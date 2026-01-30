@@ -1,4 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:inzx/core/services/cache/cache_config.dart';
 import 'package:inzx/data/entities/cache_metadata_entity.dart';
 import 'package:inzx/data/entities/download_entity.dart';
 import 'package:inzx/data/entities/playback_entity.dart';
@@ -94,8 +95,9 @@ class HiveService {
       _streamCacheBoxName,
     );
 
-    // Clean up expired cache entries on init
+    // Clean up expired cache entries and enforce limits on init
     _cleanupExpiredEntries();
+    _enforceAllEntryLimits();
   }
 
   /// Clean up expired cache entries
@@ -155,6 +157,101 @@ class HiveService {
     for (final key in expiredPlaylists) {
       await _playlistsBox.delete(key);
     }
+
+    // Clean up expired stream cache entries
+    final expiredStreams = <String>[];
+    for (final entry in _streamCacheBox.values) {
+      if (entry.isExpired) {
+        expiredStreams.add(entry.videoId);
+      }
+    }
+    for (final key in expiredStreams) {
+      await _streamCacheBox.delete(key);
+    }
+
+    // Clean up expired colors cache (older than 90 days)
+    final cutoffDate = DateTime.now().subtract(
+      Duration(days: CacheLimits.maxAgeDays),
+    );
+    final expiredColors = <String>[];
+    for (final entry in _colorsBox.values) {
+      if (entry.cachedAt.isBefore(cutoffDate)) {
+        expiredColors.add(entry.imageUrl);
+      }
+    }
+    for (final key in expiredColors) {
+      await _colorsBox.delete(key);
+    }
+  }
+
+  /// Enforce entry limits on all boxes (LRU eviction)
+  static Future<void> _enforceAllEntryLimits() async {
+    // Tracks box
+    await _enforceEntryLimit(
+      _tracksBox,
+      CacheLimits.maxTracksEntries,
+      (e) => e.id,
+    );
+
+    // Albums box
+    await _enforceEntryLimit(
+      _albumsBox,
+      CacheLimits.maxAlbumsEntries,
+      (e) => e.albumId,
+    );
+
+    // Artists box
+    await _enforceEntryLimit(
+      _artistsBox,
+      CacheLimits.maxArtistsEntries,
+      (e) => e.artistId,
+    );
+
+    // Playlists box
+    await _enforceEntryLimit(
+      _playlistsBox,
+      CacheLimits.maxPlaylistsEntries,
+      (e) => e.playlistId,
+    );
+
+    // Lyrics box
+    await _enforceEntryLimit(
+      _lyricsBox,
+      CacheLimits.maxLyricsEntries,
+      (e) => e.trackId,
+    );
+
+    // Stream cache box
+    await _enforceEntryLimit(
+      _streamCacheBox,
+      CacheLimits.maxStreamCacheEntries,
+      (e) => e.videoId,
+    );
+
+    // Colors box
+    await _enforceEntryLimit(
+      _colorsBox,
+      CacheLimits.maxColorsEntries,
+      (e) => e.imageUrl,
+    );
+  }
+
+  /// Enforce entry limit on a single box by removing oldest entries
+  static Future<void> _enforceEntryLimit<T>(
+    Box<T> box,
+    int maxEntries,
+    String Function(T) getKey,
+  ) async {
+    if (box.length <= maxEntries) return;
+
+    // Get all keys (oldest first based on insertion order)
+    final keys = box.keys.toList();
+    final entriesToRemove = keys.length - maxEntries;
+
+    // Remove oldest entries
+    for (int i = 0; i < entriesToRemove; i++) {
+      await box.delete(keys[i]);
+    }
   }
 
   // ============ Getters ============
@@ -189,5 +286,22 @@ class HiveService {
     await _playlistsBox.clear();
     await _colorsBox.clear();
     await _streamCacheBox.clear();
+  }
+
+  /// Compact all boxes to reclaim disk space from deleted entries
+  /// Call this periodically (e.g., monthly) or after major cleanup
+  static Future<void> compactAllBoxes() async {
+    await _tracksBox.compact();
+    await _searchCacheBox.compact();
+    await _playbackBox.compact();
+    await _metadataBox.compact();
+    await _downloadsBox.compact();
+    await _lyricsBox.compact();
+    await _homePageBox.compact();
+    await _albumsBox.compact();
+    await _artistsBox.compact();
+    await _playlistsBox.compact();
+    await _colorsBox.compact();
+    await _streamCacheBox.compact();
   }
 }

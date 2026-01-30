@@ -6,6 +6,7 @@ import 'package:iconsax/iconsax.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../providers/providers.dart';
 import '../../models/models.dart';
+
 import '../jams_screen.dart';
 import '../ytmusic_login_screen.dart';
 import '../ytmusic_settings_screen.dart';
@@ -313,12 +314,7 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
               _buildYTMusicLoginCard(isDark, colorScheme),
 
             // Mood chips removed as per request
-            const SizedBox(height: 20),
-
-            // Welcome / Get started section (local + YT Music data)
-            _buildWelcomeSection(isDark, colorScheme),
-
-            const SizedBox(height: 24),
+            const SizedBox(height: 8),
 
             // YT Music Home Page Shelves - use Builder to ensure proper rebuilds
             Builder(
@@ -357,7 +353,7 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
                 ),
               ),
 
-            const SizedBox(height: 100), // Space for mini player
+            // const SizedBox(height: 100), // Space for mini player - Removed as MusicApp handles this
           ],
         ),
       ),
@@ -378,10 +374,71 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
 
     final widgets = <Widget>[];
 
+    // Find a suitable shelf for the "Welcome" section
+    // Priority 1: "Quick Picks" (User request: Always fetch first)
+    // Priority 2: "Music to get you started"
+    // Priority 3: First shelf that contains songs
+
+    HomeShelf? welcomeShelf;
+
+    // Priority 1: Quick Picks
+    try {
+      welcomeShelf = shelves.firstWhere(
+        (s) =>
+            s.type == HomeShelfType.quickPicks ||
+            s.title.toLowerCase().contains('quick picks'),
+      );
+    } catch (_) {
+      // Not found
+    }
+
+    // Priority 2: "Music to get you started"
+    if (welcomeShelf == null) {
+      try {
+        welcomeShelf = shelves.firstWhere(
+          (s) =>
+              (s.strapline?.toLowerCase() ?? '').contains(
+                'music to get you started',
+              ) ||
+              (s.subtitle?.toLowerCase() ?? '').contains(
+                'music to get you started',
+              ) ||
+              s.title.startsWith('Welcome'),
+        );
+      } catch (_) {
+        // Not found
+      }
+    }
+
+    // Priority 3: First shelf with songs
+    if (welcomeShelf == null) {
+      try {
+        welcomeShelf = shelves.firstWhere(
+          (s) =>
+              s.items.any((i) => i.itemType == HomeShelfItemType.song) &&
+              s.items.length >= 4,
+        );
+      } catch (_) {}
+    }
+
+    // Render Welcome Shelf first if found
+    if (welcomeShelf != null) {
+      widgets.add(_buildNativeWelcomeShelf(welcomeShelf, isDark, colorScheme));
+      widgets.add(const SizedBox(height: 24));
+    }
+
+    // Render other shelves
     for (final shelf in shelves) {
-      // Skip empty shelves and Quick Picks
+      // Skip the one we used for welcome
+      if (shelf == welcomeShelf) continue;
+
+      // Skip empty shelves
       if (shelf.items.isEmpty) continue;
-      if (shelf.type == HomeShelfType.quickPicks) continue;
+
+      // Skip Quick Picks if we used it as welcome (double check to be safe)
+      if (shelf.type == HomeShelfType.quickPicks &&
+          welcomeShelf?.type == HomeShelfType.quickPicks)
+        continue;
 
       Widget? shelfWidget;
 
@@ -462,7 +519,11 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
       }
 
       widgets.add(shelfWidget);
-      widgets.add(const SizedBox(height: 24));
+
+      // Add spacing only if not the last item
+      if (shelf != shelves.last) {
+        widgets.add(const SizedBox(height: 24));
+      }
     }
 
     return Column(
@@ -604,208 +665,6 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildWelcomeSection(bool isDark, ColorScheme colorScheme) {
-    final ytAuthState = ref.watch(ytMusicAuthStateProvider);
-    final recentlyPlayed = ref.watch(recentlyPlayedProvider);
-    final likedSongs = ref.watch(likedSongsProvider);
-    final userName = ytAuthState.account?.name?.split(' ').first ?? 'there';
-
-    // If logged in to YT Music, fetch from there
-    final ytRecentlyPlayed = ytAuthState.isLoggedIn
-        ? ref.watch(ytMusicRecentlyPlayedProvider).valueOrNull ?? []
-        : <Track>[];
-    final ytLikedSongs = ytAuthState.isLoggedIn
-        ? ref.watch(ytMusicLikedSongsProvider).valueOrNull ?? []
-        : <Track>[];
-
-    // Combine all sources, prioritizing YT Music data
-    final allSongs = <Track>[];
-    final seenIds = <String>{};
-
-    // YT Music recently played first
-    for (final track in ytRecentlyPlayed) {
-      if (!seenIds.contains(track.id)) {
-        allSongs.add(track);
-        seenIds.add(track.id);
-      }
-    }
-    // YT Music liked songs
-    for (final track in ytLikedSongs) {
-      if (!seenIds.contains(track.id)) {
-        allSongs.add(track);
-        seenIds.add(track.id);
-      }
-    }
-    // Local recently played
-    for (final track in recentlyPlayed) {
-      if (!seenIds.contains(track.id)) {
-        allSongs.add(track);
-        seenIds.add(track.id);
-      }
-    }
-    // Local liked songs
-    for (final track in likedSongs) {
-      if (!seenIds.contains(track.id)) {
-        allSongs.add(track);
-        seenIds.add(track.id);
-      }
-    }
-
-    // Take up to 16 songs
-    final songs = allSongs.take(16).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              // Profile avatar
-              _buildProfileAvatar(isDark, colorScheme, size: 40),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'MUSIC TO GET YOU STARTED',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: isDark
-                            ? Colors.white54
-                            : MineColors.textSecondary,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Welcome $userName',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : MineColors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Jams button - minimalist
-              GestureDetector(
-                onTap: () => JamsScreen.open(context),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isDark ? Colors.white10 : Colors.grey.shade200,
-                  ),
-                  child: Icon(
-                    Iconsax.profile_2user,
-                    color: isDark ? Colors.white70 : MineColors.textSecondary,
-                    size: 20,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-
-        // OuterTune-style: Prefetch welcome section tracks
-        Builder(
-          builder: (context) {
-            if (songs.isNotEmpty) {
-              final prefetchManager = ref.read(trackPrefetchProvider);
-              prefetchManager.prefetchVisibleTracks(songs);
-            }
-            return const SizedBox.shrink();
-          },
-        ),
-
-        // Song cards grid
-        if (songs.isEmpty)
-          _buildEmptyWelcome(isDark, colorScheme)
-        else
-          _buildSongCardsGrid(songs, isDark, colorScheme),
-      ],
-    );
-  }
-
-  Widget _buildEmptyWelcome(bool isDark, ColorScheme colorScheme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: isDark ? Colors.white10 : Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              Icons.music_note_rounded,
-              size: 48,
-              color: isDark ? Colors.white38 : MineColors.textSecondary,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Search and play some music to see your songs here',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: isDark ? Colors.white54 : MineColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSongCardsGrid(
-    List<Track> songs,
-    bool isDark,
-    ColorScheme colorScheme,
-  ) {
-    final playerService = ref.watch(audioPlayerServiceProvider);
-
-    // Calculate number of pages (4 songs per page)
-    final pageCount = (songs.length / 4).ceil();
-
-    return SizedBox(
-      height: 292,
-      child: PageView.builder(
-        controller: PageController(viewportFraction: 0.92),
-        itemCount: pageCount,
-        itemBuilder: (context, pageIndex) {
-          final startIndex = pageIndex * 4;
-          final pageSongs = songs.skip(startIndex).take(4).toList();
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Column(
-              children: pageSongs.asMap().entries.map((entry) {
-                final isLast = entry.key == pageSongs.length - 1;
-                return Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: isLast ? 0 : 6),
-                    child: OptimizedTrackItem(
-                      track: entry.value,
-                      playerService: playerService,
-                      isDark: isDark,
-                      colorScheme: colorScheme,
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          );
-        },
       ),
     );
   }
@@ -1090,6 +949,152 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildNativeWelcomeShelf(
+    HomeShelf shelf,
+    bool isDark,
+    ColorScheme colorScheme,
+  ) {
+    final ytAuthState = ref.watch(ytMusicAuthStateProvider);
+    final googleAuthState = ref.watch(googleAuthStateProvider);
+
+    // Try to get name from Google Auth first, then YT Music, then fallback
+    String userName = 'there';
+    if (googleAuthState.isSignedIn &&
+        googleAuthState.user?.displayName != null) {
+      userName = googleAuthState.user!.displayName!.split(' ').first;
+    } else if (ytAuthState.account?.name != null) {
+      userName = ytAuthState.account!.name!.split(' ').first;
+    }
+
+    // Determine title: Use shelf title if it starts with "Welcome", otherwise "Welcome [Name]"
+    // This handles the fallback case where we pick "Quick Picks" but want to show "Welcome User"
+    final displayTitle = shelf.title.startsWith('Welcome')
+        ? shelf.title
+        : 'Welcome $userName';
+
+    // Convert items to tracks
+    final songs = shelf.items
+        .where((item) => item.itemType == HomeShelfItemType.song)
+        .map((item) => item.toTrack())
+        .whereType<Track>()
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              // Profile avatar
+              _buildProfileAvatar(isDark, colorScheme, size: 40),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'MUSIC TO GET YOU STARTED',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? Colors.white54
+                            : MineColors.textSecondary,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      displayTitle,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : MineColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Jams button - minimalist
+              GestureDetector(
+                onTap: () => JamsScreen.open(context),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isDark ? Colors.white10 : Colors.grey.shade200,
+                  ),
+                  child: Icon(
+                    Iconsax.profile_2user,
+                    color: isDark ? Colors.white70 : MineColors.textSecondary,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // Song cards grid
+        if (songs.isNotEmpty)
+          _buildSongCardsGrid(songs, isDark, colorScheme)
+        else
+          // Fallback if no songs found (e.g. mixed content), show standard carousel
+          TrackListShelf(
+            shelf: shelf,
+            isDark: isDark,
+            colorScheme: colorScheme,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSongCardsGrid(
+    List<Track> songs,
+    bool isDark,
+    ColorScheme colorScheme,
+  ) {
+    final playerService = ref.watch(audioPlayerServiceProvider);
+
+    // Calculate number of pages (4 songs per page)
+    final pageCount = (songs.length / 4).ceil();
+
+    return SizedBox(
+      height: 292,
+      child: PageView.builder(
+        controller: PageController(viewportFraction: 0.92),
+        itemCount: pageCount,
+        itemBuilder: (context, pageIndex) {
+          final startIndex = pageIndex * 4;
+          final pageSongs = songs.skip(startIndex).take(4).toList();
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Column(
+              children: pageSongs.asMap().entries.map((entry) {
+                final isLast = entry.key == pageSongs.length - 1;
+                return Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: isLast ? 0 : 6),
+                    child: OptimizedTrackItem(
+                      track: entry.value,
+                      playerService: playerService,
+                      isDark: isDark,
+                      colorScheme: colorScheme,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          );
+        },
+      ),
     );
   }
 

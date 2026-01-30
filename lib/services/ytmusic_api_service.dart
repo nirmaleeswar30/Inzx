@@ -98,40 +98,69 @@ class InnerTubeService {
 
   /// Make an InnerTube API request
   /// JSON decoding runs in background isolate for large responses
+  /// Includes retry logic with exponential backoff for network resilience
   Future<Map<String, dynamic>?> _request(
     String endpoint,
     Map<String, dynamic> body, {
     bool authenticated = false,
+    int maxRetries = 3,
   }) async {
-    try {
-      final url = Uri.parse(
-        '$_baseUrl/$endpoint?key=$_apiKey&prettyPrint=false',
-      );
+    int attempt = 0;
 
-      final requestBody = {'context': _clientContext, ...body};
+    while (attempt < maxRetries) {
+      try {
+        final url = Uri.parse(
+          '$_baseUrl/$endpoint?key=$_apiKey&prettyPrint=false',
+        );
 
-      final response = await http.post(
-        url,
-        headers: _buildHeaders(authenticated: authenticated),
-        body: jsonEncode(requestBody),
-      );
+        final requestBody = {'context': _clientContext, ...body};
 
-      if (response.statusCode == 200) {
-        // Decode JSON in background isolate to avoid UI jank
-        // Large responses (home page, search) can cause stuttering
-        return await compute(_jsonDecodeIsolate, response.body);
-      } else {
+        final response = await http.post(
+          url,
+          headers: _buildHeaders(authenticated: authenticated),
+          body: jsonEncode(requestBody),
+        );
+
+        if (response.statusCode == 200) {
+          // Decode JSON in background isolate to avoid UI jank
+          // Large responses (home page, search) can cause stuttering
+          return await compute(_jsonDecodeIsolate, response.body);
+        } else if (response.statusCode >= 500) {
+          // Server error - retry with backoff
+          attempt++;
+          if (attempt < maxRetries) {
+            final delayMs = 100 * pow(2, attempt).toInt(); // 200, 400, 800ms
+            await Future.delayed(Duration(milliseconds: delayMs));
+            continue;
+          }
+        }
+
         if (kDebugMode) {
           print('InnerTube error ${response.statusCode}: ${response.body}');
         }
         return null;
+      } catch (e) {
+        attempt++;
+        if (attempt < maxRetries) {
+          // Network error - retry with exponential backoff
+          final delayMs = 100 * pow(2, attempt).toInt();
+          if (kDebugMode) {
+            print(
+              'InnerTube request failed (attempt $attempt/$maxRetries): $e',
+            );
+          }
+          await Future.delayed(Duration(milliseconds: delayMs));
+          continue;
+        }
+
+        if (kDebugMode) {
+          print('InnerTube request failed after $maxRetries attempts: $e');
+        }
+        return null;
       }
-    } catch (e) {
-      if (kDebugMode) {
-        print('InnerTube request failed: $e');
-      }
-      return null;
     }
+
+    return null;
   }
 
   // ============ LIBRARY ENDPOINTS ============

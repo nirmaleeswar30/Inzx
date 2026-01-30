@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../providers/music_providers.dart';
 import '../../services/lyrics/lyrics_service.dart';
 import '../../services/lyrics/lyrics_models.dart';
 
@@ -24,6 +25,11 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
     super.dispose();
   }
 
+  /// Seek to a specific position when a lyric line is tapped
+  void _seekToLyric(int timeInMs) {
+    ref.read(audioPlayerServiceProvider).seek(Duration(milliseconds: timeInMs));
+  }
+
   @override
   Widget build(BuildContext context) {
     final lyricsState = ref.watch(lyricsProvider);
@@ -31,96 +37,7 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
     final textColor = isDark ? Colors.white : Colors.black87;
     final secondaryColor = textColor.withValues(alpha: 0.5);
 
-    return Column(
-      children: [
-        // Provider picker
-        _buildProviderPicker(lyricsState, isDark, textColor, secondaryColor),
-
-        // Lyrics content
-        Expanded(
-          child: _buildLyricsContent(
-            lyricsState,
-            isDark,
-            textColor,
-            secondaryColor,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProviderPicker(
-    LyricsState lyricsState,
-    bool isDark,
-    Color textColor,
-    Color secondaryColor,
-  ) {
-    final status = lyricsState.currentStatus;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Previous button
-          IconButton(
-            onPressed: () =>
-                ref.read(lyricsProvider.notifier).previousProvider(),
-            icon: Icon(Icons.chevron_left, color: secondaryColor),
-            iconSize: 28,
-          ),
-
-          // Provider name and status
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Status icon
-                _buildStatusIcon(status, textColor),
-                const SizedBox(width: 8),
-
-                // Provider name
-                Text(
-                  lyricsState.currentProvider.displayName,
-                  style: TextStyle(
-                    color: textColor,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Next button
-          IconButton(
-            onPressed: () => ref.read(lyricsProvider.notifier).nextProvider(),
-            icon: Icon(Icons.chevron_right, color: secondaryColor),
-            iconSize: 28,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusIcon(ProviderStatus status, Color textColor) {
-    switch (status.state) {
-      case LyricsProviderState.fetching:
-        return SizedBox(
-          width: 16,
-          height: 16,
-          child: CircularProgressIndicator(strokeWidth: 2, color: textColor),
-        );
-      case LyricsProviderState.done:
-        if (status.data?.hasLyrics ?? false) {
-          return Icon(Icons.check_circle, size: 18, color: Colors.green);
-        }
-        return Icon(Icons.warning, size: 18, color: Colors.orange);
-      case LyricsProviderState.error:
-        return Icon(Icons.error, size: 18, color: Colors.red);
-      case LyricsProviderState.idle:
-        return const SizedBox(width: 18);
-    }
+    return _buildLyricsContent(lyricsState, isDark, textColor, secondaryColor);
   }
 
   Widget _buildLyricsContent(
@@ -268,25 +185,28 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
           final fontSize = isCurrentLine ? 28.0 : 22.0; // Bigger fonts
           final fontWeight = isCurrentLine ? FontWeight.bold : FontWeight.w400;
 
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOut,
-            height: 70, // Taller for bigger text
-            alignment: Alignment.centerLeft, // LEFT aligned
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: AnimatedDefaultTextStyle(
+          return GestureDetector(
+            onTap: () => _seekToLyric(line.timeInMs),
+            child: AnimatedContainer(
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeOut,
-              style: TextStyle(
-                fontSize: fontSize,
-                fontWeight: fontWeight,
-                color: textColor.withValues(alpha: opacity),
-                height: 1.3,
-              ),
-              child: Text(
-                line.text.isEmpty ? '♪' : line.text,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+              height: 70, // Taller for bigger text
+              alignment: Alignment.centerLeft, // LEFT aligned
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOut,
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: fontWeight,
+                  color: textColor.withValues(alpha: opacity),
+                  height: 1.3,
+                ),
+                child: Text(
+                  line.text.isEmpty ? '♪' : line.text,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
           );

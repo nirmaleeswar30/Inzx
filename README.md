@@ -109,26 +109,25 @@ adb install app-release.apk
    dart run build_runner build --delete-conflicting-outputs
    ```
 
-4. **Configure Supabase** (for Jams feature)
-   - Create a Supabase project at [supabase.com](https://supabase.com)
-   - Open `lib/services/supabase_config.dart` and update these values:
-     ```dart
-     static const String supabaseUrl = 'YOUR_SUPABASE_URL';
-     static const String supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
+4. **Configure Environment Variables**
+   - Create a `.env` file in the root directory:
+     ```bash
+     cp .env.example .env
      ```
-   - Enable Realtime in your Supabase project settings for the Jams tables
 
-5. **Configure Google Sign-In** (for Jams user profiles)
+5. **Configure Supabase** (for Jams feature)
+   - Create a Supabase project at [supabase.com](https://supabase.com)
+   - Enable Realtime in your Supabase project settings
+   - Update `SUPABASE_URL` and `SUPABASE_ANON_KEY` in your `.env` file
+
+6. **Configure Google Sign-In** (for Jams user profiles)
    - Go to [Google Cloud Console](https://console.cloud.google.com)
    - Create a new project or select an existing one
    - Navigate to **APIs & Services > Credentials**
    - Create an **OAuth 2.0 Client ID**:
      - For Android: Select "Android" and add your app's package name and SHA-1 fingerprint
      - For Web (required for Android server auth): Select "Web application"
-   - Open `lib/services/auth/google_auth_service.dart` and update:
-     ```dart
-     static const _webClientId = 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com';
-     ```
+   - Update `GOOGLE_WEB_CLIENT_ID` in your `.env` file with the **Web Client ID**
    
    > **Note:** The app uses the `google_sign_in` package standalone for basic user profile info in Jams.
 

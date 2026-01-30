@@ -145,7 +145,7 @@ class MusicMiniPlayer extends ConsumerWidget {
                   children: [
                     // Content first
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 10, 4, 6),
+                      padding: const EdgeInsets.fromLTRB(12, 14, 4, 10),
                       child: Row(
                         children: [
                           // Album art with Hero for smooth transition

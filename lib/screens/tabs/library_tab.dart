@@ -89,9 +89,11 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
   }
 
   Widget _buildCategoryTabs(bool isDark, ColorScheme colorScheme) {
+    final accentColor = ref.watch(effectiveAccentColorProvider);
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(
         children: List.generate(_categories.length, (index) {
           final isSelected = _selectedCategory == index;
@@ -105,18 +107,23 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
                   setState(() => _selectedCategory = index);
                 }
               },
-              selectedColor: colorScheme.primaryContainer,
+              // Use dynamic accent color for selected state
+              selectedColor: accentColor.withValues(alpha: 0.2),
               backgroundColor: isDark ? Colors.white10 : Colors.grey.shade100,
               labelStyle: TextStyle(
                 color: isSelected
-                    ? colorScheme.primary
+                    ? accentColor
                     : (isDark ? Colors.white70 : MineColors.textPrimary),
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                fontSize: 13,
               ),
-              side: BorderSide.none,
+              side: BorderSide(
+                color: isSelected ? accentColor : Colors.transparent,
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
             ),
           );
         }),

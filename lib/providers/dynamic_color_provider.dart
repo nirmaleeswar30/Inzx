@@ -2,10 +2,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:palette_generator/palette_generator.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../models/models.dart';
 import '../services/audio_player_service.dart' as player;
+import '../services/album_color_extractor.dart';
 
 /// Dynamic colors extracted from album art
 class DynamicColors {
@@ -83,7 +82,8 @@ class DynamicColorService {
   final Map<String, DynamicColors> _colorCache = {};
 
   /// Extract colors from an image URL
-  /// Uses smaller image size for faster extraction (OuterTune approach)
+  /// Now uses AlbumColorExtractor which runs color extraction in an isolate
+  /// for better performance (no main thread blocking)
   Future<DynamicColors?> extractColorsFromUrl(
     String imageUrl, {
     bool isDark = false,
@@ -95,22 +95,16 @@ class DynamicColorService {
     }
 
     try {
-      // Use smaller resolution URL if possible (YouTube thumbnails)
-      final optimizedUrl = _getOptimizedThumbnailUrl(imageUrl);
-      final imageProvider = CachedNetworkImageProvider(optimizedUrl);
+      // Use AlbumColorExtractor which runs in an isolate
+      // Import is already available through album_color_extractor.dart
+      final albumColors = await _extractInIsolate(imageUrl);
 
-      // Extract palette with minimal size for speed
-      final paletteGenerator =
-          await PaletteGenerator.fromImageProvider(
-            imageProvider,
-            size: const Size(48, 48), // Very small - 4x faster than 200x200
-            maximumColorCount: 6, // Fewer colors = faster
-          ).timeout(
-            const Duration(seconds: 3),
-            onTimeout: () => throw TimeoutException('Palette timeout'),
-          );
+      if (albumColors == null) {
+        return null;
+      }
 
-      final colors = _buildColors(paletteGenerator, isDark);
+      // Convert AlbumColors to DynamicColors
+      final colors = _fromAlbumColors(albumColors, isDark);
       _colorCache[cacheKey] = colors;
       return colors;
     } catch (e) {
@@ -121,68 +115,33 @@ class DynamicColorService {
     }
   }
 
-  /// Get smaller thumbnail URL for faster loading
-  String _getOptimizedThumbnailUrl(String url) {
-    // YouTube thumbnails: replace maxresdefault/hqdefault with mqdefault (smaller)
-    if (url.contains('ytimg.com') || url.contains('googleusercontent.com')) {
-      return url
-          .replaceAll('maxresdefault', 'default')
-          .replaceAll('hqdefault', 'default')
-          .replaceAll('sddefault', 'default');
+  /// Extract colors using isolate-based AlbumColorExtractor
+  Future<AlbumColors?> _extractInIsolate(String imageUrl) async {
+    try {
+      return await AlbumColorExtractor.extractFromUrl(imageUrl);
+    } catch (e) {
+      return null;
     }
-    return url;
   }
 
-  /// Build DynamicColors from palette
-  DynamicColors _buildColors(PaletteGenerator palette, bool isDark) {
-    // Get dominant and vibrant colors
-    final dominant = palette.dominantColor?.color;
-    final vibrant = palette.vibrantColor?.color;
-    final darkVibrant = palette.darkVibrantColor?.color;
-    final lightVibrant = palette.lightVibrantColor?.color;
-    final muted = palette.mutedColor?.color;
-    final darkMuted = palette.darkMutedColor?.color;
-    final lightMuted = palette.lightMutedColor?.color;
-
-    Color primary;
-    Color secondary;
-    Color accent;
-    Color background;
-    Color surface;
-
-    if (isDark) {
-      // Dark theme: use lighter variants
-      primary = lightVibrant ?? vibrant ?? dominant ?? const Color(0xFF8FD4B6);
-      secondary = lightMuted ?? muted ?? primary.withValues(alpha: 0.7);
-      accent = vibrant ?? primary;
-      background = darkMuted?.withValues(alpha: 0.3) ?? const Color(0xFF121212);
-      surface = darkVibrant?.withValues(alpha: 0.2) ?? const Color(0xFF1E1E1E);
-    } else {
-      // Light theme: use vibrant variants
-      primary = vibrant ?? dominant ?? const Color(0xFF7BC4A8);
-      secondary = muted ?? darkMuted ?? primary.withValues(alpha: 0.7);
-      accent = darkVibrant ?? vibrant ?? primary;
-      background =
-          lightMuted?.withValues(alpha: 0.1) ?? const Color(0xFFF8F9FA);
-      surface = lightVibrant?.withValues(alpha: 0.1) ?? Colors.white;
-    }
-
-    // Ensure good contrast for onPrimary
+  /// Convert AlbumColors (from isolate) to DynamicColors
+  DynamicColors _fromAlbumColors(AlbumColors albumColors, bool isDark) {
+    final primary = isDark ? albumColors.accentLight : albumColors.accent;
     final onPrimary = _getContrastColor(primary);
 
     return DynamicColors(
       primary: primary,
       onPrimary: onPrimary,
-      secondary: secondary,
-      background: background,
-      surface: surface,
-      accent: accent,
+      secondary: albumColors.accentDark,
+      background: albumColors.backgroundPrimary,
+      surface: albumColors.surface,
+      accent: albumColors.accent,
       isDark: isDark,
-      dominant: dominant,
-      lightVibrant: lightVibrant,
-      darkVibrant: darkVibrant,
-      lightMuted: lightMuted,
-      darkMuted: darkMuted,
+      dominant: albumColors.backgroundPrimary,
+      lightVibrant: albumColors.accentLight,
+      darkVibrant: albumColors.accentDark,
+      lightMuted: albumColors.surface,
+      darkMuted: albumColors.backgroundSecondary,
       isActive: true,
     );
   }

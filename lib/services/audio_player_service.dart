@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/models.dart';
 import 'playback/playback.dart';
 import 'ytmusic_api_service.dart';
+import 'queue_persistence_service.dart';
 
 /// Key for persisting streaming quality preference
 const String kStreamingQualityKey = 'streaming_quality';
@@ -191,6 +192,8 @@ class AudioPlayerService {
     _init();
     // Load persisted streaming quality
     _loadStreamingQuality();
+    // Load persisted queue from previous session
+    _loadPersistedQueue();
   }
 
   /// Set the InnerTubeService instance (for personalized radio)
@@ -339,6 +342,10 @@ class AudioPlayerService {
   static const _positionUpdateInterval = Duration(
     milliseconds: 500,
   ); // Throttle to 2 updates/sec
+
+  // Queue persistence debounce
+  Timer? _persistenceDebounceTimer;
+  static const _persistenceDebounceDelay = Duration(seconds: 2);
 
   /// Stream of playback state changes (for major UI updates)
   Stream<PlaybackState> get stateStream => _stateController.stream;
@@ -591,6 +598,9 @@ class AudioPlayerService {
       isFetchingRadio: false, // Reset fetching state for new queue
     );
 
+    // Persist queue state (debounced)
+    _saveQueueDebounced();
+
     // Fire and forget - start playback without blocking caller
     // This allows UI to remain responsive while audio loads
     unawaited(_loadAndPlayCurrent());
@@ -744,6 +754,7 @@ class AudioPlayerService {
     _originalQueue.addAll(tracks);
     _queueRevision++;
     _updateState(queue: _queue, queueRevision: _queueRevision);
+    _saveQueueDebounced();
 
     // Prefetch newly added tracks
     if (tracks.isNotEmpty) {
@@ -765,6 +776,7 @@ class AudioPlayerService {
     }
     _queueRevision++;
     _updateState(queue: _queue, queueRevision: _queueRevision);
+    _saveQueueDebounced();
 
     // Prefetch the track that will play next
     _ytPlayerUtils.prefetchNext(track.id, quality: _audioQuality);
@@ -796,6 +808,7 @@ class AudioPlayerService {
       queueRevision: _queueRevision,
       currentIndex: _currentIndex,
     );
+    _saveQueueDebounced();
   }
 
   /// Reorder queue item from oldIndex to newIndex
@@ -825,6 +838,7 @@ class AudioPlayerService {
       queueRevision: _queueRevision,
       currentIndex: _currentIndex,
     );
+    _saveQueueDebounced();
   }
 
   /// Jump to specific index in queue
@@ -854,6 +868,8 @@ class AudioPlayerService {
       currentIndex: _currentIndex,
       currentTrack: null,
     );
+    // Clear persisted queue when explicitly cleared
+    QueuePersistenceService.clearQueue();
   }
 
   /// Load and play the current track using OuterTune pipeline
@@ -1446,8 +1462,59 @@ class AudioPlayerService {
     return shuffled;
   }
 
+  /// Load persisted queue from previous session
+  Future<void> _loadPersistedQueue() async {
+    try {
+      final persistedState = await QueuePersistenceService.loadQueue();
+      if (persistedState != null && persistedState.queue.isNotEmpty) {
+        if (kDebugMode) {
+          print(
+            'AudioPlayerService: Restoring ${persistedState.queue.length} tracks from persisted queue',
+          );
+        }
+        _queue = persistedState.queue;
+        _originalQueue = List.from(_queue);
+        _currentIndex = persistedState.currentIndex;
+        _currentTrack = persistedState.currentTrack;
+        _queueRevision++;
+
+        // Update state to show restored queue (but don't auto-play)
+        _updateState(
+          queue: _queue,
+          queueRevision: _queueRevision,
+          currentIndex: _currentIndex,
+          currentTrack: _currentTrack,
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('AudioPlayerService: Failed to load persisted queue: $e');
+      }
+    }
+  }
+
+  /// Save queue state with debouncing to prevent excessive writes
+  void _saveQueueDebounced() {
+    _persistenceDebounceTimer?.cancel();
+    _persistenceDebounceTimer = Timer(_persistenceDebounceDelay, () {
+      if (_queue.isNotEmpty && _currentIndex >= 0) {
+        QueuePersistenceService.saveQueue(
+          queue: _queue,
+          currentIndex: _currentIndex,
+          position: _player.position,
+        );
+        if (kDebugMode) {
+          print(
+            'AudioPlayerService: Queue persisted (${_queue.length} tracks, index $_currentIndex)',
+          );
+        }
+      }
+    });
+  }
+
   /// Dispose resources
   void dispose() {
+    _persistenceDebounceTimer?.cancel();
     _player.dispose();
     _stateController.close();
     _positionController.close();

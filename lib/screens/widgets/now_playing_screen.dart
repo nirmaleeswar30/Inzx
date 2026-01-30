@@ -141,6 +141,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   late AnimationController _colorAnimController;
   late TabController _tabController;
   late PageController _pageController;
+  late PageController _albumArtPageController; // For swiping album art
   final GlobalKey<YTMDrawerState> _drawerKey = GlobalKey<YTMDrawerState>();
   AlbumColors _currentColors = AlbumColors.defaultColors();
   AlbumColors _targetColors = AlbumColors.defaultColors();
@@ -184,6 +185,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
     // Page controller for swiping content
     _pageController = PageController(initialPage: 0);
+
+    // Album art page controller - starts at position 1 (current track in center)
+    _albumArtPageController = PageController(initialPage: 1);
   }
 
   @override
@@ -191,6 +195,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     _colorAnimController.dispose();
     _tabController.dispose();
     _pageController.dispose();
+    _albumArtPageController.dispose();
     super.dispose();
   }
 
@@ -285,6 +290,10 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
               backgroundColor: Colors.transparent,
               surfaceColor: colors.surface, // Solid background for drawer
               initiallyExpanded: _isDrawerExpanded,
+              onDismiss: () {
+                Navigator.of(context).pop();
+                widget.onClose?.call();
+              },
               onStateChanged: (expanded) {
                 setState(() {
                   _isDrawerExpanded = expanded;
@@ -1176,6 +1185,10 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   }
 
   Widget _buildAlbumArt(Track track, Color accentColor) {
+    final playerService = ref.watch(audioPlayerServiceProvider);
+    final queue = playerService.queue;
+    final currentIndex = playerService.currentIndex;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = MediaQuery.of(context).size.width;
@@ -1190,40 +1203,103 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
         return SizedBox(
           height: maxHeight,
           child: Align(
-            alignment: Alignment.topCenter, // Push album art to top
+            alignment: Alignment.topCenter,
             child: Padding(
-              padding: const EdgeInsets.only(top: 16), // Tiny bit down
-              child: Hero(
-                tag: 'album-art-${track.id}',
-                child: Container(
-                  width: artSize,
-                  height: artSize,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.4),
-                        blurRadius: 30,
-                        spreadRadius: 5,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: track.thumbnailUrl != null
-                        ? CachedNetworkImage(
-                            imageUrl: track.thumbnailUrl!.replaceAll(
-                              'w120-h120',
-                              'w600-h600',
+              padding: const EdgeInsets.only(top: 16),
+              child: SizedBox(
+                width: artSize,
+                height: artSize,
+                // Swipeable album art using PageView
+                child: PageView.builder(
+                  controller: _albumArtPageController,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: 3, // prev, current, next (virtual pages)
+                  onPageChanged: (pageIndex) {
+                    if (pageIndex == 0 && currentIndex > 0) {
+                      // Swiped right -> previous track
+                      playerService.skipToPrevious();
+                      // Reset to center after a short delay
+                      Future.delayed(const Duration(milliseconds: 300), () {
+                        if (mounted) {
+                          _albumArtPageController.jumpToPage(1);
+                        }
+                      });
+                    } else if (pageIndex == 2 &&
+                        currentIndex < queue.length - 1) {
+                      // Swiped left -> next track
+                      playerService.skipToNext();
+                      // Reset to center after a short delay
+                      Future.delayed(const Duration(milliseconds: 300), () {
+                        if (mounted) {
+                          _albumArtPageController.jumpToPage(1);
+                        }
+                      });
+                    } else {
+                      // Bounce back to center if can't navigate
+                      _albumArtPageController.animateToPage(
+                        1,
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeOut,
+                      );
+                    }
+                  },
+                  itemBuilder: (context, pageIndex) {
+                    // Get track for this page position
+                    Track? displayTrack;
+                    if (pageIndex == 0 && currentIndex > 0) {
+                      displayTrack = queue[currentIndex - 1];
+                    } else if (pageIndex == 1) {
+                      displayTrack = track;
+                    } else if (pageIndex == 2 &&
+                        currentIndex < queue.length - 1) {
+                      displayTrack = queue[currentIndex + 1];
+                    }
+
+                    // Scale animation for non-center items
+                    final scale = pageIndex == 1 ? 1.0 : 0.85;
+                    final opacity = pageIndex == 1 ? 1.0 : 0.5;
+
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOut,
+                      transform: Matrix4.identity()..scale(scale),
+                      child: Opacity(
+                        opacity: opacity,
+                        child: Hero(
+                          tag: pageIndex == 1
+                              ? 'album-art-${track.id}'
+                              : 'album-art-side-$pageIndex',
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.4),
+                                  blurRadius: 30,
+                                  spreadRadius: 5,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
                             ),
-                            fit: BoxFit.cover,
-                            placeholder: (_, __) => _defaultArt(accentColor),
-                            errorWidget: (_, __, ___) =>
-                                _defaultArt(accentColor),
-                          )
-                        : _defaultArt(accentColor),
-                  ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: displayTrack?.thumbnailUrl != null
+                                  ? CachedNetworkImage(
+                                      imageUrl: displayTrack!.thumbnailUrl!
+                                          .replaceAll('w120-h120', 'w600-h600'),
+                                      fit: BoxFit.cover,
+                                      placeholder: (_, __) =>
+                                          _defaultArt(accentColor),
+                                      errorWidget: (_, __, ___) =>
+                                          _defaultArt(accentColor),
+                                    )
+                                  : _defaultArt(accentColor),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -1608,7 +1684,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     return TabBar(
       controller: _tabController,
       // Label color - all same when collapsed, accent when expanded
-      labelColor: showActiveState ? accentColor : textColor.withValues(alpha: 0.6),
+      labelColor: showActiveState
+          ? accentColor
+          : textColor.withValues(alpha: 0.6),
       unselectedLabelColor: textColor.withValues(alpha: 0.6),
       // Indicator - transparent when collapsed
       indicatorColor: showActiveState ? accentColor : Colors.transparent,

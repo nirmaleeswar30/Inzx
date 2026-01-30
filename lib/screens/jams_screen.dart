@@ -293,9 +293,13 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
                         : _joinSession,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: accentColor,
-                      disabledBackgroundColor: accentColor.withValues(alpha: 0.3),
+                      disabledBackgroundColor: accentColor.withValues(
+                        alpha: 0.3,
+                      ),
                       foregroundColor: Colors.white,
-                      disabledForegroundColor: Colors.white.withValues(alpha: 0.5),
+                      disabledForegroundColor: Colors.white.withValues(
+                        alpha: 0.5,
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -450,7 +454,10 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [accentColor.withValues(alpha: 0.2), Colors.transparent],
+                colors: [
+                  accentColor.withValues(alpha: 0.2),
+                  Colors.transparent,
+                ],
               ),
             ),
             child: Column(
@@ -698,7 +705,9 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
                   decoration: BoxDecoration(
                     color: accentColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: accentColor.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: accentColor.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(

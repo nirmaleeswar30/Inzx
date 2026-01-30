@@ -3,6 +3,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 /// User profile from Google Sign-In
 class GoogleUserProfile {
   final String id;
@@ -51,8 +53,7 @@ class GoogleAuthService {
   static const _cacheKey = 'google_user_profile';
 
   // Web Client ID from Google Cloud Console (required for Android)
-  static const _webClientId =
-      'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com';
+  static String get _webClientId => dotenv.get('GOOGLE_WEB_CLIENT_ID');
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],

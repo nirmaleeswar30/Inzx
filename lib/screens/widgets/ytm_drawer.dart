@@ -31,6 +31,9 @@ class YTMDrawer extends StatefulWidget {
   /// Initial state
   final bool initiallyExpanded;
 
+  /// Callback when user swipes down while collapsed (for dismiss gesture)
+  final VoidCallback? onDismiss;
+
   const YTMDrawer({
     super.key,
     required this.nowPlayingContent,
@@ -42,6 +45,7 @@ class YTMDrawer extends StatefulWidget {
     this.onStateChanged,
     this.onTabFromPosition,
     this.initiallyExpanded = false,
+    this.onDismiss,
   });
 
   @override
@@ -59,6 +63,7 @@ class YTMDrawerState extends State<YTMDrawer>
   bool _isDragging = false;
   bool _isExpanded = false;
   double _dragStartX = 0.0; // Track horizontal position for tab selection
+  double _dismissDragOffset = 0.0; // Track dismiss drag distance
 
   /// Constants for snap decision
   static const double _velocityThreshold = 500.0; // px/s
@@ -130,6 +135,13 @@ class YTMDrawerState extends State<YTMDrawer>
     final screenHeight = MediaQuery.of(context).size.height;
     final delta = details.primaryDelta ?? 0;
 
+    // Check if user is swiping DOWN while drawer is collapsed - this is dismiss gesture
+    if (!_isExpanded && _dragProgress == 0.0 && delta > 0) {
+      _dismissDragOffset += delta;
+      setState(() {});
+      return; // Don't process as drawer expansion
+    }
+
     // Normalize delta to progress (inverted: drag up = increase progress)
     final progressDelta = -delta / screenHeight;
 
@@ -144,6 +156,17 @@ class YTMDrawerState extends State<YTMDrawer>
     _isDragging = false;
 
     final velocity = details.primaryVelocity ?? 0;
+
+    // Check for dismiss gesture (swiped down while collapsed)
+    // Only dismiss if drawer is at 0 progress AND user has been dragging down
+    if (_dragProgress == 0.0 && _dismissDragOffset > 0) {
+      if (_dismissDragOffset > 100 || velocity > 500) {
+        widget.onDismiss?.call();
+        _dismissDragOffset = 0;
+        return;
+      }
+    }
+    _dismissDragOffset = 0;
 
     // VELOCITY-AWARE SNAP DECISION (core of YTM feel)
     bool shouldExpand;

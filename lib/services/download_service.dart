@@ -29,7 +29,9 @@ Future<String> _getDownloadsDirPath() async {
       return downloadsDir.path;
     }
   } catch (e) {
-    if (kDebugMode) {print('DownloadService: Cannot use external storage: $e');}
+    if (kDebugMode) {
+      print('DownloadService: Cannot use external storage: $e');
+    }
   }
 
   // Ultimate fallback: app documents directory
@@ -127,7 +129,9 @@ final downloadedTracksProvider = FutureProvider<List<Track>>((ref) async {
         )
         .toList();
   } catch (e) {
-    if (kDebugMode) {print('DownloadService: Failed to load downloaded tracks: $e');}
+    if (kDebugMode) {
+      print('DownloadService: Failed to load downloaded tracks: $e');
+    }
     return [];
   }
 });
@@ -276,6 +280,7 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
   DateTime? _lastNotificationUpdate;
   bool _initialized = false;
   AudioQuality _downloadQuality = AudioQuality.high;
+  Timer? _cleanupTimer;
 
   DownloadManagerNotifier(this._playerUtils, this._ref)
     : super(const DownloadManagerState()) {
@@ -285,6 +290,11 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
     _loadPersistedDownloads();
     // Load download quality preference
     _loadDownloadQuality();
+    // Start cleanup timer (runs every 30 minutes)
+    _cleanupTimer = Timer.periodic(
+      const Duration(minutes: 30),
+      (_) => _cleanupOldCompletedTasks(),
+    );
   }
 
   /// Load download quality from preferences
@@ -354,12 +364,16 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
 
       if (tasks.isNotEmpty) {
         state = state.copyWith(tasks: tasks);
-        if (kDebugMode) {print(
-          'DownloadService: Loaded ${tasks.length} persisted downloads from Hive',
-        );}
+        if (kDebugMode) {
+          print(
+            'DownloadService: Loaded ${tasks.length} persisted downloads from Hive',
+          );
+        }
       }
     } catch (e) {
-      if (kDebugMode) {print('DownloadService: Failed to load persisted downloads: $e');}
+      if (kDebugMode) {
+        print('DownloadService: Failed to load persisted downloads: $e');
+      }
     }
   }
 
@@ -380,9 +394,13 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
       );
 
       await HiveService.downloadsBox.put(task.trackId, entity);
-      if (kDebugMode) {print('DownloadService: Persisted download ${task.trackId} to Hive');}
+      if (kDebugMode) {
+        print('DownloadService: Persisted download ${task.trackId} to Hive');
+      }
     } catch (e) {
-      if (kDebugMode) {print('DownloadService: Failed to persist download: $e');}
+      if (kDebugMode) {
+        print('DownloadService: Failed to persist download: $e');
+      }
     }
   }
 
@@ -391,7 +409,9 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
     try {
       await HiveService.downloadsBox.delete(trackId);
     } catch (e) {
-      if (kDebugMode) {print('DownloadService: Failed to remove from Hive: $e');}
+      if (kDebugMode) {
+        print('DownloadService: Failed to remove from Hive: $e');
+      }
     }
   }
 
@@ -473,10 +493,14 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
         final file = File(task.localPath!);
         if (await file.exists()) {
           await file.delete();
-          if (kDebugMode) {print('DownloadService: Deleted file: ${task.localPath}');}
+          if (kDebugMode) {
+            print('DownloadService: Deleted file: ${task.localPath}');
+          }
         }
       } catch (e) {
-        if (kDebugMode) {print('Error deleting file: $e');}
+        if (kDebugMode) {
+          print('Error deleting file: $e');
+        }
       }
     }
 
@@ -584,7 +608,9 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
         extension = '.opus';
       }
 
-      if (kDebugMode) {print('DownloadService: Downloading ${format.mimeType} as $extension');}
+      if (kDebugMode) {
+        print('DownloadService: Downloading ${format.mimeType} as $extension');
+      }
 
       // Create file with proper naming: "Artist - Title.ext"
       final dir = await _downloadsDir;
@@ -627,7 +653,9 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
         }
 
         expectedTotal = response.contentLength ?? 0;
-        if (kDebugMode) {print('DownloadService: Expected total size: $expectedTotal bytes');}
+        if (kDebugMode) {
+          print('DownloadService: Expected total size: $expectedTotal bytes');
+        }
 
         // Download initial response
         await for (final chunk in response.stream) {
@@ -665,7 +693,9 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
           }
         }
 
-        if (kDebugMode) {print('DownloadService: Initial download got $totalDownloaded bytes');}
+        if (kDebugMode) {
+          print('DownloadService: Initial download got $totalDownloaded bytes');
+        }
 
         // === RANGE CONTINUATION ===
         // If we didn't get the full file, continue with Range requests
@@ -675,9 +705,11 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
             rangeAttempts < maxRangeAttempts) {
           rangeAttempts++;
           final missing = expectedTotal - totalDownloaded;
-          if (kDebugMode) {print(
-            'DownloadService: Missing $missing bytes, attempting Range request (attempt $rangeAttempts)',
-          );}
+          if (kDebugMode) {
+            print(
+              'DownloadService: Missing $missing bytes, attempting Range request (attempt $rangeAttempts)',
+            );
+          }
 
           // Small delay before retry
           await Future.delayed(const Duration(milliseconds: 500));
@@ -696,9 +728,11 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
             // 206 Partial Content is expected for range requests
             // 200 OK with full content is also acceptable (server ignores range)
             if (response.statusCode != 200 && response.statusCode != 206) {
-              if (kDebugMode) {print(
-                'DownloadService: Range request failed with ${response.statusCode}',
-              );}
+              if (kDebugMode) {
+                print(
+                  'DownloadService: Range request failed with ${response.statusCode}',
+                );
+              }
               break;
             }
 
@@ -729,19 +763,25 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
               }
             }
 
-            if (kDebugMode) {print(
-              'DownloadService: Range request got $chunkBytes more bytes, total: $totalDownloaded',
-            );}
+            if (kDebugMode) {
+              print(
+                'DownloadService: Range request got $chunkBytes more bytes, total: $totalDownloaded',
+              );
+            }
 
             // If we got 0 bytes, server has nothing more
             if (chunkBytes == 0) {
-              if (kDebugMode) {print(
-                'DownloadService: Server returned empty response, assuming EOF',
-              );}
+              if (kDebugMode) {
+                print(
+                  'DownloadService: Server returned empty response, assuming EOF',
+                );
+              }
               break;
             }
           } catch (e) {
-            if (kDebugMode) {print('DownloadService: Range request error: $e');}
+            if (kDebugMode) {
+              print('DownloadService: Range request error: $e');
+            }
             retryCount++;
             if (retryCount >= maxRetries) {
               break;
@@ -766,16 +806,20 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
       }
 
       final actualFileSize = await downloadedFile.length();
-      if (kDebugMode) {print(
-        'DownloadService: Final file size: $actualFileSize bytes (expected: $expectedTotal)',
-      );}
+      if (kDebugMode) {
+        print(
+          'DownloadService: Final file size: $actualFileSize bytes (expected: $expectedTotal)',
+        );
+      }
 
       // Check minimum file size (audio files should be at least 50KB)
       const minFileSize = 50 * 1024; // 50KB
       if (actualFileSize < minFileSize) {
-        if (kDebugMode) {print(
-          'DownloadService: File too small ($actualFileSize bytes), likely corrupted',
-        );}
+        if (kDebugMode) {
+          print(
+            'DownloadService: File too small ($actualFileSize bytes), likely corrupted',
+          );
+        }
         await downloadedFile.delete();
         throw Exception(
           'Download corrupted: File too small (${(actualFileSize / 1024).toStringAsFixed(1)} KB)',
@@ -788,9 +832,11 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
         final percentMissing = (missingBytes / expectedTotal) * 100;
 
         if (missingBytes > 0) {
-          if (kDebugMode) {print(
-            'DownloadService: Missing $missingBytes bytes (${percentMissing.toStringAsFixed(1)}%)',
-          );}
+          if (kDebugMode) {
+            print(
+              'DownloadService: Missing $missingBytes bytes (${percentMissing.toStringAsFixed(1)}%)',
+            );
+          }
         }
 
         // Accept up to 5% missing (OuterTune tolerates this)
@@ -808,14 +854,18 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
         extension,
       );
       if (!isValidAudio) {
-        if (kDebugMode) {print('DownloadService: File header verification failed');}
+        if (kDebugMode) {
+          print('DownloadService: File header verification failed');
+        }
         await downloadedFile.delete();
         throw Exception('Download corrupted: Invalid audio file format');
       }
 
-      if (kDebugMode) {print(
-        'DownloadService: Download verified successfully - ${(actualFileSize / 1024 / 1024).toStringAsFixed(2)} MB',
-      );}
+      if (kDebugMode) {
+        print(
+          'DownloadService: Download verified successfully - ${(actualFileSize / 1024 / 1024).toStringAsFixed(2)} MB',
+        );
+      }
       // === END VALIDATION ===
 
       // Mark as completed
@@ -848,7 +898,9 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
       // Process next
       _processQueue();
     } catch (e) {
-      if (kDebugMode) {print('Download error: $e');}
+      if (kDebugMode) {
+        print('Download error: $e');
+      }
 
       _updateTask(
         task.trackId,
@@ -892,19 +944,25 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
         if (bytes.length >= 8) {
           final ftyp = String.fromCharCodes(bytes.sublist(4, 8));
           if (ftyp == 'ftyp') {
-            if (kDebugMode) {print('DownloadService: Valid M4A/MP4 header detected');}
+            if (kDebugMode) {
+              print('DownloadService: Valid M4A/MP4 header detected');
+            }
             return true;
           }
         }
         // Also check if it starts with 'ftyp' directly (some files)
         final start = String.fromCharCodes(bytes.sublist(0, 4));
         if (start == 'ftyp') {
-          if (kDebugMode) {print('DownloadService: Valid M4A/MP4 header detected (variant)');}
+          if (kDebugMode) {
+            print('DownloadService: Valid M4A/MP4 header detected (variant)');
+          }
           return true;
         }
-        if (kDebugMode) {print(
-          'DownloadService: Invalid M4A header - got: ${bytes.sublist(0, 8)}',
-        );}
+        if (kDebugMode) {
+          print(
+            'DownloadService: Invalid M4A header - got: ${bytes.sublist(0, 8)}',
+          );
+        }
         return false;
       }
 
@@ -915,18 +973,24 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
             bytes[1] == 0x45 &&
             bytes[2] == 0xDF &&
             bytes[3] == 0xA3) {
-          if (kDebugMode) {print('DownloadService: Valid WebM/Opus header detected');}
+          if (kDebugMode) {
+            print('DownloadService: Valid WebM/Opus header detected');
+          }
           return true;
         }
         // Also check for OggS header (some Opus files)
         final start = String.fromCharCodes(bytes.sublist(0, 4));
         if (start == 'OggS') {
-          if (kDebugMode) {print('DownloadService: Valid Ogg/Opus header detected');}
+          if (kDebugMode) {
+            print('DownloadService: Valid Ogg/Opus header detected');
+          }
           return true;
         }
-        if (kDebugMode) {print(
-          'DownloadService: Invalid Opus/WebM header - got: ${bytes.sublist(0, 8)}',
-        );}
+        if (kDebugMode) {
+          print(
+            'DownloadService: Invalid Opus/WebM header - got: ${bytes.sublist(0, 8)}',
+          );
+        }
         return false;
       }
 
@@ -935,22 +999,30 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
         // ID3 tag: starts with 'ID3'
         final id3 = String.fromCharCodes(bytes.sublist(0, 3));
         if (id3 == 'ID3') {
-          if (kDebugMode) {print('DownloadService: Valid MP3 (ID3) header detected');}
+          if (kDebugMode) {
+            print('DownloadService: Valid MP3 (ID3) header detected');
+          }
           return true;
         }
         // MP3 sync: 0xFF 0xFB, 0xFF 0xFA, 0xFF 0xF3, 0xFF 0xF2
         if (bytes[0] == 0xFF && (bytes[1] & 0xE0) == 0xE0) {
-          if (kDebugMode) {print('DownloadService: Valid MP3 sync header detected');}
+          if (kDebugMode) {
+            print('DownloadService: Valid MP3 sync header detected');
+          }
           return true;
         }
         return false;
       }
 
       // Unknown format - allow it (might be valid)
-      if (kDebugMode) {print('DownloadService: Unknown format $extension, allowing');}
+      if (kDebugMode) {
+        print('DownloadService: Unknown format $extension, allowing');
+      }
       return true;
     } catch (e) {
-      if (kDebugMode) {print('DownloadService: Header verification error: $e');}
+      if (kDebugMode) {
+        print('DownloadService: Header verification error: $e');
+      }
       return false;
     }
   }
@@ -972,8 +1044,38 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
     state = state.copyWith(tasks: newTasks);
   }
 
+  /// Remove old completed tasks from memory to prevent memory leaks
+  /// Keeps the last hour of completed downloads in memory, older ones are only in Hive
+  void _cleanupOldCompletedTasks() {
+    final cutoffTime = DateTime.now().subtract(const Duration(hours: 1));
+    final newTasks = Map<String, DownloadTask>.from(state.tasks);
+
+    final toRemove = <String>[];
+    for (final entry in newTasks.entries) {
+      final task = entry.value;
+      // Only remove completed tasks older than 1 hour
+      if (task.status == DownloadStatus.completed &&
+          task.startedAt.isBefore(cutoffTime)) {
+        toRemove.add(entry.key);
+      }
+    }
+
+    if (toRemove.isNotEmpty) {
+      for (final id in toRemove) {
+        newTasks.remove(id);
+      }
+      state = state.copyWith(tasks: newTasks);
+      if (kDebugMode) {
+        print(
+          'DownloadService: Cleaned up ${toRemove.length} old completed tasks from memory',
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
+    _cleanupTimer?.cancel();
     _currentDownload?.cancel();
     _httpClient?.close();
     super.dispose();

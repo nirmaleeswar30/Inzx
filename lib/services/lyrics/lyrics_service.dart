@@ -7,13 +7,12 @@ import 'package:inzx/data/repositories/music_repository.dart'
     show CacheAnalytics;
 import 'lyrics_models.dart';
 import 'lrclib_provider.dart';
-import 'genius_provider.dart';
 
 /// Provider names enum for type safety
-enum ProviderName { lrclib, genius }
+enum ProviderName { lrclib }
 
 /// All available provider names in order
-const providerNames = [ProviderName.lrclib, ProviderName.genius];
+const providerNames = [ProviderName.lrclib];
 
 /// Extension to get display name
 extension ProviderNameExt on ProviderName {
@@ -21,8 +20,6 @@ extension ProviderNameExt on ProviderName {
     switch (this) {
       case ProviderName.lrclib:
         return 'LRCLib';
-      case ProviderName.genius:
-        return 'Genius';
     }
   }
 }
@@ -68,10 +65,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
   final Map<ProviderName, LyricsProvider> _providers;
 
   LyricsNotifier()
-    : _providers = {
-        ProviderName.lrclib: LRCLibProvider(),
-        ProviderName.genius: GeniusProvider(),
-      },
+    : _providers = {ProviderName.lrclib: LRCLibProvider()},
       super(const LyricsState());
 
   /// Fetch lyrics for a track from all providers (with caching)

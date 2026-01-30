@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/design_system/design_system.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/services/cache/hive_service.dart';
@@ -15,6 +16,14 @@ InzxAudioHandler? audioHandler;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize environment variables
+  try {
+    await dotenv.load(fileName: ".env");
+    debugPrint('✅ Dotenv initialized successfully');
+  } catch (e) {
+    debugPrint('⚠️ Dotenv initialization failed: $e');
+  }
 
   // Initialize Hive for caching
   try {

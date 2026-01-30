@@ -51,7 +51,17 @@ final jamsSyncControllerProvider = Provider<JamsSyncController?>((ref) {
   if (jamsService == null) return null;
 
   final audioPlayer = AudioPlayerService.instance;
-  return JamsSyncController(jamsService: jamsService, audioPlayer: audioPlayer);
+  final controller = JamsSyncController(
+    jamsService: jamsService,
+    audioPlayer: audioPlayer,
+  );
+
+  // Dispose the controller when the provider is disposed
+  ref.onDispose(() {
+    controller.dispose();
+  });
+
+  return controller;
 });
 
 /// Current Jam session (null if not in a session)

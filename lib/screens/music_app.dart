@@ -126,7 +126,9 @@ class _MusicAppState extends ConsumerState<MusicApp>
                 // Space for mini player + nav (combined at bottom)
                 SizedBox(
                   height:
-                      (hasCurrentTrack ? 72 : 0) +
+                      (hasCurrentTrack
+                          ? 60
+                          : 0) + // Mini player height (reduced to prevent gap)
                       85 +
                       MediaQuery.of(context).padding.bottom,
                 ),
