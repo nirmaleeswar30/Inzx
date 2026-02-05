@@ -205,6 +205,8 @@ class YTMDrawerState extends State<YTMDrawer>
   @override
   Widget build(BuildContext context) {
     // Calculate visual transformations based on drag progress
+    final screenHeight = MediaQuery.of(context).size.height;
+    final drawerTopOffset = screenHeight * (1.0 - _dragProgress);
     final albumScale = 1.0 - (_dragProgress * 0.15); // Scale down to 85%
     final backgroundDim = _dragProgress * 0.3; // Darken by 30%
     final upNextOpacity = _dragProgress;
@@ -236,8 +238,8 @@ class YTMDrawerState extends State<YTMDrawer>
             Positioned(
               left: 0,
               right: 0,
-              bottom: 0,
-              height: MediaQuery.of(context).size.height * _dragProgress,
+              top: drawerTopOffset,
+              height: screenHeight,
               child: Opacity(
                 opacity: upNextOpacity,
                 child: Container(

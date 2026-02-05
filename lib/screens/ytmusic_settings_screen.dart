@@ -38,7 +38,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       appBar: AppBar(
         backgroundColor: isDark ? Colors.black : Colors.white,
         title: Text(
-          'YouTube Music',
+          'Settings',
           style: TextStyle(color: isDark ? Colors.white : Colors.black),
         ),
         leading: IconButton(
