@@ -7,12 +7,15 @@ import 'core/providers/theme_provider.dart';
 import 'core/services/cache/hive_service.dart';
 import 'services/audio_handler.dart';
 import 'services/notification_service.dart';
+import 'services/shorebird_update_service.dart';
 import 'services/supabase_config.dart';
 import 'providers/providers.dart';
 import 'providers/repository_providers.dart';
 import 'screens/music_app.dart';
 
 InzxAudioHandler? audioHandler;
+final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -91,7 +94,37 @@ class _InzxAppState extends ConsumerState<InzxApp> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final cacheWarmer = ref.read(cacheWarmingServiceProvider);
       cacheWarmer.warmCache(preTrendingMusic: true, prelikedSongs: true);
+      // ignore: unawaited_futures
+      ShorebirdUpdateService.instance.checkForUpdates().then((didUpdate) {
+        if (didUpdate) {
+          _showUpdateBanner();
+        }
+      });
     });
+  }
+
+  void _showUpdateBanner() {
+    final messenger = rootScaffoldMessengerKey.currentState;
+    if (messenger == null) return;
+    messenger.clearMaterialBanners();
+    messenger.showMaterialBanner(
+      MaterialBanner(
+        content: const Text('Update downloaded. Restart the app to apply.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              // Close the app so the update applies on next launch.
+              SystemNavigator.pop();
+            },
+            child: const Text('Restart'),
+          ),
+          TextButton(
+            onPressed: () => messenger.hideCurrentMaterialBanner(),
+            child: const Text('Dismiss'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -109,6 +142,7 @@ class _InzxAppState extends ConsumerState<InzxApp> {
     return MaterialApp(
       title: 'Inzx',
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: rootScaffoldMessengerKey,
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: toFlutterThemeMode(themeMode),

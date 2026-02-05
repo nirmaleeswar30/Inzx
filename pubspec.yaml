@@ -63,6 +63,7 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   audio_metadata_reader: ^1.4.2
   flutter_dotenv: ^6.0.0
+  shorebird_code_push: ^2.0.5
 
 dev_dependencies:
   flutter_test:
@@ -90,6 +91,7 @@ flutter:
     - assets/icon/
     - assets/splash/
     - .env
+    - shorebird.yaml
 
 # Flutter Launcher Icons configuration
 flutter_launcher_icons:

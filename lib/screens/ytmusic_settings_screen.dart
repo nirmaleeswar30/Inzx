@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -6,6 +7,7 @@ import '../providers/providers.dart';
 import '../providers/repository_providers.dart';
 import '../services/auth/google_auth_service.dart';
 import '../services/ytmusic_sync_service.dart';
+import 'package:shorebird_code_push/shorebird_code_push.dart';
 import 'ytmusic_login_screen.dart';
 import 'audio_settings_screen.dart';
 
@@ -128,6 +130,11 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
 
         // Audio & Downloads settings (also show when logged out)
         _buildAudioDownloadsSection(isDark),
+
+        const SizedBox(height: 24),
+
+        // OTA debug info
+        _buildOtaDebugSection(isDark),
       ],
     );
   }
@@ -166,6 +173,11 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
 
         const SizedBox(height: 24),
 
+        // OTA debug info
+        _buildOtaDebugSection(isDark),
+
+        const SizedBox(height: 24),
+
         // Library stats
         _buildLibraryStats(isDark),
 
@@ -174,6 +186,137 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
         // Logout button
         _buildLogoutButton(isDark),
       ],
+    );
+  }
+
+  /// OTA debug section - shows current patch number
+  Widget _buildOtaDebugSection(bool isDark) {
+    final updater = ShorebirdUpdater();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Iconsax.info_circle,
+                size: 20,
+                color: isDark ? Colors.white70 : Colors.black54,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'OTA Debug',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Release build: ${kReleaseMode ? "yes" : "no"}',
+            style: TextStyle(
+              fontSize: 13,
+              color: isDark ? Colors.white60 : Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Updater available: ${updater.isAvailable ? "yes" : "no"}',
+            style: TextStyle(
+              fontSize: 13,
+              color: isDark ? Colors.white60 : Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 10),
+          FutureBuilder<Patch?>(
+            future: updater.readCurrentPatch(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Text(
+                  'Current patch: loading...',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.white60 : Colors.black54,
+                  ),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return Text(
+                  'Current patch: error',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.white60 : Colors.black54,
+                  ),
+                );
+              }
+
+              final patch = snapshot.data;
+              final patchLabel = patch == null ? 'none' : '#${patch.number}';
+              return Text(
+                'Current patch: $patchLabel',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? Colors.white60 : Colors.black54,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 6),
+          FutureBuilder<Patch?>(
+            future: updater.readNextPatch(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Text(
+                  'Next patch: loading...',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.white60 : Colors.black54,
+                  ),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return Text(
+                  'Next patch: error',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.white60 : Colors.black54,
+                  ),
+                );
+              }
+
+              final patch = snapshot.data;
+              final patchLabel = patch == null ? 'none' : '#${patch.number}';
+              return Text(
+                'Next patch: $patchLabel',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? Colors.white60 : Colors.black54,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
