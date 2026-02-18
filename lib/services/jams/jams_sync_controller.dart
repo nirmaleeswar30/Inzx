@@ -75,11 +75,20 @@ class JamsSyncController {
   StreamSubscription? _trackCompleteSubscription;
   late final WidgetsBindingObserver _lifecycleObserver = _JamsLifecycleObserver(
     onStateChanged: (state) {
-      if (state == AppLifecycleState.resumed && _jamsService.isInSession) {
+      if (!_jamsService.isInSession) return;
+
+      if (state == AppLifecycleState.resumed) {
         if (kDebugMode) {
           print('JamsSyncController: App resumed, requesting state sync');
         }
         unawaited(_jamsService.requestStateSync(reason: 'app_resumed'));
+        unawaited(_jamsService.keepAlive(reason: 'app_resumed'));
+      } else if (state == AppLifecycleState.paused ||
+          state == AppLifecycleState.inactive) {
+        if (kDebugMode) {
+          print('JamsSyncController: App backgrounded, sending keepalive');
+        }
+        unawaited(_jamsService.keepAlive(reason: 'app_backgrounded'));
       }
     },
   );

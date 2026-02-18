@@ -20,6 +20,9 @@ class JamsBackgroundService with WidgetsBindingObserver {
   bool _isInBackground = false;
   bool _isServiceRunning = false;
   int _currentParticipantCount = 1;
+  dynamic _attachedService;
+  Timer? _backgroundKeepAliveTimer;
+  static const Duration _backgroundKeepAliveInterval = Duration(seconds: 12);
 
   /// Initialize the background service
   Future<void> initialize() async {
@@ -38,14 +41,18 @@ class JamsBackgroundService with WidgetsBindingObserver {
     );
   }
 
-  /// Attach to a JamsService instance (no-op in simplified version)
+  /// Attach to a JamsService instance for background keepalive callbacks.
   void attachService(dynamic service) {
-    // No-op - the native service only keeps the process alive
+    _attachedService = service;
+    if (_isInBackground) {
+      _startBackgroundKeepAlive();
+    }
   }
 
   /// Detach from the JamsService
   void detachService() {
-    stopService();
+    _attachedService = null;
+    _stopBackgroundKeepAlive();
   }
 
   /// Called when entering a Jam session - start native foreground service
@@ -105,11 +112,14 @@ class JamsBackgroundService with WidgetsBindingObserver {
     jamsLog('Session left', tag: 'BackgroundService');
 
     _currentParticipantCount = 1;
+    _stopBackgroundKeepAlive();
+    _attachedService = null;
     await stopService();
   }
 
   /// Stop the background service
   Future<void> stopService() async {
+    _stopBackgroundKeepAlive();
     if (_nativeBridge.isSupported && _isServiceRunning) {
       await _nativeBridge.stopService();
       _isServiceRunning = false;
@@ -148,15 +158,55 @@ class JamsBackgroundService with WidgetsBindingObserver {
       case AppLifecycleState.paused:
       case AppLifecycleState.inactive:
         _isInBackground = true;
+        _startBackgroundKeepAlive();
+        unawaited(_requestKeepAlive('app_backgrounded'));
         break;
 
       case AppLifecycleState.resumed:
         _isInBackground = false;
+        _stopBackgroundKeepAlive();
+        unawaited(_requestKeepAlive('app_resumed'));
         break;
 
       case AppLifecycleState.detached:
       case AppLifecycleState.hidden:
         break;
+    }
+  }
+
+  void _startBackgroundKeepAlive() {
+    if (_backgroundKeepAliveTimer != null) return;
+    if (_attachedService == null) return;
+
+    _backgroundKeepAliveTimer = Timer.periodic(_backgroundKeepAliveInterval, (
+      _,
+    ) {
+      unawaited(_requestKeepAlive('background_tick'));
+    });
+
+    jamsLog('Background keepalive timer started', tag: 'BackgroundService');
+  }
+
+  void _stopBackgroundKeepAlive() {
+    _backgroundKeepAliveTimer?.cancel();
+    _backgroundKeepAliveTimer = null;
+  }
+
+  Future<void> _requestKeepAlive(String reason) async {
+    final service = _attachedService;
+    if (service == null) return;
+    try {
+      jamsLog(
+        'Requesting keepalive from attached service (reason=$reason)',
+        tag: 'BackgroundService',
+      );
+      await service.keepAlive(reason: reason);
+      jamsLog('Keepalive requested (reason=$reason)', tag: 'BackgroundService');
+    } catch (e) {
+      jamsLog(
+        'Keepalive callback failed ($reason): $e',
+        tag: 'BackgroundService',
+      );
     }
   }
 
@@ -166,6 +216,8 @@ class JamsBackgroundService with WidgetsBindingObserver {
 
   /// Dispose the background service
   void dispose() {
+    _stopBackgroundKeepAlive();
+    _attachedService = null;
     WidgetsBinding.instance.removeObserver(this);
     _nativeBridge.dispose();
   }

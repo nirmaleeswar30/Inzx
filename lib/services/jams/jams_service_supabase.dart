@@ -41,8 +41,15 @@ class JamsService {
   static const Duration _participantDisconnectGrace = Duration(seconds: 45);
   Timer? _reconnectTimer;
   bool _isLeavingSession = false;
+  bool _isReconnectInFlight = false;
   int _reconnectAttempts = 0;
   static const int _maxReconnectDelaySeconds = 30;
+  DateTime _lastInboundRealtimeAt = DateTime.now();
+  DateTime? _lastKeepAliveReconnectAt;
+  static const Duration _maxInboundSilenceBeforeReconnect = Duration(
+    seconds: 20,
+  );
+  static const Duration _keepAliveReconnectCooldown = Duration(seconds: 25);
 
   // Monotonic state version for ordering/recovery across clients
   int _stateVersion = 0;
@@ -101,6 +108,13 @@ class JamsService {
     }
     if (version > _stateVersion) {
       _stateVersion = version;
+    }
+  }
+
+  void _markInboundRealtime(String source) {
+    _lastInboundRealtimeAt = DateTime.now();
+    if (kDebugMode) {
+      print('JamsService: inbound realtime event ($source)');
     }
   }
 
@@ -182,6 +196,7 @@ class JamsService {
   void _scheduleReconnect(String reason) {
     if (_isLeavingSession || _currentSessionCode == null) return;
     if (_reconnectTimer != null) return;
+    if (_isReconnectInFlight) return;
 
     _reconnectAttempts += 1;
     final exp = min(_reconnectAttempts, 5); // 1,2,4,8,16 then clamp
@@ -208,8 +223,15 @@ class JamsService {
 
   Future<void> _attemptReconnect(String reason) async {
     if (_isLeavingSession || _currentSessionCode == null) return;
+    if (_isReconnectInFlight) {
+      if (kDebugMode) {
+        print('JamsService: reconnect already in flight, skipping ($reason)');
+      }
+      return;
+    }
     final code = _currentSessionCode!;
 
+    _isReconnectInFlight = true;
     try {
       if (kDebugMode) {
         print('JamsService: reconnect attempt for $code (reason: $reason)');
@@ -227,6 +249,8 @@ class JamsService {
         print('JamsService: reconnect attempt failed: $e');
       }
       _scheduleReconnect('reconnect_failed');
+    } finally {
+      _isReconnectInFlight = false;
     }
   }
 
@@ -277,6 +301,7 @@ class JamsService {
       );
 
       _sessionController.add(_currentSession);
+      _backgroundService.attachService(this);
       await _backgroundService.onSessionJoined(
         sessionCode: code,
         oderId: oderId,
@@ -314,6 +339,7 @@ class JamsService {
       _isHost = false;
 
       await _joinChannel(_currentSessionCode!);
+      _backgroundService.attachService(this);
       await _backgroundService.onSessionJoined(
         sessionCode: _currentSessionCode!,
         oderId: oderId,
@@ -401,6 +427,12 @@ class JamsService {
       callback: (payload) => _handleStateSnapshot(payload),
     );
 
+    // Lightweight keepalive event for background resilience.
+    _channel!.onBroadcast(
+      event: 'heartbeat',
+      callback: (payload) => _handleHeartbeat(payload),
+    );
+
     // Track presence (who's in the session)
     _channel!.onPresenceSync((payload) => _handlePresenceSync());
     _channel!.onPresenceJoin(
@@ -417,6 +449,7 @@ class JamsService {
       }
       if (status == RealtimeSubscribeStatus.subscribed) {
         _resetReconnectState();
+        _markInboundRealtime('subscribed');
         _emitConnectionState(JamConnectionState.connected());
 
         // Track our presence
@@ -494,6 +527,7 @@ class JamsService {
     }
 
     await _backgroundService.onSessionLeft();
+    _backgroundService.detachService();
     if (kDebugMode) {
       print('JamsService: Left session $previousSessionCode');
     }
@@ -520,6 +554,103 @@ class JamsService {
         'requestedAt': DateTime.now().toIso8601String(),
       },
     );
+  }
+
+  /// Keep the realtime channel warm and force state recovery when backgrounded.
+  Future<void> keepAlive({String reason = 'manual'}) async {
+    if (_currentSessionCode == null || _isLeavingSession) {
+      if (kDebugMode) {
+        print(
+          'JamsService: keepAlive skipped (reason=$reason, inSession=${_currentSessionCode != null}, leaving=$_isLeavingSession)',
+        );
+      }
+      return;
+    }
+    if (_channel == null) {
+      if (kDebugMode) {
+        print(
+          'JamsService: keepAlive no channel, scheduling reconnect ($reason)',
+        );
+      }
+      _scheduleReconnect('keepalive_$reason');
+      return;
+    }
+
+    try {
+      final silenceDuration = DateTime.now().difference(_lastInboundRealtimeAt);
+      if (!_isHost &&
+          silenceDuration > _maxInboundSilenceBeforeReconnect &&
+          !_isLeavingSession) {
+        final now = DateTime.now();
+        final canForceReconnect =
+            _lastKeepAliveReconnectAt == null ||
+            now.difference(_lastKeepAliveReconnectAt!) >
+                _keepAliveReconnectCooldown;
+
+        if (canForceReconnect) {
+          _lastKeepAliveReconnectAt = now;
+          if (kDebugMode) {
+            print(
+              'JamsService: keepAlive detected stale inbound (${silenceDuration.inSeconds}s), forcing reconnect',
+            );
+          }
+          unawaited(_attemptReconnect('stale_inbound_keepalive'));
+        } else if (kDebugMode) {
+          print(
+            'JamsService: keepAlive stale inbound but reconnect cooldown active (${silenceDuration.inSeconds}s)',
+          );
+        }
+      }
+
+      if (kDebugMode) {
+        print(
+          'JamsService: keepAlive send heartbeat (reason=$reason, isHost=$_isHost, stateVersion=$_lastAppliedStateVersion)',
+        );
+      }
+      await _channel!.sendBroadcastMessage(
+        event: 'heartbeat',
+        payload: {
+          'senderId': oderId,
+          'stateVersion': _lastAppliedStateVersion,
+          'reason': reason,
+          'sentAt': DateTime.now().toIso8601String(),
+        },
+      );
+
+      if (_isHost) {
+        if (kDebugMode) {
+          print('JamsService: keepAlive host snapshot broadcast ($reason)');
+        }
+        await _broadcastStateSnapshot(reason: 'keepalive_$reason');
+      } else {
+        if (kDebugMode) {
+          print('JamsService: keepAlive participant state request ($reason)');
+        }
+        await requestStateSync(reason: 'keepalive_$reason');
+      }
+
+      if (kDebugMode) {
+        print('JamsService: keepAlive completed ($reason)');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('JamsService: keepAlive failed ($reason): $e');
+      }
+      _scheduleReconnect('keepalive_failed_$reason');
+    }
+  }
+
+  void _handleHeartbeat(Map<String, dynamic> payload) {
+    final senderId = payload['senderId'] as String?;
+    if (senderId == null || senderId == oderId) return;
+    _markInboundRealtime('heartbeat');
+    if (kDebugMode) {
+      final reason = payload['reason'] as String? ?? 'unknown';
+      final version = _extractStateVersion(payload);
+      print(
+        'JamsService: Heartbeat received from $senderId (reason=$reason, v=$version)',
+      );
+    }
   }
 
   Future<void> _broadcastStateSnapshot({
@@ -952,6 +1083,7 @@ class JamsService {
     if (controllerId == oderId) {
       return;
     }
+    _markInboundRealtime('playback');
 
     if (kDebugMode) {
       print(
@@ -1011,6 +1143,7 @@ class JamsService {
   String? _lastBroadcastTrackTitle;
 
   void _handleQueueBroadcast(Map<String, dynamic> payload) {
+    _markInboundRealtime('queue');
     try {
       final incomingVersion = _extractStateVersion(payload);
       if (_isStaleStateVersion(incomingVersion)) {
@@ -1049,6 +1182,7 @@ class JamsService {
   }
 
   void _handleHostTransfer(Map<String, dynamic> payload) {
+    _markInboundRealtime('host_transfer');
     try {
       final incomingVersion = _extractStateVersion(payload);
       if (_isStaleStateVersion(incomingVersion)) {
@@ -1106,6 +1240,7 @@ class JamsService {
   }
 
   void _handlePermissionUpdate(Map<String, dynamic> payload) {
+    _markInboundRealtime('permission_update');
     try {
       final incomingVersion = _extractStateVersion(payload);
       if (_isStaleStateVersion(incomingVersion)) {
@@ -1171,9 +1306,11 @@ class JamsService {
     _channel?.unsubscribe();
     _channel = null;
     unawaited(_backgroundService.onSessionLeft());
+    _backgroundService.detachService();
   }
 
   void _handleStateRequest(Map<String, dynamic> payload) {
+    _markInboundRealtime('state_request');
     if (!_isHost || _channel == null || _currentSession == null) return;
 
     final requesterId = payload['requesterId'] as String?;
@@ -1191,6 +1328,7 @@ class JamsService {
   }
 
   void _handleStateSnapshot(Map<String, dynamic> payload) {
+    _markInboundRealtime('state_snapshot');
     final senderId = payload['senderId'] as String?;
     if (senderId == oderId) return;
 
@@ -1248,6 +1386,7 @@ class JamsService {
 
   void _handlePresenceSync() {
     if (_channel == null) return;
+    _markInboundRealtime('presence_sync');
 
     final presenceState = _channel!.presenceState();
 
@@ -1357,6 +1496,7 @@ class JamsService {
   }
 
   void _handlePresenceJoin(List<Presence> newPresences) async {
+    _markInboundRealtime('presence_join');
     try {
       String? hostId;
       String? hostName;
@@ -1424,6 +1564,7 @@ class JamsService {
   }
 
   void _handlePresenceLeave(List<Presence> leftPresences) {
+    _markInboundRealtime('presence_leave');
     try {
       String? disconnectedHostId;
       for (final presence in leftPresences) {
@@ -1499,6 +1640,7 @@ class JamsService {
   void dispose() {
     _isLeavingSession = true;
     _cancelReconnectTimer();
+    _backgroundService.detachService();
     leaveSession();
     _cancelHostDisconnectTimer();
     _cancelAllParticipantDisconnectTimers();
