@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/widgets.dart';
 import '../audio_player_service.dart';
 import '../../models/models.dart';
 import 'jams_models.dart';
@@ -34,6 +35,8 @@ class JamsSyncController {
     required AudioPlayerService audioPlayer,
   }) : _jamsService = jamsService,
        _audioPlayer = audioPlayer {
+    WidgetsBinding.instance.addObserver(_lifecycleObserver);
+
     // Listen for host role changes to restart sync
     _hostRoleChangeSubscription = _jamsService.hostRoleChangeStream.listen((
       isNowHost,
@@ -70,6 +73,16 @@ class JamsSyncController {
   }
 
   StreamSubscription? _trackCompleteSubscription;
+  late final WidgetsBindingObserver _lifecycleObserver = _JamsLifecycleObserver(
+    onStateChanged: (state) {
+      if (state == AppLifecycleState.resumed && _jamsService.isInSession) {
+        if (kDebugMode) {
+          print('JamsSyncController: App resumed, requesting state sync');
+        }
+        unawaited(_jamsService.requestStateSync(reason: 'app_resumed'));
+      }
+    },
+  );
 
   /// Start syncing - call when joining/creating a session
   void startSync() {
@@ -798,5 +811,17 @@ class JamsSyncController {
     _hostRoleChangeSubscription = null;
     _permissionChangeSubscription?.cancel();
     _permissionChangeSubscription = null;
+    WidgetsBinding.instance.removeObserver(_lifecycleObserver);
+  }
+}
+
+class _JamsLifecycleObserver with WidgetsBindingObserver {
+  final void Function(AppLifecycleState state) onStateChanged;
+
+  _JamsLifecycleObserver({required this.onStateChanged});
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    onStateChanged(state);
   }
 }

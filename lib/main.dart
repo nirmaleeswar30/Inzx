@@ -6,6 +6,7 @@ import 'core/design_system/design_system.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/services/cache/hive_service.dart';
 import 'services/audio_handler.dart';
+import 'services/jams/jams_background_service_native.dart';
 import 'services/notification_service.dart';
 import 'services/shorebird_update_service.dart';
 import 'services/supabase_config.dart';
@@ -57,7 +58,12 @@ void main() async {
   } catch (e) {
     debugPrint('⚠️ Notification service initialization failed: $e');
   }
-
+  // Initialize native bridge for Jams foreground service (Android)
+  try {
+    await JamsBackgroundService.instance.initialize();
+  } catch (e) {
+    debugPrint('Jams background service initialization failed: $e');
+  }
   // Set preferred orientations
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,

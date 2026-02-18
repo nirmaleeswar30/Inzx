@@ -91,6 +91,17 @@ final jamsErrorProvider = StreamProvider<String>((ref) {
   return jamsService.errorStream;
 });
 
+/// Jams realtime connection status stream
+final jamsConnectionStateProvider = StreamProvider<JamConnectionState>((ref) {
+  final jamsService = ref.watch(jamsServiceProvider);
+  if (jamsService == null) {
+    return Stream.value(
+      JamConnectionState.disconnected(reason: 'service_unavailable'),
+    );
+  }
+  return jamsService.connectionStateStream;
+});
+
 /// Whether user is currently in a Jam session
 final isInJamSessionProvider = Provider<bool>((ref) {
   final session = ref.watch(currentJamSessionProvider).valueOrNull;

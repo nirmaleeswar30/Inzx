@@ -8,6 +8,8 @@
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
     
     <!-- Notification permission for download progress (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
@@ -59,6 +61,12 @@
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </service>
+
+        <!-- Jams foreground service to keep sync alive in background -->
+        <service
+            android:name=".jams.JamsForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
         
         <!-- Audio service notification configuration -->
         <meta-data

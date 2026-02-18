@@ -317,3 +317,55 @@ class JamMessage {
     );
   }
 }
+
+/// Realtime connectivity state for Jams session sync.
+enum JamConnectionStatus { connected, reconnecting, disconnected }
+
+class JamConnectionState extends Equatable {
+  final JamConnectionStatus status;
+  final int attempt;
+  final int nextRetrySeconds;
+  final String reason;
+  final DateTime updatedAt;
+
+  const JamConnectionState({
+    required this.status,
+    this.attempt = 0,
+    this.nextRetrySeconds = 0,
+    this.reason = '',
+    required this.updatedAt,
+  });
+
+  factory JamConnectionState.connected() => JamConnectionState(
+    status: JamConnectionStatus.connected,
+    updatedAt: DateTime.now(),
+  );
+
+  factory JamConnectionState.reconnecting({
+    required int attempt,
+    required int nextRetrySeconds,
+    required String reason,
+  }) => JamConnectionState(
+    status: JamConnectionStatus.reconnecting,
+    attempt: attempt,
+    nextRetrySeconds: nextRetrySeconds,
+    reason: reason,
+    updatedAt: DateTime.now(),
+  );
+
+  factory JamConnectionState.disconnected({String reason = 'session_ended'}) =>
+      JamConnectionState(
+        status: JamConnectionStatus.disconnected,
+        reason: reason,
+        updatedAt: DateTime.now(),
+      );
+
+  @override
+  List<Object?> get props => [
+    status,
+    attempt,
+    nextRetrySeconds,
+    reason,
+    updatedAt,
+  ];
+}

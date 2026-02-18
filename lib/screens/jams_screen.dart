@@ -44,6 +44,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
     final googleAuth = ref.watch(googleAuthStateProvider);
     final currentSession = ref.watch(currentJamSessionProvider).valueOrNull;
     final jamsUIState = ref.watch(jamsNotifierProvider);
+    final connectionState = ref.watch(jamsConnectionStateProvider).valueOrNull;
     final albumColors = ref.watch(albumColorsProvider);
 
     // Use dynamic colors if available, but respect light/dark mode
@@ -75,7 +76,12 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
       ),
       body: googleAuth.isSignedIn
           ? currentSession != null
-                ? _buildActiveSession(isDark, currentSession, albumColors)
+                ? _buildActiveSession(
+                    isDark,
+                    currentSession,
+                    albumColors,
+                    connectionState,
+                  )
                 : _buildJoinOrCreate(isDark, jamsUIState, albumColors)
           : _buildSignInPrompt(isDark, albumColors),
     );
@@ -440,6 +446,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
     bool isDark,
     JamSession session,
     AlbumColors albumColors,
+    JamConnectionState? connectionState,
   ) {
     final isHost = ref.watch(isJamHostProvider);
     final hasAlbumColors = !albumColors.isDefault;
@@ -510,6 +517,10 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
                   isHost ? 'You\'re the host' : 'Hosted by ${session.hostName}',
                   style: TextStyle(color: secondaryColor),
                 ),
+                if (connectionState != null) ...[
+                  const SizedBox(height: 8),
+                  _buildConnectionBadge(connectionState, textColor),
+                ],
               ],
             ),
           ),
@@ -638,6 +649,68 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildConnectionBadge(JamConnectionState state, Color textColor) {
+    final (icon, label, bg, fg) = _connectionUi(state, textColor);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: fg.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: fg),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: fg,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  (IconData, String, Color, Color) _connectionUi(
+    JamConnectionState state,
+    Color fallbackText,
+  ) {
+    switch (state.status) {
+      case JamConnectionStatus.connected:
+        return (
+          Icons.wifi_rounded,
+          'Connected',
+          Colors.green.withValues(alpha: 0.14),
+          Colors.green.shade400,
+        );
+      case JamConnectionStatus.reconnecting:
+        final suffix = state.nextRetrySeconds > 0
+            ? 'Retry in ${state.nextRetrySeconds}s'
+            : 'Reconnecting';
+        final label = state.attempt > 0
+            ? 'Reconnecting (${state.attempt}) · $suffix'
+            : 'Reconnecting · $suffix';
+        return (
+          Icons.sync,
+          label,
+          Colors.orange.withValues(alpha: 0.15),
+          Colors.orange.shade300,
+        );
+      case JamConnectionStatus.disconnected:
+        return (
+          Icons.wifi_off_rounded,
+          'Disconnected',
+          Colors.red.withValues(alpha: 0.14),
+          fallbackText.withValues(alpha: 0.9),
+        );
+    }
   }
 
   Widget _buildJamQueue(
