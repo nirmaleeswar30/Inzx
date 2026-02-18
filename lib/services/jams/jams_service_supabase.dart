@@ -49,6 +49,8 @@ class JamsService {
   DateTime _lastInboundRealtimeAt = DateTime.now();
   DateTime? _lastKeepAliveReconnectAt;
   DateTime? _lastBackgroundEntryReconnectAt;
+  DateTime? _lastParticipantStateRequestAt;
+  DateTime? _lastHostSnapshotBroadcastAt;
   // Tuned for faster background recovery.
   static const Duration _maxInboundSilenceBeforeReconnect = Duration(
     seconds: 8,
@@ -62,6 +64,18 @@ class JamsService {
   );
   static const Duration _hostBackgroundEntryReconnectCooldown = Duration(
     seconds: 8,
+  );
+  static const Duration _participantStateRequestIntervalConnected = Duration(
+    seconds: 12,
+  );
+  static const Duration _participantStateRequestIntervalRecovering = Duration(
+    seconds: 4,
+  );
+  static const Duration _hostSnapshotBroadcastIntervalConnected = Duration(
+    seconds: 12,
+  );
+  static const Duration _hostSnapshotBroadcastIntervalRecovering = Duration(
+    seconds: 4,
   );
 
   // Monotonic state version for ordering/recovery across clients
@@ -637,6 +651,13 @@ class JamsService {
     }
 
     try {
+      final isCriticalKeepAliveReason =
+          reason == 'app_backgrounded' ||
+          reason == 'app_resumed' ||
+          reason.startsWith('status_') ||
+          reason.contains('stale') ||
+          reason.contains('fastpath');
+
       if (reason == 'app_backgrounded' &&
           !_isLeavingSession &&
           !_isReconnectInFlight) {
@@ -706,15 +727,49 @@ class JamsService {
       );
 
       if (_isHost) {
-        if (kDebugMode) {
-          print('JamsService: keepAlive host snapshot broadcast ($reason)');
+        final hasRemoteParticipants = _participants.keys.any(
+          (id) => id != oderId,
+        );
+        final hostSnapshotInterval =
+            _connectionState.status == JamConnectionStatus.connected
+            ? _hostSnapshotBroadcastIntervalConnected
+            : _hostSnapshotBroadcastIntervalRecovering;
+        final now = DateTime.now();
+        final shouldBroadcastSnapshot =
+            hasRemoteParticipants &&
+            (isCriticalKeepAliveReason ||
+                _connectionState.status != JamConnectionStatus.connected ||
+                _lastHostSnapshotBroadcastAt == null ||
+                now.difference(_lastHostSnapshotBroadcastAt!) >
+                    hostSnapshotInterval);
+
+        if (shouldBroadcastSnapshot) {
+          _lastHostSnapshotBroadcastAt = now;
+          if (kDebugMode) {
+            print('JamsService: keepAlive host snapshot broadcast ($reason)');
+          }
+          await _broadcastStateSnapshot(reason: 'keepalive_$reason');
         }
-        await _broadcastStateSnapshot(reason: 'keepalive_$reason');
       } else {
-        if (kDebugMode) {
-          print('JamsService: keepAlive participant state request ($reason)');
+        final participantRequestInterval =
+            _connectionState.status == JamConnectionStatus.connected
+            ? _participantStateRequestIntervalConnected
+            : _participantStateRequestIntervalRecovering;
+        final now = DateTime.now();
+        final shouldRequestState =
+            isCriticalKeepAliveReason ||
+            silenceDuration > const Duration(seconds: 4) ||
+            _lastParticipantStateRequestAt == null ||
+            now.difference(_lastParticipantStateRequestAt!) >
+                participantRequestInterval;
+
+        if (shouldRequestState) {
+          _lastParticipantStateRequestAt = now;
+          if (kDebugMode) {
+            print('JamsService: keepAlive participant state request ($reason)');
+          }
+          await requestStateSync(reason: 'keepalive_$reason');
         }
-        await requestStateSync(reason: 'keepalive_$reason');
       }
 
       if (kDebugMode) {
@@ -1425,6 +1480,11 @@ class JamsService {
 
     final incomingVersion = _extractStateVersion(payload);
     if (_isStaleStateVersion(incomingVersion)) {
+      return;
+    }
+    final snapshotReason = payload['reason'] as String? ?? '';
+    if (incomingVersion == _lastAppliedStateVersion &&
+        snapshotReason.startsWith('keepalive_')) {
       return;
     }
 
