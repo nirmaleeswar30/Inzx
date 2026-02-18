@@ -2,19 +2,31 @@
 	<img src="assets/icon/logo.png" alt="Inzx Logo" width="200"/>
 <h1>Inzx</h1>
 
-**A modern YouTube Music client with dynamic theming and real-time Jam sessions**
+*A modern YouTube Music client with dynamic theming and real-time Jam sessions*
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.10.3-02569B?logo=flutter)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.10.3-0175C2?logo=dart)](https://dart.dev)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-[Features](#-features) • [Screenshots](#-screenshots) • [Installation](#-installation) • [Build](#-building-from-source) • [Tech Stack](#-tech-stack) • [Contributing](#-contributing)
+
+[Features](#features) • [Screenshots](#screenshots) • [Installation](#installation) • [Development](#development) • [Contributing](#contributing)
+
 
 </div>
 
----
+> [!WARNING]
+> Inzx is only available on the platforms listed here. It is not on the Play Store or any other websites claiming to provide official releases.  
+> 
+> If we ever publish Inzx on any additional platforms, it will be announced and updated here. Please avoid downloading unofficial or modified versions for your safety.
 
-## ✨ Features
+<div align="center">
+
+[<img src="assets/badge-obtainium.png" alt="Obtainium" height="40">](https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/nirmaleeswar30/Inzx/)⠀
+[<img src="assets/badge-github.png" alt="Get it on GitHub" height="40">](https://github.com/nirmaleeswar30/Inzx/releases/latest)⠀⠀
+
+</div>
+
+## Features
 
 ### 🎧 Music Playback
 - **YouTube Music Integration** - Stream millions of songs from YouTube Music
@@ -51,37 +63,61 @@
 - **No Tracking** - Your listening habits stay private
 - **Optional Cloud Sync** - Choose when to connect
 
----
 
-## 📱 Screenshots
+## Screenshots
 
 <div align="center">
-
-| Home | Now Playing | Library | Jams |
-|------|-------------|---------|------|
-| ![Home](./.github/screenshots/preview-home.png) | ![Now Playing](./.github/screenshots/preview-nowplaying.png) | ![Library](./.github/screenshots/preview-library.png) | ![Jams](./.github/screenshots/preview-jam.png) |
-
-| Search | Playlist | Folders | Settings |
-|--------|----------|-----------|----------|
-| ![Search](./.github/screenshots/preview-search.png) | ![Playlist](./.github/screenshots/preview-playlist.png) | ![Folders](./.github/screenshots/preview-folders.png) | ![Lyrics](./.github/screenshots/preview-lyrics.png) |
-
+<table>
+<tr>
+<td align="center" width="25%">
+<img src="./.github/screenshots/preview-home.png" alt="Home" width="180" height="360" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+<br/><b>Home</b>
+</td>
+<td align="center" width="25%">
+<img src="./.github/screenshots/preview-nowplaying.png" alt="Now Playing" width="180" height="360" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+<br/><b>Now Playing</b>
+</td>
+<td align="center" width="25%">
+<img src="./.github/screenshots/preview-library.png" alt="Library" width="180" height="360" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+<br/><b>Library</b>
+</td>
+<td align="center" width="25%">
+<img src="./.github/screenshots/preview-jam.png" alt="Jams" width="180" height="360" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+<br/><b>Jams</b>
+</td>
+</tr>
+<tr>
+<td align="center" width="25%">
+<img src="./.github/screenshots/preview-search.png" alt="Search" width="180" height="360" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+<br/><b>Search</b>
+</td>
+<td align="center" width="25%">
+<img src="./.github/screenshots/preview-playlist.png" alt="Playlist" width="180" height="360" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+<br/><b>Playlist</b>
+</td>
+<td align="center" width="25%">
+<img src="./.github/screenshots/preview-folders.png" alt="Folders" width="180" height="360" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+<br/><b>Folders</b>
+</td>
+<td align="center" width="25%">
+<img src="./.github/screenshots/preview-lyrics.png" alt="Lyrics" width="180" height="360" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+<br/><b>Lyrics</b>
+</td>
+</tr>
+</table>
 </div>
 
----
+## Installation
 
-## 🚀 Installation
-
-### Download APK
+#### Download from Github Releases
 Download the latest release from the [Releases](../../releases) page.
 
-### Install via ADB
+#### Installation via ADB Commands
 ```bash
 adb install app-release.apk
 ```
 
----
-
-## 🛠️ Building from Source
+## Building from Source
 
 ### Prerequisites
 - **Flutter SDK** (3.10.3 or higher)
@@ -164,34 +200,47 @@ Output files:
 - APK: `build/app/outputs/flutter-apk/app-release.apk`
 - App Bundle: `build/app/outputs/bundle/release/app-release.aab`
 
----
+### Testing
 
-## 🏗️ Tech Stack
+```bash
+# Run all tests
+flutter test
 
-### Core
+# Run with coverage
+flutter test --coverage
+
+# Run integration tests
+flutter drive --target=test_driver/app.dart
+```
+
+## Architecture
+
+### 🏗️ Tech Stack
+
+#### Core
 - **Flutter** - UI framework
 - **Dart** - Programming language
 - **Riverpod** - State management with code generation
 
-### Data & Storage
+#### Data & Storage
 - **Hive** - Fast, lightweight NoSQL database for caching
 - **Flutter Secure Storage** - Encrypted credentials storage
 - **Supabase** - Real-time backend for Jams feature
 - **Shared Preferences** - Local settings storage
 
-### Audio
+#### Audio
 - **just_audio** - Advanced audio playback
 - **audio_service** - Background playback and media controls
 - **audio_session** - Audio focus and session management
 - **youtube_explode_dart** - YouTube stream extraction
 
-### UI & Design
+#### UI & Design
 - **Material Design 3** - Modern design language
 - **Iconsax** - Beautiful icon set
 - **Cached Network Image** - Optimized image loading
 - **Palette Generator** - Dynamic color extraction from artwork
 
-### Features
+#### Features
 - **Google Sign-In** - YouTube Music authentication
 - **WebView** - YT Music cookie-based login
 - **Permission Handler** - Runtime permissions
@@ -199,9 +248,7 @@ Output files:
 - **Share Plus** - Content sharing
 - **Flutter Local Notifications** - Download progress notifications
 
----
-
-## 📁 Project Structure
+### 📁 Project Structure
 
 ```
 lib/
@@ -242,115 +289,72 @@ lib/
     └── ...
 ```
 
----
 
-## 🎯 Key Features Explained
+## Key Features Explained
 
-### Jams (Collaborative Listening)
+### 👥 Jams (Collaborative Listening)
 
 Jams allows multiple users to listen to music together in real-time with synchronized playback.
 
-**Architecture:**
-- **Supabase Realtime** - WebSocket-based real-time communication
-- **JamsSyncController** - Bidirectional sync between host and participants
-- **Conflict Resolution** - "Last controller wins" strategy
-- **Permission System** - Host can grant control to specific participants
+**How it works:**
+- **Supabase Realtime** — WebSocket-based real-time communication
+- **JamsSyncController** — Bidirectional sync between host and participants
+- **Conflict Resolution** — "Last controller wins" strategy
+- **Permission System** — Host can grant control to specific participants
 
-**Features:**
-- ✅ Real-time playback synchronization (position, play/pause, track changes)
-- ✅ Shared queue with drag-to-reorder
-- ✅ Auto-fetch radio tracks when queue runs low
-- ✅ Multiple controllers with permission-based access
-- ✅ Drift correction for perfect sync across devices
+**What's supported:**
+- [x] Real-time playback synchronization (position, play/pause, track changes)
+- [x] Shared queue with drag-to-reorder
+- [x] Auto-fetch radio tracks when queue runs low
+- [x] Multiple controllers with permission-based access
+- [x] Drift correction for perfect sync across devices
+- [x] Background synchronization
 
-### Offline-First Architecture
+##
 
-**Smart Caching Strategy:**
+### 📶 Offline-First Architecture
+
+Audio is streamed from YouTube and cached simultaneously, so tracks you've played before are available instantly — even without a connection.
+
+**Caching strategy:**
 1. Stream audio from YouTube while simultaneously caching
 2. Automatically serve from cache on subsequent plays
 3. Prioritize cached content when offline
 4. Intelligent cache management to optimize storage
 
-**Benefits:**
-- Instant playback of frequently played tracks
-- Seamless offline experience
-- Reduced data usage
-- Better battery life
+**Benefits:** instant playback of frequent tracks, reduced data usage, better battery life, and a seamless offline experience.
 
-### YouTube Music Integration
+##
 
-**Login Methods:**
-1. **Google Sign-In** - Standard OAuth flow
-2. **Cookie-based** - WebView login for accounts with 2FA
+### 🎵 YouTube Music Integration
 
-**Features:**
-- Access your YT Music library
-- Sync liked songs and playlists
-- Get personalized recommendations
-- Search entire YT Music catalog
+**Login methods:**
+1. **Google Sign-In** — Standard OAuth flow
+2. **Cookie-based** — WebView login for accounts with 2FA
 
----
+**What you get access to:**
+- Your full YT Music library
+- Liked songs and playlists sync
+- Personalized recommendations
+- The entire YT Music search catalog
 
-## 🧪 Testing
+## Development
 
-```bash
-# Run all tests
-flutter test
+### 🐛 Known Issues
 
-# Run with coverage
-flutter test --coverage
-
-# Run integration tests
-flutter drive --target=test_driver/app.dart
-```
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these guidelines:
-
-1. **Fork the repository**
-2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
-3. **Commit your changes** (`git commit -m 'Add amazing feature'`)
-4. **Push to the branch** (`git push origin feature/amazing-feature`)
-5. **Open a Pull Request**
-
-### Development Guidelines
-
-- Follow the [Dart Style Guide](https://dart.dev/guides/language/effective-dart/style)
-- Write meaningful commit messages
-- Add tests for new features
-- Update documentation as needed
-- Run `dart format .` before committing
-- Ensure `flutter analyze` passes
-
----
-
-## 🐛 Known Issues
-
-- [ ] No Background sync for jams
+- [x] ~~No Background sync for jams~~
 - [ ] No Widget support (yet)
 
----
 
-## 📝 Roadmap
+### 📝 Roadmap
 
-- [ ] **Crossfade** - Smooth transitions between tracks
+- [x] ~~**Crossfade** - Smooth transitions between tracks~~
 - [ ] **Android Auto** - Car integration
 - [ ] **Chromecast support** - Cast to speakers
 - [ ] **Desktop support** - Windows, macOS, Linux builds
 - [ ] **AI DJ Integration** - Suggest albums, music, and playlists based on user's preferences and prompts
 
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [OuterTune](https://github.com/OuterTune/OuterTune) - Kotlin based client
 - [Flutter](https://flutter.dev) - Amazing UI framework
@@ -359,14 +363,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Supabase](https://supabase.com) - Real-time backend infrastructure
 - [Iconsax](https://iconsax.io) - Beautiful icon set
 
----
+## Contributing
 
-## 📧 Contact
+Contributions are welcome! Whether it is opening an issue, bug fixes, new features, documentation improvements or document translations — all help is appreciated.
 
-Have questions or suggestions? Feel free to:
-- Open an [issue](../../issues)
-- Start a [discussion](../../discussions)
-- Reach out on social media
+Please read the [Contributing Guide](CONTRIBUTING.md) before getting started.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE)
 
 ---
 
@@ -375,5 +380,10 @@ Have questions or suggestions? Feel free to:
 **Made with ❤️ and Flutter**
 
 ⭐ Star this repo if you like it!
+
+<p>
+  <a href="../../issues">Open an Issue</a> • 
+  <a href="../../discussions">Start a Discussion</a>
+</p>
 
 </div>
