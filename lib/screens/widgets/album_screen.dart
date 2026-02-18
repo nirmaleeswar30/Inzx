@@ -170,6 +170,8 @@ class AlbumScreen extends ConsumerWidget {
     final playIcon = (isAlbumPlaying && isPlaying)
         ? Icons.pause_rounded
         : Icons.play_arrow_rounded;
+    final playButtonColor = colorScheme.primary;
+    final playIconColor = colorScheme.onPrimary;
 
     return Stack(
       children: [
@@ -186,8 +188,12 @@ class AlbumScreen extends ConsumerWidget {
                     fit: BoxFit.cover,
                     memCacheWidth: 100,
                     memCacheHeight: 100,
-                    color: Colors.black.withValues(alpha: 0.7),
-                    colorBlendMode: BlendMode.darken,
+                    color: (isDark ? Colors.black : Colors.white).withValues(
+                      alpha: isDark ? 0.7 : 0.55,
+                    ),
+                    colorBlendMode: isDark
+                        ? BlendMode.darken
+                        : BlendMode.lighten,
                   ),
                   // Gradient overlay instead of expensive BackdropFilter
                   Container(
@@ -195,11 +201,17 @@ class AlbumScreen extends ConsumerWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black.withValues(alpha: 0.4),
-                          Colors.black.withValues(alpha: 0.8),
-                          Colors.black,
-                        ],
+                        colors: isDark
+                            ? [
+                                Colors.black.withValues(alpha: 0.4),
+                                Colors.black.withValues(alpha: 0.8),
+                                Colors.black,
+                              ]
+                            : [
+                                primaryColor.withValues(alpha: 0.14),
+                                colorScheme.surface.withValues(alpha: 0.75),
+                                colorScheme.surface,
+                              ],
                         stops: const [0.0, 0.5, 1.0],
                       ),
                     ),
@@ -263,7 +275,8 @@ class AlbumScreen extends ConsumerWidget {
                             decoration: BoxDecoration(
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.4),
+                                  color: (isDark ? Colors.black : primaryColor)
+                                      .withValues(alpha: isDark ? 0.4 : 0.22),
                                   blurRadius: 20,
                                   offset: const Offset(0, 10),
                                 ),
@@ -392,12 +405,12 @@ class AlbumScreen extends ConsumerWidget {
                               Container(
                                 height: 72,
                                 width: 72,
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Colors.white,
+                                  color: playButtonColor,
                                 ),
                                 child: IconButton(
-                                  icon: Icon(playIcon, color: Colors.black),
+                                  icon: Icon(playIcon, color: playIconColor),
                                   iconSize: 42,
                                   onPressed: () {
                                     if (!isLoading &&

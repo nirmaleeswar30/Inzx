@@ -274,7 +274,7 @@ class _ArtistContent extends ConsumerWidget {
     return Stack(
       children: [
         // Dynamic background gradient
-        _buildBackground(artistData.thumbnailUrl, themeColor),
+        _buildBackground(context, artistData.thumbnailUrl, themeColor),
 
         Column(
           children: [
@@ -338,7 +338,14 @@ class _ArtistContent extends ConsumerWidget {
     );
   }
 
-  Widget _buildBackground(String? imageUrl, Color themeColor) {
+  Widget _buildBackground(
+    BuildContext context,
+    String? imageUrl,
+    Color themeColor,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Positioned.fill(
       child: Stack(
         fit: StackFit.expand,
@@ -349,19 +356,27 @@ class _ArtistContent extends ConsumerWidget {
               fit: BoxFit.cover,
               alignment: Alignment.topCenter,
               memCacheWidth: 100,
-              color: Colors.black.withValues(alpha: 0.5),
-              colorBlendMode: BlendMode.darken,
+              color: (isDark ? Colors.black : Colors.white).withValues(
+                alpha: isDark ? 0.5 : 0.5,
+              ),
+              colorBlendMode: isDark ? BlendMode.darken : BlendMode.lighten,
             ),
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  themeColor.withValues(alpha: 0.3),
-                  Colors.black.withValues(alpha: 0.7),
-                  Colors.black,
-                ],
+                colors: isDark
+                    ? [
+                        themeColor.withValues(alpha: 0.3),
+                        Colors.black.withValues(alpha: 0.7),
+                        Colors.black,
+                      ]
+                    : [
+                        themeColor.withValues(alpha: 0.14),
+                        colorScheme.surface.withValues(alpha: 0.75),
+                        colorScheme.surface,
+                      ],
                 stops: const [0.0, 0.4, 1.0],
               ),
             ),
@@ -380,6 +395,10 @@ class _ArtistContent extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     final topTracks = artistData.topTracks;
+    final playIconColor =
+        ThemeData.estimateBrightnessForColor(themeColor) == Brightness.dark
+        ? Colors.white
+        : Colors.black;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -525,7 +544,7 @@ class _ArtistContent extends ConsumerWidget {
                     isArtistPlaying && isPlaying
                         ? Icons.pause_rounded
                         : Icons.play_arrow_rounded,
-                    color: isDark ? Colors.white : colorScheme.onSurface,
+                    color: playIconColor,
                   ),
                   iconSize: 36,
                   onPressed: () {

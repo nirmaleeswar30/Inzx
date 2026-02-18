@@ -143,22 +143,19 @@ class _ShelfDetailsScreenState extends ConsumerState<ShelfDetailsScreen> {
     final currentTrack = ref.watch(currentTrackProvider);
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : Colors.white,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
           widget.shelf.title,
           style: TextStyle(
-            color: isDark ? Colors.white : Colors.black,
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
         leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: isDark ? Colors.white : Colors.black,
-          ),
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -172,7 +169,7 @@ class _ShelfDetailsScreenState extends ConsumerState<ShelfDetailsScreen> {
                 widget.shelf.strapline!,
                 style: TextStyle(
                   fontSize: 14,
-                  color: isDark ? Colors.white54 : Colors.black54,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -220,12 +217,12 @@ class _ShelfDetailsScreenState extends ConsumerState<ShelfDetailsScreen> {
             Icon(
               Iconsax.warning_2,
               size: 48,
-              color: isDark ? Colors.white54 : Colors.black54,
+              color: colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 16),
             Text(
               'Failed to load content',
-              style: TextStyle(color: isDark ? Colors.white54 : Colors.black54),
+              style: TextStyle(color: colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 8),
             TextButton(
@@ -316,20 +313,17 @@ class _ShelfDetailsScreenState extends ConsumerState<ShelfDetailsScreen> {
               fontWeight: isCurrentTrack ? FontWeight.bold : FontWeight.w500,
               color: isCurrentTrack
                   ? colorScheme.primary
-                  : (isDark ? Colors.white : Colors.black),
+                  : colorScheme.onSurface,
             ),
           ),
           subtitle: Text(
             track.artist,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: isDark ? Colors.white54 : Colors.black54),
+            style: TextStyle(color: colorScheme.onSurfaceVariant),
           ),
           trailing: IconButton(
-            icon: Icon(
-              Icons.more_vert,
-              color: isDark ? Colors.white54 : Colors.black54,
-            ),
+            icon: Icon(Icons.more_vert, color: colorScheme.onSurfaceVariant),
             onPressed: () => TrackOptionsSheet.show(context, track),
           ),
           onTap: () {
@@ -394,7 +388,9 @@ class _ShelfDetailsScreenState extends ConsumerState<ShelfDetailsScreen> {
                   borderRadius: BorderRadius.circular(isCircular ? 100 : 12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
+                      color: isDark
+                          ? Colors.black.withValues(alpha: 0.25)
+                          : colorScheme.shadow.withValues(alpha: 0.12),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -428,7 +424,7 @@ class _ShelfDetailsScreenState extends ConsumerState<ShelfDetailsScreen> {
             style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 14,
-              color: isDark ? Colors.white : Colors.black,
+              color: colorScheme.onSurface,
             ),
           ),
           if (item.subtitle != null)
@@ -439,7 +435,7 @@ class _ShelfDetailsScreenState extends ConsumerState<ShelfDetailsScreen> {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 12,
-                color: isDark ? Colors.white54 : Colors.black54,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
         ],
