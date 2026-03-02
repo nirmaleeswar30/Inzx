@@ -20,13 +20,22 @@ Write-Host ""
 
 # Check Java
 Write-Host "Checking Java..." -ForegroundColor Yellow
-try {
-    $javaVersion = java -version 2>&1 | Select-Object -First 1
-    Write-Host "  Found: $javaVersion" -ForegroundColor Green
-} catch {
-    Write-Host "  ERROR: Java not found. Please install Java JDK." -ForegroundColor Red
+$javaCommand = Get-Command java -ErrorAction SilentlyContinue
+if (-not $javaCommand) {
+    Write-Host "  ERROR: Java not found in PATH. Please install Java JDK." -ForegroundColor Red
     exit 1
 }
+
+# Note: `java -version` prints to stderr by design.
+# Run via cmd and redirect stderr to stdout to avoid PowerShell native error wrapping.
+$javaVersionOutput = & cmd /c """$($javaCommand.Source)"" -version 2>&1"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "  ERROR: Java command failed to run from: $($javaCommand.Source)" -ForegroundColor Red
+    exit 1
+}
+
+$javaVersion = $javaVersionOutput | Select-Object -First 1
+Write-Host "  Found: $javaVersion" -ForegroundColor Green
 
 # Check bundletool
 Write-Host "Checking bundletool..." -ForegroundColor Yellow
