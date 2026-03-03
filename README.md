@@ -104,6 +104,16 @@
 <br/><b>Lyrics</b>
 </td>
 </tr>
+<table>
+<tr>
+<td align="center" width="50%">
+<img src="./.github/screenshots/widget-4x1-preview.png" alt="Widget 4x1" width="380" height="180" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+<br/><b>Widget 4x1</b>
+<td align="center" width="50%">
+<img src="./.github/screenshots/widget-4x2-preview.png" alt="Widget 4x2" width="360" height="180" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+<br/><b>Widget 4x2</b>
+</tr>
+</table>
 </table>
 </div>
 
@@ -235,10 +245,11 @@ flutter drive --target=test_driver/app.dart
 - **youtube_explode_dart** - YouTube stream extraction
 
 #### UI & Design
-- **Material Design 3** - Modern design language
+- **Dynamic Theming** - Dynamic color theming based on active album art
 - **Iconsax** - Beautiful icon set
 - **Cached Network Image** - Optimized image loading
 - **Palette Generator** - Dynamic color extraction from artwork
+- **Widget Support** - Dynamic widget support with progress indicator and controls
 
 #### Features
 - **Google Sign-In** - YouTube Music authentication
@@ -343,7 +354,7 @@ Audio is streamed from YouTube and cached simultaneously, so tracks you've playe
 ### 🐛 Known Issues
 
 - [x] ~~No Background sync for jams~~
-- [ ] No Widget support (yet)
+- [x] ~~No Widget support (yet)~~
 
 
 ### 📝 Roadmap
