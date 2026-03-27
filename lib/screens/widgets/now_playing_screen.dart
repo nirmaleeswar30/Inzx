@@ -14,6 +14,7 @@ import '../../services/audio_player_service.dart' as player;
 import '../../services/lyrics/lyrics_service.dart';
 import '../../services/lyrics/lyrics_models.dart';
 import '../../core/design_system/colors.dart';
+import 'artist_screen.dart';
 import 'track_options_sheet.dart';
 import 'lyrics_view.dart';
 import 'ytm_drawer.dart';
@@ -484,14 +485,14 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  track.artist,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                _buildArtistLink(
+                  track,
                   style: TextStyle(
                     fontSize: 13,
                     color: textColor.withValues(alpha: 0.7),
                   ),
+                  maxLines: 1,
+                  enableMarquee: false,
                 ),
               ],
             ),
@@ -1585,37 +1586,11 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                 // Marquee for long artist names
                 SizedBox(
                   height: 22,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final textPainter = TextPainter(
-                        text: TextSpan(
-                          text: track.artist,
-                          style: TextStyle(fontSize: 16, color: secondaryColor),
-                        ),
-                        maxLines: 1,
-                        textDirection: TextDirection.ltr,
-                      )..layout();
-
-                      // Only use marquee if text overflows
-                      if (textPainter.width > constraints.maxWidth) {
-                        return Marquee(
-                          text: track.artist,
-                          style: TextStyle(fontSize: 16, color: secondaryColor),
-                          scrollAxis: Axis.horizontal,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          blankSpace: 60.0,
-                          velocity: 30.0,
-                          pauseAfterRound: const Duration(seconds: 2),
-                          startPadding: 0.0,
-                        );
-                      }
-                      return Text(
-                        track.artist,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 16, color: secondaryColor),
-                      );
-                    },
+                  child: _buildArtistLink(
+                    track,
+                    style: TextStyle(fontSize: 16, color: secondaryColor),
+                    maxLines: 1,
+                    enableMarquee: true,
                   ),
                 ),
               ],
@@ -1722,6 +1697,67 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
         ],
       ),
     );
+  }
+
+  Widget _buildArtistLink(
+    Track track, {
+    required TextStyle style,
+    required int maxLines,
+    required bool enableMarquee,
+  }) {
+    final canOpenArtist = track.artistId.isNotEmpty;
+
+    final artistLabel = enableMarquee
+        ? LayoutBuilder(
+            builder: (context, constraints) {
+              final textPainter = TextPainter(
+                text: TextSpan(text: track.artist, style: style),
+                maxLines: maxLines,
+                textDirection: TextDirection.ltr,
+              )..layout();
+
+              if (textPainter.width > constraints.maxWidth) {
+                return Marquee(
+                  text: track.artist,
+                  style: style,
+                  scrollAxis: Axis.horizontal,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  blankSpace: 60.0,
+                  velocity: 30.0,
+                  pauseAfterRound: const Duration(seconds: 2),
+                  startPadding: 0.0,
+                );
+              }
+
+              return Text(
+                track.artist,
+                maxLines: maxLines,
+                overflow: TextOverflow.ellipsis,
+                style: style,
+              );
+            },
+          )
+        : Text(
+            track.artist,
+            maxLines: maxLines,
+            overflow: TextOverflow.ellipsis,
+            style: style,
+          );
+
+    if (!canOpenArtist) {
+      return artistLabel;
+    }
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _openArtist(track),
+      child: artistLabel,
+    );
+  }
+
+  void _openArtist(Track track) {
+    if (track.artistId.isEmpty) return;
+    ArtistScreen.open(context, artistId: track.artistId, name: track.artist);
   }
 
   /// Jams icon button with active session indicator

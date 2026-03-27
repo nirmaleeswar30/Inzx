@@ -38,6 +38,15 @@ final artistPageProvider = FutureProvider.autoDispose
       );
     });
 
+final artistSubscribeBusyProvider = StateProvider.autoDispose
+    .family<bool, String>((ref, artistId) => false);
+
+final artistSubscribeOptimisticProvider = StateProvider.autoDispose
+    .family<bool?, String>((ref, artistId) => null);
+
+final artistDescriptionExpandedProvider = StateProvider.autoDispose
+    .family<bool, String>((ref, artistId) => false);
+
 /// Dynamic theme colors from artist image
 /// Uses a smaller image size to reduce CPU load on main thread
 final artistColorsProvider = FutureProvider.autoDispose.family<Color?, String?>(
@@ -258,6 +267,21 @@ class _ArtistContent extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hasCurrentTrack = currentTrack != null;
+    final authState = ref.watch(ytMusicAuthStateProvider);
+    final subscribedArtists = ref.watch(ytMusicSubscribedArtistsProvider);
+    final subscribeBusy = ref.watch(artistSubscribeBusyProvider(artistData.id));
+    final optimisticSubscribed = ref.watch(
+      artistSubscribeOptimisticProvider(artistData.id),
+    );
+    final isDescriptionExpanded = ref.watch(
+      artistDescriptionExpandedProvider(artistData.id),
+    );
+    final isSubscribed =
+        optimisticSubscribed ??
+        subscribedArtists.valueOrNull?.any(
+          (artist) => artist.id == artistData.id,
+        ) ??
+        false;
 
     // Get dynamic theme color from artist image
     final themeColorAsync = ref.watch(
@@ -309,9 +333,14 @@ class _ArtistContent extends ConsumerWidget {
                   SliverToBoxAdapter(
                     child: _buildHeader(
                       context,
+                      ref,
                       themeColor,
                       isArtistPlaying,
                       isPlaying,
+                      authState.isLoggedIn,
+                      isSubscribed,
+                      subscribeBusy,
+                      isDescriptionExpanded,
                     ),
                   ),
 
@@ -388,9 +417,14 @@ class _ArtistContent extends ConsumerWidget {
 
   Widget _buildHeader(
     BuildContext context,
+    WidgetRef ref,
     Color themeColor,
     bool isArtistPlaying,
     bool isPlaying,
+    bool isLoggedIn,
+    bool isSubscribed,
+    bool subscribeBusy,
+    bool isDescriptionExpanded,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
@@ -478,16 +512,33 @@ class _ArtistContent extends ConsumerWidget {
           if (artistData.description != null)
             Padding(
               padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                artistData.description!,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: isDark
-                      ? Colors.white54
-                      : colorScheme.onSurface.withValues(alpha: 0.54),
-                  fontSize: 14,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: artistData.description!.trim().isEmpty
+                    ? null
+                    : () {
+                        ref
+                                .read(
+                                  artistDescriptionExpandedProvider(
+                                    artistData.id,
+                                  ).notifier,
+                                )
+                                .state =
+                            !isDescriptionExpanded;
+                      },
+                child: Text(
+                  artistData.description!,
+                  textAlign: TextAlign.center,
+                  maxLines: isDescriptionExpanded ? null : 3,
+                  overflow: isDescriptionExpanded
+                      ? TextOverflow.visible
+                      : TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isDark
+                        ? Colors.white54
+                        : colorScheme.onSurface.withValues(alpha: 0.54),
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ),
@@ -515,6 +566,46 @@ class _ArtistContent extends ConsumerWidget {
             ),
 
           const SizedBox(height: 32),
+
+          Center(
+            child: FilledButton.tonalIcon(
+              onPressed: subscribeBusy
+                  ? null
+                  : () => _toggleSubscription(
+                      context,
+                      ref,
+                      isLoggedIn: isLoggedIn,
+                      isSubscribed: isSubscribed,
+                    ),
+              icon: subscribeBusy
+                  ? SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: isDark ? Colors.white : colorScheme.onSurface,
+                      ),
+                    )
+                  : Icon(
+                      isSubscribed ? Icons.check_rounded : Icons.add_rounded,
+                    ),
+              label: Text(
+                isLoggedIn ? (isSubscribed ? 'Following' : 'Follow') : 'Follow',
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: isDark
+                    ? Colors.white.withValues(alpha: 0.12)
+                    : Colors.black.withValues(alpha: 0.08),
+                foregroundColor: isDark ? Colors.white : colorScheme.onSurface,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 12,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 24),
 
           // Action buttons (from YTM navigation endpoints)
           Row(
@@ -575,6 +666,67 @@ class _ArtistContent extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _toggleSubscription(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool isLoggedIn,
+    required bool isSubscribed,
+  }) async {
+    if (!isLoggedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Connect YouTube Music to follow artists.'),
+        ),
+      );
+      return;
+    }
+
+    final busyNotifier = ref.read(
+      artistSubscribeBusyProvider(artistData.id).notifier,
+    );
+    final optimisticNotifier = ref.read(
+      artistSubscribeOptimisticProvider(artistData.id).notifier,
+    );
+    final subscribeAction = ref.read(ytMusicSubscribeActionProvider);
+    final nextSubscribed = !isSubscribed;
+
+    busyNotifier.state = true;
+    optimisticNotifier.state = nextSubscribed;
+
+    try {
+      final success = nextSubscribed
+          ? await subscribeAction.subscribe(artistData.id)
+          : await subscribeAction.unsubscribe(artistData.id);
+
+      if (!context.mounted) return;
+
+      if (!success) {
+        optimisticNotifier.state = isSubscribed;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Could not ${nextSubscribed ? 'follow' : 'unfollow'} ${artistData.name}.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      ref.invalidate(ytMusicSubscribedArtistsProvider);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            nextSubscribed
+                ? 'Following ${artistData.name}'
+                : 'Unfollowed ${artistData.name}',
+          ),
+        ),
+      );
+    } finally {
+      busyNotifier.state = false;
+    }
   }
 
   Widget _buildActionButton(
