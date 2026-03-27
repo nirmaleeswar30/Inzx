@@ -296,6 +296,7 @@ class AudioPlayerService {
       0; // Incremented on every queue change to force UI updates
   int _currentIndex = -1;
   bool _shuffleEnabled = false;
+  LoopMode _loopMode = LoopMode.off;
   Track? _currentTrack;
   PlaybackData? _currentPlaybackData;
   AudioQuality _audioQuality = AudioQuality.auto;
@@ -659,7 +660,7 @@ class AudioPlayerService {
   int? _nextQueueIndexForTransition() {
     if (_queue.isEmpty) return null;
     if (_currentIndex < _queue.length - 1) return _currentIndex + 1;
-    if (_player.loopMode == LoopMode.all) return 0;
+    if (_loopMode == LoopMode.all) return 0;
     return null;
   }
 
@@ -689,7 +690,7 @@ class AudioPlayerService {
     try {
       final built = await _buildSourceForTrack(targetTrack);
       await incomingPlayer.stop();
-      await incomingPlayer.setLoopMode(outgoingPlayer.loopMode);
+      await incomingPlayer.setLoopMode(_nativeLoopModeFor(_loopMode));
       await incomingPlayer.setSpeed(outgoingPlayer.speed);
       await incomingPlayer.setAudioSource(built.source, preload: true);
       await _setVolumeSafely(
@@ -770,7 +771,7 @@ class AudioPlayerService {
     if (_crossfadeDurationMs <= 0) return;
     if (_isCrossfading) return;
     if (_crossfadeTriggeredForTrack) return;
-    if (_player.loopMode == LoopMode.one) return;
+    if (_loopMode == LoopMode.one) return;
     if (!_player.playing) return;
 
     final duration = _player.duration;
@@ -2173,7 +2174,7 @@ class AudioPlayerService {
       bufferedPosition: bufferedPosition,
       duration: duration,
       speed: speed,
-      loopMode: loopMode ?? _player.loopMode,
+      loopMode: loopMode ?? _loopMode,
       shuffleEnabled: shuffleEnabled ?? _shuffleEnabled,
       error: error,
       audioQuality: audioQuality ?? _audioQuality,
@@ -2869,7 +2870,7 @@ class AudioPlayerService {
     // Check if we should fetch more radio tracks before handling completion
     _checkAndFetchRadioTracks();
 
-    switch (_player.loopMode) {
+    switch (_loopMode) {
       case LoopMode.one:
         _player.seek(Duration.zero);
         _player.play();
@@ -3135,7 +3136,7 @@ class AudioPlayerService {
     int newIndex;
     if (_currentIndex < _queue.length - 1) {
       newIndex = _currentIndex + 1;
-    } else if (_player.loopMode == LoopMode.all) {
+    } else if (_loopMode == LoopMode.all) {
       newIndex = 0;
     } else {
       return;
@@ -3158,7 +3159,7 @@ class AudioPlayerService {
     int newIndex;
     if (_currentIndex > 0) {
       newIndex = _currentIndex - 1;
-    } else if (_player.loopMode == LoopMode.all) {
+    } else if (_loopMode == LoopMode.all) {
       newIndex = _queue.length - 1;
     } else {
       await seek(Duration.zero);
@@ -3171,17 +3172,25 @@ class AudioPlayerService {
 
   /// Set loop mode
   Future<void> setLoopMode(LoopMode mode) async {
-    await _player.setLoopMode(mode);
-    await _inactivePlayer.setLoopMode(mode);
+    _loopMode = mode;
+    final nativeMode = _nativeLoopModeFor(mode);
+    await _player.setLoopMode(nativeMode);
+    await _inactivePlayer.setLoopMode(nativeMode);
     _updateState(loopMode: mode);
   }
 
   /// Cycle through loop modes
   Future<void> cycleLoopMode() async {
     final modes = [LoopMode.off, LoopMode.all, LoopMode.one];
-    final currentModeIndex = modes.indexOf(_player.loopMode);
+    final currentModeIndex = modes.indexOf(_loopMode);
     final nextMode = modes[(currentModeIndex + 1) % modes.length];
     await setLoopMode(nextMode);
+  }
+
+  LoopMode _nativeLoopModeFor(LoopMode mode) {
+    // Playback usually runs on a single-track source, so native "repeat all"
+    // would just loop that one item. Playlist repeat is handled in app logic.
+    return mode == LoopMode.one ? LoopMode.one : LoopMode.off;
   }
 
   /// Toggle shuffle
