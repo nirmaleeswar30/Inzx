@@ -6,6 +6,7 @@ import 'package:iconsax/iconsax.dart';
 import '../providers/providers.dart';
 import '../services/jams/jams_models.dart';
 import '../core/design_system/colors.dart';
+import '../core/l10n/app_localizations_x.dart';
 
 /// Jams screen - create or join collaborative listening sessions
 class JamsScreen extends ConsumerStatefulWidget {
@@ -40,6 +41,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final googleAuth = ref.watch(googleAuthStateProvider);
     final currentSession = ref.watch(currentJamSessionProvider).valueOrNull;
@@ -66,7 +68,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
         backgroundColor: backgroundColor,
         elevation: 0,
         title: Text(
-          'Jams',
+          l10n.jams,
           style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
@@ -89,6 +91,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
 
   /// Prompt to sign in with Google
   Widget _buildSignInPrompt(bool isDark, AlbumColors albumColors) {
+    final l10n = context.l10n;
     final hasAlbumColors = !albumColors.isDefault;
     // Respect light/dark mode for text colors
     final textColor = isDark
@@ -114,7 +117,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Listen Together',
+              l10n.listenTogether,
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -123,7 +126,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Sign in with Google to start or join a Jam session with friends',
+              l10n.signInGoogleToStartOrJoinJam,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16, color: secondaryColor),
             ),
@@ -133,7 +136,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
                 await ref.read(googleAuthStateProvider.notifier).signIn();
               },
               icon: const Icon(Icons.login),
-              label: const Text('Sign in with Google'),
+              label: Text(l10n.signInWithGoogle),
               style: ElevatedButton.styleFrom(
                 backgroundColor: accentColor,
                 foregroundColor: InzxColors.contrastTextOn(accentColor),
@@ -155,6 +158,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
     JamsUIState uiState,
     AlbumColors albumColors,
   ) {
+    final l10n = context.l10n;
     final hasAlbumColors = !albumColors.isDefault;
     // Respect light/dark mode for text colors
     final textColor = isDark
@@ -184,7 +188,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
                 Icon(Iconsax.profile_2user, size: 64, color: accentColor),
                 const SizedBox(height: 16),
                 Text(
-                  'Listen with friends in sync',
+                  l10n.listenWithFriendsInSync,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -192,7 +196,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
                   ),
                 ),
                 Text(
-                  'Same song, same moment',
+                  l10n.sameSongSameMoment,
                   style: TextStyle(color: secondaryColor),
                 ),
               ],
@@ -206,8 +210,8 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
             isDark: isDark,
             icon: Iconsax.add_circle,
             iconColor: accentColor,
-            title: 'Start a Jam',
-            subtitle: 'Create a session and invite friends',
+            title: l10n.startJam,
+            subtitle: l10n.createSessionAndInviteFriends,
             onTap: uiState.isLoading ? null : _createSession,
             isLoading: uiState.isLoading && !_isJoining,
             albumColors: albumColors,
@@ -243,7 +247,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Join a Jam',
+                            l10n.joinJam,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -251,7 +255,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
                             ),
                           ),
                           Text(
-                            'Enter the 6-digit code',
+                            l10n.enterSixDigitCode,
                             style: TextStyle(
                               fontSize: 13,
                               color: secondaryColor,
@@ -276,7 +280,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
                   textAlign: TextAlign.center,
                   decoration: InputDecoration(
                     counterText: '',
-                    hintText: 'ABC123',
+                    hintText: l10n.jamCodeExample,
                     hintStyle: TextStyle(
                       color: textColor.withValues(alpha: 0.3),
                       letterSpacing: 8,
@@ -324,7 +328,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
                               color: InzxColors.contrastTextOn(accentColor),
                             ),
                           )
-                        : const Text('Join'),
+                        : Text(l10n.join),
                   ),
                 ),
               ],
@@ -448,6 +452,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
     AlbumColors albumColors,
     JamConnectionState? connectionState,
   ) {
+    final l10n = context.l10n;
     final isHost = ref.watch(isJamHostProvider);
     final hasAlbumColors = !albumColors.isDefault;
     // Respect light/dark mode
@@ -504,7 +509,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
                             ClipboardData(text: session.sessionCode),
                           );
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Code copied!')),
+                            SnackBar(content: Text(l10n.codeCopied)),
                           );
                         },
                         icon: Icon(Icons.copy, color: secondaryColor),
@@ -514,7 +519,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  isHost ? 'You\'re the host' : 'Hosted by ${session.hostName}',
+                  isHost ? l10n.youAreHost : l10n.hostedBy(session.hostName),
                   style: TextStyle(color: secondaryColor),
                 ),
                 if (connectionState != null) ...[
@@ -532,7 +537,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Listening Together (${session.participants.length})',
+                  l10n.listeningTogetherCount(session.participants.length),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -642,7 +647,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
                   side: const BorderSide(color: Colors.red),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                child: Text(isHost ? 'End Session' : 'Leave Session'),
+                child: Text(isHost ? l10n.endSession : l10n.leaveSession),
               ),
             ),
           ),
@@ -682,21 +687,22 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
     JamConnectionState state,
     Color fallbackText,
   ) {
+    final l10n = context.l10n;
     switch (state.status) {
       case JamConnectionStatus.connected:
         return (
           Icons.wifi_rounded,
-          'Connected',
+          l10n.connected,
           Colors.green.withValues(alpha: 0.14),
           Colors.green.shade400,
         );
       case JamConnectionStatus.reconnecting:
         final suffix = state.nextRetrySeconds > 0
-            ? 'Retry in ${state.nextRetrySeconds}s'
-            : 'Reconnecting';
+            ? l10n.retryInSeconds(state.nextRetrySeconds)
+            : l10n.reconnecting;
         final label = state.attempt > 0
-            ? 'Reconnecting (${state.attempt}) · $suffix'
-            : 'Reconnecting · $suffix';
+            ? l10n.reconnectingAttemptStatus(state.attempt, suffix)
+            : l10n.reconnectingStatus(suffix);
         return (
           Icons.sync,
           label,
@@ -706,7 +712,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
       case JamConnectionStatus.disconnected:
         return (
           Icons.wifi_off_rounded,
-          'Disconnected',
+          l10n.disconnected,
           Colors.red.withValues(alpha: 0.14),
           fallbackText.withValues(alpha: 0.9),
         );
@@ -718,6 +724,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
     JamSession session,
     AlbumColors albumColors,
   ) {
+    final l10n = context.l10n;
     final canControlPlayback = ref.watch(canControlJamPlaybackProvider);
     final jamsService = ref.watch(jamsServiceProvider);
     final hasAlbumColors = !albumColors.isDefault;
@@ -740,7 +747,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
       final participant = session.participants
           .where((p) => p.id == oderId)
           .firstOrNull;
-      return participant?.name ?? 'Someone';
+      return participant?.name ?? l10n.someone;
     }
 
     return Expanded(
@@ -753,7 +760,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Playing',
+                  l10n.playing,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -841,7 +848,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
-                  'Up Next (${queue.length})',
+                  '${l10n.upNext} (${queue.length})',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -859,12 +866,12 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
                           Icon(Iconsax.music, size: 40, color: secondaryColor),
                           const SizedBox(height: 12),
                           Text(
-                            'No tracks in queue',
+                            l10n.noTracksInQueue,
                             style: TextStyle(color: secondaryColor),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Add songs to play them together',
+                            l10n.addSongsToPlayTogether,
                             style: TextStyle(
                               color: secondaryColor.withValues(alpha: 0.7),
                               fontSize: 12,
@@ -876,7 +883,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
                   : queue.isEmpty
                   ? Center(
                       child: Text(
-                        'Queue is empty',
+                        l10n.queueIsEmpty,
                         style: TextStyle(color: secondaryColor),
                       ),
                     )
@@ -925,7 +932,10 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
                               style: TextStyle(color: textColor),
                             ),
                             subtitle: Text(
-                              '${track.artist} • Added by $addedByName',
+                              context.metadataLine([
+                                track.artist,
+                                l10n.addedByUser(addedByName),
+                              ]),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -957,26 +967,28 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
   }
 
   Future<void> _createSession() async {
+    final l10n = context.l10n;
     setState(() => _isJoining = false);
     final code = await ref.read(jamsNotifierProvider.notifier).createSession();
     if (!mounted) return;
     if (code != null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Session created! Code: $code')));
+      ).showSnackBar(SnackBar(content: Text(l10n.sessionCreatedCode(code))));
     }
   }
 
   Future<void> _joinSession() async {
+    final l10n = context.l10n;
     setState(() => _isJoining = true);
     final success = await ref
         .read(jamsNotifierProvider.notifier)
         .joinSession(_codeController.text.toUpperCase());
     if (!mounted) return;
     if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No jam found for this code.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.noJamFoundForCode)));
     }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../core/l10n/app_localizations_x.dart';
 import '../core/design_system/design_system.dart';
 import '../providers/providers.dart';
 import '../models/models.dart';
@@ -45,9 +46,9 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   final _searchController = TextEditingController();
   final _searchFocusNode = FocusNode();
   List<String> _suggestions = [];
-  String _selectedFilter = 'All';
+  String _selectedFilter = 'all';
 
-  final _filters = ['All', 'Songs', 'Albums', 'Artists', 'Playlists'];
+  final _filters = ['all', 'songs', 'albums', 'artists', 'playlists'];
 
   @override
   void initState() {
@@ -88,6 +89,21 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     ref.read(searchQueryProvider.notifier).state = query;
     _searchFocusNode.unfocus();
     setState(() => _suggestions = []);
+  }
+
+  String _filterLabel(String filter, BuildContext context) {
+    switch (filter) {
+      case 'songs':
+        return context.l10n.songs;
+      case 'albums':
+        return context.l10n.albums;
+      case 'artists':
+        return context.l10n.artists;
+      case 'playlists':
+        return context.l10n.playlists;
+      default:
+        return context.l10n.all;
+    }
   }
 
   @override
@@ -164,7 +180,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                         fontSize: 15,
                       ),
                       decoration: InputDecoration(
-                        hintText: 'Search songs, albums, artists',
+                        hintText: context.l10n.searchMusicHint,
                         hintStyle: TextStyle(
                           color: isDark
                               ? Colors.white54
@@ -216,7 +232,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: FilterChip(
-              label: Text(filter),
+              label: Text(_filterLabel(filter, context)),
               selected: isSelected,
               onSelected: (_) => setState(() => _selectedFilter = filter),
               backgroundColor: isDark
@@ -255,7 +271,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Search for music',
+              context.l10n.searchForMusic,
               style: TextStyle(
                 fontSize: 16,
                 color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -321,7 +337,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
           padding: const EdgeInsets.only(bottom: 100),
           children: [
             // Top result (first artist or first track)
-            if (_selectedFilter == 'All') ...[
+            if (_selectedFilter == 'all') ...[
               if (results.artists.isNotEmpty)
                 _buildTopResult(results.artists.first, isDark, colorScheme)
               else if (results.tracks.isNotEmpty)
@@ -329,22 +345,22 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
             ],
 
             // Songs section
-            if ((_selectedFilter == 'All' || _selectedFilter == 'Songs') &&
+            if ((_selectedFilter == 'all' || _selectedFilter == 'songs') &&
                 results.tracks.isNotEmpty)
               _buildSongsSection(results.tracks, isDark, colorScheme),
 
             // Artists section
-            if ((_selectedFilter == 'All' || _selectedFilter == 'Artists') &&
+            if ((_selectedFilter == 'all' || _selectedFilter == 'artists') &&
                 results.artists.isNotEmpty)
               _buildArtistsSection(results.artists, isDark, colorScheme),
 
             // Albums section
-            if ((_selectedFilter == 'All' || _selectedFilter == 'Albums') &&
+            if ((_selectedFilter == 'all' || _selectedFilter == 'albums') &&
                 results.albums.isNotEmpty)
               _buildAlbumsSection(results.albums, isDark, colorScheme),
 
             // Playlists section
-            if ((_selectedFilter == 'All' || _selectedFilter == 'Playlists') &&
+            if ((_selectedFilter == 'all' || _selectedFilter == 'playlists') &&
                 results.playlists.isNotEmpty)
               _buildPlaylistsSection(results.playlists, isDark, colorScheme),
           ],
@@ -372,7 +388,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No results found',
+            context.l10n.noResultsFound,
             style: TextStyle(
               fontSize: 16,
               color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -390,7 +406,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Top result',
+            context.l10n.topResult,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -453,7 +469,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Artist${artist.formattedSubscribers != null ? ' • ${artist.formattedSubscribers}' : ''}',
+                          context.artistSubtitle(artist.formattedSubscribers),
                           style: TextStyle(
                             fontSize: 13,
                             color: isDark
@@ -484,7 +500,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Top result',
+            context.l10n.topResult,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -503,18 +519,18 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     bool isDark,
     ColorScheme colorScheme,
   ) {
-    final displayTracks = _selectedFilter == 'Songs'
+    final displayTracks = _selectedFilter == 'songs'
         ? tracks
         : tracks.take(5).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_selectedFilter == 'All')
+        if (_selectedFilter == 'all')
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
-              'Songs',
+              context.l10n.songs,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -576,7 +592,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
         ),
       ),
       subtitle: Text(
-        '${track.artist}${track.formattedDuration.isNotEmpty ? ' • ${track.formattedDuration}' : ''}',
+        context.trackSubtitle(track.artist, track.formattedDuration),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
@@ -604,18 +620,18 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     bool isDark,
     ColorScheme colorScheme,
   ) {
-    final displayArtists = _selectedFilter == 'Artists'
+    final displayArtists = _selectedFilter == 'artists'
         ? artists
         : artists.take(5).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_selectedFilter == 'All')
+        if (_selectedFilter == 'all')
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
             child: Text(
-              'Artists',
+              context.l10n.artists,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -623,7 +639,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
               ),
             ),
           ),
-        if (_selectedFilter == 'Artists')
+        if (_selectedFilter == 'artists')
           ...displayArtists.map(
             (artist) => _buildArtistTile(artist, isDark, colorScheme),
           )
@@ -677,7 +693,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
         ),
       ),
       subtitle: Text(
-        'Artist${artist.formattedSubscribers != null ? ' • ${artist.formattedSubscribers}' : ''}',
+        context.artistSubtitle(artist.formattedSubscribers),
         style: TextStyle(
           fontSize: 12,
           color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -745,18 +761,18 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     bool isDark,
     ColorScheme colorScheme,
   ) {
-    final displayAlbums = _selectedFilter == 'Albums'
+    final displayAlbums = _selectedFilter == 'albums'
         ? albums
         : albums.take(5).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_selectedFilter == 'All')
+        if (_selectedFilter == 'all')
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
             child: Text(
-              'Albums',
+              context.l10n.albums,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -764,7 +780,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
               ),
             ),
           ),
-        if (_selectedFilter == 'Albums')
+        if (_selectedFilter == 'albums')
           ...displayAlbums.map(
             (album) => _buildAlbumTile(album, isDark, colorScheme),
           )
@@ -818,7 +834,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
         ),
       ),
       subtitle: Text(
-        '${album.artist}${album.year != null ? ' • ${album.year}' : ''}',
+        context.albumSubtitle(album.artist, album.year),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
@@ -897,18 +913,18 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     bool isDark,
     ColorScheme colorScheme,
   ) {
-    final displayPlaylists = _selectedFilter == 'Playlists'
+    final displayPlaylists = _selectedFilter == 'playlists'
         ? playlists
         : playlists.take(5).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_selectedFilter == 'All')
+        if (_selectedFilter == 'all')
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
             child: Text(
-              'Playlists',
+              context.l10n.playlists,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -957,7 +973,10 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
         ),
       ),
       subtitle: Text(
-        '${playlist.author ?? 'Playlist'}${playlist.trackCount != null ? ' • ${playlist.trackCount} songs' : ''}',
+        context.playlistSubtitle(
+          playlist.author ?? context.l10n.playlist,
+          playlist.trackCount,
+        ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(

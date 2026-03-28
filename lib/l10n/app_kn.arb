@@ -1,0 +1,1179 @@
+{
+  "@@locale": "kn",
+  "appTitle": "Inzx",
+  "updateDownloadedBanner": "ನವೀಕರಣವನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗಿದೆ. ಅನ್ವಯಿಸಲು ಅಪ್ಲಿಕೇಶನ್ ಅನ್ನು ಮರುಪ್ರಾರಂಭಿಸಿ.",
+  "restart": "ಮರುಪ್ರಾರಂಭಿಸಿ",
+  "dismiss": "ವಜಾಗೊಳಿಸಿ",
+  "newVersionAvailableBanner": "ಹೊಸ ಆವೃತ್ತಿ {version} GitHub ನಲ್ಲಿ ಲಭ್ಯವಿದೆ.",
+  "@newVersionAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ",
+  "later": "ನಂತರ",
+  "home": "ಮುಖಪುಟ",
+  "songs": "ಹಾಡುಗಳು",
+  "library": "ಗ್ರಂಥಾಲಯ",
+  "folders": "ಫೋಲ್ಡರ್‌ಗಳು",
+  "settings": "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+  "searchSettingsHint": "ಹುಡುಕಾಟ ಸೆಟ್ಟಿಂಗ್‌ಗಳು...",
+  "noMatchingSettings": "ಹೊಂದಾಣಿಕೆಯ ಸೆಟ್ಟಿಂಗ್‌ಗಳಿಲ್ಲ",
+  "appearance": "ಗೋಚರತೆ",
+  "theme": "ಥೀಮ್",
+  "themeAuto": "ಆಟೋ",
+  "themeLight": "ಬೆಳಕು",
+  "themeDark": "ಕತ್ತಲು",
+  "dynamicColorsNote": "ಪ್ರಸ್ತುತ ಟ್ರ್ಯಾಕ್‌ನ ಆಲ್ಬಮ್ ಕಲೆಯಿಂದ ಬಣ್ಣಗಳು ಕ್ರಿಯಾತ್ಮಕವಾಗಿ ಹೊಂದಿಕೊಳ್ಳುತ್ತವೆ.",
+  "language": "ಭಾಷೆ",
+  "languageSubtitle": "ಅಪ್ಲಿಕೇಶನ್ ಭಾಷೆಯನ್ನು ಆರಿಸಿ",
+  "chooseLanguage": "ಭಾಷೆಯನ್ನು ಆರಿಸಿ",
+  "searchLanguagesHint": "ಭಾಷೆಗಳನ್ನು ಹುಡುಕಿ...",
+  "noMatchingLanguages": "ಯಾವುದೇ ಹೊಂದಾಣಿಕೆಯ ಭಾಷೆಗಳಿಲ್ಲ",
+  "useSystemLanguage": "ಸಿಸ್ಟಮ್ ಭಾಷೆಯನ್ನು ಬಳಸಿ",
+  "languageSystem": "ಸಿಸ್ಟಮ್ ಡೀಫಾಲ್ಟ್",
+  "languageEnglish": "ಇಂಗ್ಲೀಷ್",
+  "languageTurkish": "ಟರ್ಕಿಶ್",
+  "languageRussian": "ರಷ್ಯನ್",
+  "languageHindi": "ಹಿಂದಿ",
+  "languageTamil": "ತಮಿಳು",
+  "languageKannada": "ಕನ್ನಡ",
+  "languageTelugu": "ತೆಲುಗು",
+  "languageSpanish": "ಸ್ಪ್ಯಾನಿಷ್",
+  "languageFrench": "ಫ್ರೆಂಚ್",
+  "languageGerman": "ಜರ್ಮನ್",
+  "languageIndonesian": "ಇಂಡೋನೇಷಿಯನ್",
+  "languageJapanese": "ಜಪಾನೀಸ್",
+  "languageKorean": "ಕೊರಿಯನ್",
+  "languageArabic": "ಅರೇಬಿಕ್",
+  "languageUkrainian": "ಉಕ್ರೇನಿಯನ್",
+  "languageThai": "ಥಾಯ್",
+  "languagePortugueseBrazil": "ಪೋರ್ಚುಗೀಸ್ (ಬ್ರೆಜಿಲ್)",
+  "languageChineseSimplified": "ಚೈನೀಸ್ (ಸರಳೀಕೃತ)",
+  "languageChineseTraditional": "ಚೈನೀಸ್ (ಸಾಂಪ್ರದಾಯಿಕ)",
+  "contentLocation": "ವಿಷಯ ಸ್ಥಳ",
+  "contentLocationSubtitle": "ಶಿಫಾರಸುಗಳು ಮತ್ತು ಕ್ಯಾಟಲಾಗ್ ಲಭ್ಯತೆಗಾಗಿ ಬಳಸಿದ ಪ್ರದೇಶವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+  "chooseContentLocation": "ವಿಷಯದ ಸ್ಥಳವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+  "searchLocationsHint": "ಸ್ಥಳಗಳನ್ನು ಹುಡುಕಿ...",
+  "noMatchingLocations": "ಯಾವುದೇ ಹೊಂದಾಣಿಕೆಯ ಸ್ಥಳಗಳಿಲ್ಲ",
+  "locationSystem": "ಸಿಸ್ಟಮ್ ಡೀಫಾಲ್ಟ್",
+  "locationUnitedStates": "ಯುನೈಟೆಡ್ ಸ್ಟೇಟ್ಸ್",
+  "locationIndia": "ಭಾರತ",
+  "locationTurkey": "ಟರ್ಕಿ",
+  "locationRussia": "ರಷ್ಯಾ",
+  "quickActions": "ತ್ವರಿತ ಕ್ರಮಗಳು",
+  "audio": "ಆಡಿಯೋ",
+  "audioQuickActionsSubtitle": "ಸ್ಟ್ರೀಮಿಂಗ್ ಗುಣಮಟ್ಟ, ಕ್ರಾಸ್‌ಫೇಡ್ ಮತ್ತು ಪ್ಲೇಬ್ಯಾಕ್",
+  "downloads": "ಡೌನ್‌ಲೋಡ್‌ಗಳು",
+  "downloadsQuickActionsSubtitle": "ಗುಣಮಟ್ಟ, ಸ್ಥಳ ಮತ್ತು ಸಂಗ್ರಹಣೆಯನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ",
+  "backupRestore": "ಬ್ಯಾಕಪ್ ಮತ್ತು ಮರುಸ್ಥಾಪಿಸಿ",
+  "backupRestoreQuickActionsSubtitle": "ನಿಮ್ಮ ಲೈಬ್ರರಿಯನ್ನು ರಫ್ತು ಮಾಡಿ ಅಥವಾ ಆಮದು ಮಾಡಿ",
+  "streamingQuality": "ಸ್ಟ್ರೀಮಿಂಗ್ ಗುಣಮಟ್ಟ",
+  "streamingQualitySubtitle": "ಸ್ಟ್ರೀಮಿಂಗ್‌ಗಾಗಿ ಆಡಿಯೊ ಬಿಟ್‌ರೇಟ್ ಅನ್ನು ಹೊಂದಿಸಿ",
+  "crossfadeTransition": "ಕ್ರಾಸ್ಫೇಡ್ ಪರಿವರ್ತನೆ",
+  "crossfadeTransitionSubtitle": "ಟ್ರ್ಯಾಕ್‌ಗಳನ್ನು ಸರಾಗವಾಗಿ ಪರಸ್ಪರ ಮಿಶ್ರಣ ಮಾಡಿ",
+  "streamingCache": "ಸ್ಟ್ರೀಮಿಂಗ್ ಸಂಗ್ರಹ",
+  "streamingCacheSubtitle": "ಮುಂದಿನ ಟ್ರ್ಯಾಕ್‌ಗಳನ್ನು ಪೂರ್ವ-ಸಂಗ್ರಹಿಸಿ, ವೈ-ಫೈ ಮಾತ್ರ ಆಯ್ಕೆ",
+  "downloadQuality": "ಡೌನ್‌ಲೋಡ್ ಗುಣಮಟ್ಟ",
+  "downloadQualitySubtitle": "ಆಫ್‌ಲೈನ್ ಡೌನ್‌ಲೋಡ್‌ಗಳಿಗೆ ಗುಣಮಟ್ಟ",
+  "downloadLocation": "ಸ್ಥಳವನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ",
+  "downloadLocationSubtitle": "ಡೌನ್ಲೋಡ್ ಮಾಡಿದ ಸಂಗೀತವನ್ನು ಎಲ್ಲಿ ಸಂಗ್ರಹಿಸಲಾಗಿದೆ",
+  "dataUsageInfo": "ಡೇಟಾ ಬಳಕೆಯ ಮಾಹಿತಿ",
+  "dataUsageInfoSubtitle": "ಪ್ರತಿ ಹಾಡಿಗೆ ಅಂದಾಜು ಸಂಗ್ರಹಣೆ",
+  "createBackup": "ಬ್ಯಾಕಪ್ ರಚಿಸಿ",
+  "createBackupSubtitle": "ನಿಮ್ಮ ಲೈಬ್ರರಿ ಮತ್ತು ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ರಫ್ತು ಮಾಡಿ",
+  "restoreBackup": "ಬ್ಯಾಕಪ್ ಅನ್ನು ಮರುಸ್ಥಾಪಿಸಿ",
+  "restoreBackupSubtitle": "ಹಿಂದಿನ ಬ್ಯಾಕಪ್ ಫೈಲ್ ಅನ್ನು ಆಮದು ಮಾಡಿ",
+  "connectYoutubeMusic": "YouTube Music ಅನ್ನು ಸಂಪರ್ಕಿಸಿ",
+  "connectYoutubeMusicSubtitle": "ನಿಮ್ಮ ಇಷ್ಟಪಟ್ಟ ಹಾಡುಗಳು, ಪ್ಲೇಪಟ್ಟಿಗಳು ಮತ್ತು ಹೆಚ್ಚಿನದನ್ನು ಸಿಂಕ್ ಮಾಡಿ",
+  "connectYtMusicButton": "YT ಸಂಗೀತವನ್ನು ಸಂಪರ್ಕಿಸಿ",
+  "downloadsTitle": "ಡೌನ್‌ಲೋಡ್‌ಗಳು",
+  "clearCompleted": "ತೆರವುಗೊಳಿಸಲಾಗಿದೆ",
+  "clearFailed": "Clear failed",
+  "noDownloadsYet": "ಇನ್ನೂ ಯಾವುದೇ ಡೌನ್‌ಲೋಡ್‌ಗಳಿಲ್ಲ",
+  "downloadSongsToListenOffline": "ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿ ಕೇಳಲು ಹಾಡುಗಳನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ",
+  "downloadingTitle": "ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ",
+  "downloadedTitle": "ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗಿದೆ ({count})",
+  "@downloadedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedTitle": "ವಿಫಲವಾಗಿದೆ",
+  "songsDownloaded": "{count} ಹಾಡುಗಳನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗಿದೆ",
+  "@songsDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usingStorage": "{storage} ಬಳಸುವುದು",
+  "@usingStorage": {
+    "placeholders": {
+      "storage": {
+        "type": "String"
+      }
+    }
+  },
+  "failedWithError": "ವಿಫಲವಾಗಿದೆ: {error}",
+  "@failedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownError": "ಅಜ್ಞಾತ ದೋಷ",
+  "removeDownload": "ಡೌನ್‌ಲೋಡ್ ತೆಗೆದುಹಾಕಿ",
+  "downloadSettingsTitle": "ಡೌನ್‌ಲೋಡ್ ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+  "downloadLocationSubtitleLong": "ಡೌನ್‌ಲೋಡ್ ಮಾಡಿದ ಸಂಗೀತ ಫೈಲ್‌ಗಳನ್ನು ಎಲ್ಲಿ ಸಂಗ್ರಹಿಸಲಾಗಿದೆ",
+  "offlineDownloadTip": "ಡೌನ್‌ಲೋಡ್ ಮಾಡಿದ ಟ್ರ್ಯಾಕ್‌ಗಳು ಇಂಟರ್ನೆಟ್ ಇಲ್ಲದೆ ಪ್ಲೇ ಆಗುತ್ತವೆ ಮತ್ತು ಸ್ಟ್ರೀಮಿಂಗ್ ಡೇಟಾವನ್ನು ಬಳಸಬೇಡಿ.",
+  "estimatedStoragePerSong": "ಪ್ರತಿ ಹಾಡಿಗೆ ಅಂದಾಜು ಸಂಗ್ರಹಣೆ",
+  "storageLocation": "ಶೇಖರಣಾ ಸ್ಥಳ",
+  "loading": "ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+  "errorLoadingPath": "ಮಾರ್ಗವನ್ನು ಲೋಡ್ ಮಾಡುವಲ್ಲಿ ದೋಷ",
+  "privateStorageDownloadsNote": "ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಉತ್ತಮ ವಿಶ್ವಾಸಾರ್ಹತೆಗಾಗಿ ಅಪ್ಲಿಕೇಶನ್-ಖಾಸಗಿ ಸಂಗ್ರಹಣೆಯಲ್ಲಿ ಸಂಗ್ರಹಿಸಲಾಗುತ್ತದೆ ಮತ್ತು ಯಾವುದೇ ಅನುಮತಿ ಅವಶ್ಯಕತೆಗಳಿಲ್ಲ.",
+  "qualityAutoChip": "ಆಟೋ",
+  "qualityLowChip": "ಕಡಿಮೆ",
+  "qualityMediumChip": "ಮಧ್ಯಮ",
+  "qualityHighChip": "ಹೆಚ್ಚು",
+  "qualityMaxChip": "ಗರಿಷ್ಠ",
+  "qualityHighest": "ಅತ್ಯುನ್ನತ",
+  "qualityDescriptionAuto": "ಸ್ವಯಂ - ನೆಟ್ವರ್ಕ್ಗೆ ಹೊಂದಿಕೊಳ್ಳುತ್ತದೆ",
+  "qualityDescriptionLow": "ಕಡಿಮೆ - ~64 ಕೆಬಿಪಿಎಸ್ (ಸಂಗ್ರಹಣೆಯನ್ನು ಉಳಿಸುತ್ತದೆ)",
+  "qualityDescriptionMedium": "ಮಧ್ಯಮ - ~128 ಕೆಬಿಪಿಎಸ್ (ಸಮತೋಲಿತ)",
+  "qualityDescriptionHigh": "ಹೆಚ್ಚು - ~256 ಕೆಬಿಪಿಎಸ್ (ಶಿಫಾರಸು ಮಾಡಲಾಗಿದೆ)",
+  "qualityDescriptionMax": "ಗರಿಷ್ಠ - ಅತ್ಯಧಿಕ ಲಭ್ಯವಿದೆ (~256 kbps)",
+  "backupRestoreTitle": "ಬ್ಯಾಕಪ್ ಮತ್ತು ಮರುಸ್ಥಾಪಿಸಿ",
+  "backupIncludesDescription": "ಬ್ಯಾಕಪ್ ಇಷ್ಟಪಟ್ಟ ಹಾಡುಗಳು, ಪ್ಲೇಪಟ್ಟಿಗಳು, ಹುಡುಕಾಟ ಇತಿಹಾಸ, ಇತ್ತೀಚೆಗೆ ಪ್ಲೇ ಮಾಡಿದ ಮತ್ತು ಪ್ರಮುಖ ಅಪ್ಲಿಕೇಶನ್ ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ಒಳಗೊಂಡಿದೆ.",
+  "exportBackup": "ರಫ್ತು ಬ್ಯಾಕಪ್",
+  "exportBackupSubtitle": "ಹಂಚಿಕೊಳ್ಳಲು ಅಥವಾ ಸಂಗ್ರಹಿಸಲು ಬ್ಯಾಕಪ್ ಫೈಲ್ ಅನ್ನು ಉಳಿಸಿ",
+  "importBackup": "ಆಮದು ಬ್ಯಾಕಪ್",
+  "importBackupSubtitle": "ಬ್ಯಾಕಪ್ ಫೈಲ್‌ನಿಂದ ಮರುಸ್ಥಾಪಿಸಿ",
+  "dangerZone": "ಡೇಂಜರ್ ಝೋನ್",
+  "clearAppData": "ಅಪ್ಲಿಕೇಶನ್ ಡೇಟಾವನ್ನು ತೆರವುಗೊಳಿಸಿ",
+  "clearAppDataSubtitle": "ಡೌನ್‌ಲೋಡ್ ಮಾಡಿದ ಆಡಿಯೊ ಫೈಲ್‌ಗಳನ್ನು ಇರಿಸಿಕೊಂಡು ಅಪ್ಲಿಕೇಶನ್ ಡೇಟಾ/ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ಮರುಹೊಂದಿಸಿ",
+  "backupCreatedSuccessfully": "ಬ್ಯಾಕಪ್ ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ರಚಿಸಲಾಗಿದೆ",
+  "backupFailed": "ಬ್ಯಾಕಪ್ ವಿಫಲವಾಗಿದೆ: {error}",
+  "@backupFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoredSuccessfully": "ಬ್ಯಾಕಪ್ ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಮರುಸ್ಥಾಪಿಸಲಾಗಿದೆ",
+  "restoreFailed": "ಮರುಸ್ಥಾಪನೆ ವಿಫಲವಾಗಿದೆ: {error}",
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearAllDataQuestion": "ಎಲ್ಲಾ ಡೇಟಾವನ್ನು ತೆರವುಗೊಳಿಸುವುದೇ?",
+  "clearAllDataWarning": "ಇದು ಸ್ಥಳೀಯ ಅಪ್ಲಿಕೇಶನ್ ಡೇಟಾ ಮತ್ತು ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ಮರುಹೊಂದಿಸುತ್ತದೆ, ಆದರೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿದ ಹಾಡಿನ ಫೈಲ್‌ಗಳನ್ನು ಇರಿಸುತ್ತದೆ. ಇದನ್ನು ರದ್ದುಗೊಳಿಸಲಾಗುವುದಿಲ್ಲ.",
+  "cancel": "ರದ್ದುಮಾಡಿ",
+  "clearAll": "ಎಲ್ಲವನ್ನೂ ತೆರವುಗೊಳಿಸಿ",
+  "appDataClearedPreserved": "ಅಪ್ಲಿಕೇಶನ್ ಡೇಟಾವನ್ನು ತೆರವುಗೊಳಿಸಲಾಗಿದೆ (ಡೌನ್‌ಲೋಡ್ ಮಾಡಿದ ಆಡಿಯೊ ಫೈಲ್‌ಗಳನ್ನು ಸಂರಕ್ಷಿಸಲಾಗಿದೆ)",
+  "failedGeneric": "ವಿಫಲವಾಗಿದೆ: {error}",
+  "@failedGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupSubject": "Inzx ಸಂಗೀತ ಬ್ಯಾಕಪ್",
+  "statisticsTitle": "ಅಂಕಿಅಂಶಗಳು",
+  "statisticsCleared": "ಅಂಕಿಅಂಶಗಳನ್ನು ತೆರವುಗೊಳಿಸಲಾಗಿದೆ",
+  "clearStatistics": "ಸ್ಪಷ್ಟ ಅಂಕಿಅಂಶಗಳು",
+  "noStatisticsYet": "ಇನ್ನೂ ಯಾವುದೇ ಅಂಕಿಅಂಶಗಳಿಲ್ಲ",
+  "startListeningStats": "ನಿಮ್ಮ ಅಂಕಿಅಂಶಗಳನ್ನು ನೋಡಲು ಕೇಳಲು ಪ್ರಾರಂಭಿಸಿ",
+  "overview": "ಅವಲೋಕನ",
+  "totalPlays": "ಒಟ್ಟು ನಾಟಕಗಳು",
+  "listenTime": "ಆಲಿಸುವ ಸಮಯ",
+  "mostPlayed": "ಹೆಚ್ಚು ಆಡಿದ",
+  "playsCount": "{count} ನಾಟಕಗಳು",
+  "@playsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutes": "{hours}h {minutes}m",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutesOnly": "{minutes}m",
+  "@durationMinutesOnly": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "retry": "ಮರುಪ್ರಯತ್ನಿಸಿ",
+  "share": "ಹಂಚಿಕೊಳ್ಳಿ",
+  "playlist": "ಪ್ಲೇಪಟ್ಟಿ",
+  "album": "ಆಲ್ಬಮ್",
+  "channel": "ಚಾನಲ್",
+  "playNext": "ಮುಂದೆ ಪ್ಲೇ ಮಾಡಿ",
+  "addToQueue": "ಸರದಿಯಲ್ಲಿ ಸೇರಿಸಿ",
+  "addToPlaylist": "ಪ್ಲೇಪಟ್ಟಿಗೆ ಸೇರಿಸಿ",
+  "goToAlbum": "ಆಲ್ಬಮ್‌ಗೆ ಹೋಗಿ",
+  "goToArtist": "ಕಲಾವಿದರ ಬಳಿಗೆ ಹೋಗಿ",
+  "startRadio": "ರೇಡಿಯೋ ಪ್ರಾರಂಭಿಸಿ",
+  "playAll": "ಎಲ್ಲವನ್ನೂ ಪ್ಲೇ ಮಾಡಿ",
+  "shuffle": "ಷಫಲ್",
+  "shuffleAll": "ಎಲ್ಲವನ್ನೂ ಷಫಲ್ ಮಾಡಿ",
+  "radio": "ರೇಡಿಯೋ",
+  "follow": "ಅನುಸರಿಸಿ",
+  "following": "ಅನುಸರಿಸುತ್ತಿದೆ",
+  "connectYtMusicToFollowArtists": "ಕಲಾವಿದರನ್ನು ಅನುಸರಿಸಲು YouTube Music ಅನ್ನು ಸಂಪರ್ಕಿಸಿ.",
+  "couldNotFollowArtist": "{artist} ಅನುಸರಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.",
+  "@couldNotFollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotUnfollowArtist": "{artist} ಅನ್ನು ಅನುಸರಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.",
+  "@couldNotUnfollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "followingArtist": "ಅನುಸರಿಸಲಾಗುತ್ತಿದೆ {artist}",
+  "@followingArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "unfollowedArtist": "ಅನುಸರಿಸದಿರುವುದು {artist}",
+  "@unfollowedArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingArtist": "ಕಲಾವಿದರನ್ನು ಲೋಡ್ ಮಾಡುವಲ್ಲಿ ದೋಷ",
+  "subscribersCount": "{count} ಚಂದಾದಾರರು",
+  "@subscribersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSection": "ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗಿದೆ",
+  "showAllDownloaded": "ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾದ ಎಲ್ಲಾ {count} ತೋರಿಸಿ",
+  "@showAllDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "seeAll": "ಎಲ್ಲಾ ನೋಡಿ",
+  "removeFromLikedSongs": "ಇಷ್ಟಪಟ್ಟ ಹಾಡುಗಳಿಂದ ತೆಗೆದುಹಾಕಿ",
+  "addToLikedSongs": "ಇಷ್ಟಪಟ್ಟ ಹಾಡುಗಳಿಗೆ ಸೇರಿಸಿ",
+  "playingTrackNext": "ಮುಂದೆ \"{title}\" ಪ್ಲೇ ಮಾಡಲಾಗುತ್ತಿದೆ",
+  "@playingTrackNext": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTrackToQueue": "ಸರದಿಯಲ್ಲಿ \"{title}\" ಸೇರಿಸಲಾಗಿದೆ",
+  "@addedTrackToQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playNextInJam": "ಜಾಮ್‌ನಲ್ಲಿ ಮುಂದೆ ಪ್ಲೇ ಮಾಡಿ",
+  "playTrackNextInJam": "\"{title}\" ಜಾಮ್‌ನಲ್ಲಿ ಮುಂದೆ ಪ್ಲೇ ಆಗುತ್ತದೆ",
+  "@playTrackNextInJam": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addToJamQueue": "ಜಾಮ್ ಕ್ಯೂಗೆ ಸೇರಿಸಿ",
+  "addedTrackToJamQueue": "\"{title}\" ಅನ್ನು ಜಾಮ್ ಕ್ಯೂಗೆ ಸೇರಿಸಲಾಗಿದೆ",
+  "@addedTrackToJamQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloaded": "ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗಿದೆ",
+  "downloadingProgress": "ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ {progress}%",
+  "@downloadingProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadStartingTrack": "\"{title}\" ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ",
+  "@downloadStartingTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadNotificationsChannelDescription": "ಪ್ರಗತಿ ಅಧಿಸೂಚನೆಗಳನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ",
+  "downloadStartingNotification": "ಡೌನ್‌ಲೋಡ್ ಪ್ರಾರಂಭಿಸಲಾಗುತ್ತಿದೆ...",
+  "downloadCompleteNotification": "ಡೌನ್‌ಲೋಡ್ ಪೂರ್ಣಗೊಂಡಿದೆ",
+  "downloadFileNotCreated": "ಫೈಲ್ ಅನ್ನು ರಚಿಸದ ಕಾರಣ ಡೌನ್‌ಲೋಡ್ ವಿಫಲವಾಗಿದೆ",
+  "shareTrackText": "{title} ರಿಂದ {artist}\n{url}",
+  "@shareTrackText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "createNewPlaylist": "ಹೊಸ ಪ್ಲೇಪಟ್ಟಿಯನ್ನು ರಚಿಸಿ",
+  "playlistName": "ಪ್ಲೇಪಟ್ಟಿ ಹೆಸರು",
+  "create": "ರಚಿಸಿ",
+  "couldNotLoadPlaylists": "ಪ್ಲೇಪಟ್ಟಿಗಳನ್ನು ಲೋಡ್ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ",
+  "createLocalPlaylistInstead": "ಬದಲಿಗೆ ಸ್ಥಳೀಯ ಪ್ಲೇಪಟ್ಟಿಯನ್ನು ರಚಿಸಿ",
+  "noPlaylistsYet": "ಇನ್ನೂ ಯಾವುದೇ ಪ್ಲೇಪಟ್ಟಿಗಳಿಲ್ಲ",
+  "createOneToGetStarted": "ಪ್ರಾರಂಭಿಸಲು ಒಂದನ್ನು ರಚಿಸಿ",
+  "songsCount": "{count} ಹಾಡುಗಳು",
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createdPlaylistOnYtMusicAndAddedTrack": "YT ಸಂಗೀತದಲ್ಲಿ \"{playlist}\" ಅನ್ನು ರಚಿಸಲಾಗಿದೆ ಮತ್ತು \"{track}\" ಅನ್ನು ಸೇರಿಸಲಾಗಿದೆ",
+  "@createdPlaylistOnYtMusicAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToCreatePlaylist": "ಪ್ಲೇಪಟ್ಟಿ ರಚಿಸಲು ವಿಫಲವಾಗಿದೆ",
+  "createdPlaylistLocallyAndAddedTrack": "ಸ್ಥಳೀಯವಾಗಿ \"{playlist}\" ಅನ್ನು ರಚಿಸಲಾಗಿದೆ ಮತ್ತು \"{track}\" ಅನ್ನು ಸೇರಿಸಲಾಗಿದೆ",
+  "@createdPlaylistLocallyAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddToPlaylist": "ಪ್ಲೇಪಟ್ಟಿಗೆ ಸೇರಿಸಲು ವಿಫಲವಾಗಿದೆ",
+  "addedTrackToPlaylist": "\"{track}\" ಅನ್ನು \"{playlist}\" ಗೆ ಸೇರಿಸಲಾಗಿದೆ",
+  "@addedTrackToPlaylist": {
+    "placeholders": {
+      "track": {
+        "type": "String"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorWithMessage": "ದೋಷ: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "searchingForLyrics": "ಸಾಹಿತ್ಯಕ್ಕಾಗಿ ಹುಡುಕಲಾಗುತ್ತಿದೆ...",
+  "failedToLoadLyrics": "ಸಾಹಿತ್ಯವನ್ನು ಲೋಡ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ",
+  "tryAnotherProvider": "ಮತ್ತೊಂದು ಪೂರೈಕೆದಾರರನ್ನು ಪ್ರಯತ್ನಿಸಿ",
+  "noLyricsFound": "ಯಾವುದೇ ಸಾಹಿತ್ಯ ಕಂಡುಬಂದಿಲ್ಲ",
+  "linkLabel": "ಲಿಂಕ್: {url}",
+  "@linkLabel": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "tracksCount": "{count} ಟ್ರ್ಯಾಕ್‌ಗಳು",
+  "@tracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFromYoutubeMusic": "YouTube Music ನಿಂದ ಆಮದು ಮಾಡಿಕೊಳ್ಳಿ",
+  "importedPlaylistSuffix": "ಆಮದು ಮಾಡಿಕೊಳ್ಳಲಾಗಿದೆ",
+  "importedFromYoutubeMusicDescription": "YouTube Music ನಿಂದ ಆಮದು ಮಾಡಿಕೊಳ್ಳಲಾಗಿದೆ",
+  "importedPlaylist": "\"{playlist}\" ಆಮದು ಮಾಡಲಾಗಿದೆ",
+  "@importedPlaylist": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToImportPlaylist": "ಆಮದು ಮಾಡಲು ವಿಫಲವಾಗಿದೆ: {error}",
+  "@failedToImportPlaylist": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadPlaylists": "ಪ್ಲೇಪಟ್ಟಿಗಳನ್ನು ಲೋಡ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ",
+  "makeSureLoggedInYoutubeMusic": "ನೀವು YouTube Music ಗೆ ಲಾಗ್ ಇನ್ ಆಗಿರುವಿರಿ ಎಂಬುದನ್ನು ಖಚಿತಪಡಿಸಿಕೊಳ್ಳಿ",
+  "noPlaylistsFound": "ಯಾವುದೇ ಪ್ಲೇಪಟ್ಟಿಗಳು ಕಂಡುಬಂದಿಲ್ಲ",
+  "createPlaylistsInYoutubeMusicFirst": "ಮೊದಲು YouTube Music ನಲ್ಲಿ ಕೆಲವು ಪ್ಲೇಪಟ್ಟಿಗಳನ್ನು ರಚಿಸಿ",
+  "loggedInYoutubeMusicSuccess": "YouTube Music ಗೆ ಯಶಸ್ವಿಯಾಗಿ ಲಾಗ್ ಇನ್ ಮಾಡಲಾಗಿದೆ!",
+  "signInToYoutubeMusic": "YouTube Music ಗೆ ಸೈನ್ ಇನ್ ಮಾಡಿ",
+  "loggingYouIn": "ನಿಮ್ಮನ್ನು ಲಾಗ್ ಇನ್ ಮಾಡಲಾಗುತ್ತಿದೆ...",
+  "signInSyncYoutubeMusicDescription": "ಇಷ್ಟಪಟ್ಟ ಹಾಡುಗಳು, ಪ್ಲೇಪಟ್ಟಿಗಳು ಮತ್ತು ಆಲ್ಬಮ್‌ಗಳು ಸೇರಿದಂತೆ ನಿಮ್ಮ YouTube ಸಂಗೀತ ಲೈಬ್ರರಿಯನ್ನು ಸಿಂಕ್ ಮಾಡಲು ನಿಮ್ಮ Google ಖಾತೆಯೊಂದಿಗೆ ಸೈನ್ ಇನ್ ಮಾಡಿ.",
+  "playbackSpeed": "ಪ್ಲೇಬ್ಯಾಕ್ ವೇಗ",
+  "normal": "ಸಾಮಾನ್ಯ",
+  "defaultValue": "ಡೀಫಾಲ್ಟ್",
+  "failedToLoadContent": "ವಿಷಯವನ್ನು ಲೋಡ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ",
+  "loadMore": "ಹೆಚ್ಚು ಲೋಡ್ ಮಾಡಿ",
+  "audioSettingsTitle": "ಆಡಿಯೋ ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+  "nowPlayingLabel": "ಈಗ ಪ್ಲೇ ಆಗುತ್ತಿದೆ",
+  "higherQualityUsesMoreData": "ಹೆಚ್ಚಿನ ಗುಣಮಟ್ಟವು ಹೆಚ್ಚಿನ ಡೇಟಾವನ್ನು ಬಳಸುತ್ತದೆ",
+  "adjustsBasedOnNetworkSpeed": "ನೆಟ್ವರ್ಕ್ ವೇಗವನ್ನು ಆಧರಿಸಿ ಹೊಂದಿಸುತ್ತದೆ",
+  "qualityLowUsesLessData": "~64 kbps - ಕಡಿಮೆ ಡೇಟಾವನ್ನು ಬಳಸುತ್ತದೆ",
+  "qualityMediumBalanced": "~128 kbps - ಸಮತೋಲಿತ",
+  "qualityHighBestForMost": "~ 256 kbps - ಹೆಚ್ಚಿನವರಿಗೆ ಉತ್ತಮವಾಗಿದೆ",
+  "qualityMaximumAvailable": "ಅತ್ಯಧಿಕ ಲಭ್ಯವಿದೆ (~256 ಕೆಬಿಪಿಎಸ್)",
+  "recommended": "ಶಿಫಾರಸು ಮಾಡಲಾಗಿದೆ",
+  "blendTrackEndsIntoNext": "ಪ್ರಸ್ತುತ ಟ್ರ್ಯಾಕ್‌ನ ಅಂತ್ಯವನ್ನು ಮುಂದಿನ ಪ್ರಾರಂಭಕ್ಕೆ ಮಿಶ್ರಣ ಮಾಡಿ",
+  "preCachesNextTracks": "ಲಭ್ಯವಿರುವಾಗ ಸ್ಥಳೀಯ ಸಂಗ್ರಹದಿಂದ ಮುಂದಿನ ಟ್ರ್ಯಾಕ್‌ಗಳು ಮತ್ತು ಪ್ಲೇಗಳನ್ನು ಪೂರ್ವ-ಕ್ಯಾಶ್ ಮಾಡಿ",
+  "smartStreamCache": "ಸ್ಮಾರ್ಟ್ ಸ್ಟ್ರೀಮ್ ಸಂಗ್ರಹ",
+  "usedCacheStorage": "ಬಳಸಲಾಗಿದೆ: {used} / {limit} MB",
+  "@usedCacheStorage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "calculatingCacheUsage": "ಸಂಗ್ರಹ ಬಳಕೆಯನ್ನು ಲೆಕ್ಕಾಚಾರ ಮಾಡಲಾಗುತ್ತಿದೆ...",
+  "unableToReadCacheUsage": "ಸಂಗ್ರಹ ಬಳಕೆಯನ್ನು ಓದಲು ಸಾಧ್ಯವಾಗುತ್ತಿಲ್ಲ",
+  "preCacheNetwork": "ಪೂರ್ವ-ಸಂಗ್ರಹ ನೆಟ್‌ವರ್ಕ್",
+  "wifiOnly": "Wi-Fi ಮಾತ್ರ",
+  "wifiAndMobileData": "Wi-Fi + ಮೊಬೈಲ್ ಡೇಟಾ",
+  "preCacheRunsWifiOnly": "Wi-Fi ಗೆ ಸಂಪರ್ಕಿಸಿದಾಗ ಮಾತ್ರ ಪೂರ್ವ-ಸಂಗ್ರಹ ರನ್ ಆಗುತ್ತದೆ",
+  "preCacheRunsWifiAndMobile": "ಪೂರ್ವ-ಸಂಗ್ರಹ Wi-Fi ಮತ್ತು ಮೊಬೈಲ್ ಡೇಟಾ ಎರಡರಲ್ಲೂ ರನ್ ಆಗಬಹುದು",
+  "concurrentPreCacheDownloads": "ಸಮಕಾಲೀನ ಪೂರ್ವ-ಸಂಗ್ರಹ ಡೌನ್‌ಲೋಡ್‌ಗಳು",
+  "higherValuesCacheFaster": "ಹೆಚ್ಚಿನ ಮೌಲ್ಯಗಳು ವೇಗವಾಗಿ ಸಂಗ್ರಹವಾಗುತ್ತವೆ ಆದರೆ ಹೆಚ್ಚು ನೆಟ್‌ವರ್ಕ್ ಮತ್ತು ಬ್ಯಾಟರಿಯನ್ನು ಬಳಸುತ್ತವೆ",
+  "cacheSizeLimit": "ಸಂಗ್ರಹ ಗಾತ್ರದ ಮಿತಿ",
+  "off": "ಆಫ್",
+  "crossfadeDisabled": "ಕ್ರಾಸ್‌ಫೇಡ್ ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ",
+  "currentValueLabel": "ಪ್ರಸ್ತುತ: {value}",
+  "@currentValueLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "audioQuality": "ಆಡಿಯೋ ಗುಣಮಟ್ಟ",
+  "qualityLowKbps": "ಕಡಿಮೆ (64 kbps)",
+  "qualityMediumKbps": "ಮಧ್ಯಮ (128 kbps)",
+  "qualityHighKbps": "ಹೆಚ್ಚು (256 kbps)",
+  "qualityMaximumKbps": "ಗರಿಷ್ಠ (~256 kbps)",
+  "all": "ಎಲ್ಲಾ",
+  "artists": "ಕಲಾವಿದರು",
+  "albums": "ಆಲ್ಬಮ್‌ಗಳು",
+  "playlists": "ಪ್ಲೇಪಟ್ಟಿಗಳು",
+  "singlesAndEps": "ಸಿಂಗಲ್ಸ್ ಮತ್ತು ಇಪಿಗಳು",
+  "appearsOn": "ರಂದು ಕಾಣಿಸಿಕೊಳ್ಳುತ್ತದೆ",
+  "fansAlsoLike": "ಅಭಿಮಾನಿಗಳೂ ಇಷ್ಟ ಪಡುತ್ತಾರೆ",
+  "searchMusicHint": "ಹಾಡುಗಳು, ಆಲ್ಬಮ್‌ಗಳು, ಕಲಾವಿದರನ್ನು ಹುಡುಕಿ",
+  "searchForMusic": "ಸಂಗೀತಕ್ಕಾಗಿ ಹುಡುಕಿ",
+  "noResultsFound": "ಯಾವುದೇ ಫಲಿತಾಂಶಗಳು ಕಂಡುಬಂದಿಲ್ಲ",
+  "showAllLocalResults": "ಎಲ್ಲಾ {count} ಸ್ಥಳೀಯ ಫಲಿತಾಂಶಗಳನ್ನು ತೋರಿಸಿ",
+  "@showAllLocalResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "topResult": "ಉನ್ನತ ಫಲಿತಾಂಶ",
+  "artistLabel": "ಕಲಾವಿದ",
+  "albumByArtist": "ಆಲ್ಬಮ್ - {artist}",
+  "@albumByArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistByAuthor": "ಪ್ಲೇಪಟ್ಟಿ - {author}",
+  "@playlistByAuthor": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "ಉಳಿಸಿ",
+  "upNext": "ಮುಂದೆ",
+  "lyricsTab": "ಸಾಹಿತ್ಯ",
+  "relatedTab": "ಸಂಬಂಧಿತ",
+  "youMightAlsoLike": "ನಿಮಗೂ ಇಷ್ಟವಾಗಬಹುದು",
+  "otherPerformances": "ಇತರ ಪ್ರದರ್ಶನಗಳು",
+  "moreFrom": "ನಿಂದ ಇನ್ನಷ್ಟು",
+  "aboutArtist": "ಕಲಾವಿದನ ಬಗ್ಗೆ",
+  "jamQueue": "ಜಾಮ್ ಕ್ಯೂ",
+  "radioQueue": "ರೇಡಿಯೋ ಕ್ಯೂ",
+  "queueLabel": "ಸರತಿ",
+  "playingFrom": "ನಿಂದ ಆಡಲಾಗುತ್ತಿದೆ",
+  "loadingMoreTracks": "ಇನ್ನಷ್ಟು ಟ್ರ್ಯಾಕ್‌ಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...",
+  "scrollForMore": "ಹೆಚ್ಚಿನದಕ್ಕಾಗಿ ಸ್ಕ್ರಾಲ್ ಮಾಡಿ",
+  "someone": "ಯಾರೋ",
+  "noTracksInQueue": "ಸರದಿಯಲ್ಲಿ ಯಾವುದೇ ಟ್ರ್ಯಾಕ್‌ಗಳಿಲ್ಲ",
+  "addSongsToJamQueue": "ಜಾಮ್ ಕ್ಯೂಗೆ ಹಾಡುಗಳನ್ನು ಸೇರಿಸಿ",
+  "addedByUser": "{name} ರಿಂದ ಸೇರಿಸಲಾಗಿದೆ",
+  "@addedByUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTrackPlaying": "ಟ್ರ್ಯಾಕ್ ಪ್ಲೇಯಿಂಗ್ ಇಲ್ಲ",
+  "noRelatedTracksFound": "ಯಾವುದೇ ಸಂಬಂಧಿತ ಟ್ರ್ಯಾಕ್‌ಗಳು ಕಂಡುಬಂದಿಲ್ಲ",
+  "queueIsEmpty": "ಸರತಿ ಸಾಲು ಖಾಲಿಯಾಗಿದೆ",
+  "defaultQueueName": "ನನ್ನ ಕ್ಯೂ",
+  "saveQueueAsPlaylist": "ಸರದಿಯನ್ನು ಪ್ಲೇಪಟ್ಟಿಯಾಗಿ ಉಳಿಸಿ",
+  "savedTracksToPlaylist": "{count} ಟ್ರ್ಯಾಕ್‌ಗಳನ್ನು \"{name}\" ಗೆ ಉಳಿಸಲಾಗಿದೆ",
+  "@savedTracksToPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "jams": "ಜಾಮ್ಗಳು",
+  "nowPlayingHeader": "ಈಗ ಆಡಲಾಗುತ್ತಿದೆ",
+  "browseMoodsGenresTitle": "ಮೂಡ್ಸ್ & ಪ್ರಕಾರಗಳು",
+  "moodCategoryMoods": "ಮನಸ್ಥಿತಿಗಳು",
+  "moodCategoryGenres": "ಪ್ರಕಾರಗಳು",
+  "moodCategoryActivities": "ಚಟುವಟಿಕೆಗಳು",
+  "moodChill": "ಚಿಲ್",
+  "moodParty": "ಪಾರ್ಟಿ",
+  "moodWorkout": "ತಾಲೀಮು",
+  "moodFocus": "ಗಮನ",
+  "moodSleep": "ನಿದ್ರೆ",
+  "moodHappy": "ಸಂತೋಷವಾಗಿದೆ",
+  "moodSad": "ದುಃಖ",
+  "moodRomance": "ಪ್ರಣಯ",
+  "moodFeelGood": "ಒಳ್ಳೆಯದನ್ನು ಅನುಭವಿಸಿ",
+  "moodEnergize": "ಶಕ್ತಿ ತುಂಬು",
+  "genrePop": "ಪಾಪ್",
+  "genreRock": "ರಾಕ್",
+  "genreHipHop": "ಹಿಪ್-ಹಾಪ್",
+  "genreRnb": "R&B",
+  "genreElectronic": "ಎಲೆಕ್ಟ್ರಾನಿಕ್",
+  "genreDance": "ನೃತ್ಯ",
+  "genreJazz": "ಜಾಝ್",
+  "genreClassical": "ಶಾಸ್ತ್ರೀಯ",
+  "genreCountry": "ದೇಶ",
+  "genreMetal": "ಲೋಹ",
+  "genreIndie": "ಇಂಡಿ",
+  "genreKPop": "ಕೆ-ಪಾಪ್",
+  "genreLatin": "ಲ್ಯಾಟಿನ್",
+  "genreBollywood": "ಬಾಲಿವುಡ್",
+  "activityDriving": "ಚಾಲನೆ",
+  "activityCooking": "ಅಡುಗೆ",
+  "activityGaming": "ಗೇಮಿಂಗ್",
+  "activityStudying": "ಅಧ್ಯಯನ ಮಾಡುತ್ತಿದ್ದಾರೆ",
+  "activityMeditation": "ಧ್ಯಾನ",
+  "play": "ಪ್ಲೇ ಮಾಡಿ",
+  "findInPlaylist": "ಪ್ಲೇಪಟ್ಟಿಯಲ್ಲಿ ಹುಡುಕಿ...",
+  "playlistNotFoundMessage": "ಪ್ಲೇಪಟ್ಟಿ ಕಂಡುಬಂದಿಲ್ಲ\n\nಪ್ಲೇಪಟ್ಟಿ ID: {id}\n\nಈ ಪ್ಲೇಪಟ್ಟಿ ಖಾಸಗಿಯಾಗಿರಬಹುದು ಅಥವಾ ಲಭ್ಯವಿಲ್ಲದಿರಬಹುದು.",
+  "@playlistNotFoundMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineSnapshotDownloaded": "ಆಫ್‌ಲೈನ್ ಸ್ನ್ಯಾಪ್‌ಶಾಟ್ - {downloaded}/{total} ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗಿದೆ",
+  "@offlineSnapshotDownloaded": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noMatchingTracks": "ಯಾವುದೇ ಹೊಂದಾಣಿಕೆಯ ಟ್ರ್ಯಾಕ್‌ಗಳಿಲ್ಲ",
+  "noTracksFound": "ಯಾವುದೇ ಟ್ರ್ಯಾಕ್‌ಗಳು ಕಂಡುಬಂದಿಲ್ಲ",
+  "downloadingTracksFromPlaylist": "{playlist} ನಿಂದ {count} ಟ್ರ್ಯಾಕ್‌ಗಳನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ",
+  "@downloadingTracksFromPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTracksToQueueCount": "ಸರತಿ ಸಾಲಿನಲ್ಲಿ {count} ಟ್ರ್ಯಾಕ್‌ಗಳನ್ನು ಸೇರಿಸಲಾಗಿದೆ",
+  "@addedTracksToQueueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadPlaylist": "ಪ್ಲೇಪಟ್ಟಿಯನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ",
+  "signInWithGoogle": "Google ನೊಂದಿಗೆ ಸೈನ್ ಇನ್ ಮಾಡಿ",
+  "signInToUseJams": "ಜಾಮ್‌ಗಳನ್ನು ಬಳಸಲು ಸೈನ್ ಇನ್ ಮಾಡಿ",
+  "listenTogetherRealtime": "ನೈಜ ಸಮಯದಲ್ಲಿ ಸ್ನೇಹಿತರೊಂದಿಗೆ ಒಟ್ಟಿಗೆ ಆಲಿಸಿ",
+  "signInGoogleToStartOrJoinJam": "ಸ್ನೇಹಿತರೊಂದಿಗೆ ಜಾಮ್ ಸೆಶನ್ ಅನ್ನು ಪ್ರಾರಂಭಿಸಲು ಅಥವಾ ಸೇರಲು Google ನೊಂದಿಗೆ ಸೈನ್ ಇನ್ ಮಾಡಿ",
+  "listenTogether": "ಒಟ್ಟಿಗೆ ಆಲಿಸಿ",
+  "listenWithFriendsInSync": "ಸಿಂಕ್‌ನಲ್ಲಿ ಸ್ನೇಹಿತರೊಂದಿಗೆ ಆಲಿಸಿ",
+  "sameSongSameMoment": "ಅದೇ ಹಾಡು, ಅದೇ ಕ್ಷಣ",
+  "startJam": "ಜಾಮ್ ಅನ್ನು ಪ್ರಾರಂಭಿಸಿ",
+  "createSessionAndInviteFriends": "ಅಧಿವೇಶನವನ್ನು ರಚಿಸಿ ಮತ್ತು ಸ್ನೇಹಿತರನ್ನು ಆಹ್ವಾನಿಸಿ",
+  "joinJam": "ಜಾಮ್‌ಗೆ ಸೇರಿ",
+  "enterSixDigitCode": "6-ಅಂಕಿಯ ಕೋಡ್ ನಮೂದಿಸಿ",
+  "join": "ಸೇರಿಕೊಳ್ಳಿ",
+  "shareThisCode": "ಈ ಕೋಡ್ ಅನ್ನು ಹಂಚಿಕೊಳ್ಳಿ",
+  "codeCopied": "ಕೋಡ್ ನಕಲಿಸಲಾಗಿದೆ!",
+  "youAreHost": "ನೀವು ಅತಿಥೇಯರು",
+  "hostedBy": "{name} ಮೂಲಕ ಹೋಸ್ಟ್ ಮಾಡಲಾಗಿದೆ",
+  "@hostedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listeningTogetherCount": "ಒಟ್ಟಿಗೆ ಆಲಿಸುವುದು ({count})",
+  "@listeningTogetherCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "endSession": "ಅಧಿವೇಶನವನ್ನು ಕೊನೆಗೊಳಿಸಿ",
+  "leaveSession": "ಸೆಷನ್ ಬಿಡಿ",
+  "connected": "ಸಂಪರ್ಕಗೊಂಡಿದೆ",
+  "reconnecting": "ಮರುಸಂಪರ್ಕಿಸಲಾಗುತ್ತಿದೆ",
+  "retryInSeconds": "{seconds}s ನಲ್ಲಿ ಮರುಪ್ರಯತ್ನಿಸಿ",
+  "@retryInSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectingStatus": "ಮರುಸಂಪರ್ಕಿಸಲಾಗುತ್ತಿದೆ · {suffix}",
+  "@reconnectingStatus": {
+    "placeholders": {
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "reconnectingAttemptStatus": "ಮರುಸಂಪರ್ಕಿಸಲಾಗುತ್ತಿದೆ ({attempt}) · {suffix}",
+  "@reconnectingAttemptStatus": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "disconnected": "ಸಂಪರ್ಕ ಕಡಿತಗೊಂಡಿದೆ",
+  "playing": "ನುಡಿಸುತ್ತಿದ್ದೇನೆ",
+  "addSongsToPlayTogether": "ಒಟ್ಟಿಗೆ ಪ್ಲೇ ಮಾಡಲು ಹಾಡುಗಳನ್ನು ಸೇರಿಸಿ",
+  "sessionCreatedCode": "ಸೆಷನ್ ರಚಿಸಲಾಗಿದೆ! ಕೋಡ್: {code}",
+  "@sessionCreatedCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "noJamFoundForCode": "ಈ ಕೋಡ್‌ಗೆ ಯಾವುದೇ ಜಾಮ್ ಕಂಡುಬಂದಿಲ್ಲ.",
+  "hostRole": "ಹೋಸ್ಟ್",
+  "canControl": "ನಿಯಂತ್ರಿಸಬಹುದು",
+  "listeningStatus": "ಕೇಳುತ್ತಿದೆ",
+  "transferHostQuestion": "ಹೋಸ್ಟ್ ಅನ್ನು ವರ್ಗಾಯಿಸುವುದೇ?",
+  "transferHostMessage": "{name} ಅನ್ನು ಹೊಸ ಹೋಸ್ಟ್ ಮಾಡುವುದೇ? ನೀವು ಹೋಸ್ಟ್ ನಿಯಂತ್ರಣಗಳನ್ನು ಕಳೆದುಕೊಳ್ಳುತ್ತೀರಿ.",
+  "@transferHostMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transfer": "ವರ್ಗಾವಣೆ",
+  "removeControl": "ನಿಯಂತ್ರಣವನ್ನು ತೆಗೆದುಹಾಕಿ",
+  "allowControl": "ನಿಯಂತ್ರಣವನ್ನು ಅನುಮತಿಸಿ",
+  "makeHost": "ಹೋಸ್ಟ್ ಮಾಡಿ",
+  "live": "ಲೈವ್",
+  "playbackControlsJam": "ನಿಮ್ಮ ಪ್ಲೇಬ್ಯಾಕ್ ಜಾಮ್ ಅನ್ನು ನಿಯಂತ್ರಿಸುತ್ತದೆ",
+  "starting": "ಪ್ರಾರಂಭಿಸಲಾಗುತ್ತಿದೆ...",
+  "or": "ಅಥವಾ",
+  "joinFriendsJam": "ಸ್ನೇಹಿತರ ಜಾಮ್‌ಗೆ ಸೇರಿ",
+  "startJamDescription": "ಸ್ನೇಹಿತರೊಂದಿಗೆ ಸಂಗೀತವನ್ನು ಹಂಚಿಕೊಳ್ಳಲು ಜಾಮ್ ಅನ್ನು ಪ್ರಾರಂಭಿಸಿ.\nಎಲ್ಲರೂ ಒಂದೇ ಹಾಡನ್ನು ಸಿಂಕ್ ಆಗಿ ಕೇಳುತ್ತಾರೆ.",
+  "folderSettings": "ಫೋಲ್ಡರ್ ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+  "noFoldersAddedYet": "ಇನ್ನೂ ಯಾವುದೇ ಫೋಲ್ಡರ್‌ಗಳನ್ನು ಸೇರಿಸಲಾಗಿಲ್ಲ",
+  "addFolder": "ಫೋಲ್ಡರ್ ಸೇರಿಸಿ",
+  "localMusic": "ಸ್ಥಳೀಯ ಸಂಗೀತ",
+  "scanLocalMusicDescription": "ಸ್ಥಳೀಯ ಸಂಗೀತ ಫೈಲ್‌ಗಳನ್ನು ಹುಡುಕಲು ಮತ್ತು ಅವುಗಳನ್ನು ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿ ಪ್ಲೇ ಮಾಡಲು ನಿಮ್ಮ ಸಾಧನವನ್ನು ಸ್ಕ್ಯಾನ್ ಮಾಡಿ",
+  "scanForMusic": "ಸಂಗೀತಕ್ಕಾಗಿ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ",
+  "addFolderLowercase": "ಫೋಲ್ಡರ್ ಸೇರಿಸಿ",
+  "supportedFormats": "ಬೆಂಬಲಿತ ಸ್ವರೂಪಗಳು: MP3, FLAC, WAV, M4A, OGG",
+  "songsFromFoldersCount": "{folders} ಫೋಲ್ಡರ್(ಗಳು) ನಿಂದ {songs} ಹಾಡುಗಳು",
+  "@songsFromFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "add": "ಸೇರಿಸಿ",
+  "permissionRequired": "ಅನುಮತಿ ಅಗತ್ಯವಿದೆ",
+  "storagePermissionRequiredMessage": "ನಿಮ್ಮ ಸಂಗೀತ ಫೈಲ್‌ಗಳನ್ನು ಪ್ರವೇಶಿಸಲು ಶೇಖರಣಾ ಅನುಮತಿಯ ಅಗತ್ಯವಿದೆ. ದಯವಿಟ್ಟು ಅದನ್ನು ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಸಕ್ರಿಯಗೊಳಿಸಿ.",
+  "couldNotOpenSettingsPermission": "ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ತೆರೆಯಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಶೇಖರಣಾ ಅನುಮತಿಯನ್ನು ಹಸ್ತಚಾಲಿತವಾಗಿ ಸಕ್ರಿಯಗೊಳಿಸಿ.",
+  "openSettings": "ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ತೆರೆಯಿರಿ",
+  "folderAdded": "ಫೋಲ್ಡರ್ ಸೇರಿಸಲಾಗಿದೆ",
+  "addedFolderScanNow": "\"{folder}\" ಸೇರಿಸಲಾಗಿದೆ. ನೀವು ಇದೀಗ ಅದನ್ನು ಸಂಗೀತಕ್ಕಾಗಿ ಸ್ಕ್ಯಾನ್ ಮಾಡಲು ಬಯಸುವಿರಾ?",
+  "@addedFolderScanNow": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanNow": "ಈಗ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ",
+  "foundSongsCount": "{count} ಹಾಡುಗಳು ಕಂಡುಬಂದಿವೆ",
+  "@foundSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addFolderFirstThenScan": "ಮೊದಲು ಫೋಲ್ಡರ್ ಸೇರಿಸಿ, ನಂತರ ಆಡಿಯೊ ಫೈಲ್‌ಗಳಿಗಾಗಿ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ.",
+  "scanFoldersCountDescription": "ಇದು ಆಡಿಯೊ ಫೈಲ್‌ಗಳಿಗಾಗಿ {count} ಫೋಲ್ಡರ್(ಗಳನ್ನು) ಸ್ಕ್ಯಾನ್ ಮಾಡುತ್ತದೆ.",
+  "@scanFoldersCountDescription": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "foldersToScan": "ಸ್ಕ್ಯಾನ್ ಮಾಡಲು ಫೋಲ್ಡರ್‌ಗಳು:",
+  "andMoreFolders": "... ಮತ್ತು {count} ಹೆಚ್ಚು",
+  "@andMoreFolders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "startScan": "ಸ್ಕ್ಯಾನ್ ಪ್ರಾರಂಭಿಸಿ",
+  "foundSongsInFoldersCount": "{folders} ಫೋಲ್ಡರ್(ಗಳು) ನಲ್ಲಿ {songs} ಹಾಡುಗಳು ಕಂಡುಬಂದಿವೆ",
+  "@foundSongsInFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "scanningForMusic": "ಸಂಗೀತಕ್ಕಾಗಿ ಸ್ಕ್ಯಾನ್ ಮಾಡಲಾಗುತ್ತಿದೆ...",
+  "filesProgress": "{scanned} / {total} ಫೈಲ್‌ಗಳು",
+  "@filesProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "signOut": "ಸೈನ್ ಔಟ್ ಮಾಡಿ",
+  "signInGoogleProfilePictureJams": "ನಿಮ್ಮ ಪ್ರೊಫೈಲ್ ಚಿತ್ರವನ್ನು ಪಡೆಯಲು ಮತ್ತು ಜಾಮ್‌ಗಳನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಲು Google ನೊಂದಿಗೆ ಸೈನ್ ಇನ್ ಮಾಡಿ",
+  "sync": "ಸಿಂಕ್ ಮಾಡಿ",
+  "lastSynced": "ಕೊನೆಯದಾಗಿ ಸಿಂಕ್ ಮಾಡಿದ್ದು: {time}",
+  "@lastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedItems": "{count} ಐಟಂಗಳನ್ನು ಸಿಂಕ್ ಮಾಡಲಾಗಿದೆ",
+  "@syncedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncing": "ಸಿಂಕ್ ಮಾಡಲಾಗುತ್ತಿದೆ...",
+  "syncNow": "ಈಗ ಸಿಂಕ್ ಮಾಡಿ",
+  "cachedItems": "{count} ಕ್ಯಾಶ್ ಮಾಡಿದ ಐಟಂಗಳು",
+  "@cachedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streams": "ಸ್ಟ್ರೀಮ್‌ಗಳು",
+  "colors": "ಬಣ್ಣಗಳು",
+  "searches": "ಹುಡುಕಾಟಗಳು",
+  "expiredCount": "{count} ಅವಧಿ ಮೀರಿದೆ",
+  "@expiredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cacheCleanupComplete": "ಸಂಗ್ರಹ ಕ್ಲೀನಪ್ ಪೂರ್ಣಗೊಂಡಿದೆ",
+  "cleanUp": "ಸ್ವಚ್ಛಗೊಳಿಸಿ",
+  "clearCache": "ಸಂಗ್ರಹವನ್ನು ತೆರವುಗೊಳಿಸಿ",
+  "clearCachedMusicDataConfirm": "ಇದು ಎಲ್ಲಾ ಕ್ಯಾಶ್ ಮಾಡಲಾದ ಸಂಗೀತ ಡೇಟಾವನ್ನು ತೆರವುಗೊಳಿಸುತ್ತದೆ. ಮುಂದುವರಿಸುವುದೇ?",
+  "clear": "ತೆರವುಗೊಳಿಸಿ",
+  "cacheCleared": "ಸಂಗ್ರಹವನ್ನು ತೆರವುಗೊಳಿಸಲಾಗಿದೆ",
+  "analytics": "ಅನಾಲಿಟಿಕ್ಸ್",
+  "hits": "ಹಿಟ್ಸ್",
+  "misses": "ತಪ್ಪಿಸಿಕೊಂಡಿದ್ದಾರೆ",
+  "network": "ನೆಟ್ವರ್ಕ್",
+  "analyticsReset": "ಅನಾಲಿಟಿಕ್ಸ್ ರೀಸೆಟ್",
+  "resetStats": "ಅಂಕಿಅಂಶಗಳನ್ನು ಮರುಹೊಂದಿಸಿ",
+  "cacheHitRate": "ಸಂಗ್ರಹ ಹಿಟ್ ದರ",
+  "liked": "ಇಷ್ಟವಾಯಿತು",
+  "appInfo": "ಅಪ್ಲಿಕೇಶನ್ ಮಾಹಿತಿ",
+  "releaseBuild": "ಬಿಡುಗಡೆ ನಿರ್ಮಾಣ",
+  "updater": "ಅಪ್ಡೇಟರ್",
+  "available": "ಲಭ್ಯವಿದೆ",
+  "unavailable": "ಲಭ್ಯವಿಲ್ಲ",
+  "loadingCompact": "ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+  "errorCompact": "ದೋಷ",
+  "none": "ಯಾವುದೂ ಇಲ್ಲ",
+  "currentPatch": "ಪ್ರಸ್ತುತ ಪ್ಯಾಚ್",
+  "nextPatch": "ಮುಂದಿನ ಪ್ಯಾಚ್",
+  "disconnectYoutubeMusic": "YouTube ಸಂಗೀತದ ಸಂಪರ್ಕ ಕಡಿತಗೊಳಿಸಿ",
+  "disconnectYoutubeMusicQuestion": "YouTube ಸಂಗೀತದ ಸಂಪರ್ಕ ಕಡಿತಗೊಳಿಸುವುದೇ?",
+  "disconnectYoutubeMusicWarning": "ಇದು ನಿಮ್ಮ YouTube ಸಂಗೀತ ಖಾತೆಯನ್ನು ಅಪ್ಲಿಕೇಶನ್‌ನಿಂದ ತೆಗೆದುಹಾಕುತ್ತದೆ. ನಿಮ್ಮ ಲೈಬ್ರರಿ ಡೇಟಾವನ್ನು ತೆರವುಗೊಳಿಸಲಾಗುತ್ತದೆ.",
+  "disconnect": "ಸಂಪರ್ಕ ಕಡಿತಗೊಳಿಸಿ",
+  "syncFailed": "ಸಿಂಕ್ ವಿಫಲವಾಗಿದೆ: {error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "justNow": "ಈಗಷ್ಟೇ",
+  "minutesAgo": "{count}m ಹಿಂದೆ",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count}ಗಂ ಹಿಂದೆ",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count}ದಿ ಹಿಂದೆ",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noSongsInTitle": "{title} ನಲ್ಲಿ ಯಾವುದೇ ಹಾಡುಗಳಿಲ್ಲ",
+  "@noSongsInTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "createPlaylistDescription": "ನಿಮ್ಮ ಸಂಗೀತವನ್ನು ಸಂಘಟಿಸಲು ಪ್ಲೇಪಟ್ಟಿಯನ್ನು ರಚಿಸಿ",
+  "savedAlbumsFromYoutubeMusic": "YouTube Music ನಿಂದ ಆಲ್ಬಮ್‌ಗಳನ್ನು ಉಳಿಸಲಾಗಿದೆ",
+  "noSavedAlbumsFromYoutubeMusic": "YouTube Music ನಿಂದ ಯಾವುದೇ ಆಲ್ಬಮ್‌ಗಳನ್ನು ಉಳಿಸಲಾಗಿಲ್ಲ",
+  "errorLoadingAlbums": "ಆಲ್ಬಮ್‌ಗಳನ್ನು ಲೋಡ್ ಮಾಡುವಲ್ಲಿ ದೋಷ",
+  "recentlyPlayed": "ಇತ್ತೀಚೆಗೆ ಆಡಿದರು",
+  "noAlbumsYet": "ಇನ್ನೂ ಯಾವುದೇ ಆಲ್ಬಮ್‌ಗಳಿಲ್ಲ",
+  "playSomeMusicToSeeAlbumsHere": "ಇಲ್ಲಿ ಆಲ್ಬಮ್‌ಗಳನ್ನು ನೋಡಲು ಕೆಲವು ಸಂಗೀತವನ್ನು ಪ್ಲೇ ಮಾಡಿ",
+  "subscribedArtists": "ಚಂದಾದಾರ ಕಲಾವಿದರು",
+  "noSubscribedArtists": "ಯಾವುದೇ ಚಂದಾದಾರ ಕಲಾವಿದರು ಇಲ್ಲ",
+  "errorLoadingArtists": "ಕಲಾವಿದರನ್ನು ಲೋಡ್ ಮಾಡುವಲ್ಲಿ ದೋಷ",
+  "recentlyPlayedArtists": "ಇತ್ತೀಚೆಗೆ ಆಡಿದ ಕಲಾವಿದರು",
+  "noArtistsYet": "ಇನ್ನೂ ಕಲಾವಿದರಿಲ್ಲ",
+  "playSomeMusicToSeeArtistsHere": "ಇಲ್ಲಿ ಕಲಾವಿದರನ್ನು ನೋಡಲು ಸ್ವಲ್ಪ ಸಂಗೀತವನ್ನು ಪ್ಲೇ ಮಾಡಿ",
+  "downloading": "ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ",
+  "downloadedPlaylists": "ಪ್ಲೇಪಟ್ಟಿಗಳನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗಿದೆ",
+  "errorLoadingDownloads": "ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಲೋಡ್ ಮಾಡುವಲ್ಲಿ ದೋಷ",
+  "deleteDownload": "ಡೌನ್‌ಲೋಡ್ ಅಳಿಸಿ",
+  "deleteDownloadQuestion": "ಡೌನ್‌ಲೋಡ್ ಅಳಿಸುವುದೇ?",
+  "deleteDownloadWarning": "ಇದು ನಿಮ್ಮ ಸಾಧನದಿಂದ \"{title}\" ಅನ್ನು ತೆಗೆದುಹಾಕುತ್ತದೆ. ನೀವು ಅದನ್ನು ನಂತರ ಮತ್ತೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಬಹುದು.",
+  "@deleteDownloadWarning": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedTrack": "\"{title}\" ಅಳಿಸಲಾಗಿದೆ",
+  "@deletedTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSongsWillAppearHere": "ಡೌನ್‌ಲೋಡ್ ಮಾಡಿದ ಹಾಡುಗಳು ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತವೆ",
+  "createPlaylist": "ಪ್ಲೇಪಟ್ಟಿಯನ್ನು ರಚಿಸಿ",
+  "autoPlaylists": "ಸ್ವಯಂ ಪ್ಲೇಪಟ್ಟಿಗಳು",
+  "likedSongsLabel": "ಇಷ್ಟವಾದ ಹಾಡುಗಳು",
+  "downloadedFraction": "{downloaded}/{total} ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗಿದೆ",
+  "@downloadedFraction": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "more": "ಇನ್ನಷ್ಟು",
+  "video": "ವೀಡಿಯೊ",
+  "forgottenFavorites": "ಮರೆತುಹೋದ ಮೆಚ್ಚಿನವುಗಳು",
+  "mixedForYou": "ನಿಮಗಾಗಿ ಮಿಶ್ರಣ ಮಾಡಲಾಗಿದೆ",
+  "myMixOne": "ನನ್ನ ಮಿಕ್ಸ್ 1",
+  "discoverMix": "ಡಿಸ್ಕವರ್ ಮಿಕ್ಸ್",
+  "replayMix": "ರಿಪ್ಲೇ ಮಿಕ್ಸ್",
+  "newRelease": "ಹೊಸ ಬಿಡುಗಡೆ",
+  "chillMix": "ಚಿಲ್ ಮಿಕ್ಸ್",
+  "basedOnYourListening": "ನಿಮ್ಮ ಆಲಿಸುವಿಕೆಯ ಆಧಾರದ ಮೇಲೆ",
+  "newMusicForYou": "ನಿಮಗಾಗಿ ಹೊಸ ಸಂಗೀತ",
+  "yourFavorites": "ನಿಮ್ಮ ಮೆಚ್ಚಿನವುಗಳು",
+  "freshTracks": "ತಾಜಾ ಹಾಡುಗಳು",
+  "relaxingVibes": "ವಿಶ್ರಾಂತಿ ಕಂಪನಗಳು",
+  "musicToGetYouStarted": "ನೀವು ಪ್ರಾರಂಭಿಸಲು ಸಂಗೀತ",
+  "welcomeUser": "ಸ್ವಾಗತ {name}",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeFallbackName": "ಅಲ್ಲಿ",
+  "youtubeMusicLabel": "YouTube ಸಂಗೀತ",
+  "local": "ಸ್ಥಳೀಯ",
+  "recentlyAdded": "ಇತ್ತೀಚೆಗೆ ಸೇರಿಸಲಾಗಿದೆ",
+  "name": "ಹೆಸರು",
+  "duration": "ಅವಧಿ",
+  "searchSongsHint": "ಹಾಡುಗಳನ್ನು ಹುಡುಕಿ...",
+  "noLikedSongs": "ಇಷ್ಟಪಟ್ಟ ಹಾಡುಗಳಿಲ್ಲ",
+  "likeSomeSongsToSeeThemHere": "ಕೆಲವು ಹಾಡುಗಳನ್ನು ಇಲ್ಲಿ ನೋಡಲು ಇಷ್ಟ",
+  "noLocalSongs": "ಸ್ಥಳೀಯ ಹಾಡುಗಳಿಲ್ಲ",
+  "scanFoldersToFindLocalMusic": "ಸ್ಥಳೀಯ ಸಂಗೀತವನ್ನು ಹುಡುಕಲು ಫೋಲ್ಡರ್‌ಗಳನ್ನು ಸ್ಕ್ಯಾನ್ ಮಾಡಿ",
+  "noResults": "ಯಾವುದೇ ಫಲಿತಾಂಶಗಳಿಲ್ಲ",
+  "tryDifferentKeywords": "ವಿಭಿನ್ನ ಕೀವರ್ಡ್‌ಗಳನ್ನು ಪ್ರಯತ್ನಿಸಿ",
+  "noSongsYet": "ಇನ್ನೂ ಯಾವುದೇ ಹಾಡುಗಳಿಲ್ಲ",
+  "playSomeMusicToBuildYourLibrary": "ನಿಮ್ಮ ಲೈಬ್ರರಿಯನ್ನು ನಿರ್ಮಿಸಲು ಸ್ವಲ್ಪ ಸಂಗೀತವನ್ನು ಪ್ಲೇ ಮಾಡಿ",
+  "albumNotFound": "ಆಲ್ಬಮ್ ಕಂಡುಬಂದಿಲ್ಲ",
+  "downloadAlbum": "ಆಲ್ಬಮ್ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ",
+  "downloadingTracksFromAlbum": "{album} ನಿಂದ {count} ಟ್ರ್ಯಾಕ್‌ಗಳನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ",
+  "@downloadingTracksFromAlbum": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "shareAlbumText": "{title} ರಿಂದ {artist}\n{url}",
+  "@shareAlbumText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestions": "ಸಲಹೆಗಳು",
+  "recentSearches": "ಇತ್ತೀಚಿನ ಹುಡುಕಾಟಗಳು",
+  "startTypingToSearch": "ಹುಡುಕಲು ಟೈಪ್ ಮಾಡಲು ಪ್ರಾರಂಭಿಸಿ...",
+  "youtubeMusicPlaylists": "YouTube ಸಂಗೀತ ಪ್ಲೇಪಟ್ಟಿಗಳು",
+  "errorLoadingPlaylists": "ಪ್ಲೇಪಟ್ಟಿಗಳನ್ನು ಲೋಡ್ ಮಾಡುವಲ್ಲಿ ದೋಷ",
+  "yourPlaylists": "ನಿಮ್ಮ ಪ್ಲೇಪಟ್ಟಿಗಳು",
+  "noYoutubeMusicPlaylistsFound": "ಯಾವುದೇ YouTube ಸಂಗೀತ ಪ್ಲೇಪಟ್ಟಿಗಳು ಕಂಡುಬಂದಿಲ್ಲ",
+  "songCountLabel": "{count, plural, one {# ಹಾಡು} other {# ಹಾಡುಗಳು}}",
+  "@songCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unknownAlbum": "ಅಜ್ಞಾತ ಆಲ್ಬಮ್",
+  "jamCodeExample": "ABC123",
+  "jamCodeHint": "ಕೋಡ್",
+  "yourProfile": "ನಿಮ್ಮ ಪ್ರೊಫೈಲ್",
+  "googleUser": "Google ಬಳಕೆದಾರ",
+  "jamsAndProfile": "ಜಾಮ್ ಮತ್ತು ಪ್ರೊಫೈಲ್",
+  "yes": "ಹೌದು",
+  "no": "ಇಲ್ಲ",
+  "foundInSettings": "ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಕಂಡುಬಂದಿದೆ",
+  "sharePlaylistText": "{title}\n{url}",
+  "@sharePlaylistText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "shareArtistText": "{artist}\n{url}",
+  "@shareArtistText": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "megabytesValue": "{value} MB",
+  "@megabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "gigabytesValue": "{value} GB",
+  "@gigabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxMegabytesValue": "~{value} MB",
+  "@approxMegabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxKbpsValue": "~{value} kbps",
+  "@approxKbpsValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "secondsShort": "{value}s",
+  "@secondsShort": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "speedMultiplier": "{value}x",
+  "@speedMultiplier": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

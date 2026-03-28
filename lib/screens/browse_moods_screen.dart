@@ -2,94 +2,276 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/design_system/design_system.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import '../../providers/providers.dart';
 import '../../models/models.dart';
 
 /// Mood category model
 class MoodCategory {
-  final String title;
+  final String key;
   final List<MoodItem> items;
 
-  const MoodCategory({required this.title, required this.items});
+  const MoodCategory({required this.key, required this.items});
 }
 
 /// Mood item model
 class MoodItem {
-  final String title;
+  final String key;
+  final String searchTerm;
   final String? browseId;
   final String? params;
 
-  const MoodItem({required this.title, this.browseId, this.params});
+  const MoodItem({
+    required this.key,
+    required this.searchTerm,
+    this.browseId,
+    this.params,
+  });
 }
 
 /// Predefined moods and genres (static list since API may not be available)
 final List<MoodCategory> _defaultMoods = [
   MoodCategory(
-    title: 'Moods',
+    key: 'moods',
     items: [
-      MoodItem(title: 'Chill', browseId: 'FEmusic_moods_and_genres_category'),
-      MoodItem(title: 'Party', browseId: 'FEmusic_moods_and_genres_category'),
-      MoodItem(title: 'Workout', browseId: 'FEmusic_moods_and_genres_category'),
-      MoodItem(title: 'Focus', browseId: 'FEmusic_moods_and_genres_category'),
-      MoodItem(title: 'Sleep', browseId: 'FEmusic_moods_and_genres_category'),
-      MoodItem(title: 'Happy', browseId: 'FEmusic_moods_and_genres_category'),
-      MoodItem(title: 'Sad', browseId: 'FEmusic_moods_and_genres_category'),
-      MoodItem(title: 'Romance', browseId: 'FEmusic_moods_and_genres_category'),
       MoodItem(
-        title: 'Feel Good',
+        key: 'chill',
+        searchTerm: 'Chill',
         browseId: 'FEmusic_moods_and_genres_category',
       ),
       MoodItem(
-        title: 'Energize',
+        key: 'party',
+        searchTerm: 'Party',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'workout',
+        searchTerm: 'Workout',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'focus',
+        searchTerm: 'Focus',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'sleep',
+        searchTerm: 'Sleep',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'happy',
+        searchTerm: 'Happy',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'sad',
+        searchTerm: 'Sad',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'romance',
+        searchTerm: 'Romance',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'feel_good',
+        searchTerm: 'Feel Good',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'energize',
+        searchTerm: 'Energize',
         browseId: 'FEmusic_moods_and_genres_category',
       ),
     ],
   ),
   MoodCategory(
-    title: 'Genres',
+    key: 'genres',
     items: [
-      MoodItem(title: 'Pop', browseId: 'FEmusic_moods_and_genres_category'),
-      MoodItem(title: 'Rock', browseId: 'FEmusic_moods_and_genres_category'),
-      MoodItem(title: 'Hip-Hop', browseId: 'FEmusic_moods_and_genres_category'),
-      MoodItem(title: 'R&B', browseId: 'FEmusic_moods_and_genres_category'),
       MoodItem(
-        title: 'Electronic',
+        key: 'pop',
+        searchTerm: 'Pop',
         browseId: 'FEmusic_moods_and_genres_category',
       ),
-      MoodItem(title: 'Dance', browseId: 'FEmusic_moods_and_genres_category'),
-      MoodItem(title: 'Jazz', browseId: 'FEmusic_moods_and_genres_category'),
       MoodItem(
-        title: 'Classical',
+        key: 'rock',
+        searchTerm: 'Rock',
         browseId: 'FEmusic_moods_and_genres_category',
       ),
-      MoodItem(title: 'Country', browseId: 'FEmusic_moods_and_genres_category'),
-      MoodItem(title: 'Metal', browseId: 'FEmusic_moods_and_genres_category'),
-      MoodItem(title: 'Indie', browseId: 'FEmusic_moods_and_genres_category'),
-      MoodItem(title: 'K-Pop', browseId: 'FEmusic_moods_and_genres_category'),
-      MoodItem(title: 'Latin', browseId: 'FEmusic_moods_and_genres_category'),
       MoodItem(
-        title: 'Bollywood',
+        key: 'hip_hop',
+        searchTerm: 'Hip-Hop',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'rnb',
+        searchTerm: 'R&B',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'electronic',
+        searchTerm: 'Electronic',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'dance',
+        searchTerm: 'Dance',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'jazz',
+        searchTerm: 'Jazz',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'classical',
+        searchTerm: 'Classical',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'country',
+        searchTerm: 'Country',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'metal',
+        searchTerm: 'Metal',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'indie',
+        searchTerm: 'Indie',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'k_pop',
+        searchTerm: 'K-Pop',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'latin',
+        searchTerm: 'Latin',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'bollywood',
+        searchTerm: 'Bollywood',
         browseId: 'FEmusic_moods_and_genres_category',
       ),
     ],
   ),
   MoodCategory(
-    title: 'Activities',
+    key: 'activities',
     items: [
-      MoodItem(title: 'Driving', browseId: 'FEmusic_moods_and_genres_category'),
-      MoodItem(title: 'Cooking', browseId: 'FEmusic_moods_and_genres_category'),
-      MoodItem(title: 'Gaming', browseId: 'FEmusic_moods_and_genres_category'),
       MoodItem(
-        title: 'Studying',
+        key: 'driving',
+        searchTerm: 'Driving',
         browseId: 'FEmusic_moods_and_genres_category',
       ),
       MoodItem(
-        title: 'Meditation',
+        key: 'cooking',
+        searchTerm: 'Cooking',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'gaming',
+        searchTerm: 'Gaming',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'studying',
+        searchTerm: 'Studying',
+        browseId: 'FEmusic_moods_and_genres_category',
+      ),
+      MoodItem(
+        key: 'meditation',
+        searchTerm: 'Meditation',
         browseId: 'FEmusic_moods_and_genres_category',
       ),
     ],
   ),
 ];
+
+String _localizedMoodCategoryTitle(BuildContext context, String key) {
+  final l10n = context.l10n;
+  switch (key) {
+    case 'moods':
+      return l10n.moodCategoryMoods;
+    case 'genres':
+      return l10n.moodCategoryGenres;
+    case 'activities':
+      return l10n.moodCategoryActivities;
+    default:
+      return key;
+  }
+}
+
+String _localizedMoodItemTitle(BuildContext context, String key) {
+  final l10n = context.l10n;
+  switch (key) {
+    case 'chill':
+      return l10n.moodChill;
+    case 'party':
+      return l10n.moodParty;
+    case 'workout':
+      return l10n.moodWorkout;
+    case 'focus':
+      return l10n.moodFocus;
+    case 'sleep':
+      return l10n.moodSleep;
+    case 'happy':
+      return l10n.moodHappy;
+    case 'sad':
+      return l10n.moodSad;
+    case 'romance':
+      return l10n.moodRomance;
+    case 'feel_good':
+      return l10n.moodFeelGood;
+    case 'energize':
+      return l10n.moodEnergize;
+    case 'pop':
+      return l10n.genrePop;
+    case 'rock':
+      return l10n.genreRock;
+    case 'hip_hop':
+      return l10n.genreHipHop;
+    case 'rnb':
+      return l10n.genreRnb;
+    case 'electronic':
+      return l10n.genreElectronic;
+    case 'dance':
+      return l10n.genreDance;
+    case 'jazz':
+      return l10n.genreJazz;
+    case 'classical':
+      return l10n.genreClassical;
+    case 'country':
+      return l10n.genreCountry;
+    case 'metal':
+      return l10n.genreMetal;
+    case 'indie':
+      return l10n.genreIndie;
+    case 'k_pop':
+      return l10n.genreKPop;
+    case 'latin':
+      return l10n.genreLatin;
+    case 'bollywood':
+      return l10n.genreBollywood;
+    case 'driving':
+      return l10n.activityDriving;
+    case 'cooking':
+      return l10n.activityCooking;
+    case 'gaming':
+      return l10n.activityGaming;
+    case 'studying':
+      return l10n.activityStudying;
+    case 'meditation':
+      return l10n.activityMeditation;
+    default:
+      return key;
+  }
+}
 
 /// Browse moods and genres screen
 class BrowseMoodsScreen extends ConsumerWidget {
@@ -105,7 +287,7 @@ class BrowseMoodsScreen extends ConsumerWidget {
           ? InzxColors.darkBackground
           : InzxColors.background,
       appBar: AppBar(
-        title: const Text('Moods & Genres'),
+        title: Text(context.l10n.browseMoodsGenresTitle),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -139,7 +321,7 @@ class BrowseMoodsScreen extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
           child: Text(
-            category.title,
+            _localizedMoodCategoryTitle(context, category.key),
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -169,7 +351,7 @@ class BrowseMoodsScreen extends ConsumerWidget {
     bool isDark,
     ColorScheme colorScheme,
   ) {
-    final color = _getMoodColor(item.title);
+    final color = _getMoodColor(item.key);
 
     return InkWell(
       onTap: () => _searchMood(context, ref, item),
@@ -192,7 +374,7 @@ class BrowseMoodsScreen extends ConsumerWidget {
           ],
         ),
         child: Text(
-          item.title,
+          _localizedMoodItemTitle(context, item.key),
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w600,
@@ -210,7 +392,7 @@ class BrowseMoodsScreen extends ConsumerWidget {
     try {
       // Search for playlists matching this mood
       final results = await innerTube.search(
-        '${item.title} playlist',
+        '${item.searchTerm} playlist',
         filter: 'playlists',
       );
 
@@ -225,65 +407,70 @@ class BrowseMoodsScreen extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.errorWithMessage('$e'))),
+        );
       }
     }
   }
 
-  Color _getMoodColor(String title) {
-    final lowerTitle = title.toLowerCase();
-    if (lowerTitle.contains('chill') || lowerTitle.contains('relax')) {
-      return Colors.blue;
+  Color _getMoodColor(String key) {
+    switch (key) {
+      case 'chill':
+        return Colors.blue;
+      case 'party':
+      case 'dance':
+        return Colors.pink;
+      case 'workout':
+      case 'energize':
+        return Colors.orange;
+      case 'focus':
+      case 'studying':
+        return Colors.purple;
+      case 'sleep':
+      case 'meditation':
+        return Colors.indigo;
+      case 'happy':
+      case 'feel_good':
+        return Colors.amber.shade700;
+      case 'sad':
+        return Colors.blueGrey;
+      case 'romance':
+        return Colors.red;
+      case 'rock':
+      case 'metal':
+        return Colors.grey.shade800;
+      case 'hip_hop':
+        return Colors.amber.shade800;
+      case 'pop':
+        return Colors.teal;
+      case 'jazz':
+        return Colors.brown;
+      case 'country':
+        return Colors.green.shade700;
+      case 'classical':
+        return Colors.deepPurple;
+      case 'electronic':
+        return Colors.cyan;
+      case 'indie':
+        return Colors.lime.shade700;
+      case 'k_pop':
+        return Colors.pink.shade300;
+      case 'latin':
+        return Colors.red.shade400;
+      case 'bollywood':
+        return Colors.orange.shade700;
+      case 'rnb':
+        return Colors.deepOrange;
+      case 'driving':
+        return Colors.blueGrey.shade700;
+      case 'cooking':
+        return Colors.orange.shade600;
+      case 'gaming':
+        return Colors.green.shade600;
     }
-    if (lowerTitle.contains('party') || lowerTitle.contains('dance')) {
-      return Colors.pink;
-    }
-    if (lowerTitle.contains('workout') || lowerTitle.contains('energy')) {
-      return Colors.orange;
-    }
-    if (lowerTitle.contains('focus') || lowerTitle.contains('study')) {
-      return Colors.purple;
-    }
-    if (lowerTitle.contains('sleep') || lowerTitle.contains('meditation')) {
-      return Colors.indigo;
-    }
-    if (lowerTitle.contains('happy') || lowerTitle.contains('feel good')) {
-      return Colors.amber.shade700;
-    }
-    if (lowerTitle.contains('sad') || lowerTitle.contains('melanchol')) {
-      return Colors.blueGrey;
-    }
-    if (lowerTitle.contains('romance') || lowerTitle.contains('love')) {
-      return Colors.red;
-    }
-    if (lowerTitle.contains('rock') || lowerTitle.contains('metal')) {
-      return Colors.grey.shade800;
-    }
-    if (lowerTitle.contains('hip') || lowerTitle.contains('rap')) {
-      return Colors.amber.shade800;
-    }
-    if (lowerTitle.contains('pop')) return Colors.teal;
-    if (lowerTitle.contains('jazz') || lowerTitle.contains('blues')) {
-      return Colors.brown;
-    }
-    if (lowerTitle.contains('country')) return Colors.green.shade700;
-    if (lowerTitle.contains('classical')) return Colors.deepPurple;
-    if (lowerTitle.contains('electronic') || lowerTitle.contains('edm')) {
-      return Colors.cyan;
-    }
-    if (lowerTitle.contains('indie')) return Colors.lime.shade700;
-    if (lowerTitle.contains('k-pop')) return Colors.pink.shade300;
-    if (lowerTitle.contains('latin')) return Colors.red.shade400;
-    if (lowerTitle.contains('bollywood')) return Colors.orange.shade700;
-    if (lowerTitle.contains('r&b')) return Colors.deepOrange;
-    if (lowerTitle.contains('driv')) return Colors.blueGrey.shade700;
-    if (lowerTitle.contains('cook')) return Colors.orange.shade600;
-    if (lowerTitle.contains('gam')) return Colors.green.shade600;
 
-    // Generate consistent color from title hash
-    final hash = title.hashCode.abs();
+    final hash = key.hashCode.abs();
     return Color.fromARGB(
       255,
       100 + (hash % 100),
@@ -314,14 +501,14 @@ class MoodPlaylistsScreen extends ConsumerWidget {
           ? InzxColors.darkBackground
           : InzxColors.background,
       appBar: AppBar(
-        title: Text(mood.title),
+        title: Text(_localizedMoodItemTitle(context, mood.key)),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       body: playlists.isEmpty
           ? Center(
               child: Text(
-                'No playlists found',
+                context.l10n.noPlaylistsFound,
                 style: TextStyle(
                   color: isDark ? Colors.white54 : InzxColors.textSecondary,
                 ),

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../core/l10n/app_localizations_x.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../services/download_service.dart';
@@ -55,6 +57,7 @@ class AlbumScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     // Use ytMusicAlbumProvider which uses the shared InnerTubeService singleton
     final albumAsync = ref.watch(ytMusicAlbumProvider(albumId));
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -64,12 +67,18 @@ class AlbumScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: isDark ? Colors.black : colorScheme.surface,
       body: albumAsync.when(
-        loading: () =>
-            _buildLoadingState(albumTitle, thumbnailUrl, isDark, colorScheme),
-        error: (e, stack) => _buildErrorState('Error: ${e.toString()}', isDark),
+        loading: () => _buildLoadingState(
+          albumTitle,
+          thumbnailUrl,
+          isDark,
+          colorScheme,
+          l10n,
+        ),
+        error: (e, stack) =>
+            _buildErrorState(l10n.errorWithMessage(e.toString()), isDark),
         data: (album) {
           if (album == null) {
-            return _buildErrorState('Album not found', isDark);
+            return _buildErrorState(l10n.albumNotFound, isDark);
           }
           return _buildContent(
             context,
@@ -89,15 +98,16 @@ class AlbumScreen extends ConsumerWidget {
     String? thumbnail,
     bool isDark,
     ColorScheme colorScheme,
+    AppLocalizations l10n,
   ) {
     return _buildContent(
       null,
       null,
       Album(
         id: albumId,
-        title: title ?? 'Loading...',
+        title: title ?? l10n.loading,
         thumbnailUrl: thumbnail,
-        artist: 'Loading...',
+        artist: l10n.loading,
         tracks: [],
       ),
       isDark,
@@ -332,7 +342,8 @@ class AlbumScreen extends ConsumerWidget {
 
                           // Artist & Year
                           Text(
-                            '${album.artist}${album.year != null ? ' • ${album.year}' : ''}',
+                            context?.albumSubtitle(album.artist, album.year) ??
+                                album.artist,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: isDark
@@ -435,7 +446,9 @@ class AlbumScreen extends ConsumerWidget {
                               _buildCircleButton(
                                 Icons.share_outlined,
                                 () {
-                                  _shareAlbum(album);
+                                  if (context != null) {
+                                    _shareAlbum(context, album);
+                                  }
                                 },
                                 isDark: isDark,
                                 colorScheme: colorScheme,
@@ -477,7 +490,7 @@ class AlbumScreen extends ConsumerWidget {
                     SliverFillRemaining(
                       child: Center(
                         child: Text(
-                          'No tracks found',
+                          context!.l10n.noTracksFound,
                           style: TextStyle(
                             color: isDark
                                 ? Colors.white54
@@ -671,10 +684,12 @@ class AlbumScreen extends ConsumerWidget {
   }
 
   /// Share album link
-  void _shareAlbum(Album album) {
+  void _shareAlbum(BuildContext context, Album album) {
     final url = 'https://music.youtube.com/playlist?list=${album.id}';
     SharePlus.instance.share(
-      ShareParams(text: '${album.title} by ${album.artist}\n$url'),
+      ShareParams(
+        text: context.l10n.shareAlbumText(album.title, album.artist, url),
+      ),
     );
   }
 
@@ -694,7 +709,7 @@ class AlbumScreen extends ConsumerWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Downloading ${tracks.length} tracks from ${album.title}',
+          context.l10n.downloadingTracksFromAlbum(tracks.length, album.title),
         ),
         duration: const Duration(seconds: 2),
       ),
@@ -711,6 +726,7 @@ class AlbumScreen extends ConsumerWidget {
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     showModalBottomSheet(
       context: context,
       backgroundColor: isDark ? Colors.grey[900] : Colors.grey[200],
@@ -771,7 +787,7 @@ class AlbumScreen extends ConsumerWidget {
                   color: isDark ? Colors.white : colorScheme.onSurface,
                 ),
                 title: Text(
-                  'Play',
+                  l10n.play,
                   style: TextStyle(
                     color: isDark ? Colors.white : colorScheme.onSurface,
                   ),
@@ -793,7 +809,7 @@ class AlbumScreen extends ConsumerWidget {
                   color: isDark ? Colors.white : colorScheme.onSurface,
                 ),
                 title: Text(
-                  'Shuffle',
+                  l10n.shuffle,
                   style: TextStyle(
                     color: isDark ? Colors.white : colorScheme.onSurface,
                   ),
@@ -816,7 +832,7 @@ class AlbumScreen extends ConsumerWidget {
                   color: isDark ? Colors.white : colorScheme.onSurface,
                 ),
                 title: Text(
-                  'Add to queue',
+                  l10n.addToQueue,
                   style: TextStyle(
                     color: isDark ? Colors.white : colorScheme.onSurface,
                   ),
@@ -829,7 +845,9 @@ class AlbumScreen extends ConsumerWidget {
                     }
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Added ${tracks.length} tracks to queue'),
+                        content: Text(
+                          l10n.addedTracksToQueueCount(tracks.length),
+                        ),
                       ),
                     );
                   }
@@ -841,7 +859,7 @@ class AlbumScreen extends ConsumerWidget {
                   color: isDark ? Colors.white : colorScheme.onSurface,
                 ),
                 title: Text(
-                  'Download album',
+                  l10n.downloadAlbum,
                   style: TextStyle(
                     color: isDark ? Colors.white : colorScheme.onSurface,
                   ),
@@ -857,14 +875,14 @@ class AlbumScreen extends ConsumerWidget {
                   color: isDark ? Colors.white : colorScheme.onSurface,
                 ),
                 title: Text(
-                  'Share',
+                  l10n.share,
                   style: TextStyle(
                     color: isDark ? Colors.white : colorScheme.onSurface,
                   ),
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
-                  _shareAlbum(album);
+                  _shareAlbum(context, album);
                 },
               ),
               const SizedBox(height: 16),

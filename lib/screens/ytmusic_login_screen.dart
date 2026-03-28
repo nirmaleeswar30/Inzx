@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import '../core/l10n/app_localizations_x.dart';
 import '../providers/ytmusic_providers.dart';
 import '../services/ytmusic_auth_service.dart';
 
@@ -273,8 +274,8 @@ class _YTMusicLoginScreenState extends ConsumerState<YTMusicLoginScreen> {
 
         if (success && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Successfully logged in to YouTube Music!'),
+            SnackBar(
+              content: Text(context.l10n.loggedInYoutubeMusicSuccess),
               backgroundColor: Colors.green,
             ),
           );
@@ -310,7 +311,7 @@ class _YTMusicLoginScreenState extends ConsumerState<YTMusicLoginScreen> {
           onPressed: () => Navigator.of(context).pop(false),
         ),
         title: Text(
-          'Sign in to YouTube Music',
+          context.l10n.signInToYoutubeMusic,
           style: TextStyle(
             color: isDark ? Colors.white : colorScheme.onSurface,
           ),
@@ -343,7 +344,7 @@ class _YTMusicLoginScreenState extends ConsumerState<YTMusicLoginScreen> {
                     const CircularProgressIndicator(color: Colors.red),
                     const SizedBox(height: 16),
                     Text(
-                      'Logging you in...',
+                      context.l10n.loggingYouIn,
                       style: TextStyle(
                         color: isDark ? Colors.white : colorScheme.onSurface,
                         fontSize: 16,
@@ -359,7 +360,7 @@ class _YTMusicLoginScreenState extends ConsumerState<YTMusicLoginScreen> {
         padding: const EdgeInsets.all(16),
         color: isDark ? Colors.grey[900] : Colors.grey[200],
         child: Text(
-          'Sign in with your Google account to sync your YouTube Music library, including liked songs, playlists, and albums.',
+          context.l10n.signInSyncYoutubeMusicDescription,
           style: TextStyle(
             color: isDark
                 ? Colors.grey

@@ -1,0 +1,1180 @@
+{
+  "@@locale": "tr",
+  "appTitle": "Inzx",
+  "updateDownloadedBanner": "Güncelleme indirildi. Uygulamak için uygulamayı yeniden başlatın.",
+  "restart": "Yeniden başlat",
+  "dismiss": "Kapat",
+  "newVersionAvailableBanner": "Yeni {version} sürümü GitHub'da mevcut.",
+  "@newVersionAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "İndir",
+  "later": "Daha sonra",
+  "home": "Ana Sayfa",
+  "songs": "Şarkılar",
+  "library": "Kütüphane",
+  "folders": "Klasörler",
+  "settings": "Ayarlar",
+  "searchSettingsHint": "Ayarlarda ara...",
+  "noMatchingSettings": "Eşleşen ayar yok",
+  "appearance": "Görünüm",
+  "theme": "Tema",
+  "themeAuto": "Otomatik",
+  "themeLight": "Açık",
+  "themeDark": "Koyu",
+  "dynamicColorsNote": "Renkler, mevcut parçanın albüm kapağından dinamik olarak uyarlanır.",
+  "language": "Dil",
+  "languageSubtitle": "Uygulama dilini seçin",
+  "chooseLanguage": "Dil seçin",
+  "searchLanguagesHint": "Dilleri ara...",
+  "noMatchingLanguages": "Eşleşen dil yok",
+  "useSystemLanguage": "Sistem dilini kullan",
+  "languageSystem": "Sistem varsayılanı",
+  "languageEnglish": "İngilizce",
+  "languageTurkish": "Türkçe",
+  "languageRussian": "Rusça",
+  "languageHindi": "Hintçe",
+  "languageTamil": "Tamilce",
+  "languageKannada": "Kannada",
+  "languageTelugu": "Telugu",
+  "languageSpanish": "İspanyolca",
+  "languageFrench": "Fransızca",
+  "languageGerman": "Almanca",
+  "languageIndonesian": "Endonezce",
+  "languageJapanese": "Japonca",
+  "languageKorean": "Korece",
+  "languageArabic": "Arapça",
+  "languageUkrainian": "Ukraynaca",
+  "languageThai": "Tayca",
+  "languagePortugueseBrazil": "Portekizce (Brezilya)",
+  "languageChineseSimplified": "Çince (Basitleştirilmiş)",
+  "languageChineseTraditional": "Çince (Geleneksel)",
+  "contentLocation": "İçerik konumu",
+  "contentLocationSubtitle": "Öneriler ve katalog kullanılabilirliği için kullanılan bölgeyi seçin",
+  "chooseContentLocation": "İçerik konumunu seçin",
+  "searchLocationsHint": "Konum ara...",
+  "noMatchingLocations": "Eşleşen konum yok",
+  "locationSystem": "Sistem varsayılanı",
+  "locationUnitedStates": "Amerika Birleşik Devletleri",
+  "locationIndia": "Hindistan",
+  "locationTurkey": "Türkiye",
+  "locationRussia": "Rusya",
+  "quickActions": "Hızlı İşlemler",
+  "audio": "Ses",
+  "audioQuickActionsSubtitle": "Akış kalitesi, çapraz geçiş ve oynatma",
+  "downloads": "İndirilenler",
+  "downloadsQuickActionsSubtitle": "İndirme kalitesi, konum ve depolama",
+  "backupRestore": "Yedekle ve Geri Yükle",
+  "backupRestoreQuickActionsSubtitle": "Kütüphanenizi dışa aktarın veya içe aktarın",
+  "streamingQuality": "Akış Kalitesi",
+  "streamingQualitySubtitle": "Akış için ses bit hızını ayarlayın",
+  "crossfadeTransition": "Çapraz Geçiş",
+  "crossfadeTransitionSubtitle": "Parçaları birbirine akıcı şekilde bağlayın",
+  "streamingCache": "Akış Önbelleği",
+  "streamingCacheSubtitle": "Sonraki parçaları önbelleğe al, yalnızca Wi-Fi seçeneği",
+  "downloadQuality": "İndirme Kalitesi",
+  "downloadQualitySubtitle": "Çevrimdışı indirmeler için kalite",
+  "downloadLocation": "İndirme Konumu",
+  "downloadLocationSubtitle": "İndirilen müziklerin depolandığı yer",
+  "dataUsageInfo": "Veri Kullanımı Bilgisi",
+  "dataUsageInfoSubtitle": "Şarkı başına tahmini depolama alanı",
+  "createBackup": "Yedek Oluştur",
+  "createBackupSubtitle": "Kütüphanenizi ve ayarlarınızı dışa aktarın",
+  "restoreBackup": "Yedeği Geri Yükle",
+  "restoreBackupSubtitle": "Önceki bir yedek dosyasını içe aktarın",
+  "connectYoutubeMusic": "YouTube Music'e Bağlan",
+  "connectYoutubeMusicSubtitle": "Beğenilen şarkılarınızı, çalma listelerinizi ve daha fazlasını senkronize edin",
+  "connectYtMusicButton": "YT Music'e Bağlan",
+  "downloadsTitle": "İndirilenler",
+  "clearCompleted": "Tamamlananları temizle",
+  "clearFailed": "Başarısız olanları temizle",
+  "noDownloadsYet": "Henüz indirme yok",
+  "downloadSongsToListenOffline": "Çevrimdışı dinlemek için şarkı indirin",
+  "downloadingTitle": "İndiriliyor",
+  "downloadedTitle": "İndirildi ({count})",
+  "@downloadedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedTitle": "Başarısız",
+  "songsDownloaded": "{count} şarkı indirildi",
+  "@songsDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usingStorage": "{storage} kullanılıyor",
+  "@usingStorage": {
+    "placeholders": {
+      "storage": {
+        "type": "String"
+      }
+    }
+  },
+  "failedWithError": "Başarısız: {error}",
+  "@failedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownError": "Bilinmeyen hata",
+  "removeDownload": "İndirmeyi kaldır",
+  "downloadSettingsTitle": "İndirme Ayarları",
+  "downloadLocationSubtitleLong": "İndirilen müzik dosyalarının saklandığı yer",
+  "offlineDownloadTip": "İndirilen parçalar internet olmadan çalar ve akış verisi kullanmaz.",
+  "estimatedStoragePerSong": "Şarkı Başına Tahmini Depolama",
+  "storageLocation": "Depolama Konumu",
+  "loading": "Yükleniyor...",
+  "errorLoadingPath": "Yol yüklenemedi",
+  "privateStorageDownloadsNote": "İndirmeler, daha iyi güvenilirlik ve izin gerektirmemesi için uygulamaya özel depolamada saklanır.",
+  "qualityAutoChip": "Oto",
+  "qualityLowChip": "Düşük",
+  "qualityMediumChip": "Orta",
+  "qualityHighChip": "Yüksek",
+  "qualityMaxChip": "Maks",
+  "qualityHighest": "En yüksek",
+  "qualityDescriptionAuto": "Oto - Ağa göre uyarlanır",
+  "qualityDescriptionLow": "Düşük - ~64 kbps (depolama tasarrufu)",
+  "qualityDescriptionMedium": "Orta - ~128 kbps (dengeli)",
+  "qualityDescriptionHigh": "Yüksek - ~256 kbps (önerilen)",
+  "qualityDescriptionMax": "Maksimum - Kullanılabilen en yüksek (~256 kbps)",
+  "backupRestoreTitle": "Yedekle ve Geri Yükle",
+  "backupIncludesDescription": "Yedek; beğenilen şarkıları, çalma listelerini, arama geçmişini, son çalınanları ve temel uygulama ayarlarını içerir.",
+  "exportBackup": "Yedeği Dışa Aktar",
+  "exportBackupSubtitle": "Paylaşmak veya saklamak için bir yedek dosyası kaydedin",
+  "importBackup": "Yedeği İçe Aktar",
+  "importBackupSubtitle": "Bir yedek dosyasından geri yükleyin",
+  "dangerZone": "Tehlikeli Bölge",
+  "clearAppData": "Uygulama Verilerini Temizle",
+  "clearAppDataSubtitle": "İndirilen ses dosyalarını koruyarak uygulama verilerini/ayarlarını sıfırla",
+  "backupCreatedSuccessfully": "Yedek başarıyla oluşturuldu",
+  "backupFailed": "Yedek başarısız oldu: {error}",
+  "@backupFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoredSuccessfully": "Yedek başarıyla geri yüklendi",
+  "restoreFailed": "Geri yükleme başarısız oldu: {error}",
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearAllDataQuestion": "Tüm veriler temizlensin mi?",
+  "clearAllDataWarning": "Bu işlem yerel uygulama verilerini ve ayarlarını sıfırlar, ancak indirilen şarkı dosyalarını korur. Geri alınamaz.",
+  "cancel": "İptal",
+  "clearAll": "Tümünü temizle",
+  "appDataClearedPreserved": "Uygulama verileri temizlendi (indirilen ses dosyaları korundu)",
+  "failedGeneric": "Başarısız: {error}",
+  "@failedGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupSubject": "Inzx Müzik Yedeği",
+  "statisticsTitle": "İstatistikler",
+  "statisticsCleared": "İstatistikler temizlendi",
+  "clearStatistics": "İstatistikleri Temizle",
+  "noStatisticsYet": "Henüz istatistik yok",
+  "startListeningStats": "İstatistiklerinizi görmek için dinlemeye başlayın",
+  "overview": "Genel Bakış",
+  "totalPlays": "Toplam Çalma",
+  "listenTime": "Dinleme Süresi",
+  "mostPlayed": "En Çok Çalınanlar",
+  "playsCount": "{count} çalma",
+  "@playsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutes": "{hours}s {minutes}d",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutesOnly": "{minutes}d",
+  "@durationMinutesOnly": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "retry": "Tekrar dene",
+  "share": "Paylaş",
+  "playlist": "Çalma listesi",
+  "album": "Albüm",
+  "channel": "Kanal",
+  "playNext": "Sıradaki çal",
+  "addToQueue": "Sıraya ekle",
+  "addToPlaylist": "Çalma listesine ekle",
+  "goToAlbum": "Albüme git",
+  "goToArtist": "Sanatçıya git",
+  "startRadio": "Radyoyu başlat",
+  "playAll": "Tümünü çal",
+  "shuffle": "Karıştır",
+  "shuffleAll": "Tümünü karıştır",
+  "radio": "Radyo",
+  "follow": "Takip et",
+  "following": "Takip ediliyor",
+  "connectYtMusicToFollowArtists": "Sanatçıları takip etmek için YouTube Music'i bağlayın.",
+  "couldNotFollowArtist": "{artist} takip edilemedi.",
+  "@couldNotFollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotUnfollowArtist": "{artist} takibi bırakılamadı.",
+  "@couldNotUnfollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "followingArtist": "{artist} takip ediliyor",
+  "@followingArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "unfollowedArtist": "{artist} takibi bırakıldı",
+  "@unfollowedArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingArtist": "Sanatçı yüklenemedi",
+  "subscribersCount": "{count} abone",
+  "@subscribersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSection": "İndirilenler",
+  "showAllDownloaded": "İndirilenlerin tümünü göster ({count})",
+  "@showAllDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "seeAll": "Tümünü gör",
+  "removeFromLikedSongs": "Beğenilen Şarkılardan kaldır",
+  "addToLikedSongs": "Beğenilen Şarkılara ekle",
+  "playingTrackNext": "\"{title}\" sıradaki parça olarak çalacak",
+  "@playingTrackNext": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTrackToQueue": "\"{title}\" sıraya eklendi",
+  "@addedTrackToQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playNextInJam": "Jam'de sıradaki çal",
+  "playTrackNextInJam": "\"{title}\" Jam'de sıradaki çalacak",
+  "@playTrackNextInJam": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addToJamQueue": "Jam sırasına ekle",
+  "addedTrackToJamQueue": "\"{title}\" Jam sırasına eklendi",
+  "@addedTrackToJamQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloaded": "İndirildi",
+  "downloadingProgress": "%{progress} indiriliyor",
+  "@downloadingProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadStartingTrack": "\"{title}\" indiriliyor",
+  "@downloadStartingTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadNotificationsChannelDescription": "İndirme ilerleme bildirimleri",
+  "downloadStartingNotification": "İndirme başlatılıyor...",
+  "downloadCompleteNotification": "İndirme tamamlandı",
+  "downloadFileNotCreated": "Dosya oluşturulamadığı için indirme başarısız oldu",
+  "shareTrackText": "{title} - {artist}\n{url}",
+  "@shareTrackText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "createNewPlaylist": "Yeni Çalma Listesi Oluştur",
+  "playlistName": "Çalma listesi adı",
+  "create": "Oluştur",
+  "couldNotLoadPlaylists": "Çalma listeleri yüklenemedi",
+  "createLocalPlaylistInstead": "Bunun yerine yerel bir çalma listesi oluşturun",
+  "noPlaylistsYet": "Henüz çalma listesi yok",
+  "createOneToGetStarted": "Başlamak için bir tane oluşturun",
+  "songsCount": "{count} şarkı",
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createdPlaylistOnYtMusicAndAddedTrack": "\"{playlist}\" YT Music'te oluşturuldu ve \"{track}\" eklendi",
+  "@createdPlaylistOnYtMusicAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToCreatePlaylist": "Çalma listesi oluşturulamadı",
+  "createdPlaylistLocallyAndAddedTrack": "\"{playlist}\" yerel olarak oluşturuldu ve \"{track}\" eklendi",
+  "@createdPlaylistLocallyAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddToPlaylist": "Çalma listesine eklenemedi",
+  "addedTrackToPlaylist": "\"{track}\", \"{playlist}\" listesine eklendi",
+  "@addedTrackToPlaylist": {
+    "placeholders": {
+      "track": {
+        "type": "String"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorWithMessage": "Hata: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "searchingForLyrics": "Şarkı sözleri aranıyor...",
+  "failedToLoadLyrics": "Şarkı sözleri yüklenemedi",
+  "tryAnotherProvider": "Başka bir sağlayıcı dene",
+  "noLyricsFound": "Şarkı sözü bulunamadı",
+  "linkLabel": "Bağlantı: {url}",
+  "@linkLabel": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "tracksCount": "{count} parça",
+  "@tracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFromYoutubeMusic": "YouTube Music'ten İçe Aktar",
+  "importedPlaylistSuffix": "İçe Aktarıldı",
+  "importedFromYoutubeMusicDescription": "YouTube Music'ten içe aktarıldı",
+  "importedPlaylist": "\"{playlist}\" içe aktarıldı",
+  "@importedPlaylist": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToImportPlaylist": "İçe aktarma başarısız: {error}",
+  "@failedToImportPlaylist": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadPlaylists": "Çalma listeleri yüklenemedi",
+  "makeSureLoggedInYoutubeMusic": "YouTube Music'e giriş yaptığınızdan emin olun",
+  "noPlaylistsFound": "Çalma listesi bulunamadı",
+  "createPlaylistsInYoutubeMusicFirst": "Önce YouTube Music'te birkaç çalma listesi oluşturun",
+  "loggedInYoutubeMusicSuccess": "YouTube Music'e başarıyla giriş yapıldı!",
+  "signInToYoutubeMusic": "YouTube Music'e giriş yap",
+  "loggingYouIn": "Giriş yapılıyor...",
+  "signInSyncYoutubeMusicDescription": "Beğenilen şarkılar, çalma listeleri ve albümler dahil olmak üzere YouTube Music kitaplığınızı eşitlemek için Google hesabınızla giriş yapın.",
+  "playbackSpeed": "Oynatma Hızı",
+  "normal": "Normal",
+  "defaultValue": "Varsayılan",
+  "failedToLoadContent": "İçerik yüklenemedi",
+  "loadMore": "Daha fazla yükle",
+  "audioSettingsTitle": "Ses Ayarları",
+  "nowPlayingLabel": "Şu An Çalıyor",
+  "higherQualityUsesMoreData": "Daha yüksek kalite daha fazla veri kullanır",
+  "adjustsBasedOnNetworkSpeed": "Ağ hızına göre ayarlanır",
+  "qualityLowUsesLessData": "~64 kbps - Daha az veri kullanır",
+  "qualityMediumBalanced": "~128 kbps - Dengeli",
+  "qualityHighBestForMost": "~256 kbps - Çoğu kullanıcı için en iyisi",
+  "qualityMaximumAvailable": "Mevcut en yüksek kalite (~256 kbps)",
+  "recommended": "Önerilen",
+  "blendTrackEndsIntoNext": "Geçerli parçanın sonunu bir sonraki parçanın başlangıcına karıştırın",
+  "preCachesNextTracks": "Sonraki parçaları önbelleğe alır ve mümkün olduğunda yerel önbellekten çalar",
+  "smartStreamCache": "Akıllı Akış Önbelleği",
+  "usedCacheStorage": "Kullanılan: {used} / {limit} MB",
+  "@usedCacheStorage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "calculatingCacheUsage": "Önbellek kullanımı hesaplanıyor...",
+  "unableToReadCacheUsage": "Önbellek kullanımı okunamadı",
+  "preCacheNetwork": "Ön Belleğe Alma Ağı",
+  "wifiOnly": "Yalnızca Wi-Fi",
+  "wifiAndMobileData": "Wi-Fi + mobil veri",
+  "preCacheRunsWifiOnly": "Ön bellek alma yalnızca Wi-Fi bağlıyken çalışır",
+  "preCacheRunsWifiAndMobile": "Ön bellek alma hem Wi-Fi hem de mobil veride çalışabilir",
+  "concurrentPreCacheDownloads": "Eşzamanlı Ön Bellek İndirmeleri",
+  "higherValuesCacheFaster": "Daha yüksek değerler daha hızlı önbellekler ancak daha fazla ağ ve pil kullanır",
+  "cacheSizeLimit": "Önbellek Boyutu Sınırı",
+  "off": "Kapalı",
+  "crossfadeDisabled": "Çapraz geçiş devre dışı",
+  "currentValueLabel": "Geçerli: {value}",
+  "@currentValueLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "audioQuality": "Ses Kalitesi",
+  "qualityLowKbps": "Düşük (64 kbps)",
+  "qualityMediumKbps": "Orta (128 kbps)",
+  "qualityHighKbps": "Yüksek (256 kbps)",
+  "qualityMaximumKbps": "Maksimum (~256 kbps)",
+  "all": "Tümü",
+  "artists": "Sanatçılar",
+  "albums": "Albümler",
+  "playlists": "Çalma listeleri",
+  "singlesAndEps": "Tekliler ve EP'ler",
+  "appearsOn": "Yer Aldığı Çalışmalar",
+  "fansAlsoLike": "Bunu Beğenenler",
+  "searchMusicHint": "Şarkı, albüm, sanatçı ara",
+  "searchForMusic": "Müzik ara",
+  "noResultsFound": "Sonuç bulunamadı",
+  "showAllLocalResults": "Tüm yerel sonuçları göster ({count})",
+  "@showAllLocalResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "topResult": "En iyi sonuç",
+  "artistLabel": "Sanatçı",
+  "albumByArtist": "Albüm - {artist}",
+  "@albumByArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistByAuthor": "Çalma listesi - {author}",
+  "@playlistByAuthor": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "Kaydet",
+  "upNext": "SONRAKİ",
+  "lyricsTab": "ŞARKI SÖZLERİ",
+  "relatedTab": "BENZERLER",
+  "youMightAlsoLike": "Bunları da beğenebilirsin",
+  "otherPerformances": "Diğer performanslar",
+  "moreFrom": "Daha fazlası",
+  "aboutArtist": "Sanatçı hakkında",
+  "jamQueue": "Jam Kuyruğu",
+  "radioQueue": "Radyo Kuyruğu",
+  "queueLabel": "Kuyruk",
+  "playingFrom": "Çalınan kaynak",
+  "loadingMoreTracks": "Daha fazla parça yükleniyor...",
+  "scrollForMore": "Daha fazlası için kaydır",
+  "someone": "Birisi",
+  "noTracksInQueue": "Kuyrukta parça yok",
+  "addSongsToJamQueue": "Jam kuyruğuna şarkı ekleyin",
+  "addedByUser": "{name} tarafından eklendi",
+  "@addedByUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTrackPlaying": "Çalan parça yok",
+  "noRelatedTracksFound": "Benzer parça bulunamadı",
+  "queueIsEmpty": "Kuyruk boş",
+  "defaultQueueName": "Kuyruğum",
+  "saveQueueAsPlaylist": "Kuyruğu çalma listesi olarak kaydet",
+  "savedTracksToPlaylist": "{count} parça \"{name}\" listesine kaydedildi",
+  "@savedTracksToPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "jams": "Jam'ler",
+  "nowPlayingHeader": "ŞİMDİ ÇALIYOR",
+  "browseMoodsGenresTitle": "Modlar ve Türler",
+  "moodCategoryMoods": "Modlar",
+  "moodCategoryGenres": "Türler",
+  "moodCategoryActivities": "Aktiviteler",
+  "moodChill": "Sakin",
+  "moodParty": "Parti",
+  "moodWorkout": "Antrenman",
+  "moodFocus": "Odak",
+  "moodSleep": "Uyku",
+  "moodHappy": "Mutlu",
+  "moodSad": "Hüzünlü",
+  "moodRomance": "Romantik",
+  "moodFeelGood": "İyi Hisset",
+  "moodEnergize": "Enerji Ver",
+  "genrePop": "Pop",
+  "genreRock": "Rock",
+  "genreHipHop": "Hip-Hop",
+  "genreRnb": "R&B",
+  "genreElectronic": "Elektronik",
+  "genreDance": "Dans",
+  "genreJazz": "Caz",
+  "genreClassical": "Klasik",
+  "genreCountry": "Country",
+  "genreMetal": "Metal",
+  "genreIndie": "Indie",
+  "genreKPop": "K-Pop",
+  "genreLatin": "Latin",
+  "genreBollywood": "Bollywood",
+  "activityDriving": "Sürüş",
+  "activityCooking": "Yemek",
+  "activityGaming": "Oyun",
+  "activityStudying": "Ders çalışma",
+  "activityMeditation": "Meditasyon",
+  "play": "Çal",
+  "findInPlaylist": "Çalma listesinde ara...",
+  "playlistNotFoundMessage": "Çalma listesi bulunamadı\n\nÇalma listesi kimliği: {id}\n\nBu çalma listesi özel olabilir veya kullanılamıyor olabilir.",
+  "@playlistNotFoundMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineSnapshotDownloaded": "Çevrimdışı anlık görüntü - {downloaded}/{total} indirildi",
+  "@offlineSnapshotDownloaded": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noMatchingTracks": "Eşleşen parça yok",
+  "noTracksFound": "Parça bulunamadı",
+  "downloadingTracksFromPlaylist": "{playlist} listesinden {count} parça indiriliyor",
+  "@downloadingTracksFromPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTracksToQueueCount": "{count} parça kuyruğa eklendi",
+  "@addedTracksToQueueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadPlaylist": "Çalma listesini indir",
+  "signInWithGoogle": "Google ile giriş yap",
+  "signInToUseJams": "Jam'leri kullanmak için giriş yap",
+  "listenTogetherRealtime": "Arkadaşlarınla gerçek zamanlı birlikte dinle",
+  "signInGoogleToStartOrJoinJam": "Arkadaşlarınla bir Jam oturumu başlatmak veya katılmak için Google ile giriş yap",
+  "listenTogether": "Birlikte Dinle",
+  "listenWithFriendsInSync": "Arkadaşlarınla senkron dinle",
+  "sameSongSameMoment": "Aynı şarkı, aynı an",
+  "startJam": "Jam başlat",
+  "createSessionAndInviteFriends": "Bir oturum oluştur ve arkadaşlarını davet et",
+  "joinJam": "Jam'e katıl",
+  "enterSixDigitCode": "6 haneli kodu gir",
+  "join": "Katıl",
+  "shareThisCode": "Bu kodu paylaş",
+  "codeCopied": "Kod kopyalandı!",
+  "youAreHost": "Sunucu sensin",
+  "hostedBy": "Sunucu: {name}",
+  "@hostedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listeningTogetherCount": "Birlikte dinleyenler ({count})",
+  "@listeningTogetherCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "endSession": "Oturumu bitir",
+  "leaveSession": "Oturumdan ayrıl",
+  "connected": "Bağlı",
+  "reconnecting": "Yeniden bağlanıyor",
+  "retryInSeconds": "{seconds} sn sonra tekrar dene",
+  "@retryInSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectingStatus": "Yeniden bağlanıyor · {suffix}",
+  "@reconnectingStatus": {
+    "placeholders": {
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "reconnectingAttemptStatus": "Yeniden bağlanıyor ({attempt}) · {suffix}",
+  "@reconnectingAttemptStatus": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "disconnected": "Bağlantı kesildi",
+  "playing": "Çalıyor",
+  "addSongsToPlayTogether": "Birlikte çalmak için şarkı ekleyin",
+  "sessionCreatedCode": "Oturum oluşturuldu! Kod: {code}",
+  "@sessionCreatedCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "noJamFoundForCode": "Bu kod için Jam bulunamadı.",
+  "hostRole": "Sunucu",
+  "canControl": "Kontrol edebilir",
+  "listeningStatus": "Dinliyor",
+  "transferHostQuestion": "Sunuculuk devredilsin mi?",
+  "transferHostMessage": "{name} yeni sunucu olsun mu? Sunucu kontrollerini kaybedeceksiniz.",
+  "@transferHostMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transfer": "Devret",
+  "removeControl": "Kontrolü kaldır",
+  "allowControl": "Kontrole izin ver",
+  "makeHost": "Sunucu yap",
+  "live": "Canlı",
+  "playbackControlsJam": "oynatma kontrollerin Jam'i yönetir",
+  "starting": "Başlatılıyor...",
+  "or": "veya",
+  "joinFriendsJam": "Bir arkadaşının Jam'ine katıl",
+  "startJamDescription": "Arkadaşlarınla müzik paylaşmak için bir Jam başlat.\nHerkes aynı şarkıyı senkron şekilde duyar.",
+  "folderSettings": "Klasör Ayarları",
+  "noFoldersAddedYet": "Henüz klasör eklenmedi",
+  "addFolder": "Klasör Ekle",
+  "localMusic": "Yerel Müzik",
+  "scanLocalMusicDescription": "Yerel müzik dosyalarını bulmak ve çevrimdışı çalmak için cihazını tara",
+  "scanForMusic": "Müzik tara",
+  "addFolderLowercase": "Klasör ekle",
+  "supportedFormats": "Desteklenen biçimler: MP3, FLAC, WAV, M4A, OGG",
+  "songsFromFoldersCount": "{folders} klasörden {songs} şarkı",
+  "@songsFromFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "add": "Ekle",
+  "permissionRequired": "İzin Gerekli",
+  "storagePermissionRequiredMessage": "Müzik dosyalarına erişmek için depolama izni gerekir. Lütfen Ayarlar'dan etkinleştirin.",
+  "couldNotOpenSettingsPermission": "Ayarlar açılamadı. Lütfen depolama iznini elle etkinleştirin.",
+  "openSettings": "Ayarları Aç",
+  "folderAdded": "Klasör Eklendi",
+  "addedFolderScanNow": "\"{folder}\" eklendi. Şimdi müzik için taramak ister misin?",
+  "@addedFolderScanNow": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanNow": "Şimdi Tara",
+  "foundSongsCount": "{count} şarkı bulundu",
+  "@foundSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addFolderFirstThenScan": "Önce bir klasör ekle, sonra ses dosyalarını tara.",
+  "scanFoldersCountDescription": "{count} klasör ses dosyaları için taranacak.",
+  "@scanFoldersCountDescription": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "foldersToScan": "Taranacak klasörler:",
+  "andMoreFolders": "... ve {count} tane daha",
+  "@andMoreFolders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "startScan": "Taramayı Başlat",
+  "foundSongsInFoldersCount": "{folders} klasörde {songs} şarkı bulundu",
+  "@foundSongsInFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "scanningForMusic": "Müzik taranıyor...",
+  "filesProgress": "{scanned} / {total} dosya",
+  "@filesProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "signOut": "Çıkış yap",
+  "signInGoogleProfilePictureJams": "Profil resmini almak ve Jam'leri etkinleştirmek için Google ile giriş yap",
+  "sync": "Senkronizasyon",
+  "lastSynced": "Son senkronizasyon: {time}",
+  "@lastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedItems": "{count} öğe senkronize edildi",
+  "@syncedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncing": "Senkronize ediliyor...",
+  "syncNow": "Şimdi Senkronize Et",
+  "cachedItems": "{count} önbelleğe alınmış öğe",
+  "@cachedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streams": "Akışlar",
+  "colors": "Renkler",
+  "searches": "Aramalar",
+  "expiredCount": "{count} süresi dolmuş",
+  "@expiredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cacheCleanupComplete": "Önbellek temizleme tamamlandı",
+  "cleanUp": "Temizle",
+  "clearCache": "Önbelleği Temizle",
+  "clearCachedMusicDataConfirm": "Bu işlem tüm önbelleğe alınmış müzik verilerini temizler. Devam edilsin mi?",
+  "clear": "Temizle",
+  "cacheCleared": "Önbellek temizlendi",
+  "analytics": "Analitik",
+  "hits": "İsabet",
+  "misses": "Kaçırma",
+  "network": "Ağ",
+  "analyticsReset": "Analitik sıfırlandı",
+  "resetStats": "İstatistikleri Sıfırla",
+  "cacheHitRate": "Önbellek İsabet Oranı",
+  "liked": "Beğenilenler",
+  "appInfo": "Uygulama Bilgisi",
+  "releaseBuild": "Sürüm derlemesi",
+  "updater": "Güncelleyici",
+  "available": "kullanılabilir",
+  "unavailable": "kullanılamıyor",
+  "loadingCompact": "yükleniyor...",
+  "errorCompact": "hata",
+  "none": "yok",
+  "currentPatch": "Geçerli yama",
+  "nextPatch": "Sonraki yama",
+  "disconnectYoutubeMusic": "YouTube Music bağlantısını kes",
+  "disconnectYoutubeMusicQuestion": "YouTube Music bağlantısı kesilsin mi?",
+  "disconnectYoutubeMusicWarning": "Bu işlem YouTube Music hesabını uygulamadan kaldırır. Kitaplık verilerin temizlenecek.",
+  "disconnect": "Bağlantıyı kes",
+  "syncFailed": "Senkronizasyon başarısız: {error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "justNow": "Az önce",
+  "minutesAgo": "{count} dk önce",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count} sa önce",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count} g önce",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noSongsInTitle": "{title} içinde şarkı yok",
+  "@noSongsInTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "createPlaylistDescription": "Müziğini düzenlemek için bir çalma listesi oluştur",
+  "savedAlbumsFromYoutubeMusic": "YouTube Music'ten kaydedilen albümler",
+  "noSavedAlbumsFromYoutubeMusic": "YouTube Music'ten kaydedilmiş albüm yok",
+  "errorLoadingAlbums": "Albümler yüklenirken hata oluştu",
+  "recentlyPlayed": "Son çalınanlar",
+  "noAlbumsYet": "Henüz albüm yok",
+  "playSomeMusicToSeeAlbumsHere": "Burada albümleri görmek için biraz müzik çal",
+  "subscribedArtists": "Abone olunan sanatçılar",
+  "noSubscribedArtists": "Abone olunan sanatçı yok",
+  "errorLoadingArtists": "Sanatçılar yüklenirken hata oluştu",
+  "recentlyPlayedArtists": "Son çalınan sanatçılar",
+  "noArtistsYet": "Henüz sanatçı yok",
+  "playSomeMusicToSeeArtistsHere": "Burada sanatçıları görmek için biraz müzik çal",
+  "downloading": "İndiriliyor",
+  "downloadedPlaylists": "İndirilen çalma listeleri",
+  "errorLoadingDownloads": "İndirilenler yüklenirken hata oluştu",
+  "deleteDownload": "İndirmeyi sil",
+  "deleteDownloadQuestion": "İndirme silinsin mi?",
+  "deleteDownloadWarning": "Bu işlem \"{title}\" parçasını cihazından kaldırır. Daha sonra yeniden indirebilirsin.",
+  "@deleteDownloadWarning": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedTrack": "\"{title}\" silindi",
+  "@deletedTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSongsWillAppearHere": "İndirilen şarkılar burada görünecek",
+  "createPlaylist": "Çalma listesi oluştur",
+  "autoPlaylists": "Otomatik çalma listeleri",
+  "likedSongsLabel": "Beğenilen Şarkılar",
+  "downloadedFraction": "{downloaded}/{total} indirildi",
+  "@downloadedFraction": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "more": "Daha fazla",
+  "video": "VİDEO",
+  "forgottenFavorites": "Unutulan favoriler",
+  "mixedForYou": "Senin için karışık",
+  "myMixOne": "Karışımım 1",
+  "discoverMix": "Keşif Karışımı",
+  "replayMix": "Tekrar Karışımı",
+  "newRelease": "Yeni Çıkanlar",
+  "chillMix": "Sakin Karışım",
+  "basedOnYourListening": "Dinleme geçmişine göre",
+  "newMusicForYou": "Senin için yeni müzikler",
+  "yourFavorites": "Favorilerin",
+  "freshTracks": "Taze parçalar",
+  "relaxingVibes": "Rahatlatıcı havalar",
+  "musicToGetYouStarted": "SENİ BAŞLATACAK MÜZİKLER",
+  "welcomeUser": "Hoş geldin {name}",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeFallbackName": "orada",
+  "youtubeMusicLabel": "YouTube Music",
+  "local": "Yerel",
+  "recentlyAdded": "Son eklenenler",
+  "name": "Ad",
+  "duration": "Süre",
+  "searchSongsHint": "Şarkı ara...",
+  "noLikedSongs": "Beğenilen şarkı yok",
+  "likeSomeSongsToSeeThemHere": "Burada görmek için bazı şarkıları beğen",
+  "noLocalSongs": "Yerel şarkı yok",
+  "scanFoldersToFindLocalMusic": "Yerel müzik bulmak için klasörleri tara",
+  "noResults": "Sonuç yok",
+  "tryDifferentKeywords": "Farklı anahtar kelimeler dene",
+  "noSongsYet": "Henüz şarkı yok",
+  "playSomeMusicToBuildYourLibrary": "Kitaplığını oluşturmak için biraz müzik çal",
+  "albumNotFound": "Albüm bulunamadı",
+  "downloadAlbum": "Albümü indir",
+  "downloadingTracksFromAlbum": "{album} albümünden {count} parça indiriliyor",
+  "@downloadingTracksFromAlbum": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "shareAlbumText": "{title} - {artist}\n{url}",
+  "@shareAlbumText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestions": "Öneriler",
+  "recentSearches": "Son aramalar",
+  "startTypingToSearch": "Aramak için yazmaya başla...",
+  "youtubeMusicPlaylists": "YouTube Music çalma listeleri",
+  "errorLoadingPlaylists": "Çalma listeleri yüklenirken hata oluştu",
+  "yourPlaylists": "Çalma listelerin",
+  "noYoutubeMusicPlaylistsFound": "YouTube Music çalma listesi bulunamadı",
+  "songCountLabel": "{count, plural, one {# şarkı} other {# şarkı}}",
+  "@songCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unknownAlbum": "Bilinmeyen Albüm",
+  "jamCodeExample": "ABC123",
+  "jamCodeHint": "KOD",
+  "yourProfile": "Profilin",
+  "connected": "Bağlandı",
+  "googleUser": "Google Kullanıcısı",
+  "jamsAndProfile": "Jam'ler ve profil",
+  "yes": "evet",
+  "no": "hayır",
+  "foundInSettings": "Ayarlarda bulundu",
+  "sharePlaylistText": "{title}\n{url}",
+  "@sharePlaylistText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "shareArtistText": "{artist}\n{url}",
+  "@shareArtistText": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "megabytesValue": "{value} MB",
+  "@megabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "gigabytesValue": "{value} GB",
+  "@gigabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxMegabytesValue": "~{value} MB",
+  "@approxMegabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxKbpsValue": "~{value} kbps",
+  "@approxKbpsValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "secondsShort": "{value} sn",
+  "@secondsShort": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "speedMultiplier": "{value}x",
+  "@speedMultiplier": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

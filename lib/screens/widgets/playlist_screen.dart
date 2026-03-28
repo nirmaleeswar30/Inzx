@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../services/download_service.dart';
@@ -39,16 +40,18 @@ class PlaylistScreen extends ConsumerStatefulWidget {
 
   bool get isOfflineDownloaded => downloadedSnapshot != null;
 
-  Playlist buildOfflinePlaylist() {
+  Playlist buildOfflinePlaylist(BuildContext context) {
     final snapshot = downloadedSnapshot!;
     return Playlist(
       id: snapshot.sourcePlaylistId,
       title: snapshot.title,
       thumbnailUrl: snapshot.thumbnailUrl,
       tracks: snapshot.downloadedOrderedTracks,
-      description:
-          'Offline snapshot • ${snapshot.downloadedTracks}/${snapshot.totalTracks} downloaded',
-      author: 'Downloaded',
+      description: context.l10n.offlineSnapshotDownloaded(
+        snapshot.downloadedTracks,
+        snapshot.totalTracks,
+      ),
+      author: context.l10n.downloaded,
       isLocal: true,
     );
   }
@@ -93,7 +96,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     final playerService = ref.read(audioPlayerServiceProvider);
 
     if (widget.isOfflineDownloaded) {
-      final playlist = widget.buildOfflinePlaylist();
+      final playlist = widget.buildOfflinePlaylist(context);
       return Scaffold(
         backgroundColor: isDark ? Colors.black : colorScheme.surface,
         body: _buildContent(
@@ -120,12 +123,15 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
           colorScheme,
         ),
         error: (e, stack) {
-          return _buildErrorState('Error: ${e.toString()}', isDark);
+          return _buildErrorState(
+            context.l10n.errorWithMessage(e.toString()),
+            isDark,
+          );
         },
         data: (playlist) {
           if (playlist == null) {
             return _buildErrorState(
-              'Playlist not found\n\nPlaylist ID: ${widget.playlistId}\n\nThis playlist may be private or unavailable.',
+              context.l10n.playlistNotFoundMessage(widget.playlistId),
               isDark,
             );
           }
@@ -153,11 +159,11 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
       null,
       Playlist(
         id: widget.playlistId,
-        title: title ?? 'Loading...',
+        title: title ?? context.l10n.loading,
         thumbnailUrl: thumbnail,
         tracks: [],
-        description: 'Loading...',
-        author: 'YouTube Music',
+        description: context.l10n.loading,
+        author: context.l10n.youtubeMusicLabel,
       ),
       isDark,
       colorScheme,
@@ -196,6 +202,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     dynamic playerService, {
     bool isLoading = false,
   }) {
+    final l10n = (context ?? this.context).l10n;
     final allTracks = playlist.tracks ?? [];
 
     // Filter tracks based on search query
@@ -325,7 +332,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                                   : colorScheme.onSurface,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Find in playlist...',
+                              hintText: l10n.findInPlaylist,
                               hintStyle: TextStyle(
                                 color: isDark
                                     ? Colors.white54
@@ -450,7 +457,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
 
                             // Subtitle / Author
                             Text(
-                              playlist.author ?? 'YouTube Music',
+                              playlist.author ?? l10n.youtubeMusicLabel,
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: isDark
@@ -552,10 +559,11 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                                   ),
                                 ),
 
-                                _buildCircleButton(
-                                  Icons.share_outlined,
-                                  () => _sharePlaylist(playlist),
-                                ),
+                                _buildCircleButton(Icons.share_outlined, () {
+                                  if (context != null) {
+                                    _sharePlaylist(context, playlist);
+                                  }
+                                }),
                                 _buildCircleButton(Icons.more_vert_rounded, () {
                                   if (context == null) return;
                                   _showPlaylistOptions(
@@ -588,8 +596,8 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                       child: Center(
                         child: Text(
                           _isSearching
-                              ? 'No matching tracks'
-                              : 'No tracks found',
+                              ? l10n.noMatchingTracks
+                              : l10n.noTracksFound,
                           style: TextStyle(
                             color: isDark
                                 ? Colors.white54
@@ -737,9 +745,11 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     );
   }
 
-  void _sharePlaylist(Playlist playlist) {
+  void _sharePlaylist(BuildContext context, Playlist playlist) {
     final url = 'https://music.youtube.com/playlist?list=${playlist.id}';
-    SharePlus.instance.share(ShareParams(text: '${playlist.title}\n$url'));
+    SharePlus.instance.share(
+      ShareParams(text: context.l10n.sharePlaylistText(playlist.title, url)),
+    );
   }
 
   void _downloadPlaylist(
@@ -761,7 +771,10 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Downloading ${tracks.length} tracks from ${playlist.title}',
+          context.l10n.downloadingTracksFromPlaylist(
+            tracks.length,
+            playlist.title,
+          ),
         ),
         duration: const Duration(seconds: 2),
       ),
@@ -781,7 +794,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Added ${tracks.length} tracks to queue'),
+        content: Text(context.l10n.addedTracksToQueueCount(tracks.length)),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -823,7 +836,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                   color: isDark ? Colors.white : colorScheme.onSurface,
                 ),
                 title: Text(
-                  'Play',
+                  context.l10n.play,
                   style: TextStyle(
                     color: isDark ? Colors.white : colorScheme.onSurface,
                   ),
@@ -845,7 +858,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                   color: isDark ? Colors.white : colorScheme.onSurface,
                 ),
                 title: Text(
-                  'Shuffle',
+                  context.l10n.shuffle,
                   style: TextStyle(
                     color: isDark ? Colors.white : colorScheme.onSurface,
                   ),
@@ -868,7 +881,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                   color: isDark ? Colors.white : colorScheme.onSurface,
                 ),
                 title: Text(
-                  'Add to queue',
+                  context.l10n.addToQueue,
                   style: TextStyle(
                     color: isDark ? Colors.white : colorScheme.onSurface,
                   ),
@@ -884,7 +897,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                   color: isDark ? Colors.white : colorScheme.onSurface,
                 ),
                 title: Text(
-                  'Download playlist',
+                  context.l10n.downloadPlaylist,
                   style: TextStyle(
                     color: isDark ? Colors.white : colorScheme.onSurface,
                   ),
@@ -900,14 +913,14 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                   color: isDark ? Colors.white : colorScheme.onSurface,
                 ),
                 title: Text(
-                  'Share',
+                  context.l10n.share,
                   style: TextStyle(
                     color: isDark ? Colors.white : colorScheme.onSurface,
                   ),
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
-                  _sharePlaylist(playlist);
+                  _sharePlaylist(context, playlist);
                 },
               ),
               const SizedBox(height: 16),

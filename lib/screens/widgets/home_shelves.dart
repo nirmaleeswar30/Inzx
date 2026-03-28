@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../../core/design_system/design_system.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../services/audio_player_service.dart' as player;
@@ -25,38 +26,25 @@ enum ShelfLayout {
   contentCarousel, // Default carousel
 }
 
+bool _containsAnyKeyword(String value, Iterable<String> keywords) {
+  return keywords.any(value.contains);
+}
+
+bool _hasMixedCommunityItems(HomeShelf shelf) {
+  final hasPlaylistLikeItem = shelf.items.any(
+    (item) =>
+        item.itemType == HomeShelfItemType.playlist ||
+        item.itemType == HomeShelfItemType.mix,
+  );
+  final hasSongItem = shelf.items.any(
+    (item) => item.itemType == HomeShelfItemType.song,
+  );
+  return hasPlaylistLikeItem && hasSongItem;
+}
+
 ShelfLayout getShelfLayout(HomeShelf shelf) {
   final title = shelf.title.toLowerCase();
 
-  // Music videos, Live performances -> Full width tall cards
-  if (title.contains('music video') ||
-      title.contains('live performance') ||
-      title.contains('official video')) {
-    return ShelfLayout.videoStyle;
-  }
-
-  // From the community -> Playlist with songs
-  if (title.contains('from the community') ||
-      title.contains('community playlist')) {
-    return ShelfLayout.communityStyle;
-  }
-
-  // Daily discover -> Large cards
-  if (title.contains('daily discover') || title.contains('your daily')) {
-    return ShelfLayout.dailyDiscoverStyle;
-  }
-
-  // Trending, Heard in Shorts, Covers, Long listens -> Quick picks style
-  if (title.contains('trending') ||
-      title.contains('heard in shorts') ||
-      title.contains('shorts') ||
-      title.contains('cover') ||
-      title.contains('remix') ||
-      title.contains('long listen')) {
-    return ShelfLayout.quickPicksStyle;
-  }
-
-  // Fallback to type-based layout
   switch (shelf.type) {
     case HomeShelfType.quickPicks:
       return ShelfLayout.quickPicksStyle;
@@ -70,9 +58,52 @@ ShelfLayout getShelfLayout(HomeShelf shelf) {
     case HomeShelfType.moods:
     case HomeShelfType.genres:
       return ShelfLayout.moodGenreStyle;
+    case HomeShelfType.videos:
+      return ShelfLayout.videoStyle;
     default:
-      return ShelfLayout.contentCarousel;
+      break;
   }
+
+  // Type-based detection handles the common cases above.
+  // Title sniffing only remains as a fallback for shelves the API still marks
+  // as unknown.
+  if (shelf.type == HomeShelfType.unknown &&
+      (shelf.items.any((item) => item.itemType == HomeShelfItemType.video) ||
+          _containsAnyKeyword(title, [
+            'music video',
+            'live performance',
+            'official video',
+          ]))) {
+    return ShelfLayout.videoStyle;
+  }
+
+  if (_hasMixedCommunityItems(shelf) ||
+      (shelf.type == HomeShelfType.unknown &&
+          _containsAnyKeyword(title, [
+            'from the community',
+            'community playlist',
+          ]))) {
+    return ShelfLayout.communityStyle;
+  }
+
+  if (shelf.type == HomeShelfType.unknown &&
+      _containsAnyKeyword(title, ['daily discover', 'your daily'])) {
+    return ShelfLayout.dailyDiscoverStyle;
+  }
+
+  if (shelf.type == HomeShelfType.unknown &&
+      _containsAnyKeyword(title, [
+        'trending',
+        'heard in shorts',
+        'shorts',
+        'cover',
+        'remix',
+        'long listen',
+      ])) {
+    return ShelfLayout.quickPicksStyle;
+  }
+
+  return ShelfLayout.contentCarousel;
 }
 
 /// Widget for displaying Quick Picks shelf (radio-based song selection)
@@ -90,6 +121,7 @@ class QuickPicksShelf extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    const tracksPerPage = 4;
     final playerService = ref.watch(audioPlayerServiceProvider);
     final tracks = shelf.tracks;
 
@@ -160,17 +192,23 @@ class QuickPicksShelf extends ConsumerWidget {
         const SizedBox(height: 16),
         // Track list (vertical list, 4 items visible at a time)
         SizedBox(
-          height: 360, // Fixed height with smaller text to prevent overflow
+          height: 360,
           child: ListView.builder(
+            key: ValueKey(
+              'quick_picks_${Localizations.localeOf(context).languageCode}_${shelf.id}_${tracks.length}',
+            ),
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             cacheExtent: MediaQuery.of(
               context,
             ).size.width, // Preload 1 page ahead
-            itemCount: (tracks.length / 4).ceil(),
+            itemCount: (tracks.length / tracksPerPage).ceil(),
             itemBuilder: (context, pageIndex) {
-              final startIndex = pageIndex * 4;
-              final pageTracks = tracks.skip(startIndex).take(4).toList();
+              final startIndex = pageIndex * tracksPerPage;
+              final pageTracks = tracks
+                  .skip(startIndex)
+                  .take(tracksPerPage)
+                  .toList();
 
               return Container(
                 width: MediaQuery.of(context).size.width - 48,
@@ -209,6 +247,8 @@ class OptimizedTrackItem extends ConsumerWidget {
   final bool isDark;
   final ColorScheme colorScheme;
   final List<Track>? shelfTracks; // All tracks in the shelf for queue
+  final bool enableDynamicColors;
+  final bool showCurrentTrackHighlight;
 
   const OptimizedTrackItem({
     super.key,
@@ -217,24 +257,26 @@ class OptimizedTrackItem extends ConsumerWidget {
     required this.isDark,
     required this.colorScheme,
     this.shelfTracks,
+    this.enableDynamicColors = true,
+    this.showCurrentTrackHighlight = true,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Only watch the current track ID, not the entire playback state
-    final currentTrackId = ref.watch(currentTrackIdProvider);
-    final isCurrentTrack = currentTrackId == track.id;
-
-    // Watch colors for this track (with auto-dispose for memory efficiency)
-    final trackColors = ref.watch(trackColorsProvider(track.thumbnailUrl));
+    final isCurrentTrack = showCurrentTrackHighlight
+        ? ref.watch(currentTrackIdProvider) == track.id
+        : false;
 
     // Capture notifier BEFORE async operation to avoid "ref after dispose" error
     final recentlyPlayedNotifier = ref.read(recentlyPlayedProvider.notifier);
 
-    // Get accent color from track colors (defaults to theme primary)
-    final accentColor = trackColors.whenOrNull(
-      data: (colors) => colors.isDefault ? null : colors.accent,
-    );
+    Color? accentColor;
+    if (enableDynamicColors) {
+      final trackColors = ref.watch(trackColorsProvider(track.thumbnailUrl));
+      accentColor = trackColors.whenOrNull(
+        data: (colors) => colors.isDefault ? null : colors.accent,
+      );
+    }
 
     return GestureDetector(
       onTap: () {
@@ -525,6 +567,7 @@ class ContentCarouselShelf extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     if (shelf.items.isEmpty) return const SizedBox.shrink();
 
     return Column(
@@ -567,7 +610,7 @@ class ContentCarouselShelf extends ConsumerWidget {
                     ShelfDetailsScreen.open(context, shelf);
                   },
                   child: Text(
-                    'More',
+                    l10n.more,
                     style: TextStyle(color: colorScheme.primary),
                   ),
                 ),
@@ -772,6 +815,7 @@ class ChartsShelf extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     if (shelf.items.isEmpty) return const SizedBox.shrink();
 
     return Column(
@@ -797,7 +841,7 @@ class ChartsShelf extends ConsumerWidget {
                     // TODO: Navigate to chart details
                   },
                   child: Text(
-                    'See all',
+                    l10n.seeAll,
                     style: TextStyle(color: colorScheme.primary),
                   ),
                 ),
@@ -907,6 +951,7 @@ class VideoShelf extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     if (shelf.items.isEmpty) return const SizedBox.shrink();
 
     return Column(
@@ -949,7 +994,7 @@ class VideoShelf extends ConsumerWidget {
                     ShelfDetailsScreen.open(context, shelf);
                   },
                   child: Text(
-                    'More',
+                    l10n.more,
                     style: TextStyle(color: colorScheme.primary),
                   ),
                 ),
@@ -979,6 +1024,7 @@ class VideoShelf extends ConsumerWidget {
     HomeShelfItem item,
     WidgetRef ref,
   ) {
+    final l10n = context.l10n;
     final screenWidth = MediaQuery.of(context).size.width;
     final cardWidth = screenWidth - 48; // Full width with padding
 
@@ -1037,8 +1083,8 @@ class VideoShelf extends ConsumerWidget {
                         color: Colors.black.withValues(alpha: 0.8),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text(
-                        'VIDEO',
+                      child: Text(
+                        l10n.video,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 10,
@@ -1110,6 +1156,7 @@ class CommunityShelf extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final items = shelf.items;
 
     if (items.isEmpty) return const SizedBox.shrink();
@@ -1154,7 +1201,7 @@ class CommunityShelf extends ConsumerWidget {
                     ShelfDetailsScreen.open(context, shelf);
                   },
                   child: Text(
-                    'More',
+                    l10n.more,
                     style: TextStyle(color: colorScheme.primary),
                   ),
                 ),
@@ -1268,6 +1315,7 @@ class DailyDiscoverShelf extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     if (shelf.items.isEmpty) return const SizedBox.shrink();
 
     return Column(
@@ -1323,7 +1371,7 @@ class DailyDiscoverShelf extends ConsumerWidget {
                   }
                 },
                 child: Text(
-                  'Play all',
+                  l10n.playAll,
                   style: TextStyle(color: colorScheme.primary),
                 ),
               ),
@@ -1424,16 +1472,27 @@ class TrackListShelf extends ConsumerWidget {
   final HomeShelf shelf;
   final bool isDark;
   final ColorScheme colorScheme;
+  final bool showPlayButton;
+  final double headerHorizontalPadding;
+  final double listHorizontalPadding;
+  final bool enableDynamicColors;
+  final bool showCurrentTrackHighlight;
 
   const TrackListShelf({
     super.key,
     required this.shelf,
     required this.isDark,
     required this.colorScheme,
+    this.showPlayButton = true,
+    this.headerHorizontalPadding = 16,
+    this.listHorizontalPadding = 4,
+    this.enableDynamicColors = true,
+    this.showCurrentTrackHighlight = true,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    const tracksPerPage = 4;
     final playerService = ref.watch(audioPlayerServiceProvider);
     final tracks = shelf.tracks;
     final items = shelf.items;
@@ -1450,7 +1509,7 @@ class TrackListShelf extends ConsumerWidget {
       children: [
         // Header
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: EdgeInsets.symmetric(horizontal: headerHorizontalPadding),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1480,7 +1539,7 @@ class TrackListShelf extends ConsumerWidget {
                 ),
               ),
               // Play all button
-              if (displayTracks.isNotEmpty)
+              if (showPlayButton && displayTracks.isNotEmpty)
                 IconButton(
                   onPressed: () async {
                     await playerService.playTrack(displayTracks.first);
@@ -1509,17 +1568,22 @@ class TrackListShelf extends ConsumerWidget {
         SizedBox(
           height: 280,
           child: PageView.builder(
+            key: ValueKey(
+              'track_list_${Localizations.localeOf(context).languageCode}_${shelf.id}_${displayTracks.length}',
+            ),
             controller: PageController(viewportFraction: 0.92),
-            itemCount: (displayTracks.length / 4).ceil(),
+            itemCount: (displayTracks.length / tracksPerPage).ceil(),
             itemBuilder: (context, pageIndex) {
-              final startIndex = pageIndex * 4;
+              final startIndex = pageIndex * tracksPerPage;
               final pageTracks = displayTracks
                   .skip(startIndex)
-                  .take(4)
+                  .take(tracksPerPage)
                   .toList();
 
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
+                padding: EdgeInsets.symmetric(
+                  horizontal: listHorizontalPadding,
+                ),
                 child: Column(
                   children: pageTracks.asMap().entries.map((entry) {
                     final isLast = entry.key == pageTracks.length - 1;
@@ -1534,6 +1598,8 @@ class TrackListShelf extends ConsumerWidget {
                           colorScheme: colorScheme,
                           shelfTracks:
                               displayTracks, // Pass all tracks for queue
+                          enableDynamicColors: enableDynamicColors,
+                          showCurrentTrackHighlight: showCurrentTrackHighlight,
                         ),
                       ),
                     );

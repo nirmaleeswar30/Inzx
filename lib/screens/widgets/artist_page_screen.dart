@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:palette_generator/palette_generator.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../services/artist_service.dart';
@@ -126,6 +128,7 @@ class ArtistPageScreen extends ConsumerStatefulWidget {
 class _ArtistPageScreenState extends ConsumerState<ArtistPageScreen> {
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final artistAsync = ref.watch(artistPageProvider(widget.artistId));
     final playerService = ref.read(audioPlayerServiceProvider);
     final playbackState = ref.watch(playbackStateProvider);
@@ -137,7 +140,7 @@ class _ArtistPageScreenState extends ConsumerState<ArtistPageScreen> {
       backgroundColor: isDark ? Colors.black : colorScheme.surface,
       body: artistAsync.when(
         loading: () => _buildLoadingState(),
-        error: (e, _) => _buildErrorState('Error loading artist'),
+        error: (e, _) => _buildErrorState(l10n.errorLoadingArtist),
         data: (artistData) => _ArtistContent(
           artistData: artistData,
           playerService: playerService,
@@ -150,6 +153,7 @@ class _ArtistPageScreenState extends ConsumerState<ArtistPageScreen> {
   }
 
   Widget _buildLoadingState() {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     return CustomScrollView(
@@ -193,7 +197,7 @@ class _ArtistPageScreenState extends ConsumerState<ArtistPageScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                widget.artistName ?? 'Loading...',
+                widget.artistName ?? l10n.loading,
                 style: TextStyle(
                   color: isDark ? Colors.white : colorScheme.onSurface,
                   fontSize: 28,
@@ -238,7 +242,7 @@ class _ArtistPageScreenState extends ConsumerState<ArtistPageScreen> {
           TextButton(
             onPressed: () =>
                 ref.invalidate(artistPageProvider(widget.artistId)),
-            child: const Text('Retry'),
+            child: Text(context.l10n.retry),
           ),
         ],
       ),
@@ -367,6 +371,28 @@ class _ArtistContent extends ConsumerWidget {
     );
   }
 
+  String _localizedShelfTitle(BuildContext context, ArtistShelf shelf) {
+    switch (shelf.type) {
+      case ArtistShelfType.songs:
+        return context.l10n.songs;
+      case ArtistShelfType.albums:
+        return context.l10n.albums;
+      case ArtistShelfType.singles:
+      case ArtistShelfType.eps:
+        return context.l10n.singlesAndEps;
+      case ArtistShelfType.appearsOn:
+      case ArtistShelfType.featuredOn:
+        return context.l10n.appearsOn;
+      case ArtistShelfType.playlists:
+        return context.l10n.playlists;
+      case ArtistShelfType.similar:
+      case ArtistShelfType.fans:
+        return context.l10n.fansAlsoLike;
+      default:
+        return shelf.title;
+    }
+  }
+
   Widget _buildBackground(
     BuildContext context,
     String? imageUrl,
@@ -426,6 +452,7 @@ class _ArtistContent extends ConsumerWidget {
     bool subscribeBusy,
     bool isDescriptionExpanded,
   ) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     final topTracks = artistData.topTracks;
@@ -499,7 +526,9 @@ class _ArtistContent extends ConsumerWidget {
           // Subscriber count
           if (artistData.subscriberCount != null)
             Text(
-              '${_formatNumber(artistData.subscriberCount!)} subscribers',
+              l10n.subscribersCount(
+                _formatNumber(context, artistData.subscriberCount!),
+              ),
               style: TextStyle(
                 color: isDark
                     ? Colors.white70
@@ -555,7 +584,7 @@ class _ArtistContent extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                'Channel',
+                l10n.channel,
                 style: TextStyle(
                   color: isDark
                       ? Colors.white54
@@ -590,7 +619,9 @@ class _ArtistContent extends ConsumerWidget {
                       isSubscribed ? Icons.check_rounded : Icons.add_rounded,
                     ),
               label: Text(
-                isLoggedIn ? (isSubscribed ? 'Following' : 'Follow') : 'Follow',
+                isLoggedIn
+                    ? (isSubscribed ? l10n.following : l10n.follow)
+                    : l10n.follow,
               ),
               style: FilledButton.styleFrom(
                 backgroundColor: isDark
@@ -611,7 +642,7 @@ class _ArtistContent extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildActionButton(context, Icons.shuffle, 'Shuffle', () {
+              _buildActionButton(context, Icons.shuffle, l10n.shuffle, () {
                 if (topTracks.isNotEmpty) {
                   final shuffled = List<Track>.from(topTracks)..shuffle();
                   playerService.playQueue(
@@ -654,7 +685,7 @@ class _ArtistContent extends ConsumerWidget {
                 ),
               ),
 
-              _buildActionButton(context, Icons.radio, 'Radio', () {
+              _buildActionButton(context, Icons.radio, l10n.radio, () {
                 if (topTracks.isNotEmpty) {
                   playerService.playTrack(topTracks.first, enableRadio: true);
                 }
@@ -676,9 +707,7 @@ class _ArtistContent extends ConsumerWidget {
   }) async {
     if (!isLoggedIn) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Connect YouTube Music to follow artists.'),
-        ),
+        SnackBar(content: Text(context.l10n.connectYtMusicToFollowArtists)),
       );
       return;
     }
@@ -707,7 +736,9 @@ class _ArtistContent extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Could not ${nextSubscribed ? 'follow' : 'unfollow'} ${artistData.name}.',
+              nextSubscribed
+                  ? context.l10n.couldNotFollowArtist(artistData.name)
+                  : context.l10n.couldNotUnfollowArtist(artistData.name),
             ),
           ),
         );
@@ -719,8 +750,8 @@ class _ArtistContent extends ConsumerWidget {
         SnackBar(
           content: Text(
             nextSubscribed
-                ? 'Following ${artistData.name}'
-                : 'Unfollowed ${artistData.name}',
+                ? context.l10n.followingArtist(artistData.name)
+                : context.l10n.unfollowedArtist(artistData.name),
           ),
         ),
       );
@@ -783,7 +814,7 @@ class _ArtistContent extends ConsumerWidget {
               Icon(Icons.download_done, size: 18, color: Colors.green[400]),
               const SizedBox(width: 8),
               Text(
-                'Downloaded',
+                context.l10n.downloadedSection,
                 style: TextStyle(
                   color: isDark ? Colors.white : colorScheme.onSurface,
                   fontSize: 20,
@@ -815,7 +846,7 @@ class _ArtistContent extends ConsumerWidget {
                 // Show all local tracks
               },
               child: Text(
-                'Show all ${artistData.localTracks.length} downloaded',
+                context.l10n.showAllDownloaded(artistData.localTracks.length),
               ),
             ),
           ),
@@ -864,6 +895,7 @@ class _ArtistContent extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     final tracks = shelf.tracks;
+    final displayTitle = _localizedShelfTitle(context, shelf);
 
     return [
       SliverToBoxAdapter(
@@ -873,7 +905,7 @@ class _ArtistContent extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                shelf.title,
+                displayTitle,
                 style: TextStyle(
                   color: isDark ? Colors.white : colorScheme.onSurface,
                   fontSize: 20,
@@ -886,7 +918,7 @@ class _ArtistContent extends ConsumerWidget {
                     // Navigate to full songs list
                     final songsShelf = HomeShelf(
                       id: shelf.browseId ?? artistData.id,
-                      title: '${artistData.name} - ${shelf.title}',
+                      title: '${artistData.name} - $displayTitle',
                       type: HomeShelfType.unknown,
                       items: tracks
                           .map(
@@ -906,7 +938,7 @@ class _ArtistContent extends ConsumerWidget {
                     ShelfDetailsScreen.open(context, songsShelf);
                   },
                   child: Text(
-                    'See all',
+                    context.l10n.seeAll,
                     style: TextStyle(
                       color: isDark
                           ? Colors.white70
@@ -972,7 +1004,7 @@ class _ArtistContent extends ConsumerWidget {
         ),
       ),
       subtitle: Text(
-        '${track.artist}${track.formattedDuration.isNotEmpty && track.formattedDuration != '0:00' ? ' • ${track.formattedDuration}' : ''}',
+        context.trackSubtitle(track.artist, track.formattedDuration),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
@@ -1006,13 +1038,14 @@ class _ArtistContent extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     final albums = shelf.albums;
+    final displayTitle = _localizedShelfTitle(context, shelf);
 
     return [
       SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
           child: Text(
-            shelf.title,
+            displayTitle,
             style: TextStyle(
               color: isDark ? Colors.white : colorScheme.onSurface,
               fontSize: 20,
@@ -1080,7 +1113,7 @@ class _ArtistContent extends ConsumerWidget {
               ),
             ),
             Text(
-              album.year ?? 'Album',
+              album.year ?? context.l10n.album,
               maxLines: 1,
               style: TextStyle(
                 color: isDark
@@ -1099,13 +1132,14 @@ class _ArtistContent extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     final playlists = shelf.playlists;
+    final displayTitle = _localizedShelfTitle(context, shelf);
 
     return [
       SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
           child: Text(
-            shelf.title,
+            displayTitle,
             style: TextStyle(
               color: isDark ? Colors.white : colorScheme.onSurface,
               fontSize: 20,
@@ -1140,7 +1174,7 @@ class _ArtistContent extends ConsumerWidget {
               ),
             ),
             subtitle: Text(
-              playlist.author ?? 'Playlist',
+              playlist.author ?? context.l10n.playlist,
               style: TextStyle(
                 color: isDark
                     ? Colors.white60
@@ -1166,13 +1200,14 @@ class _ArtistContent extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     final artists = shelf.artists;
+    final displayTitle = _localizedShelfTitle(context, shelf);
 
     return [
       SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
           child: Text(
-            shelf.title,
+            displayTitle,
             style: TextStyle(
               color: isDark ? Colors.white : colorScheme.onSurface,
               fontSize: 20,
@@ -1290,7 +1325,9 @@ class _ArtistContent extends ConsumerWidget {
                 ),
                 subtitle: artistData.subscriberCount != null
                     ? Text(
-                        '${_formatNumber(artistData.subscriberCount!)} subscribers',
+                        context.l10n.subscribersCount(
+                          _formatNumber(context, artistData.subscriberCount!),
+                        ),
                         style: TextStyle(
                           color: isDark
                               ? Colors.white54
@@ -1306,7 +1343,7 @@ class _ArtistContent extends ConsumerWidget {
                   color: isDark ? Colors.white : colorScheme.onSurface,
                 ),
                 title: Text(
-                  'Play all',
+                  context.l10n.playAll,
                   style: TextStyle(
                     color: isDark ? Colors.white : colorScheme.onSurface,
                   ),
@@ -1328,7 +1365,7 @@ class _ArtistContent extends ConsumerWidget {
                   color: isDark ? Colors.white : colorScheme.onSurface,
                 ),
                 title: Text(
-                  'Shuffle all',
+                  context.l10n.shuffleAll,
                   style: TextStyle(
                     color: isDark ? Colors.white : colorScheme.onSurface,
                   ),
@@ -1351,7 +1388,7 @@ class _ArtistContent extends ConsumerWidget {
                   color: isDark ? Colors.white : colorScheme.onSurface,
                 ),
                 title: Text(
-                  'Start radio',
+                  context.l10n.startRadio,
                   style: TextStyle(
                     color: isDark ? Colors.white : colorScheme.onSurface,
                   ),
@@ -1369,7 +1406,7 @@ class _ArtistContent extends ConsumerWidget {
                   color: isDark ? Colors.white : colorScheme.onSurface,
                 ),
                 title: Text(
-                  'Share',
+                  context.l10n.share,
                   style: TextStyle(
                     color: isDark ? Colors.white : colorScheme.onSurface,
                   ),
@@ -1378,9 +1415,11 @@ class _ArtistContent extends ConsumerWidget {
                   Navigator.pop(context);
                   final url =
                       'https://music.youtube.com/channel/${artistData.id}';
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('Link: $url')));
+                  SharePlus.instance.share(
+                    ShareParams(
+                      text: context.l10n.shareArtistText(artistData.name, url),
+                    ),
+                  );
                 },
               ),
               const SizedBox(height: 16),
@@ -1391,13 +1430,7 @@ class _ArtistContent extends ConsumerWidget {
     );
   }
 
-  String _formatNumber(int number) {
-    if (number >= 1000000) {
-      return '${(number / 1000000).toStringAsFixed(1)}M';
-    }
-    if (number >= 1000) {
-      return '${(number / 1000).toStringAsFixed(1)}K';
-    }
-    return number.toString();
+  String _formatNumber(BuildContext context, int number) {
+    return context.compactNumber(number);
   }
 }

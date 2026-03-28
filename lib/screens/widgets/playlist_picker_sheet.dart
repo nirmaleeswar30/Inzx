@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 
@@ -37,6 +38,7 @@ class _PlaylistPickerSheetState extends ConsumerState<PlaylistPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     final backgroundColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
@@ -75,7 +77,7 @@ class _PlaylistPickerSheetState extends ConsumerState<PlaylistPickerSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Add to Playlist',
+                  l10n.addToPlaylist,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -104,7 +106,7 @@ class _PlaylistPickerSheetState extends ConsumerState<PlaylistPickerSheet> {
               child: Icon(Iconsax.add, color: colorScheme.primary),
             ),
             title: Text(
-              'Create New Playlist',
+              l10n.createNewPlaylist,
               style: TextStyle(color: textColor, fontWeight: FontWeight.w500),
             ),
             onTap: () => setState(() => _showCreateNew = !_showCreateNew),
@@ -121,7 +123,7 @@ class _PlaylistPickerSheetState extends ConsumerState<PlaylistPickerSheet> {
                       controller: _newPlaylistController,
                       autofocus: true,
                       decoration: InputDecoration(
-                        hintText: 'Playlist name',
+                        hintText: l10n.playlistName,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -137,7 +139,7 @@ class _PlaylistPickerSheetState extends ConsumerState<PlaylistPickerSheet> {
                   const SizedBox(width: 8),
                   FilledButton(
                     onPressed: _createAndAdd,
-                    child: const Text('Create'),
+                    child: Text(l10n.create),
                   ),
                 ],
               ),
@@ -162,12 +164,12 @@ class _PlaylistPickerSheetState extends ConsumerState<PlaylistPickerSheet> {
                     Icon(Iconsax.warning_2, size: 48, color: secondaryColor),
                     const SizedBox(height: 16),
                     Text(
-                      'Could not load playlists',
+                      l10n.couldNotLoadPlaylists,
                       style: TextStyle(color: secondaryColor),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Create a local playlist instead',
+                      l10n.createLocalPlaylistInstead,
                       style: TextStyle(color: secondaryColor, fontSize: 13),
                     ),
                   ],
@@ -190,12 +192,12 @@ class _PlaylistPickerSheetState extends ConsumerState<PlaylistPickerSheet> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'No playlists yet',
+                          l10n.noPlaylistsYet,
                           style: TextStyle(color: secondaryColor),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Create one to get started',
+                          l10n.createOneToGetStarted,
                           style: TextStyle(color: secondaryColor, fontSize: 13),
                         ),
                       ],
@@ -240,7 +242,7 @@ class _PlaylistPickerSheetState extends ConsumerState<PlaylistPickerSheet> {
                       subtitle: Row(
                         children: [
                           Text(
-                            '${playlist.trackCount} songs',
+                            l10n.songsCount(playlist.trackCount ?? 0),
                             style: TextStyle(
                               color: secondaryColor,
                               fontSize: 13,
@@ -279,6 +281,7 @@ class _PlaylistPickerSheetState extends ConsumerState<PlaylistPickerSheet> {
   }
 
   void _createAndAdd() async {
+    final l10n = context.l10n;
     final name = _newPlaylistController.text.trim();
     if (name.isEmpty) return;
 
@@ -301,22 +304,25 @@ class _PlaylistPickerSheetState extends ConsumerState<PlaylistPickerSheet> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Created "$name" on YT Music and added "${widget.track.title}"',
+                l10n.createdPlaylistOnYtMusicAndAddedTrack(
+                  name,
+                  widget.track.title,
+                ),
               ),
             ),
           );
         } else {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to create playlist')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.failedToCreatePlaylist)));
         }
       } catch (e) {
         if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.errorWithMessage(e.toString()))),
+          );
         }
       }
     } else {
@@ -332,7 +338,7 @@ class _PlaylistPickerSheetState extends ConsumerState<PlaylistPickerSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Created "$name" locally and added "${widget.track.title}"',
+            l10n.createdPlaylistLocallyAndAddedTrack(name, widget.track.title),
           ),
         ),
       );
@@ -340,6 +346,7 @@ class _PlaylistPickerSheetState extends ConsumerState<PlaylistPickerSheet> {
   }
 
   void _addToPlaylist(Playlist playlist, {bool isYtPlaylist = false}) async {
+    final l10n = context.l10n;
     if (isYtPlaylist) {
       // Add to YT Music playlist via API
       final innerTube = ref.read(innerTubeServiceProvider);
@@ -354,8 +361,11 @@ class _PlaylistPickerSheetState extends ConsumerState<PlaylistPickerSheet> {
             SnackBar(
               content: Text(
                 success
-                    ? 'Added "${widget.track.title}" to "${playlist.title}"'
-                    : 'Failed to add to playlist',
+                    ? l10n.addedTrackToPlaylist(
+                        widget.track.title,
+                        playlist.title,
+                      )
+                    : l10n.failedToAddToPlaylist,
               ),
             ),
           );
@@ -363,9 +373,9 @@ class _PlaylistPickerSheetState extends ConsumerState<PlaylistPickerSheet> {
       } catch (e) {
         if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.errorWithMessage(e.toString()))),
+          );
         }
       }
     } else {
@@ -376,7 +386,9 @@ class _PlaylistPickerSheetState extends ConsumerState<PlaylistPickerSheet> {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Added "${widget.track.title}" to "${playlist.title}"'),
+          content: Text(
+            l10n.addedTrackToPlaylist(widget.track.title, playlist.title),
+          ),
         ),
       );
     }

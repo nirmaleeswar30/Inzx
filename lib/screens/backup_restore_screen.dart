@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import '../../core/design_system/design_system.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../core/services/cache/hive_service.dart';
@@ -47,6 +48,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     final albumColors = ref.watch(albumColorsProvider);
@@ -63,7 +65,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Backup & Restore'),
+        title: Text(l10n.backupRestoreTitle),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -83,7 +85,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Backup includes liked songs, playlists, search history, recently played, and key app settings.',
+                    l10n.backupIncludesDescription,
                     style: TextStyle(
                       color: isDark ? Colors.white70 : InzxColors.textSecondary,
                     ),
@@ -97,7 +99,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
 
           // Backup section
           Text(
-            'Create Backup',
+            l10n.createBackup,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -109,8 +111,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
             context,
             isDark: isDark,
             icon: Iconsax.export_1,
-            title: 'Export Backup',
-            subtitle: 'Save a backup file to share or store',
+            title: l10n.exportBackup,
+            subtitle: l10n.exportBackupSubtitle,
             isLoading: _isBackingUp,
             onTap: _createBackup,
           ),
@@ -119,7 +121,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
 
           // Restore section
           Text(
-            'Restore Backup',
+            l10n.restoreBackup,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -131,8 +133,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
             context,
             isDark: isDark,
             icon: Iconsax.import_1,
-            title: 'Import Backup',
-            subtitle: 'Restore from a backup file',
+            title: l10n.importBackup,
+            subtitle: l10n.importBackupSubtitle,
             isLoading: _isRestoring,
             onTap: _restoreBackup,
           ),
@@ -141,7 +143,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
 
           // Danger zone
           Text(
-            'Danger Zone',
+            l10n.dangerZone,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -153,9 +155,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
             context,
             isDark: isDark,
             icon: Iconsax.trash,
-            title: 'Clear App Data',
-            subtitle:
-                'Reset app data/settings while keeping downloaded audio files',
+            title: l10n.clearAppData,
+            subtitle: l10n.clearAppDataSubtitle,
             color: Colors.red,
             onTap: _clearAllData,
           ),
@@ -244,6 +245,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
 
   Future<void> _createBackup() async {
     setState(() => _isBackingUp = true);
+    final l10n = context.l10n;
 
     try {
       final backup = await _generateBackupData();
@@ -257,19 +259,18 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
 
       // Share
       await SharePlus.instance.share(
-        ShareParams(files: [XFile(file.path)], subject: 'Inzx Music Backup'),
+        ShareParams(files: [XFile(file.path)], subject: l10n.backupSubject),
       );
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Backup created successfully')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.backupCreatedSuccessfully)));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Backup failed: $e')));
+        ).showSnackBar(SnackBar(content: Text(l10n.backupFailed('$e'))));
       }
     }
 
@@ -298,14 +299,14 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Backup restored successfully')),
+          SnackBar(content: Text(context.l10n.backupRestoredSuccessfully)),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Restore failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.restoreFailed('$e'))),
+        );
       }
     }
 
@@ -316,19 +317,17 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear All Data?'),
-        content: const Text(
-          'This resets local app data and settings, but keeps downloaded song files. This cannot be undone.',
-        ),
+        title: Text(context.l10n.clearAllDataQuestion),
+        content: Text(context.l10n.clearAllDataWarning),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Clear All'),
+            child: Text(context.l10n.clearAll),
           ),
         ],
       ),
@@ -372,18 +371,14 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'App data cleared (downloaded audio files were preserved)',
-            ),
-          ),
+          SnackBar(content: Text(context.l10n.appDataClearedPreserved)),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.failedGeneric('$e'))),
+        );
       }
     }
   }

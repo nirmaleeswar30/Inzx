@@ -1,0 +1,1179 @@
+{
+  "@@locale": "ar",
+  "appTitle": "Inzx",
+  "updateDownloadedBanner": "تم تنزيل التحديث. أعد تشغيل التطبيق للتطبيق.",
+  "restart": "إعادة تشغيل",
+  "dismiss": "رفض",
+  "newVersionAvailableBanner": "الإصدار الجديد {version} متاح على GitHub.",
+  "@newVersionAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "تحميل",
+  "later": "لاحقاً",
+  "home": "بيت",
+  "songs": "أغاني",
+  "library": "مكتبة",
+  "folders": "المجلدات",
+  "settings": "إعدادات",
+  "searchSettingsHint": "إعدادات البحث...",
+  "noMatchingSettings": "لا توجد إعدادات مطابقة",
+  "appearance": "مظهر",
+  "theme": "سمة",
+  "themeAuto": "آلي",
+  "themeLight": "ضوء",
+  "themeDark": "مظلم",
+  "dynamicColorsNote": "تتكيف الألوان ديناميكيًا من صورة الألبوم للمسار الحالي.",
+  "language": "لغة",
+  "languageSubtitle": "اختر لغة التطبيق",
+  "chooseLanguage": "اختر اللغة",
+  "searchLanguagesHint": "بحث في اللغات...",
+  "noMatchingLanguages": "لا توجد لغات مطابقة",
+  "useSystemLanguage": "استخدم لغة النظام",
+  "languageSystem": "الافتراضي للنظام",
+  "languageEnglish": "إنجليزي",
+  "languageTurkish": "تركي",
+  "languageRussian": "الروسية",
+  "languageHindi": "الهندية",
+  "languageTamil": "التاميل",
+  "languageKannada": "الكانادا",
+  "languageTelugu": "التيلجو",
+  "languageSpanish": "الأسبانية",
+  "languageFrench": "فرنسي",
+  "languageGerman": "الألمانية",
+  "languageIndonesian": "الاندونيسية",
+  "languageJapanese": "اليابانية",
+  "languageKorean": "كوري",
+  "languageArabic": "عربي",
+  "languageUkrainian": "الأوكرانية",
+  "languageThai": "التايلاندية",
+  "languagePortugueseBrazil": "البرتغالية (البرازيل)",
+  "languageChineseSimplified": "الصينية (المبسطة)",
+  "languageChineseTraditional": "الصينية (التقليدية)",
+  "contentLocation": "موقع المحتوى",
+  "contentLocationSubtitle": "اختر المنطقة المستخدمة للتوصيات وتوافر الكتالوج",
+  "chooseContentLocation": "اختر موقع المحتوى",
+  "searchLocationsHint": "مواقع البحث...",
+  "noMatchingLocations": "لا توجد مواقع مطابقة",
+  "locationSystem": "الافتراضي للنظام",
+  "locationUnitedStates": "الولايات المتحدة",
+  "locationIndia": "الهند",
+  "locationTurkey": "ديك رومى",
+  "locationRussia": "روسيا",
+  "quickActions": "إجراءات سريعة",
+  "audio": "صوتي",
+  "audioQuickActionsSubtitle": "جودة البث والتلاشي والتشغيل",
+  "downloads": "التنزيلات",
+  "downloadsQuickActionsSubtitle": "تنزيل الجودة والموقع والتخزين",
+  "backupRestore": "النسخ الاحتياطي والاستعادة",
+  "backupRestoreQuickActionsSubtitle": "تصدير أو استيراد مكتبتك",
+  "streamingQuality": "جودة البث",
+  "streamingQualitySubtitle": "ضبط معدل البت الصوتي للبث",
+  "crossfadeTransition": "الانتقال المتقاطع",
+  "crossfadeTransitionSubtitle": "مزج المسارات بسلاسة مع بعضها البعض",
+  "streamingCache": "تدفق ذاكرة التخزين المؤقت",
+  "streamingCacheSubtitle": "التخزين المؤقت المسبق للمسارات التالية، خيار Wi-Fi فقط",
+  "downloadQuality": "تحميل الجودة",
+  "downloadQualitySubtitle": "الجودة للتنزيلات دون اتصال بالإنترنت",
+  "downloadLocation": "تحميل الموقع",
+  "downloadLocationSubtitle": "حيث يتم تخزين الموسيقى التي تم تنزيلها",
+  "dataUsageInfo": "معلومات استخدام البيانات",
+  "dataUsageInfoSubtitle": "التخزين المقدر لكل أغنية",
+  "createBackup": "إنشاء نسخة احتياطية",
+  "createBackupSubtitle": "تصدير مكتبتك والإعدادات الخاصة بك",
+  "restoreBackup": "استعادة النسخة الاحتياطية",
+  "restoreBackupSubtitle": "استيراد ملف النسخ الاحتياطي السابق",
+  "connectYoutubeMusic": "قم بتوصيل موسيقى يوتيوب",
+  "connectYoutubeMusicSubtitle": "مزامنة الأغاني وقوائم التشغيل المفضلة لديك والمزيد",
+  "connectYtMusicButton": "قم بتوصيل موسيقى YT",
+  "downloadsTitle": "التنزيلات",
+  "clearCompleted": "اكتمل المسح",
+  "clearFailed": "فشل المسح",
+  "noDownloadsYet": "لا التنزيلات بعد",
+  "downloadSongsToListenOffline": "قم بتنزيل الأغاني للاستماع إليها دون اتصال بالإنترنت",
+  "downloadingTitle": "جارٍ التنزيل",
+  "downloadedTitle": "تم التنزيل ({count})",
+  "@downloadedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedTitle": "فشل",
+  "songsDownloaded": "تم تنزيل الأغاني {count}",
+  "@songsDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usingStorage": "باستخدام {storage}",
+  "@usingStorage": {
+    "placeholders": {
+      "storage": {
+        "type": "String"
+      }
+    }
+  },
+  "failedWithError": "فشل: {error}",
+  "@failedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownError": "خطأ غير معروف",
+  "removeDownload": "إزالة التنزيل",
+  "downloadSettingsTitle": "تحميل الإعدادات",
+  "downloadLocationSubtitleLong": "حيث يتم تخزين ملفات الموسيقى التي تم تنزيلها",
+  "offlineDownloadTip": "يتم تشغيل المسارات التي تم تنزيلها بدون الإنترنت ولا تستخدم بيانات البث.",
+  "estimatedStoragePerSong": "التخزين المقدر لكل أغنية",
+  "storageLocation": "موقع التخزين",
+  "loading": "تحميل...",
+  "errorLoadingPath": "خطأ في تحميل المسار",
+  "privateStorageDownloadsNote": "يتم تخزين التنزيلات في مساحة تخزين خاصة بالتطبيق لتحسين الموثوقية وعدم وجود متطلبات إذن.",
+  "qualityAutoChip": "آلي",
+  "qualityLowChip": "قليل",
+  "qualityMediumChip": "واسطة",
+  "qualityHighChip": "عالي",
+  "qualityMaxChip": "الأعلى",
+  "qualityHighest": "الأعلى",
+  "qualityDescriptionAuto": "تلقائي - يتكيف مع الشبكة",
+  "qualityDescriptionLow": "منخفض - ~64 كيلوبت في الثانية (يحفظ مساحة التخزين)",
+  "qualityDescriptionMedium": "متوسط ​​- ~128 كيلو بايت في الثانية (متوازن)",
+  "qualityDescriptionHigh": "عالية - ~256 كيلوبت في الثانية (مستحسن)",
+  "qualityDescriptionMax": "الحد الأقصى - الأعلى المتاح (~256 كيلوبت في الثانية)",
+  "backupRestoreTitle": "النسخ الاحتياطي والاستعادة",
+  "backupIncludesDescription": "يتضمن النسخ الاحتياطي الأغاني المفضلة وقوائم التشغيل وسجل البحث والأغاني التي تم تشغيلها مؤخرًا وإعدادات التطبيق الرئيسية.",
+  "exportBackup": "تصدير النسخ الاحتياطي",
+  "exportBackupSubtitle": "احفظ ملف نسخة احتياطية لمشاركته أو تخزينه",
+  "importBackup": "استيراد النسخ الاحتياطي",
+  "importBackupSubtitle": "استعادة من ملف النسخ الاحتياطي",
+  "dangerZone": "منطقة الخطر",
+  "clearAppData": "مسح بيانات التطبيق",
+  "clearAppDataSubtitle": "إعادة ضبط بيانات/إعدادات التطبيق مع الاحتفاظ بالملفات الصوتية التي تم تنزيلها",
+  "backupCreatedSuccessfully": "تم إنشاء النسخة الاحتياطية بنجاح",
+  "backupFailed": "فشل النسخ الاحتياطي: {error}",
+  "@backupFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoredSuccessfully": "تمت استعادة النسخة الاحتياطية بنجاح",
+  "restoreFailed": "فشلت الاستعادة: {error}",
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearAllDataQuestion": "مسح كافة البيانات؟",
+  "clearAllDataWarning": "يؤدي هذا إلى إعادة تعيين بيانات التطبيق المحلية وإعداداته، لكنه يحتفظ بملفات الأغاني التي تم تنزيلها. لا يمكن التراجع عن هذا.",
+  "cancel": "يلغي",
+  "clearAll": "مسح الكل",
+  "appDataClearedPreserved": "تم مسح بيانات التطبيق (تم الاحتفاظ بالملفات الصوتية التي تم تنزيلها)",
+  "failedGeneric": "فشل: {error}",
+  "@failedGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupSubject": "Inzx النسخ الاحتياطي للموسيقى",
+  "statisticsTitle": "إحصائيات",
+  "statisticsCleared": "تم مسح الإحصائيات",
+  "clearStatistics": "إحصائيات واضحة",
+  "noStatisticsYet": "لا توجد إحصاءات حتى الآن",
+  "startListeningStats": "ابدأ الاستماع لترى إحصائياتك",
+  "overview": "ملخص",
+  "totalPlays": "إجمالي عدد مرات التشغيل",
+  "listenTime": "وقت الاستماع",
+  "mostPlayed": "الأكثر لعبًا",
+  "playsCount": "{count} مسرحيات",
+  "@playsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutes": "{hours}h {minutes}m",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutesOnly": "{minutes}م",
+  "@durationMinutesOnly": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "retry": "أعد المحاولة",
+  "share": "يشارك",
+  "playlist": "قائمة التشغيل",
+  "album": "الألبوم",
+  "channel": "قناة",
+  "playNext": "العب التالي",
+  "addToQueue": "إضافة إلى قائمة الانتظار",
+  "addToPlaylist": "أضف إلى قائمة التشغيل",
+  "goToAlbum": "اذهب إلى الألبوم",
+  "goToArtist": "اذهب إلى الفنان",
+  "startRadio": "ابدأ الراديو",
+  "playAll": "العب الكل",
+  "shuffle": "خلط",
+  "shuffleAll": "خلط الكل",
+  "radio": "راديو",
+  "follow": "يتبع",
+  "following": "التالي",
+  "connectYtMusicToFollowArtists": "قم بتوصيل YouTube Music لمتابعة الفنانين.",
+  "couldNotFollowArtist": "لا يمكن متابعة {artist}.",
+  "@couldNotFollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotUnfollowArtist": "تعذر إلغاء متابعة {artist}.",
+  "@couldNotUnfollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "followingArtist": "متابعة {artist}",
+  "@followingArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "unfollowedArtist": "غير مُتابع {artist}",
+  "@unfollowedArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingArtist": "حدث خطأ أثناء تحميل الفنان",
+  "subscribersCount": "{count} المشتركين",
+  "@subscribersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSection": "تم التنزيل",
+  "showAllDownloaded": "إظهار جميع {count} التي تم تنزيلها",
+  "@showAllDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "seeAll": "شاهد الكل",
+  "removeFromLikedSongs": "إزالة من الأغاني التي أعجبتني",
+  "addToLikedSongs": "أضف إلى الأغاني التي أعجبتك",
+  "playingTrackNext": "جارٍ تشغيل \"{title}\" بعد ذلك",
+  "@playingTrackNext": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTrackToQueue": "تمت إضافة \"{title}\" إلى قائمة الانتظار",
+  "@addedTrackToQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playNextInJam": "تشغيل التالي في Jam",
+  "playTrackNextInJam": "سيتم تشغيل \"{title}\" بعد ذلك في Jam",
+  "@playTrackNextInJam": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addToJamQueue": "إضافة إلى قائمة انتظار Jam",
+  "addedTrackToJamQueue": "تمت إضافة \"{title}\" إلى قائمة انتظار Jam",
+  "@addedTrackToJamQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloaded": "تم التنزيل",
+  "downloadingProgress": "جارٍ التنزيل {progress}%",
+  "@downloadingProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadStartingTrack": "جارٍ التنزيل \"{title}\"",
+  "@downloadStartingTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadNotificationsChannelDescription": "تنزيل إشعارات التقدم",
+  "downloadStartingNotification": "جارٍ بدء التنزيل...",
+  "downloadCompleteNotification": "اكتمل التنزيل",
+  "downloadFileNotCreated": "فشل التنزيل لأنه لم يتم إنشاء الملف",
+  "shareTrackText": "{title} بواسطة {artist}\n{url}",
+  "@shareTrackText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "createNewPlaylist": "إنشاء قائمة تشغيل جديدة",
+  "playlistName": "اسم قائمة التشغيل",
+  "create": "يخلق",
+  "couldNotLoadPlaylists": "تعذر تحميل قوائم التشغيل",
+  "createLocalPlaylistInstead": "قم بإنشاء قائمة تشغيل محلية بدلاً من ذلك",
+  "noPlaylistsYet": "لا توجد قوائم تشغيل حتى الآن",
+  "createOneToGetStarted": "قم بإنشاء واحدة للبدء",
+  "songsCount": "{count} الأغاني",
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createdPlaylistOnYtMusicAndAddedTrack": "تم إنشاء \"{playlist}\" على YT Music وإضافة \"{track}\"",
+  "@createdPlaylistOnYtMusicAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToCreatePlaylist": "فشل إنشاء قائمة التشغيل",
+  "createdPlaylistLocallyAndAddedTrack": "تم إنشاء \"{playlist}\" محليًا وإضافة \"{track}\"",
+  "@createdPlaylistLocallyAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddToPlaylist": "فشلت الإضافة إلى قائمة التشغيل",
+  "addedTrackToPlaylist": "تمت إضافة \"{track}\" إلى \"{playlist}\"",
+  "@addedTrackToPlaylist": {
+    "placeholders": {
+      "track": {
+        "type": "String"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorWithMessage": "خطأ: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "searchingForLyrics": "جارٍ البحث عن كلمات الأغاني...",
+  "failedToLoadLyrics": "فشل تحميل كلمات الأغاني",
+  "tryAnotherProvider": "حاول مزود آخر",
+  "noLyricsFound": "لم يتم العثور على كلمات",
+  "linkLabel": "الرابط: {url}",
+  "@linkLabel": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "tracksCount": "{count} المسارات",
+  "@tracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFromYoutubeMusic": "استيراد من موسيقى يوتيوب",
+  "importedPlaylistSuffix": "مستورد",
+  "importedFromYoutubeMusicDescription": "تم الاستيراد من YouTube Music",
+  "importedPlaylist": "مستورد \"{playlist}\"",
+  "@importedPlaylist": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToImportPlaylist": "فشل الاستيراد: {error}",
+  "@failedToImportPlaylist": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadPlaylists": "فشل تحميل قوائم التشغيل",
+  "makeSureLoggedInYoutubeMusic": "تأكد من تسجيل الدخول إلى YouTube Music",
+  "noPlaylistsFound": "لم يتم العثور على قوائم التشغيل",
+  "createPlaylistsInYoutubeMusicFirst": "قم بإنشاء بعض قوائم التشغيل في YouTube Music أولاً",
+  "loggedInYoutubeMusicSuccess": "تم تسجيل الدخول بنجاح إلى YouTube Music!",
+  "signInToYoutubeMusic": "قم بتسجيل الدخول إلى YouTube Music",
+  "loggingYouIn": "تسجيل دخولك...",
+  "signInSyncYoutubeMusicDescription": "قم بتسجيل الدخول باستخدام حساب Google الخاص بك لمزامنة مكتبة YouTube Music الخاصة بك، بما في ذلك الأغاني وقوائم التشغيل والألبومات التي أعجبتك.",
+  "playbackSpeed": "سرعة التشغيل",
+  "normal": "طبيعي",
+  "defaultValue": "تقصير",
+  "failedToLoadContent": "فشل في تحميل المحتوى",
+  "loadMore": "تحميل المزيد",
+  "audioSettingsTitle": "إعدادات الصوت",
+  "nowPlayingLabel": "التشغيل الآن",
+  "higherQualityUsesMoreData": "الجودة الأعلى تستخدم المزيد من البيانات",
+  "adjustsBasedOnNetworkSpeed": "يتم ضبطه بناءً على سرعة الشبكة",
+  "qualityLowUsesLessData": "~64 كيلوبت في الثانية - يستخدم بيانات أقل",
+  "qualityMediumBalanced": "~128 كيلو بايت في الثانية - متوازن",
+  "qualityHighBestForMost": "~256 كيلوبت في الثانية - الأفضل بالنسبة لمعظم الأشخاص",
+  "qualityMaximumAvailable": "أعلى مستوى متاح (~256 كيلوبت في الثانية)",
+  "recommended": "مُستَحسَن",
+  "blendTrackEndsIntoNext": "قم بدمج نهاية المسار الحالي في بداية المسار التالي",
+  "preCachesNextTracks": "يقوم بالتخزين المؤقت للمسارات التالية مسبقًا وتشغيلها من ذاكرة التخزين المؤقت المحلية عند توفرها",
+  "smartStreamCache": "ذاكرة التخزين المؤقت للتدفق الذكي",
+  "usedCacheStorage": "المستخدمة: {used} / {limit} ميغابايت",
+  "@usedCacheStorage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "calculatingCacheUsage": "جارٍ حساب استخدام ذاكرة التخزين المؤقت...",
+  "unableToReadCacheUsage": "غير قادر على قراءة استخدام ذاكرة التخزين المؤقت",
+  "preCacheNetwork": "شبكة التخزين المؤقت المسبق",
+  "wifiOnly": "خدمة الواي فاي فقط",
+  "wifiAndMobileData": "واي فاي + بيانات الجوال",
+  "preCacheRunsWifiOnly": "يتم تشغيل ذاكرة التخزين المؤقت المسبقة فقط عند الاتصال بشبكة Wi-Fi",
+  "preCacheRunsWifiAndMobile": "يمكن تشغيل ذاكرة التخزين المؤقت المسبقة على كل من شبكة Wi-Fi وبيانات الهاتف المحمول",
+  "concurrentPreCacheDownloads": "التنزيلات المتزامنة المسبقة للتخزين المؤقت",
+  "higherValuesCacheFaster": "يتم تخزين القيم الأعلى بشكل أسرع ولكن تستخدم المزيد من الشبكة والبطارية",
+  "cacheSizeLimit": "الحد الأقصى لحجم ذاكرة التخزين المؤقت",
+  "off": "عن",
+  "crossfadeDisabled": "تم تعطيل التلاشي المتداخل",
+  "currentValueLabel": "الحالي: {value}",
+  "@currentValueLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "audioQuality": "جودة الصوت",
+  "qualityLowKbps": "منخفض (64 كيلوبت في الثانية)",
+  "qualityMediumKbps": "متوسط ​​(128 كيلو بايت في الثانية)",
+  "qualityHighKbps": "عالية (256 كيلو بايت في الثانية)",
+  "qualityMaximumKbps": "الحد الأقصى (~256 كيلو بايت في الثانية)",
+  "all": "الجميع",
+  "artists": "الفنانين",
+  "albums": "الألبومات",
+  "playlists": "قوائم التشغيل",
+  "singlesAndEps": "الفردي وأح.م",
+  "appearsOn": "يظهر على",
+  "fansAlsoLike": "المعجبين يحبون أيضًا",
+  "searchMusicHint": "بحث الأغاني والألبومات والفنانين",
+  "searchForMusic": "ابحث عن الموسيقى",
+  "noResultsFound": "لم يتم العثور على نتائج",
+  "showAllLocalResults": "عرض جميع النتائج المحلية {count}",
+  "@showAllLocalResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "topResult": "أعلى نتيجة",
+  "artistLabel": "فنان",
+  "albumByArtist": "الألبوم - {artist}",
+  "@albumByArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistByAuthor": "قائمة التشغيل - {author}",
+  "@playlistByAuthor": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "يحفظ",
+  "upNext": "التالي",
+  "lyricsTab": "كلمات",
+  "relatedTab": "متعلق ب",
+  "youMightAlsoLike": "قد ترغب أيضا",
+  "otherPerformances": "عروض أخرى",
+  "moreFrom": "المزيد من",
+  "aboutArtist": "عن الفنان",
+  "jamQueue": "قائمة انتظار المربى",
+  "radioQueue": "قائمة انتظار الراديو",
+  "queueLabel": "طابور",
+  "playingFrom": "اللعب من",
+  "loadingMoreTracks": "جارٍ تحميل المزيد من المقاطع الصوتية...",
+  "scrollForMore": "قم بالتمرير للمزيد",
+  "someone": "شخص ما",
+  "noTracksInQueue": "لا توجد مسارات في قائمة الانتظار",
+  "addSongsToJamQueue": "أضف الأغاني إلى قائمة انتظار المربى",
+  "addedByUser": "أضيفت بواسطة {name}",
+  "@addedByUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTrackPlaying": "لا يوجد مسار اللعب",
+  "noRelatedTracksFound": "لم يتم العثور على مسارات ذات صلة",
+  "queueIsEmpty": "قائمة الانتظار فارغة",
+  "defaultQueueName": "قائمة الانتظار الخاصة بي",
+  "saveQueueAsPlaylist": "حفظ قائمة الانتظار كقائمة تشغيل",
+  "savedTracksToPlaylist": "تم حفظ المسارات {count} إلى \"{name}\"",
+  "@savedTracksToPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "jams": "مربيات",
+  "nowPlayingHeader": "العب الآن",
+  "browseMoodsGenresTitle": "المزاج والأنواع",
+  "moodCategoryMoods": "الحالة المزاجية",
+  "moodCategoryGenres": "الأنواع",
+  "moodCategoryActivities": "أنشطة",
+  "moodChill": "برد",
+  "moodParty": "حزب",
+  "moodWorkout": "اكتشف - حل",
+  "moodFocus": "ركز",
+  "moodSleep": "ينام",
+  "moodHappy": "سعيد",
+  "moodSad": "حزين",
+  "moodRomance": "الرومانسية",
+  "moodFeelGood": "أشعر أنني بحالة جيدة",
+  "moodEnergize": "تنشيط",
+  "genrePop": "البوب",
+  "genreRock": "صخر",
+  "genreHipHop": "الهيب هوب",
+  "genreRnb": "آر أند بي",
+  "genreElectronic": "الكترونية",
+  "genreDance": "الرقص",
+  "genreJazz": "موسيقى الجاز",
+  "genreClassical": "الكلاسيكية",
+  "genreCountry": "دولة",
+  "genreMetal": "معدن",
+  "genreIndie": "إندي",
+  "genreKPop": "الكيبوب",
+  "genreLatin": "اللاتينية",
+  "genreBollywood": "بوليوود",
+  "activityDriving": "القيادة",
+  "activityCooking": "طبخ",
+  "activityGaming": "الألعاب",
+  "activityStudying": "دراسة",
+  "activityMeditation": "تأمل",
+  "play": "يلعب",
+  "findInPlaylist": "البحث في قائمة التشغيل...",
+  "playlistNotFoundMessage": "لم يتم العثور على قائمة التشغيل\n\nمعرف قائمة التشغيل: {id}\n\nقد تكون قائمة التشغيل هذه خاصة أو غير متاحة.",
+  "@playlistNotFoundMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineSnapshotDownloaded": "لقطة بلا اتصال - تم تنزيل {downloaded}/{total}",
+  "@offlineSnapshotDownloaded": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noMatchingTracks": "لا توجد مسارات مطابقة",
+  "noTracksFound": "لم يتم العثور على مسارات",
+  "downloadingTracksFromPlaylist": "تنزيل مسارات {count} من {playlist}",
+  "@downloadingTracksFromPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTracksToQueueCount": "تمت إضافة مسارات {count} إلى قائمة الانتظار",
+  "@addedTracksToQueueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadPlaylist": "تحميل قائمة التشغيل",
+  "signInWithGoogle": "قم بتسجيل الدخول باستخدام جوجل",
+  "signInToUseJams": "قم بتسجيل الدخول لاستخدام Jams",
+  "listenTogetherRealtime": "استمع مع الأصدقاء في الوقت الحقيقي",
+  "signInGoogleToStartOrJoinJam": "قم بتسجيل الدخول باستخدام Google لبدء جلسة Jam مع الأصدقاء أو الانضمام إليها",
+  "listenTogether": "الاستماع معا",
+  "listenWithFriendsInSync": "استمع مع الأصدقاء بشكل متزامن",
+  "sameSongSameMoment": "نفس الأغنية، نفس اللحظة",
+  "startJam": "ابدأ المربى",
+  "createSessionAndInviteFriends": "إنشاء جلسة ودعوة الأصدقاء",
+  "joinJam": "انضم إلى Jam",
+  "enterSixDigitCode": "أدخل الرمز المكون من 6 أرقام",
+  "join": "ينضم",
+  "shareThisCode": "شارك هذا الرمز",
+  "codeCopied": "تم نسخ الكود!",
+  "youAreHost": "أنت المضيف",
+  "hostedBy": "تمت الاستضافة بواسطة {name}",
+  "@hostedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listeningTogetherCount": "الاستماع معًا ({count})",
+  "@listeningTogetherCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "endSession": "نهاية الجلسة",
+  "leaveSession": "مغادرة الجلسة",
+  "connected": "متصل",
+  "reconnecting": "إعادة الاتصال",
+  "retryInSeconds": "أعد المحاولة خلال {seconds}s",
+  "@retryInSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectingStatus": "إعادة الاتصال · {suffix}",
+  "@reconnectingStatus": {
+    "placeholders": {
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "reconnectingAttemptStatus": "إعادة الاتصال ({attempt}) · {suffix}",
+  "@reconnectingAttemptStatus": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "disconnected": "غير متصل",
+  "playing": "اللعب",
+  "addSongsToPlayTogether": "أضف الأغاني لتشغيلها معًا",
+  "sessionCreatedCode": "تم إنشاء الجلسة! الكود: {code}",
+  "@sessionCreatedCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "noJamFoundForCode": "لم يتم العثور على انحشار لهذا الرمز.",
+  "hostRole": "يستضيف",
+  "canControl": "يمكن السيطرة عليها",
+  "listeningStatus": "الاستماع",
+  "transferHostQuestion": "نقل المضيف؟",
+  "transferHostMessage": "هل تريد جعل {name} المضيف الجديد؟ سوف تفقد ضوابط المضيف.",
+  "@transferHostMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transfer": "تحويل",
+  "removeControl": "إزالة التحكم",
+  "allowControl": "السماح بالتحكم",
+  "makeHost": "اصنع مضيفًا",
+  "live": "يعيش",
+  "playbackControlsJam": "يتحكم التشغيل الخاص بك في Jam",
+  "starting": "جارٍ البدء...",
+  "or": "أو",
+  "joinFriendsJam": "انضم إلى Jam الخاص بصديق",
+  "startJamDescription": "ابدأ Jam لمشاركة الموسيقى مع الأصدقاء.\nالجميع يسمع نفس الأغنية في المزامنة.",
+  "folderSettings": "إعدادات المجلد",
+  "noFoldersAddedYet": "لم تتم إضافة أي مجلدات حتى الآن",
+  "addFolder": "إضافة مجلد",
+  "localMusic": "الموسيقى المحلية",
+  "scanLocalMusicDescription": "افحص جهازك للعثور على ملفات الموسيقى المحلية وتشغيلها دون الاتصال بالإنترنت",
+  "scanForMusic": "البحث عن الموسيقى",
+  "addFolderLowercase": "إضافة مجلد",
+  "supportedFormats": "الصيغ المدعومة: MP3، FLAC، WAV، M4A، OGG",
+  "songsFromFoldersCount": "{songs} الأغاني من المجلد (المجلدات) {folders}",
+  "@songsFromFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "add": "يضيف",
+  "permissionRequired": "الإذن مطلوب",
+  "storagePermissionRequiredMessage": "مطلوب إذن التخزين للوصول إلى ملفات الموسيقى الخاصة بك. يرجى تمكينه في الإعدادات.",
+  "couldNotOpenSettingsPermission": "لا يمكن فتح الإعدادات. يرجى تمكين إذن التخزين يدويًا.",
+  "openSettings": "افتح الإعدادات",
+  "folderAdded": "تمت إضافة المجلد",
+  "addedFolderScanNow": "تمت إضافة \"{folder}\". هل ترغب في مسحه ضوئيًا للموسيقى الآن؟",
+  "@addedFolderScanNow": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanNow": "مسح الآن",
+  "foundSongsCount": "تم العثور على أغاني {count}",
+  "@foundSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addFolderFirstThenScan": "أضف مجلدًا أولاً، ثم ابحث عن الملفات الصوتية.",
+  "scanFoldersCountDescription": "سيؤدي هذا إلى فحص مجلد (مجلدات) {count} بحثًا عن الملفات الصوتية.",
+  "@scanFoldersCountDescription": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "foldersToScan": "المجلدات المراد مسحها:",
+  "andMoreFolders": "... و{count} أكثر",
+  "@andMoreFolders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "startScan": "ابدأ المسح",
+  "foundSongsInFoldersCount": "تم العثور على {songs} الأغاني في مجلد (مجلدات) {folders}",
+  "@foundSongsInFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "scanningForMusic": "جارٍ البحث عن الموسيقى...",
+  "filesProgress": "{scanned} / {total} الملفات",
+  "@filesProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "signOut": "تسجيل الخروج",
+  "signInGoogleProfilePictureJams": "قم بتسجيل الدخول باستخدام Google للحصول على صورة ملفك الشخصي وتمكين Jams",
+  "sync": "مزامنة",
+  "lastSynced": "آخر مزامنة: {time}",
+  "@lastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedItems": "تمت مزامنة {count} العناصر",
+  "@syncedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncing": "جارٍ المزامنة...",
+  "syncNow": "مزامنة الآن",
+  "cachedItems": "{count} العناصر المخزنة مؤقتًا",
+  "@cachedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streams": "تيارات",
+  "colors": "الألوان",
+  "searches": "عمليات البحث",
+  "expiredCount": "{count} انتهت صلاحيتها",
+  "@expiredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cacheCleanupComplete": "اكتملت عملية تنظيف ذاكرة التخزين المؤقت",
+  "cleanUp": "تنظيف",
+  "clearCache": "مسح ذاكرة التخزين المؤقت",
+  "clearCachedMusicDataConfirm": "سيؤدي هذا إلى مسح جميع بيانات الموسيقى المخزنة مؤقتًا. يكمل؟",
+  "clear": "واضح",
+  "cacheCleared": "تم مسح ذاكرة التخزين المؤقت",
+  "analytics": "التحليلات",
+  "hits": "الزيارات",
+  "misses": "يخطئ",
+  "network": "شبكة",
+  "analyticsReset": "إعادة تعيين التحليلات",
+  "resetStats": "إعادة تعيين الإحصائيات",
+  "cacheHitRate": "معدل ضرب ذاكرة التخزين المؤقت",
+  "liked": "أعجبني",
+  "appInfo": "معلومات التطبيق",
+  "releaseBuild": "الافراج عن البناء",
+  "updater": "المحدث",
+  "available": "متاح",
+  "unavailable": "غير متاح",
+  "loadingCompact": "تحميل...",
+  "errorCompact": "خطأ",
+  "none": "لا أحد",
+  "currentPatch": "التصحيح الحالي",
+  "nextPatch": "التصحيح التالي",
+  "disconnectYoutubeMusic": "افصل موسيقى يوتيوب",
+  "disconnectYoutubeMusicQuestion": "هل تريد إلغاء ربط موسيقى YouTube؟",
+  "disconnectYoutubeMusicWarning": "سيؤدي هذا إلى إزالة حساب YouTube Music الخاص بك من التطبيق. سيتم مسح بيانات مكتبتك.",
+  "disconnect": "قطع الاتصال",
+  "syncFailed": "فشلت المزامنة: {error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "justNow": "الآن",
+  "minutesAgo": "{count}م مضت",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count}h منذ",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count}d منذ",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noSongsInTitle": "لا توجد أغانٍ في {title}",
+  "@noSongsInTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "createPlaylistDescription": "قم بإنشاء قائمة تشغيل لتنظيم الموسيقى الخاصة بك",
+  "savedAlbumsFromYoutubeMusic": "الألبومات المحفوظة من YouTube Music",
+  "noSavedAlbumsFromYoutubeMusic": "لا توجد ألبومات محفوظة من YouTube Music",
+  "errorLoadingAlbums": "حدث خطأ أثناء تحميل الألبومات",
+  "recentlyPlayed": "لعبت مؤخرا",
+  "noAlbumsYet": "لا توجد ألبومات بعد",
+  "playSomeMusicToSeeAlbumsHere": "قم بتشغيل بعض الموسيقى لرؤية الألبومات هنا",
+  "subscribedArtists": "الفنانين المشتركين",
+  "noSubscribedArtists": "لا يوجد فنانين مشتركين",
+  "errorLoadingArtists": "حدث خطأ أثناء تحميل الفنانين",
+  "recentlyPlayedArtists": "الفنانين الذين لعبوا مؤخرا",
+  "noArtistsYet": "لا يوجد فنانين بعد",
+  "playSomeMusicToSeeArtistsHere": "قم بتشغيل بعض الموسيقى لرؤية الفنانين هنا",
+  "downloading": "جارٍ التنزيل",
+  "downloadedPlaylists": "قوائم التشغيل التي تم تنزيلها",
+  "errorLoadingDownloads": "حدث خطأ أثناء تحميل التنزيلات",
+  "deleteDownload": "حذف التحميل",
+  "deleteDownloadQuestion": "هل تريد حذف التنزيل؟",
+  "deleteDownloadWarning": "سيؤدي هذا إلى إزالة \"{title}\" من جهازك. ويمكنك تنزيله مرة أخرى لاحقًا.",
+  "@deleteDownloadWarning": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedTrack": "تم حذف \"{title}\"",
+  "@deletedTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSongsWillAppearHere": "ستظهر الأغاني التي تم تنزيلها هنا",
+  "createPlaylist": "إنشاء قائمة التشغيل",
+  "autoPlaylists": "قوائم التشغيل التلقائية",
+  "likedSongsLabel": "اغاني اعجبتني",
+  "downloadedFraction": "تم تنزيل {downloaded}/{total}",
+  "@downloadedFraction": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "more": "أكثر",
+  "video": "فيديو",
+  "forgottenFavorites": "نسيت المفضلة",
+  "mixedForYou": "مختلطة بالنسبة لك",
+  "myMixOne": "مزيج بلدي 1",
+  "discoverMix": "اكتشف المزيج",
+  "replayMix": "إعادة تشغيل المزيج",
+  "newRelease": "الإصدار الجديد",
+  "chillMix": "مزيج البرد",
+  "basedOnYourListening": "على أساس الاستماع الخاص بك",
+  "newMusicForYou": "موسيقى جديدة لك",
+  "yourFavorites": "المفضلة لديك",
+  "freshTracks": "مسارات جديدة",
+  "relaxingVibes": "مشاعر الاسترخاء",
+  "musicToGetYouStarted": "الموسيقى لتبدأ",
+  "welcomeUser": "مرحباً {name}",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeFallbackName": "هناك",
+  "youtubeMusicLabel": "يوتيوب موسيقى",
+  "local": "محلي",
+  "recentlyAdded": "تمت إضافتها مؤخرًا",
+  "name": "اسم",
+  "duration": "مدة",
+  "searchSongsHint": "بحث في الأغاني...",
+  "noLikedSongs": "لا توجد أغاني محبوبة",
+  "likeSomeSongsToSeeThemHere": "مثل بعض الأغاني لرؤيتهم هنا",
+  "noLocalSongs": "لا توجد أغاني محلية",
+  "scanFoldersToFindLocalMusic": "مسح المجلدات للعثور على الموسيقى المحلية",
+  "noResults": "لا توجد نتائج",
+  "tryDifferentKeywords": "جرب كلمات رئيسية مختلفة",
+  "noSongsYet": "لا توجد أغاني بعد",
+  "playSomeMusicToBuildYourLibrary": "قم بتشغيل بعض الموسيقى لبناء مكتبتك",
+  "albumNotFound": "لم يتم العثور على الألبوم",
+  "downloadAlbum": "تحميل الألبوم",
+  "downloadingTracksFromAlbum": "تنزيل مسارات {count} من {album}",
+  "@downloadingTracksFromAlbum": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "shareAlbumText": "{title} بواسطة {artist}\n{url}",
+  "@shareAlbumText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestions": "اقتراحات",
+  "recentSearches": "عمليات البحث الأخيرة",
+  "startTypingToSearch": "ابدأ بالكتابة للبحث...",
+  "youtubeMusicPlaylists": "قوائم تشغيل موسيقى يوتيوب",
+  "errorLoadingPlaylists": "حدث خطأ أثناء تحميل قوائم التشغيل",
+  "yourPlaylists": "قوائم التشغيل الخاصة بك",
+  "noYoutubeMusicPlaylistsFound": "لم يتم العثور على قوائم تشغيل YouTube Music",
+  "songCountLabel": "{count, plural, one {# أغنية} other {# الأغاني}}",
+  "@songCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unknownAlbum": "ألبوم غير معروف",
+  "jamCodeExample": "ABC123",
+  "jamCodeHint": "شفرة",
+  "yourProfile": "ملفك الشخصي",
+  "googleUser": "مستخدم جوجل",
+  "jamsAndProfile": "المربى والملف الشخصي",
+  "yes": "نعم",
+  "no": "لا",
+  "foundInSettings": "وجدت في الإعدادات",
+  "sharePlaylistText": "{title}\n{url}",
+  "@sharePlaylistText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "shareArtistText": "{artist}\n{url}",
+  "@shareArtistText": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "megabytesValue": "{value} ميغابايت",
+  "@megabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "gigabytesValue": "{value} غيغابايت",
+  "@gigabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxMegabytesValue": "~{value} ميغابايت",
+  "@approxMegabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxKbpsValue": "~{value} كيلو بايت في الثانية",
+  "@approxKbpsValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "secondsShort": "{value}s",
+  "@secondsShort": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "speedMultiplier": "{value}x",
+  "@speedMultiplier": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

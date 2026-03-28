@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import '../../providers/music_providers.dart';
 import '../../providers/providers.dart';
 import '../../services/lyrics/lyrics_service.dart';
@@ -42,15 +43,23 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
     final textColor = colors.onBackground;
     final secondaryColor = textColor.withValues(alpha: 0.5);
 
-    return _buildLyricsContent(lyricsState, isDark, textColor, secondaryColor);
+    return _buildLyricsContent(
+      context,
+      lyricsState,
+      isDark,
+      textColor,
+      secondaryColor,
+    );
   }
 
   Widget _buildLyricsContent(
+    BuildContext context,
     LyricsState lyricsState,
     bool isDark,
     Color textColor,
     Color secondaryColor,
   ) {
+    final l10n = context.l10n;
     final status = lyricsState.currentStatus;
 
     // Loading state
@@ -62,7 +71,7 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
             CircularProgressIndicator(color: textColor),
             const SizedBox(height: 16),
             Text(
-              'Searching for lyrics...',
+              l10n.searchingForLyrics,
               style: TextStyle(color: secondaryColor),
             ),
           ],
@@ -79,13 +88,13 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
             Icon(Iconsax.warning_2, size: 48, color: secondaryColor),
             const SizedBox(height: 16),
             Text(
-              'Failed to load lyrics',
+              l10n.failedToLoadLyrics,
               style: TextStyle(color: secondaryColor),
             ),
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => ref.read(lyricsProvider.notifier).nextProvider(),
-              child: const Text('Try another provider'),
+              child: Text(l10n.tryAnotherProvider),
             ),
           ],
         ),
@@ -100,11 +109,11 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
           children: [
             Icon(Iconsax.music, size: 48, color: secondaryColor),
             const SizedBox(height: 16),
-            Text('No lyrics found', style: TextStyle(color: secondaryColor)),
+            Text(l10n.noLyricsFound, style: TextStyle(color: secondaryColor)),
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => ref.read(lyricsProvider.notifier).nextProvider(),
-              child: const Text('Try another provider'),
+              child: Text(l10n.tryAnotherProvider),
             ),
           ],
         ),

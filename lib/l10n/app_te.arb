@@ -1,0 +1,1179 @@
+{
+  "@@locale": "te",
+  "appTitle": "Inzx",
+  "updateDownloadedBanner": "అప్‌డేట్ డౌన్‌లోడ్ చేయబడింది. దరఖాస్తు చేయడానికి యాప్‌ని రీస్టార్ట్ చేయండి.",
+  "restart": "పునఃప్రారంభించండి",
+  "dismiss": "తొలగించు",
+  "newVersionAvailableBanner": "కొత్త వెర్షన్ {version} GitHubలో అందుబాటులో ఉంది.",
+  "@newVersionAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "డౌన్‌లోడ్ చేయండి",
+  "later": "తరువాత",
+  "home": "హోమ్",
+  "songs": "పాటలు",
+  "library": "లైబ్రరీ",
+  "folders": "ఫోల్డర్లు",
+  "settings": "సెట్టింగ్‌లు",
+  "searchSettingsHint": "శోధన సెట్టింగ్‌లు...",
+  "noMatchingSettings": "సరిపోలే సెట్టింగ్‌లు లేవు",
+  "appearance": "స్వరూపం",
+  "theme": "థీమ్",
+  "themeAuto": "ఆటో",
+  "themeLight": "కాంతి",
+  "themeDark": "చీకటి",
+  "dynamicColorsNote": "ప్రస్తుత ట్రాక్ యొక్క ఆల్బమ్ ఆర్ట్ నుండి రంగులు డైనమిక్‌గా స్వీకరించబడతాయి.",
+  "language": "భాష",
+  "languageSubtitle": "యాప్ భాషను ఎంచుకోండి",
+  "chooseLanguage": "భాషను ఎంచుకోండి",
+  "searchLanguagesHint": "భాషలను వెతకండి...",
+  "noMatchingLanguages": "సరిపోలే భాషలు ఏవీ లేవు",
+  "useSystemLanguage": "సిస్టమ్ భాషను ఉపయోగించండి",
+  "languageSystem": "సిస్టమ్ డిఫాల్ట్",
+  "languageEnglish": "ఇంగ్లీష్",
+  "languageTurkish": "టర్కిష్",
+  "languageRussian": "రష్యన్",
+  "languageHindi": "హిందీ",
+  "languageTamil": "తమిళం",
+  "languageKannada": "కన్నడ",
+  "languageTelugu": "తెలుగు",
+  "languageSpanish": "స్పానిష్",
+  "languageFrench": "ఫ్రెంచ్",
+  "languageGerman": "జర్మన్",
+  "languageIndonesian": "ఇండోనేషియన్",
+  "languageJapanese": "జపనీస్",
+  "languageKorean": "కొరియన్",
+  "languageArabic": "అరబిక్",
+  "languageUkrainian": "ఉక్రేనియన్",
+  "languageThai": "థాయ్",
+  "languagePortugueseBrazil": "పోర్చుగీస్ (బ్రెజిల్)",
+  "languageChineseSimplified": "చైనీస్ (సరళీకృతం)",
+  "languageChineseTraditional": "చైనీస్ (సాంప్రదాయ)",
+  "contentLocation": "కంటెంట్ స్థానం",
+  "contentLocationSubtitle": "సిఫార్సులు మరియు కేటలాగ్ లభ్యత కోసం ఉపయోగించే ప్రాంతాన్ని ఎంచుకోండి",
+  "chooseContentLocation": "కంటెంట్ స్థానాన్ని ఎంచుకోండి",
+  "searchLocationsHint": "స్థానాలను శోధించండి...",
+  "noMatchingLocations": "సరిపోలే స్థానాలు లేవు",
+  "locationSystem": "సిస్టమ్ డిఫాల్ట్",
+  "locationUnitedStates": "యునైటెడ్ స్టేట్స్",
+  "locationIndia": "భారతదేశం",
+  "locationTurkey": "టర్కీ",
+  "locationRussia": "రష్యా",
+  "quickActions": "త్వరిత చర్యలు",
+  "audio": "ఆడియో",
+  "audioQuickActionsSubtitle": "స్ట్రీమింగ్ నాణ్యత, క్రాస్‌ఫేడ్ & ప్లేబ్యాక్",
+  "downloads": "డౌన్‌లోడ్‌లు",
+  "downloadsQuickActionsSubtitle": "డౌన్‌లోడ్ నాణ్యత, స్థానం & నిల్వ",
+  "backupRestore": "బ్యాకప్ & పునరుద్ధరించు",
+  "backupRestoreQuickActionsSubtitle": "మీ లైబ్రరీని ఎగుమతి చేయండి లేదా దిగుమతి చేయండి",
+  "streamingQuality": "స్ట్రీమింగ్ నాణ్యత",
+  "streamingQualitySubtitle": "స్ట్రీమింగ్ కోసం ఆడియో బిట్‌రేట్‌ని సర్దుబాటు చేయండి",
+  "crossfadeTransition": "క్రాస్‌ఫేడ్ ట్రాన్సిషన్",
+  "crossfadeTransitionSubtitle": "ట్రాక్‌లను ఒకదానికొకటి సాఫీగా కలపండి",
+  "streamingCache": "స్ట్రీమింగ్ కాష్",
+  "streamingCacheSubtitle": "తదుపరి ట్రాక్‌లను ప్రీ-కాష్ చేయండి, Wi-Fi మాత్రమే ఎంపిక",
+  "downloadQuality": "డౌన్‌లోడ్ నాణ్యత",
+  "downloadQualitySubtitle": "ఆఫ్‌లైన్ డౌన్‌లోడ్‌ల కోసం నాణ్యత",
+  "downloadLocation": "స్థానాన్ని డౌన్‌లోడ్ చేయండి",
+  "downloadLocationSubtitle": "డౌన్‌లోడ్ చేసిన సంగీతం ఎక్కడ నిల్వ చేయబడుతుంది",
+  "dataUsageInfo": "డేటా వినియోగ సమాచారం",
+  "dataUsageInfoSubtitle": "ఒక్కో పాటకు అంచనా వేసిన నిల్వ",
+  "createBackup": "బ్యాకప్ సృష్టించండి",
+  "createBackupSubtitle": "మీ లైబ్రరీ మరియు సెట్టింగ్‌లను ఎగుమతి చేయండి",
+  "restoreBackup": "బ్యాకప్‌ని పునరుద్ధరించండి",
+  "restoreBackupSubtitle": "మునుపటి బ్యాకప్ ఫైల్‌ను దిగుమతి చేయండి",
+  "connectYoutubeMusic": "YouTube Musicని కనెక్ట్ చేయండి",
+  "connectYoutubeMusicSubtitle": "మీరు ఇష్టపడిన పాటలు, ప్లేజాబితాలు మరియు మరిన్నింటిని సమకాలీకరించండి",
+  "connectYtMusicButton": "YT సంగీతాన్ని కనెక్ట్ చేయండి",
+  "downloadsTitle": "డౌన్‌లోడ్‌లు",
+  "clearCompleted": "క్లియర్ పూర్తయింది",
+  "clearFailed": "క్లియర్ విఫలమైంది",
+  "noDownloadsYet": "ఇంకా డౌన్‌లోడ్‌లు లేవు",
+  "downloadSongsToListenOffline": "ఆఫ్‌లైన్‌లో వినడానికి పాటలను డౌన్‌లోడ్ చేయండి",
+  "downloadingTitle": "డౌన్‌లోడ్ చేస్తోంది",
+  "downloadedTitle": "డౌన్‌లోడ్ చేయబడింది ({count})",
+  "@downloadedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedTitle": "విఫలమైంది",
+  "songsDownloaded": "{count} పాటలు డౌన్‌లోడ్ చేయబడ్డాయి",
+  "@songsDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usingStorage": "{storage}ని ఉపయోగించడం",
+  "@usingStorage": {
+    "placeholders": {
+      "storage": {
+        "type": "String"
+      }
+    }
+  },
+  "failedWithError": "విఫలమైంది: {error}",
+  "@failedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownError": "తెలియని లోపం",
+  "removeDownload": "డౌన్‌లోడ్‌ని తీసివేయండి",
+  "downloadSettingsTitle": "డౌన్‌లోడ్ సెట్టింగ్‌లు",
+  "downloadLocationSubtitleLong": "డౌన్‌లోడ్ చేసిన మ్యూజిక్ ఫైల్‌లు ఎక్కడ నిల్వ చేయబడతాయి",
+  "offlineDownloadTip": "డౌన్‌లోడ్ చేసిన ట్రాక్‌లు ఇంటర్నెట్ లేకుండా ప్లే అవుతాయి మరియు స్ట్రీమింగ్ డేటాను ఉపయోగించవద్దు.",
+  "estimatedStoragePerSong": "ఒక్కో పాటకు అంచనా వేసిన నిల్వ",
+  "storageLocation": "నిల్వ స్థానం",
+  "loading": "లోడ్ అవుతోంది...",
+  "errorLoadingPath": "మార్గాన్ని లోడ్ చేయడంలో లోపం",
+  "privateStorageDownloadsNote": "డౌన్‌లోడ్‌లు మెరుగైన విశ్వసనీయత కోసం యాప్-ప్రైవేట్ స్టోరేజ్‌లో నిల్వ చేయబడతాయి మరియు అనుమతి అవసరాలు లేవు.",
+  "qualityAutoChip": "ఆటో",
+  "qualityLowChip": "తక్కువ",
+  "qualityMediumChip": "మధ్యస్థం",
+  "qualityHighChip": "అధిక",
+  "qualityMaxChip": "గరిష్టంగా",
+  "qualityHighest": "అత్యధికం",
+  "qualityDescriptionAuto": "ఆటో - నెట్‌వర్క్‌కు అనుగుణంగా ఉంటుంది",
+  "qualityDescriptionLow": "తక్కువ - ~64 kbps (నిల్వను ఆదా చేస్తుంది)",
+  "qualityDescriptionMedium": "మధ్యస్థం - ~128 kbps (సమతుల్యత)",
+  "qualityDescriptionHigh": "అధికం - ~256 kbps (సిఫార్సు చేయబడింది)",
+  "qualityDescriptionMax": "గరిష్టంగా - అత్యధికంగా అందుబాటులో ఉంది (~256 kbps)",
+  "backupRestoreTitle": "బ్యాకప్ & పునరుద్ధరించు",
+  "backupIncludesDescription": "బ్యాకప్‌లో లైక్ చేసిన పాటలు, ప్లేజాబితాలు, శోధన చరిత్ర, ఇటీవల ప్లే చేయబడినవి మరియు కీ యాప్ సెట్టింగ్‌లు ఉంటాయి.",
+  "exportBackup": "ఎగుమతి బ్యాకప్",
+  "exportBackupSubtitle": "భాగస్వామ్యం చేయడానికి లేదా నిల్వ చేయడానికి బ్యాకప్ ఫైల్‌ను సేవ్ చేయండి",
+  "importBackup": "బ్యాకప్‌ని దిగుమతి చేయండి",
+  "importBackupSubtitle": "బ్యాకప్ ఫైల్ నుండి పునరుద్ధరించండి",
+  "dangerZone": "డేంజర్ జోన్",
+  "clearAppData": "యాప్ డేటాను క్లియర్ చేయండి",
+  "clearAppDataSubtitle": "డౌన్‌లోడ్ చేసిన ఆడియో ఫైల్‌లను ఉంచుతూనే యాప్ డేటా/సెట్టింగ్‌లను రీసెట్ చేయండి",
+  "backupCreatedSuccessfully": "బ్యాకప్ విజయవంతంగా సృష్టించబడింది",
+  "backupFailed": "బ్యాకప్ విఫలమైంది: {error}",
+  "@backupFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoredSuccessfully": "బ్యాకప్ విజయవంతంగా పునరుద్ధరించబడింది",
+  "restoreFailed": "పునరుద్ధరించడం విఫలమైంది: {error}",
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearAllDataQuestion": "మొత్తం డేటాను క్లియర్ చేయాలా?",
+  "clearAllDataWarning": "ఇది స్థానిక యాప్ డేటా మరియు సెట్టింగ్‌లను రీసెట్ చేస్తుంది, కానీ డౌన్‌లోడ్ చేసిన పాట ఫైల్‌లను ఉంచుతుంది. ఇది రద్దు చేయబడదు.",
+  "cancel": "రద్దు చేయి",
+  "clearAll": "అన్నీ క్లియర్ చేయండి",
+  "appDataClearedPreserved": "యాప్ డేటా క్లియర్ చేయబడింది (డౌన్‌లోడ్ చేసిన ఆడియో ఫైల్‌లు భద్రపరచబడ్డాయి)",
+  "failedGeneric": "విఫలమైంది: {error}",
+  "@failedGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupSubject": "Inzx సంగీత బ్యాకప్",
+  "statisticsTitle": "గణాంకాలు",
+  "statisticsCleared": "గణాంకాలు క్లియర్ చేయబడ్డాయి",
+  "clearStatistics": "క్లియర్ గణాంకాలు",
+  "noStatisticsYet": "ఇంకా గణాంకాలు లేవు",
+  "startListeningStats": "మీ గణాంకాలను చూడటానికి వినడం ప్రారంభించండి",
+  "overview": "అవలోకనం",
+  "totalPlays": "మొత్తం నాటకాలు",
+  "listenTime": "వినే సమయం",
+  "mostPlayed": "ఎక్కువగా ఆడినవి",
+  "playsCount": "{count} ఆడుతుంది",
+  "@playsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutes": "{hours}h {minutes}m",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutesOnly": "{minutes}మీ",
+  "@durationMinutesOnly": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "retry": "మళ్లీ ప్రయత్నించండి",
+  "share": "షేర్ చేయండి",
+  "playlist": "ప్లేజాబితా",
+  "album": "ఆల్బమ్",
+  "channel": "ఛానెల్",
+  "playNext": "తదుపరి ప్లే చేయండి",
+  "addToQueue": "క్యూకి జోడించండి",
+  "addToPlaylist": "ప్లేజాబితాకు జోడించండి",
+  "goToAlbum": "ఆల్బమ్‌కి వెళ్లండి",
+  "goToArtist": "ఆర్టిస్ట్‌కి వెళ్లండి",
+  "startRadio": "రేడియోను ప్రారంభించండి",
+  "playAll": "అన్నీ ఆడండి",
+  "shuffle": "షఫుల్ చేయండి",
+  "shuffleAll": "అన్నింటినీ షఫుల్ చేయండి",
+  "radio": "రేడియో",
+  "follow": "అనుసరించండి",
+  "following": "అనుసరిస్తోంది",
+  "connectYtMusicToFollowArtists": "కళాకారులను అనుసరించడానికి YouTube Musicని కనెక్ట్ చేయండి.",
+  "couldNotFollowArtist": "{artist}ని అనుసరించడం సాధ్యపడలేదు.",
+  "@couldNotFollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotUnfollowArtist": "{artist} అనుసరణను రద్దు చేయడం సాధ్యపడలేదు.",
+  "@couldNotUnfollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "followingArtist": "{artist}ని అనుసరిస్తున్నారు",
+  "@followingArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "unfollowedArtist": "అనుసరించలేదు {artist}",
+  "@unfollowedArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingArtist": "కళాకారుడిని లోడ్ చేయడంలో లోపం",
+  "subscribersCount": "{count} చందాదారులు",
+  "@subscribersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSection": "డౌన్‌లోడ్ చేయబడింది",
+  "showAllDownloaded": "డౌన్‌లోడ్ చేసిన మొత్తం {count}ని చూపు",
+  "@showAllDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "seeAll": "అన్నీ చూడండి",
+  "removeFromLikedSongs": "ఇష్టపడిన పాటల నుండి తీసివేయండి",
+  "addToLikedSongs": "ఇష్టపడిన పాటలకు జోడించండి",
+  "playingTrackNext": "తర్వాత \"{title}\" ప్లే అవుతోంది",
+  "@playingTrackNext": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTrackToQueue": "క్యూలో \"{title}\" జోడించబడింది",
+  "@addedTrackToQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playNextInJam": "జామ్‌లో నెక్స్ట్ ప్లే చేయండి",
+  "playTrackNextInJam": "\"{title}\" తర్వాత జామ్‌లో ప్లే అవుతుంది",
+  "@playTrackNextInJam": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addToJamQueue": "జామ్ క్యూకి జోడించండి",
+  "addedTrackToJamQueue": "జామ్ క్యూకి \"{title}\" జోడించబడింది",
+  "@addedTrackToJamQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloaded": "డౌన్‌లోడ్ చేయబడింది",
+  "downloadingProgress": "డౌన్‌లోడ్ చేస్తోంది {progress}%",
+  "@downloadingProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadStartingTrack": "\"{title}\"ని డౌన్‌లోడ్ చేస్తోంది",
+  "@downloadStartingTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadNotificationsChannelDescription": "ప్రోగ్రెస్ నోటిఫికేషన్‌లను డౌన్‌లోడ్ చేయండి",
+  "downloadStartingNotification": "డౌన్‌లోడ్ ప్రారంభిస్తోంది...",
+  "downloadCompleteNotification": "డౌన్‌లోడ్ పూర్తయింది",
+  "downloadFileNotCreated": "ఫైల్ సృష్టించబడనందున డౌన్‌లోడ్ విఫలమైంది",
+  "shareTrackText": "{title} ద్వారా {artist}\n{url}",
+  "@shareTrackText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "createNewPlaylist": "కొత్త ప్లేజాబితాని సృష్టించండి",
+  "playlistName": "ప్లేజాబితా పేరు",
+  "create": "సృష్టించు",
+  "couldNotLoadPlaylists": "ప్లేజాబితాలను లోడ్ చేయడం సాధ్యపడలేదు",
+  "createLocalPlaylistInstead": "బదులుగా స్థానిక ప్లేజాబితాని సృష్టించండి",
+  "noPlaylistsYet": "ఇంకా ప్లేజాబితాలు లేవు",
+  "createOneToGetStarted": "ప్రారంభించడానికి ఒకదాన్ని సృష్టించండి",
+  "songsCount": "{count} పాటలు",
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createdPlaylistOnYtMusicAndAddedTrack": "YT సంగీతంలో \"{playlist}\" సృష్టించబడింది మరియు \"{track}\" జోడించబడింది",
+  "@createdPlaylistOnYtMusicAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToCreatePlaylist": "ప్లేజాబితాను సృష్టించడం విఫలమైంది",
+  "createdPlaylistLocallyAndAddedTrack": "స్థానికంగా \"{playlist}\" సృష్టించబడింది మరియు \"{track}\" జోడించబడింది",
+  "@createdPlaylistLocallyAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddToPlaylist": "ప్లేజాబితాకు జోడించడంలో విఫలమైంది",
+  "addedTrackToPlaylist": "\"{playlist}\"కి \"{track}\" జోడించబడింది",
+  "@addedTrackToPlaylist": {
+    "placeholders": {
+      "track": {
+        "type": "String"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorWithMessage": "లోపం: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "searchingForLyrics": "సాహిత్యం కోసం వెతుకుతోంది...",
+  "failedToLoadLyrics": "సాహిత్యాన్ని లోడ్ చేయడంలో విఫలమైంది",
+  "tryAnotherProvider": "మరొక ప్రొవైడర్‌ని ప్రయత్నించండి",
+  "noLyricsFound": "సాహిత్యం కనుగొనబడలేదు",
+  "linkLabel": "లింక్: {url}",
+  "@linkLabel": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "tracksCount": "{count} ట్రాక్‌లు",
+  "@tracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFromYoutubeMusic": "YouTube Music నుండి దిగుమతి చేయండి",
+  "importedPlaylistSuffix": "దిగుమతి చేయబడింది",
+  "importedFromYoutubeMusicDescription": "YouTube Music నుండి దిగుమతి చేయబడింది",
+  "importedPlaylist": "\"{playlist}\" దిగుమతి చేయబడింది",
+  "@importedPlaylist": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToImportPlaylist": "దిగుమతి చేయడంలో విఫలమైంది: {error}",
+  "@failedToImportPlaylist": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadPlaylists": "ప్లేజాబితాలను లోడ్ చేయడంలో విఫలమైంది",
+  "makeSureLoggedInYoutubeMusic": "మీరు YouTube Musicకి లాగిన్ అయ్యారని నిర్ధారించుకోండి",
+  "noPlaylistsFound": "ప్లేజాబితాలు ఏవీ కనుగొనబడలేదు",
+  "createPlaylistsInYoutubeMusicFirst": "ముందుగా YouTube Musicలో కొన్ని ప్లేజాబితాలను సృష్టించండి",
+  "loggedInYoutubeMusicSuccess": "YouTube Musicకు విజయవంతంగా లాగిన్ చేయబడింది!",
+  "signInToYoutubeMusic": "YouTube Musicకి సైన్ ఇన్ చేయండి",
+  "loggingYouIn": "మిమ్మల్ని లాగిన్ చేస్తోంది...",
+  "signInSyncYoutubeMusicDescription": "ఇష్టపడిన పాటలు, ప్లేజాబితాలు మరియు ఆల్బమ్‌లతో సహా మీ YouTube సంగీత లైబ్రరీని సమకాలీకరించడానికి మీ Google ఖాతాతో సైన్ ఇన్ చేయండి.",
+  "playbackSpeed": "ప్లేబ్యాక్ వేగం",
+  "normal": "సాధారణ",
+  "defaultValue": "డిఫాల్ట్",
+  "failedToLoadContent": "కంటెంట్‌ను లోడ్ చేయడంలో విఫలమైంది",
+  "loadMore": "మరింత లోడ్ చేయండి",
+  "audioSettingsTitle": "ఆడియో సెట్టింగ్‌లు",
+  "nowPlayingLabel": "ఇప్పుడు ప్లే అవుతోంది",
+  "higherQualityUsesMoreData": "అధిక నాణ్యత ఎక్కువ డేటాను ఉపయోగిస్తుంది",
+  "adjustsBasedOnNetworkSpeed": "నెట్‌వర్క్ వేగం ఆధారంగా సర్దుబాటు చేస్తుంది",
+  "qualityLowUsesLessData": "~64 kbps - తక్కువ డేటాను ఉపయోగిస్తుంది",
+  "qualityMediumBalanced": "~128 kbps - సమతుల్యం",
+  "qualityHighBestForMost": "~256 kbps - చాలా మందికి ఉత్తమమైనది",
+  "qualityMaximumAvailable": "అత్యధికంగా అందుబాటులో ఉంది (~256 kbps)",
+  "recommended": "సిఫార్సు చేయబడింది",
+  "blendTrackEndsIntoNext": "ప్రస్తుత ట్రాక్ ముగింపును తదుపరి ప్రారంభంలో కలపండి",
+  "preCachesNextTracks": "అందుబాటులో ఉన్నప్పుడు స్థానిక కాష్ నుండి తదుపరి ట్రాక్‌లు మరియు ప్లేలను ముందే కాష్ చేయండి",
+  "smartStreamCache": "స్మార్ట్ స్ట్రీమ్ కాష్",
+  "usedCacheStorage": "వాడినది: {used} / {limit} MB",
+  "@usedCacheStorage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "calculatingCacheUsage": "కాష్ వినియోగాన్ని గణిస్తోంది...",
+  "unableToReadCacheUsage": "కాష్ వినియోగాన్ని చదవడం సాధ్యం కాలేదు",
+  "preCacheNetwork": "ప్రీ-కాష్ నెట్‌వర్క్",
+  "wifiOnly": "Wi-Fi మాత్రమే",
+  "wifiAndMobileData": "Wi-Fi + మొబైల్ డేటా",
+  "preCacheRunsWifiOnly": "Wi-Fiకి కనెక్ట్ చేసినప్పుడు మాత్రమే ప్రీ-కాష్ రన్ అవుతుంది",
+  "preCacheRunsWifiAndMobile": "ప్రీ-కాష్ Wi-Fi మరియు మొబైల్ డేటా రెండింటిలోనూ రన్ అవుతుంది",
+  "concurrentPreCacheDownloads": "ఏకకాల ప్రీ-కాష్ డౌన్‌లోడ్‌లు",
+  "higherValuesCacheFaster": "అధిక విలువలు వేగంగా కాష్ అవుతాయి కానీ ఎక్కువ నెట్‌వర్క్ మరియు బ్యాటరీని ఉపయోగిస్తాయి",
+  "cacheSizeLimit": "కాష్ పరిమాణ పరిమితి",
+  "off": "ఆఫ్",
+  "crossfadeDisabled": "క్రాస్‌ఫేడ్ డిజేబుల్ చేయబడింది",
+  "currentValueLabel": "ప్రస్తుత: {value}",
+  "@currentValueLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "audioQuality": "ఆడియో నాణ్యత",
+  "qualityLowKbps": "తక్కువ (64 kbps)",
+  "qualityMediumKbps": "మధ్యస్థం (128 kbps)",
+  "qualityHighKbps": "అధిక (256 kbps)",
+  "qualityMaximumKbps": "గరిష్టం (~256 kbps)",
+  "all": "అన్నీ",
+  "artists": "కళాకారులు",
+  "albums": "ఆల్బమ్‌లు",
+  "playlists": "ప్లేజాబితాలు",
+  "singlesAndEps": "సింగిల్స్ & EPలు",
+  "appearsOn": "ఆన్‌లో కనిపిస్తుంది",
+  "fansAlsoLike": "అభిమానులు కూడా ఇష్టపడతారు",
+  "searchMusicHint": "పాటలు, ఆల్బమ్‌లు, కళాకారులను శోధించండి",
+  "searchForMusic": "సంగీతం కోసం శోధించండి",
+  "noResultsFound": "ఫలితాలు ఏవీ కనుగొనబడలేదు",
+  "showAllLocalResults": "అన్ని {count} స్థానిక ఫలితాలను చూపు",
+  "@showAllLocalResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "topResult": "అగ్ర ఫలితం",
+  "artistLabel": "కళాకారుడు",
+  "albumByArtist": "ఆల్బమ్ - {artist}",
+  "@albumByArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistByAuthor": "ప్లేజాబితా - {author}",
+  "@playlistByAuthor": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "సేవ్ చేయండి",
+  "upNext": "తదుపరి",
+  "lyricsTab": "సాహిత్యం",
+  "relatedTab": "సంబంధిత",
+  "youMightAlsoLike": "మీరు కూడా ఇష్టపడవచ్చు",
+  "otherPerformances": "ఇతర ప్రదర్శనలు",
+  "moreFrom": "నుండి మరిన్ని",
+  "aboutArtist": "కళాకారుడి గురించి",
+  "jamQueue": "జామ్ క్యూ",
+  "radioQueue": "రేడియో క్యూ",
+  "queueLabel": "క్యూ",
+  "playingFrom": "నుండి ప్లే",
+  "loadingMoreTracks": "మరిన్ని ట్రాక్‌లను లోడ్ చేస్తోంది...",
+  "scrollForMore": "మరిన్నింటి కోసం స్క్రోల్ చేయండి",
+  "someone": "ఎవరో",
+  "noTracksInQueue": "క్యూలో ట్రాక్‌లు లేవు",
+  "addSongsToJamQueue": "జామ్ క్యూలో పాటలను జోడించండి",
+  "addedByUser": "{name} ద్వారా జోడించబడింది",
+  "@addedByUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTrackPlaying": "ట్రాక్ ప్లే చేయడం లేదు",
+  "noRelatedTracksFound": "సంబంధిత ట్రాక్‌లు ఏవీ కనుగొనబడలేదు",
+  "queueIsEmpty": "క్యూ ఖాళీగా ఉంది",
+  "defaultQueueName": "నా క్యూ",
+  "saveQueueAsPlaylist": "క్యూను ప్లేజాబితాగా సేవ్ చేయండి",
+  "savedTracksToPlaylist": "{count} ట్రాక్‌లు \"{name}\"కి సేవ్ చేయబడ్డాయి",
+  "@savedTracksToPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "jams": "జామ్‌లు",
+  "nowPlayingHeader": "ఇప్పుడు ఆడుతోంది",
+  "browseMoodsGenresTitle": "మూడ్స్ & శైలులు",
+  "moodCategoryMoods": "మనోభావాలు",
+  "moodCategoryGenres": "శైలులు",
+  "moodCategoryActivities": "కార్యకలాపాలు",
+  "moodChill": "చలి",
+  "moodParty": "పార్టీ",
+  "moodWorkout": "వ్యాయామం",
+  "moodFocus": "దృష్టి పెట్టండి",
+  "moodSleep": "నిద్రించు",
+  "moodHappy": "సంతోషం",
+  "moodSad": "విచారకరం",
+  "moodRomance": "శృంగారం",
+  "moodFeelGood": "మంచి అనుభూతి",
+  "moodEnergize": "శక్తినిస్తుంది",
+  "genrePop": "పాప్",
+  "genreRock": "రాక్",
+  "genreHipHop": "హిప్-హాప్",
+  "genreRnb": "R&B",
+  "genreElectronic": "ఎలక్ట్రానిక్",
+  "genreDance": "నృత్యం",
+  "genreJazz": "జాజ్",
+  "genreClassical": "క్లాసికల్",
+  "genreCountry": "దేశం",
+  "genreMetal": "మెటల్",
+  "genreIndie": "ఇండీ",
+  "genreKPop": "K-పాప్",
+  "genreLatin": "లాటిన్",
+  "genreBollywood": "బాలీవుడ్",
+  "activityDriving": "డ్రైవింగ్",
+  "activityCooking": "వంట",
+  "activityGaming": "గేమింగ్",
+  "activityStudying": "చదువుతున్నారు",
+  "activityMeditation": "ధ్యానం",
+  "play": "ఆడండి",
+  "findInPlaylist": "ప్లేజాబితాలో కనుగొనండి...",
+  "playlistNotFoundMessage": "ప్లేజాబితా కనుగొనబడలేదు\n\nప్లేజాబితా ID: {id}\n\nఈ ప్లేజాబితా ప్రైవేట్‌గా ఉండవచ్చు లేదా అందుబాటులో ఉండకపోవచ్చు.",
+  "@playlistNotFoundMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineSnapshotDownloaded": "ఆఫ్‌లైన్ స్నాప్‌షాట్ - {downloaded}/{total} డౌన్‌లోడ్ చేయబడింది",
+  "@offlineSnapshotDownloaded": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noMatchingTracks": "సరిపోలే ట్రాక్‌లు లేవు",
+  "noTracksFound": "ట్రాక్‌లు ఏవీ కనుగొనబడలేదు",
+  "downloadingTracksFromPlaylist": "{playlist} నుండి {count} ట్రాక్‌లను డౌన్‌లోడ్ చేస్తోంది",
+  "@downloadingTracksFromPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTracksToQueueCount": "క్యూకి {count} ట్రాక్‌లు జోడించబడ్డాయి",
+  "@addedTracksToQueueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadPlaylist": "ప్లేజాబితాను డౌన్‌లోడ్ చేయండి",
+  "signInWithGoogle": "Googleతో సైన్ ఇన్ చేయండి",
+  "signInToUseJams": "జామ్‌లను ఉపయోగించడానికి సైన్ ఇన్ చేయండి",
+  "listenTogetherRealtime": "నిజ సమయంలో స్నేహితులతో కలిసి వినండి",
+  "signInGoogleToStartOrJoinJam": "స్నేహితులతో జామ్ సెషన్‌ను ప్రారంభించడానికి లేదా చేరడానికి Googleతో సైన్ ఇన్ చేయండి",
+  "listenTogether": "కలిసి వినండి",
+  "listenWithFriendsInSync": "సమకాలీకరణలో స్నేహితులతో వినండి",
+  "sameSongSameMoment": "అదే పాట, అదే క్షణం",
+  "startJam": "జామ్‌ని ప్రారంభించండి",
+  "createSessionAndInviteFriends": "సెషన్‌ని సృష్టించండి మరియు స్నేహితులను ఆహ్వానించండి",
+  "joinJam": "జామ్‌లో చేరండి",
+  "enterSixDigitCode": "6-అంకెల కోడ్‌ను నమోదు చేయండి",
+  "join": "చేరండి",
+  "shareThisCode": "ఈ కోడ్‌ని షేర్ చేయండి",
+  "codeCopied": "కోడ్ కాపీ చేయబడింది!",
+  "youAreHost": "మీరు హోస్ట్",
+  "hostedBy": "{name} ద్వారా హోస్ట్ చేయబడింది",
+  "@hostedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listeningTogetherCount": "కలిసి వినడం ({count})",
+  "@listeningTogetherCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "endSession": "సెషన్ ముగింపు",
+  "leaveSession": "సెషన్‌ను వదిలివేయండి",
+  "connected": "కనెక్ట్ చేయబడింది",
+  "reconnecting": "మళ్లీ కనెక్ట్ అవుతోంది",
+  "retryInSeconds": "{seconds}sలో మళ్లీ ప్రయత్నించండి",
+  "@retryInSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectingStatus": "మళ్లీ కనెక్ట్ అవుతోంది · {suffix}",
+  "@reconnectingStatus": {
+    "placeholders": {
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "reconnectingAttemptStatus": "మళ్లీ కనెక్ట్ చేస్తోంది ({attempt}) · {suffix}",
+  "@reconnectingAttemptStatus": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "disconnected": "డిస్‌కనెక్ట్ చేయబడింది",
+  "playing": "ఆడుతున్నారు",
+  "addSongsToPlayTogether": "వాటిని కలిసి ప్లే చేయడానికి పాటలను జోడించండి",
+  "sessionCreatedCode": "సెషన్ సృష్టించబడింది! కోడ్: {code}",
+  "@sessionCreatedCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "noJamFoundForCode": "ఈ కోడ్ కోసం జామ్ కనుగొనబడలేదు.",
+  "hostRole": "హోస్ట్",
+  "canControl": "నియంత్రించవచ్చు",
+  "listeningStatus": "వింటున్నాను",
+  "transferHostQuestion": "హోస్ట్‌ని బదిలీ చేయాలా?",
+  "transferHostMessage": "{name}ని కొత్త హోస్ట్‌గా చేయాలా? మీరు హోస్ట్ నియంత్రణలను కోల్పోతారు.",
+  "@transferHostMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transfer": "బదిలీ చేయండి",
+  "removeControl": "నియంత్రణను తీసివేయండి",
+  "allowControl": "నియంత్రణను అనుమతించండి",
+  "makeHost": "హోస్ట్ చేయండి",
+  "live": "ప్రత్యక్షం",
+  "playbackControlsJam": "మీ ప్లేబ్యాక్ జామ్‌ని నియంత్రిస్తుంది",
+  "starting": "ప్రారంభిస్తోంది...",
+  "or": "లేదా",
+  "joinFriendsJam": "స్నేహితుని జామ్‌లో చేరండి",
+  "startJamDescription": "స్నేహితులతో సంగీతాన్ని పంచుకోవడానికి జామ్‌ని ప్రారంభించండి.\nఅందరూ ఒకే పాటను సింక్‌లో వింటారు.",
+  "folderSettings": "ఫోల్డర్ సెట్టింగ్‌లు",
+  "noFoldersAddedYet": "ఇంకా ఫోల్డర్‌లు ఏవీ జోడించబడలేదు",
+  "addFolder": "ఫోల్డర్‌ని జోడించండి",
+  "localMusic": "స్థానిక సంగీతం",
+  "scanLocalMusicDescription": "స్థానిక సంగీత ఫైల్‌లను కనుగొని వాటిని ఆఫ్‌లైన్‌లో ప్లే చేయడానికి మీ పరికరాన్ని స్కాన్ చేయండి",
+  "scanForMusic": "సంగీతం కోసం స్కాన్ చేయండి",
+  "addFolderLowercase": "ఫోల్డర్‌ని జోడించండి",
+  "supportedFormats": "మద్దతు ఉన్న ఫార్మాట్‌లు: MP3, FLAC, WAV, M4A, OGG",
+  "songsFromFoldersCount": "{folders} ఫోల్డర్(లు) నుండి {songs} పాటలు",
+  "@songsFromFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "add": "జోడించు",
+  "permissionRequired": "అనుమతి అవసరం",
+  "storagePermissionRequiredMessage": "మీ మ్యూజిక్ ఫైల్‌లను యాక్సెస్ చేయడానికి స్టోరేజ్ అనుమతి అవసరం. దయచేసి దీన్ని సెట్టింగ్‌లలో ప్రారంభించండి.",
+  "couldNotOpenSettingsPermission": "సెట్టింగ్‌లను తెరవడం సాధ్యపడలేదు. దయచేసి నిల్వ అనుమతిని మాన్యువల్‌గా ప్రారంభించండి.",
+  "openSettings": "సెట్టింగ్‌లను తెరవండి",
+  "folderAdded": "ఫోల్డర్ జోడించబడింది",
+  "addedFolderScanNow": "\"{folder}\" జోడించబడింది. మీరు ఇప్పుడు సంగీతం కోసం దీన్ని స్కాన్ చేయాలనుకుంటున్నారా?",
+  "@addedFolderScanNow": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanNow": "ఇప్పుడు స్కాన్ చేయండి",
+  "foundSongsCount": "{count} పాటలు కనుగొనబడ్డాయి",
+  "@foundSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addFolderFirstThenScan": "ముందుగా ఫోల్డర్‌ని జోడించి, ఆపై ఆడియో ఫైల్‌ల కోసం స్కాన్ చేయండి.",
+  "scanFoldersCountDescription": "ఇది ఆడియో ఫైల్‌ల కోసం {count} ఫోల్డర్(లు)ని స్కాన్ చేస్తుంది.",
+  "@scanFoldersCountDescription": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "foldersToScan": "స్కాన్ చేయడానికి ఫోల్డర్‌లు:",
+  "andMoreFolders": "... మరియు {count} మరిన్ని",
+  "@andMoreFolders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "startScan": "స్కాన్ ప్రారంభించండి",
+  "foundSongsInFoldersCount": "{folders} ఫోల్డర్(లు)లో {songs} పాటలు కనుగొనబడ్డాయి",
+  "@foundSongsInFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "scanningForMusic": "సంగీతం కోసం స్కాన్ చేస్తోంది...",
+  "filesProgress": "{scanned} / {total} ఫైల్‌లు",
+  "@filesProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "signOut": "సైన్ అవుట్ చేయండి",
+  "signInGoogleProfilePictureJams": "మీ ప్రొఫైల్ చిత్రాన్ని పొందడానికి మరియు జామ్‌లను ఎనేబుల్ చేయడానికి Googleతో సైన్ ఇన్ చేయండి",
+  "sync": "సమకాలీకరించు",
+  "lastSynced": "చివరిగా సమకాలీకరించబడినది: {time}",
+  "@lastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedItems": "{count} అంశాలు సమకాలీకరించబడ్డాయి",
+  "@syncedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncing": "సమకాలీకరిస్తోంది...",
+  "syncNow": "ఇప్పుడు సమకాలీకరించండి",
+  "cachedItems": "{count} కాష్ చేయబడిన అంశాలు",
+  "@cachedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streams": "ప్రవాహాలు",
+  "colors": "రంగులు",
+  "searches": "శోధనలు",
+  "expiredCount": "{count} గడువు ముగిసింది",
+  "@expiredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cacheCleanupComplete": "కాష్ క్లీనప్ పూర్తయింది",
+  "cleanUp": "శుభ్రపరచండి",
+  "clearCache": "కాష్‌ని క్లియర్ చేయండి",
+  "clearCachedMusicDataConfirm": "ఇది కాష్ చేసిన మ్యూజిక్ డేటా మొత్తాన్ని క్లియర్ చేస్తుంది. కొనసాగించాలా?",
+  "clear": "క్లియర్",
+  "cacheCleared": "కాష్ క్లియర్ చేయబడింది",
+  "analytics": "విశ్లేషణలు",
+  "hits": "హిట్స్",
+  "misses": "మిస్సయింది",
+  "network": "నెట్‌వర్క్",
+  "analyticsReset": "Analytics రీసెట్",
+  "resetStats": "గణాంకాలను రీసెట్ చేయండి",
+  "cacheHitRate": "కాష్ హిట్ రేట్",
+  "liked": "ఇష్టపడ్డారు",
+  "appInfo": "యాప్ సమాచారం",
+  "releaseBuild": "విడుదల బిల్డ్",
+  "updater": "అప్‌డేటర్",
+  "available": "అందుబాటులో",
+  "unavailable": "అందుబాటులో లేదు",
+  "loadingCompact": "లోడ్ అవుతోంది...",
+  "errorCompact": "లోపం",
+  "none": "ఏదీ లేదు",
+  "currentPatch": "ప్రస్తుత ప్యాచ్",
+  "nextPatch": "తదుపరి పాచ్",
+  "disconnectYoutubeMusic": "YouTube సంగీతాన్ని డిస్‌కనెక్ట్ చేయండి",
+  "disconnectYoutubeMusicQuestion": "YouTube సంగీతాన్ని డిస్‌కనెక్ట్ చేయాలా?",
+  "disconnectYoutubeMusicWarning": "ఇది యాప్ నుండి మీ YouTube Music ఖాతాను తీసివేస్తుంది. మీ లైబ్రరీ డేటా క్లియర్ చేయబడుతుంది.",
+  "disconnect": "డిస్‌కనెక్ట్ చేయండి",
+  "syncFailed": "సమకాలీకరణ విఫలమైంది: {error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "justNow": "ఇప్పుడే",
+  "minutesAgo": "{count}నిమి క్రితం",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count}గం క్రితం",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count}d క్రితం",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noSongsInTitle": "{title}లో పాటలు లేవు",
+  "@noSongsInTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "createPlaylistDescription": "మీ సంగీతాన్ని నిర్వహించడానికి ప్లేజాబితాను సృష్టించండి",
+  "savedAlbumsFromYoutubeMusic": "YouTube Music నుండి సేవ్ చేయబడిన ఆల్బమ్‌లు",
+  "noSavedAlbumsFromYoutubeMusic": "YouTube Music నుండి సేవ్ చేయబడిన ఆల్బమ్‌లు లేవు",
+  "errorLoadingAlbums": "ఆల్బమ్‌లను లోడ్ చేయడంలో లోపం",
+  "recentlyPlayed": "ఇటీవల ఆడింది",
+  "noAlbumsYet": "ఇంకా ఆల్బమ్‌లు లేవు",
+  "playSomeMusicToSeeAlbumsHere": "ఇక్కడ ఆల్బమ్‌లను చూడటానికి కొంత సంగీతాన్ని ప్లే చేయండి",
+  "subscribedArtists": "చందా పొందిన కళాకారులు",
+  "noSubscribedArtists": "చందా పొందిన కళాకారులు లేరు",
+  "errorLoadingArtists": "కళాకారులను లోడ్ చేయడంలో లోపం ఏర్పడింది",
+  "recentlyPlayedArtists": "ఇటీవల కళాకారులు ఆడారు",
+  "noArtistsYet": "ఇంకా కళాకారులు లేరు",
+  "playSomeMusicToSeeArtistsHere": "ఇక్కడ కళాకారులను చూడటానికి కొంత సంగీతాన్ని ప్లే చేయండి",
+  "downloading": "డౌన్‌లోడ్ చేస్తోంది",
+  "downloadedPlaylists": "డౌన్‌లోడ్ చేయబడిన ప్లేజాబితాలు",
+  "errorLoadingDownloads": "డౌన్‌లోడ్‌లను లోడ్ చేయడంలో లోపం",
+  "deleteDownload": "డౌన్‌లోడ్‌ను తొలగించండి",
+  "deleteDownloadQuestion": "డౌన్‌లోడ్‌ను తొలగించాలా?",
+  "deleteDownloadWarning": "ఇది మీ పరికరం నుండి \"{title}\"ని తీసివేస్తుంది. మీరు దీన్ని తర్వాత మళ్లీ డౌన్‌లోడ్ చేసుకోవచ్చు.",
+  "@deleteDownloadWarning": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedTrack": "\"{title}\" తొలగించబడింది",
+  "@deletedTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSongsWillAppearHere": "డౌన్‌లోడ్ చేసిన పాటలు ఇక్కడ కనిపిస్తాయి",
+  "createPlaylist": "ప్లేజాబితాని సృష్టించండి",
+  "autoPlaylists": "ఆటో ప్లేజాబితాలు",
+  "likedSongsLabel": "నచ్చిన పాటలు",
+  "downloadedFraction": "{downloaded}/{total} డౌన్‌లోడ్ చేయబడింది",
+  "@downloadedFraction": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "more": "మరిన్ని",
+  "video": "వీడియో",
+  "forgottenFavorites": "ఇష్టమైనవి మర్చిపోయారు",
+  "mixedForYou": "మీ కోసం మిశ్రమంగా ఉంది",
+  "myMixOne": "నా మిక్స్ 1",
+  "discoverMix": "డిస్కవర్ మిక్స్",
+  "replayMix": "రీప్లే మిక్స్",
+  "newRelease": "కొత్త విడుదల",
+  "chillMix": "చిల్ మిక్స్",
+  "basedOnYourListening": "మీరు వినడం ఆధారంగా",
+  "newMusicForYou": "మీ కోసం కొత్త సంగీతం",
+  "yourFavorites": "మీకు ఇష్టమైనవి",
+  "freshTracks": "తాజా ట్రాక్‌లు",
+  "relaxingVibes": "రిలాక్సింగ్ వైబ్స్",
+  "musicToGetYouStarted": "మీరు ప్రారంభించడానికి సంగీతం",
+  "welcomeUser": "స్వాగతం {name}",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeFallbackName": "అక్కడ",
+  "youtubeMusicLabel": "YouTube సంగీతం",
+  "local": "స్థానిక",
+  "recentlyAdded": "ఇటీవల జోడించబడింది",
+  "name": "పేరు",
+  "duration": "వ్యవధి",
+  "searchSongsHint": "పాటలను వెతకండి...",
+  "noLikedSongs": "నచ్చిన పాటలు లేవు",
+  "likeSomeSongsToSeeThemHere": "వాటిని ఇక్కడ చూడడానికి కొన్ని పాటలు ఇష్టం",
+  "noLocalSongs": "స్థానిక పాటలు లేవు",
+  "scanFoldersToFindLocalMusic": "స్థానిక సంగీతాన్ని కనుగొనడానికి ఫోల్డర్‌లను స్కాన్ చేయండి",
+  "noResults": "ఫలితాలు లేవు",
+  "tryDifferentKeywords": "విభిన్న కీలకపదాలను ప్రయత్నించండి",
+  "noSongsYet": "ఇంకా పాటలు లేవు",
+  "playSomeMusicToBuildYourLibrary": "మీ లైబ్రరీని నిర్మించడానికి కొంత సంగీతాన్ని ప్లే చేయండి",
+  "albumNotFound": "ఆల్బమ్ కనుగొనబడలేదు",
+  "downloadAlbum": "ఆల్బమ్‌ని డౌన్‌లోడ్ చేయండి",
+  "downloadingTracksFromAlbum": "{album} నుండి {count} ట్రాక్‌లను డౌన్‌లోడ్ చేస్తోంది",
+  "@downloadingTracksFromAlbum": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "shareAlbumText": "{title} ద్వారా {artist}\n{url}",
+  "@shareAlbumText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestions": "సూచనలు",
+  "recentSearches": "ఇటీవలి శోధనలు",
+  "startTypingToSearch": "శోధించడానికి టైప్ చేయడం ప్రారంభించండి...",
+  "youtubeMusicPlaylists": "YouTube సంగీతం ప్లేజాబితాలు",
+  "errorLoadingPlaylists": "ప్లేజాబితాలను లోడ్ చేయడంలో లోపం",
+  "yourPlaylists": "మీ ప్లేజాబితాలు",
+  "noYoutubeMusicPlaylistsFound": "YouTube సంగీతం ప్లేజాబితాలు ఏవీ కనుగొనబడలేదు",
+  "songCountLabel": "{count, plural, one {# పాట} other {# పాటలు}}",
+  "@songCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unknownAlbum": "తెలియని ఆల్బమ్",
+  "jamCodeExample": "ABC123",
+  "jamCodeHint": "కోడ్",
+  "yourProfile": "మీ ప్రొఫైల్",
+  "googleUser": "Google వినియోగదారు",
+  "jamsAndProfile": "జామ్‌లు & ప్రొఫైల్",
+  "yes": "అవును",
+  "no": "సంఖ్య",
+  "foundInSettings": "సెట్టింగ్‌లలో కనుగొనబడింది",
+  "sharePlaylistText": "{title}\n{url}",
+  "@sharePlaylistText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "shareArtistText": "{artist}\n{url}",
+  "@shareArtistText": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "megabytesValue": "{value} MB",
+  "@megabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "gigabytesValue": "{value} GB",
+  "@gigabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxMegabytesValue": "~{value} MB",
+  "@approxMegabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxKbpsValue": "~{value} kbps",
+  "@approxKbpsValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "secondsShort": "{value}లు",
+  "@secondsShort": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "speedMultiplier": "{value}x",
+  "@speedMultiplier": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

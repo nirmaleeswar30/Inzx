@@ -7,6 +7,7 @@ import 'package:marquee/marquee.dart';
 import '../../providers/providers.dart';
 import '../../services/jams/jams_models.dart';
 import '../../core/design_system/colors.dart';
+import '../../core/l10n/app_localizations_x.dart';
 
 /// Jams panel shown as a bottom sheet from Now Playing
 class JamsPanel extends ConsumerStatefulWidget {
@@ -55,6 +56,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final googleAuth = ref.watch(googleAuthStateProvider);
     final session = ref.watch(currentJamSessionProvider).valueOrNull;
     final jamsState = ref.watch(jamsNotifierProvider);
@@ -93,7 +95,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Jams',
+                  l10n.jams,
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -133,6 +135,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
 
   /// Prompt to sign in with Google
   Widget _buildSignInPrompt() {
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 40),
       child: Column(
@@ -144,7 +147,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Sign in to use Jams',
+            l10n.signInToUseJams,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -153,7 +156,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Listen together with friends in real-time',
+            l10n.listenTogetherRealtime,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
@@ -166,7 +169,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
               await ref.read(googleAuthStateProvider.notifier).signIn();
             },
             icon: const Icon(Icons.login),
-            label: const Text('Sign in with Google'),
+            label: Text(l10n.signInWithGoogle),
             style: ElevatedButton.styleFrom(
               backgroundColor: widget.accentColor,
               foregroundColor: InzxColors.contrastTextOn(widget.accentColor),
@@ -180,6 +183,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
 
   /// No active session - show create/join options
   Widget _buildNoSession(JamsUIState state) {
+    final l10n = context.l10n;
     return Column(
       children: [
         // Illustration
@@ -197,7 +201,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
         ),
         const SizedBox(height: 20),
         Text(
-          'Listen together',
+          l10n.listenTogether,
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -206,7 +210,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Start a Jam to share music with friends.\nEveryone hears the same song in sync.',
+          l10n.startJamDescription,
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 14,
@@ -231,7 +235,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
                     ),
                   )
                 : const Icon(Iconsax.add),
-            label: Text(state.isLoading ? 'Starting...' : 'Start a Jam'),
+            label: Text(state.isLoading ? l10n.starting : l10n.startJam),
             style: ElevatedButton.styleFrom(
               backgroundColor: widget.accentColor,
               foregroundColor: InzxColors.contrastTextOn(widget.accentColor),
@@ -253,7 +257,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
-                'or',
+                l10n.or,
                 style: TextStyle(
                   color: widget.textColor.withValues(alpha: 0.5),
                 ),
@@ -268,7 +272,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
 
         // Join with code
         Text(
-          'Join a friend\'s Jam',
+          l10n.joinFriendsJam,
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -291,7 +295,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
                 ),
                 textAlign: TextAlign.center,
                 decoration: InputDecoration(
-                  hintText: 'CODE',
+                  hintText: context.l10n.jamCodeHint,
                   hintStyle: TextStyle(
                     color: widget.textColor.withValues(alpha: 0.3),
                     letterSpacing: 4,
@@ -333,7 +337,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
                         color: widget.textColor,
                       ),
                     )
-                  : const Text('Join'),
+                  : Text(l10n.join),
             ),
           ],
         ),
@@ -355,6 +359,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
 
   /// Active session view
   Widget _buildActiveSession(JamSession session) {
+    final l10n = context.l10n;
     final isHost = ref.watch(isJamHostProvider);
 
     return Column(
@@ -374,7 +379,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
           child: Column(
             children: [
               Text(
-                'Share this code',
+                l10n.shareThisCode,
                 style: TextStyle(
                   fontSize: 13,
                   color: widget.textColor.withValues(alpha: 0.7),
@@ -401,7 +406,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
                       );
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: const Text('Code copied!'),
+                          content: Text(l10n.codeCopied),
                           backgroundColor: widget.accentColor,
                           duration: const Duration(seconds: 2),
                         ),
@@ -418,7 +423,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
 
         // Participants
         Text(
-          'Listening together (${session.participantCount})',
+          l10n.listeningTogetherCount(session.participantCount),
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -432,7 +437,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
         // Now playing in Jam
         if (session.playbackState.currentTrack != null) ...[
           Text(
-            'Now Playing',
+            l10n.nowPlayingLabel,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -452,7 +457,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
                 Icon(Iconsax.crown1, color: Colors.amber, size: 18),
                 const SizedBox(width: 8),
                 Text(
-                  'You\'re the host - your playback controls the Jam',
+                  '${l10n.youAreHost} - ${l10n.playbackControlsJam}',
                   style: TextStyle(
                     fontSize: 12,
                     color: widget.textColor.withValues(alpha: 0.6),
@@ -468,6 +473,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
   }
 
   Widget _buildParticipantTile(JamParticipant participant) {
+    final l10n = context.l10n;
     final isHost = ref.watch(isJamHostProvider);
     final jamsService = ref.watch(jamsServiceProvider);
 
@@ -534,10 +540,10 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
                 ),
                 Text(
                   participant.isHost
-                      ? 'Host'
+                      ? l10n.hostRole
                       : (participant.canControlPlayback
-                            ? 'Can control'
-                            : 'Listening'),
+                            ? l10n.canControl
+                            : l10n.listeningStatus),
                   style: TextStyle(
                     fontSize: 12,
                     color: widget.textColor.withValues(alpha: 0.5),
@@ -569,11 +575,11 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
                       builder: (ctx) => AlertDialog(
                         backgroundColor: widget.backgroundColor,
                         title: Text(
-                          'Transfer Host?',
+                          l10n.transferHostQuestion,
                           style: TextStyle(color: widget.textColor),
                         ),
                         content: Text(
-                          'Make ${participant.name} the new host? You will lose host controls.',
+                          l10n.transferHostMessage(participant.name),
                           style: TextStyle(
                             color: widget.textColor.withValues(alpha: 0.7),
                           ),
@@ -582,7 +588,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
                           TextButton(
                             onPressed: () => Navigator.pop(ctx, false),
                             child: Text(
-                              'Cancel',
+                              l10n.cancel,
                               style: TextStyle(
                                 color: widget.textColor.withValues(alpha: 0.6),
                               ),
@@ -591,7 +597,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
                           TextButton(
                             onPressed: () => Navigator.pop(ctx, true),
                             child: Text(
-                              'Transfer',
+                              l10n.transfer,
                               style: TextStyle(color: widget.accentColor),
                             ),
                           ),
@@ -621,8 +627,8 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
                       const SizedBox(width: 12),
                       Text(
                         participant.canControlPlayback
-                            ? 'Remove control'
-                            : 'Allow control',
+                            ? l10n.removeControl
+                            : l10n.allowControl,
                         style: TextStyle(color: widget.textColor),
                       ),
                     ],
@@ -635,7 +641,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
                       Icon(Iconsax.crown1, color: Colors.amber, size: 18),
                       const SizedBox(width: 12),
                       Text(
-                        'Make host',
+                        l10n.makeHost,
                         style: TextStyle(color: widget.textColor),
                       ),
                     ],
@@ -663,8 +669,8 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  const Text(
-                    'Live',
+                  Text(
+                    l10n.live,
                     style: TextStyle(
                       color: Colors.green,
                       fontSize: 11,

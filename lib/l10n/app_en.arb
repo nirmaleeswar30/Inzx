@@ -1,0 +1,1180 @@
+{
+  "@@locale": "en",
+  "appTitle": "Inzx",
+  "updateDownloadedBanner": "Update downloaded. Restart the app to apply.",
+  "restart": "Restart",
+  "dismiss": "Dismiss",
+  "newVersionAvailableBanner": "New version {version} is available on GitHub.",
+  "@newVersionAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "Download",
+  "later": "Later",
+  "home": "Home",
+  "songs": "Songs",
+  "library": "Library",
+  "folders": "Folders",
+  "settings": "Settings",
+  "searchSettingsHint": "Search settings...",
+  "noMatchingSettings": "No matching settings",
+  "appearance": "Appearance",
+  "theme": "Theme",
+  "themeAuto": "Auto",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "dynamicColorsNote": "Colors adapt dynamically from the album art of the current track.",
+  "language": "Language",
+  "languageSubtitle": "Choose the app language",
+  "chooseLanguage": "Choose language",
+  "searchLanguagesHint": "Search languages...",
+  "noMatchingLanguages": "No matching languages",
+  "useSystemLanguage": "Use system language",
+  "languageSystem": "System default",
+  "languageEnglish": "English",
+  "languageTurkish": "Turkish",
+  "languageRussian": "Russian",
+  "languageHindi": "Hindi",
+  "languageTamil": "Tamil",
+  "languageKannada": "Kannada",
+  "languageTelugu": "Telugu",
+  "languageSpanish": "Spanish",
+  "languageFrench": "French",
+  "languageGerman": "German",
+  "languageIndonesian": "Indonesian",
+  "languageJapanese": "Japanese",
+  "languageKorean": "Korean",
+  "languageArabic": "Arabic",
+  "languageUkrainian": "Ukrainian",
+  "languageThai": "Thai",
+  "languagePortugueseBrazil": "Portuguese (Brazil)",
+  "languageChineseSimplified": "Chinese (Simplified)",
+  "languageChineseTraditional": "Chinese (Traditional)",
+  "contentLocation": "Content location",
+  "contentLocationSubtitle": "Choose the region used for recommendations and catalog availability",
+  "chooseContentLocation": "Choose content location",
+  "searchLocationsHint": "Search locations...",
+  "noMatchingLocations": "No matching locations",
+  "locationSystem": "System default",
+  "locationUnitedStates": "United States",
+  "locationIndia": "India",
+  "locationTurkey": "Turkey",
+  "locationRussia": "Russia",
+  "quickActions": "Quick Actions",
+  "audio": "Audio",
+  "audioQuickActionsSubtitle": "Streaming quality, crossfade & playback",
+  "downloads": "Downloads",
+  "downloadsQuickActionsSubtitle": "Download quality, location & storage",
+  "backupRestore": "Backup & Restore",
+  "backupRestoreQuickActionsSubtitle": "Export or import your library",
+  "streamingQuality": "Streaming Quality",
+  "streamingQualitySubtitle": "Adjust audio bitrate for streaming",
+  "crossfadeTransition": "Crossfade Transition",
+  "crossfadeTransitionSubtitle": "Blend tracks smoothly into each other",
+  "streamingCache": "Streaming Cache",
+  "streamingCacheSubtitle": "Pre-cache next tracks, Wi-Fi only option",
+  "downloadQuality": "Download Quality",
+  "downloadQualitySubtitle": "Quality for offline downloads",
+  "downloadLocation": "Download Location",
+  "downloadLocationSubtitle": "Where downloaded music is stored",
+  "dataUsageInfo": "Data Usage Info",
+  "dataUsageInfoSubtitle": "Estimated storage per song",
+  "createBackup": "Create Backup",
+  "createBackupSubtitle": "Export your library and settings",
+  "restoreBackup": "Restore Backup",
+  "restoreBackupSubtitle": "Import a previous backup file",
+  "connectYoutubeMusic": "Connect YouTube Music",
+  "connectYoutubeMusicSubtitle": "Sync your liked songs, playlists, and more",
+  "connectYtMusicButton": "Connect YT Music",
+  "downloadsTitle": "Downloads",
+  "clearCompleted": "Clear completed",
+  "clearFailed": "Clear failed",
+  "noDownloadsYet": "No downloads yet",
+  "downloadSongsToListenOffline": "Download songs to listen offline",
+  "downloadingTitle": "Downloading",
+  "downloadedTitle": "Downloaded ({count})",
+  "@downloadedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedTitle": "Failed",
+  "songsDownloaded": "{count} songs downloaded",
+  "@songsDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usingStorage": "Using {storage}",
+  "@usingStorage": {
+    "placeholders": {
+      "storage": {
+        "type": "String"
+      }
+    }
+  },
+  "failedWithError": "Failed: {error}",
+  "@failedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownError": "Unknown error",
+  "removeDownload": "Remove download",
+  "downloadSettingsTitle": "Download Settings",
+  "downloadLocationSubtitleLong": "Where downloaded music files are stored",
+  "offlineDownloadTip": "Downloaded tracks play without internet and don't use streaming data.",
+  "estimatedStoragePerSong": "Estimated Storage per Song",
+  "storageLocation": "Storage Location",
+  "loading": "Loading...",
+  "errorLoadingPath": "Error loading path",
+  "privateStorageDownloadsNote": "Downloads are stored in app-private storage for better reliability and no permission requirements.",
+  "qualityAutoChip": "Auto",
+  "qualityLowChip": "Low",
+  "qualityMediumChip": "Medium",
+  "qualityHighChip": "High",
+  "qualityMaxChip": "Max",
+  "qualityHighest": "Highest",
+  "qualityDescriptionAuto": "Auto - Adapts to network",
+  "qualityDescriptionLow": "Low - ~64 kbps (saves storage)",
+  "qualityDescriptionMedium": "Medium - ~128 kbps (balanced)",
+  "qualityDescriptionHigh": "High - ~256 kbps (recommended)",
+  "qualityDescriptionMax": "Maximum - Highest available (~256 kbps)",
+  "backupRestoreTitle": "Backup & Restore",
+  "backupIncludesDescription": "Backup includes liked songs, playlists, search history, recently played, and key app settings.",
+  "exportBackup": "Export Backup",
+  "exportBackupSubtitle": "Save a backup file to share or store",
+  "importBackup": "Import Backup",
+  "importBackupSubtitle": "Restore from a backup file",
+  "dangerZone": "Danger Zone",
+  "clearAppData": "Clear App Data",
+  "clearAppDataSubtitle": "Reset app data/settings while keeping downloaded audio files",
+  "backupCreatedSuccessfully": "Backup created successfully",
+  "backupFailed": "Backup failed: {error}",
+  "@backupFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoredSuccessfully": "Backup restored successfully",
+  "restoreFailed": "Restore failed: {error}",
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearAllDataQuestion": "Clear All Data?",
+  "clearAllDataWarning": "This resets local app data and settings, but keeps downloaded song files. This cannot be undone.",
+  "cancel": "Cancel",
+  "clearAll": "Clear All",
+  "appDataClearedPreserved": "App data cleared (downloaded audio files were preserved)",
+  "failedGeneric": "Failed: {error}",
+  "@failedGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupSubject": "Inzx Music Backup",
+  "statisticsTitle": "Statistics",
+  "statisticsCleared": "Statistics cleared",
+  "clearStatistics": "Clear Statistics",
+  "noStatisticsYet": "No statistics yet",
+  "startListeningStats": "Start listening to see your stats",
+  "overview": "Overview",
+  "totalPlays": "Total Plays",
+  "listenTime": "Listen Time",
+  "mostPlayed": "Most Played",
+  "playsCount": "{count} plays",
+  "@playsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutes": "{hours}h {minutes}m",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutesOnly": "{minutes}m",
+  "@durationMinutesOnly": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "retry": "Retry",
+  "share": "Share",
+  "playlist": "Playlist",
+  "album": "Album",
+  "channel": "Channel",
+  "playNext": "Play Next",
+  "addToQueue": "Add to Queue",
+  "addToPlaylist": "Add to Playlist",
+  "goToAlbum": "Go to Album",
+  "goToArtist": "Go to Artist",
+  "startRadio": "Start Radio",
+  "playAll": "Play all",
+  "shuffle": "Shuffle",
+  "shuffleAll": "Shuffle all",
+  "radio": "Radio",
+  "follow": "Follow",
+  "following": "Following",
+  "connectYtMusicToFollowArtists": "Connect YouTube Music to follow artists.",
+  "couldNotFollowArtist": "Could not follow {artist}.",
+  "@couldNotFollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotUnfollowArtist": "Could not unfollow {artist}.",
+  "@couldNotUnfollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "followingArtist": "Following {artist}",
+  "@followingArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "unfollowedArtist": "Unfollowed {artist}",
+  "@unfollowedArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingArtist": "Error loading artist",
+  "subscribersCount": "{count} subscribers",
+  "@subscribersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSection": "Downloaded",
+  "showAllDownloaded": "Show all {count} downloaded",
+  "@showAllDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "seeAll": "See all",
+  "removeFromLikedSongs": "Remove from Liked Songs",
+  "addToLikedSongs": "Add to Liked Songs",
+  "playingTrackNext": "Playing \"{title}\" next",
+  "@playingTrackNext": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTrackToQueue": "Added \"{title}\" to queue",
+  "@addedTrackToQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playNextInJam": "Play Next in Jam",
+  "playTrackNextInJam": "\"{title}\" will play next in Jam",
+  "@playTrackNextInJam": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addToJamQueue": "Add to Jam Queue",
+  "addedTrackToJamQueue": "Added \"{title}\" to Jam Queue",
+  "@addedTrackToJamQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloaded": "Downloaded",
+  "downloadingProgress": "Downloading {progress}%",
+  "@downloadingProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadStartingTrack": "Downloading \"{title}\"",
+  "@downloadStartingTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadNotificationsChannelDescription": "Download progress notifications",
+  "downloadStartingNotification": "Starting download...",
+  "downloadCompleteNotification": "Download complete",
+  "downloadFileNotCreated": "Download failed because the file was not created",
+  "shareTrackText": "{title} by {artist}\n{url}",
+  "@shareTrackText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "createNewPlaylist": "Create New Playlist",
+  "playlistName": "Playlist name",
+  "create": "Create",
+  "couldNotLoadPlaylists": "Could not load playlists",
+  "createLocalPlaylistInstead": "Create a local playlist instead",
+  "noPlaylistsYet": "No playlists yet",
+  "createOneToGetStarted": "Create one to get started",
+  "songsCount": "{count} songs",
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createdPlaylistOnYtMusicAndAddedTrack": "Created \"{playlist}\" on YT Music and added \"{track}\"",
+  "@createdPlaylistOnYtMusicAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToCreatePlaylist": "Failed to create playlist",
+  "createdPlaylistLocallyAndAddedTrack": "Created \"{playlist}\" locally and added \"{track}\"",
+  "@createdPlaylistLocallyAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddToPlaylist": "Failed to add to playlist",
+  "addedTrackToPlaylist": "Added \"{track}\" to \"{playlist}\"",
+  "@addedTrackToPlaylist": {
+    "placeholders": {
+      "track": {
+        "type": "String"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorWithMessage": "Error: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "searchingForLyrics": "Searching for lyrics...",
+  "failedToLoadLyrics": "Failed to load lyrics",
+  "tryAnotherProvider": "Try another provider",
+  "noLyricsFound": "No lyrics found",
+  "linkLabel": "Link: {url}",
+  "@linkLabel": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "tracksCount": "{count} tracks",
+  "@tracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFromYoutubeMusic": "Import from YouTube Music",
+  "importedPlaylistSuffix": "Imported",
+  "importedFromYoutubeMusicDescription": "Imported from YouTube Music",
+  "importedPlaylist": "Imported \"{playlist}\"",
+  "@importedPlaylist": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToImportPlaylist": "Failed to import: {error}",
+  "@failedToImportPlaylist": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadPlaylists": "Failed to load playlists",
+  "makeSureLoggedInYoutubeMusic": "Make sure you're logged in to YouTube Music",
+  "noPlaylistsFound": "No playlists found",
+  "createPlaylistsInYoutubeMusicFirst": "Create some playlists in YouTube Music first",
+  "loggedInYoutubeMusicSuccess": "Successfully logged in to YouTube Music!",
+  "signInToYoutubeMusic": "Sign in to YouTube Music",
+  "loggingYouIn": "Logging you in...",
+  "signInSyncYoutubeMusicDescription": "Sign in with your Google account to sync your YouTube Music library, including liked songs, playlists, and albums.",
+  "playbackSpeed": "Playback Speed",
+  "normal": "Normal",
+  "defaultValue": "Default",
+  "failedToLoadContent": "Failed to load content",
+  "loadMore": "Load more",
+  "audioSettingsTitle": "Audio Settings",
+  "nowPlayingLabel": "Now Playing",
+  "higherQualityUsesMoreData": "Higher quality uses more data",
+  "adjustsBasedOnNetworkSpeed": "Adjusts based on network speed",
+  "qualityLowUsesLessData": "~64 kbps - Uses less data",
+  "qualityMediumBalanced": "~128 kbps - Balanced",
+  "qualityHighBestForMost": "~256 kbps - Best for most",
+  "qualityMaximumAvailable": "Highest available (~256 kbps)",
+  "recommended": "Recommended",
+  "blendTrackEndsIntoNext": "Blend the end of the current track into the start of the next",
+  "preCachesNextTracks": "Pre-caches next tracks and plays from local cache when available",
+  "smartStreamCache": "Smart Stream Cache",
+  "usedCacheStorage": "Used: {used} / {limit} MB",
+  "@usedCacheStorage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "calculatingCacheUsage": "Calculating cache usage...",
+  "unableToReadCacheUsage": "Unable to read cache usage",
+  "preCacheNetwork": "Pre-cache Network",
+  "wifiOnly": "Wi-Fi only",
+  "wifiAndMobileData": "Wi-Fi + mobile data",
+  "preCacheRunsWifiOnly": "Pre-cache runs only when connected to Wi-Fi",
+  "preCacheRunsWifiAndMobile": "Pre-cache can run on both Wi-Fi and mobile data",
+  "concurrentPreCacheDownloads": "Concurrent Pre-cache Downloads",
+  "higherValuesCacheFaster": "Higher values cache faster but use more network and battery",
+  "cacheSizeLimit": "Cache Size Limit",
+  "off": "Off",
+  "crossfadeDisabled": "Crossfade disabled",
+  "currentValueLabel": "Current: {value}",
+  "@currentValueLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "audioQuality": "Audio Quality",
+  "qualityLowKbps": "Low (64 kbps)",
+  "qualityMediumKbps": "Medium (128 kbps)",
+  "qualityHighKbps": "High (256 kbps)",
+  "qualityMaximumKbps": "Maximum (~256 kbps)",
+  "all": "All",
+  "artists": "Artists",
+  "albums": "Albums",
+  "playlists": "Playlists",
+  "singlesAndEps": "Singles & EPs",
+  "appearsOn": "Appears On",
+  "fansAlsoLike": "Fans Also Like",
+  "searchMusicHint": "Search songs, albums, artists",
+  "searchForMusic": "Search for music",
+  "noResultsFound": "No results found",
+  "showAllLocalResults": "Show all {count} local results",
+  "@showAllLocalResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "topResult": "Top result",
+  "artistLabel": "Artist",
+  "albumByArtist": "Album - {artist}",
+  "@albumByArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistByAuthor": "Playlist - {author}",
+  "@playlistByAuthor": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "Save",
+  "upNext": "UP NEXT",
+  "lyricsTab": "LYRICS",
+  "relatedTab": "RELATED",
+  "youMightAlsoLike": "You might also like",
+  "otherPerformances": "Other performances",
+  "moreFrom": "More from",
+  "aboutArtist": "About the artist",
+  "jamQueue": "Jam Queue",
+  "radioQueue": "Radio Queue",
+  "queueLabel": "Queue",
+  "playingFrom": "Playing from",
+  "loadingMoreTracks": "Loading more tracks...",
+  "scrollForMore": "Scroll for more",
+  "someone": "Someone",
+  "noTracksInQueue": "No tracks in queue",
+  "addSongsToJamQueue": "Add songs to the jam queue",
+  "addedByUser": "Added by {name}",
+  "@addedByUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTrackPlaying": "No track playing",
+  "noRelatedTracksFound": "No related tracks found",
+  "queueIsEmpty": "Queue is empty",
+  "defaultQueueName": "My Queue",
+  "saveQueueAsPlaylist": "Save Queue as Playlist",
+  "savedTracksToPlaylist": "Saved {count} tracks to \"{name}\"",
+  "@savedTracksToPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "jams": "Jams",
+  "nowPlayingHeader": "NOW PLAYING",
+  "browseMoodsGenresTitle": "Moods & Genres",
+  "moodCategoryMoods": "Moods",
+  "moodCategoryGenres": "Genres",
+  "moodCategoryActivities": "Activities",
+  "moodChill": "Chill",
+  "moodParty": "Party",
+  "moodWorkout": "Workout",
+  "moodFocus": "Focus",
+  "moodSleep": "Sleep",
+  "moodHappy": "Happy",
+  "moodSad": "Sad",
+  "moodRomance": "Romance",
+  "moodFeelGood": "Feel Good",
+  "moodEnergize": "Energize",
+  "genrePop": "Pop",
+  "genreRock": "Rock",
+  "genreHipHop": "Hip-Hop",
+  "genreRnb": "R&B",
+  "genreElectronic": "Electronic",
+  "genreDance": "Dance",
+  "genreJazz": "Jazz",
+  "genreClassical": "Classical",
+  "genreCountry": "Country",
+  "genreMetal": "Metal",
+  "genreIndie": "Indie",
+  "genreKPop": "K-Pop",
+  "genreLatin": "Latin",
+  "genreBollywood": "Bollywood",
+  "activityDriving": "Driving",
+  "activityCooking": "Cooking",
+  "activityGaming": "Gaming",
+  "activityStudying": "Studying",
+  "activityMeditation": "Meditation",
+  "play": "Play",
+  "findInPlaylist": "Find in playlist...",
+  "playlistNotFoundMessage": "Playlist not found\n\nPlaylist ID: {id}\n\nThis playlist may be private or unavailable.",
+  "@playlistNotFoundMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineSnapshotDownloaded": "Offline snapshot - {downloaded}/{total} downloaded",
+  "@offlineSnapshotDownloaded": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noMatchingTracks": "No matching tracks",
+  "noTracksFound": "No tracks found",
+  "downloadingTracksFromPlaylist": "Downloading {count} tracks from {playlist}",
+  "@downloadingTracksFromPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTracksToQueueCount": "Added {count} tracks to queue",
+  "@addedTracksToQueueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadPlaylist": "Download playlist",
+  "signInWithGoogle": "Sign in with Google",
+  "signInToUseJams": "Sign in to use Jams",
+  "listenTogetherRealtime": "Listen together with friends in real-time",
+  "signInGoogleToStartOrJoinJam": "Sign in with Google to start or join a Jam session with friends",
+  "listenTogether": "Listen Together",
+  "listenWithFriendsInSync": "Listen with friends in sync",
+  "sameSongSameMoment": "Same song, same moment",
+  "startJam": "Start a Jam",
+  "createSessionAndInviteFriends": "Create a session and invite friends",
+  "joinJam": "Join a Jam",
+  "enterSixDigitCode": "Enter the 6-digit code",
+  "join": "Join",
+  "shareThisCode": "Share this code",
+  "codeCopied": "Code copied!",
+  "youAreHost": "You're the host",
+  "hostedBy": "Hosted by {name}",
+  "@hostedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listeningTogetherCount": "Listening Together ({count})",
+  "@listeningTogetherCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "endSession": "End Session",
+  "leaveSession": "Leave Session",
+  "connected": "Connected",
+  "reconnecting": "Reconnecting",
+  "retryInSeconds": "Retry in {seconds}s",
+  "@retryInSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectingStatus": "Reconnecting · {suffix}",
+  "@reconnectingStatus": {
+    "placeholders": {
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "reconnectingAttemptStatus": "Reconnecting ({attempt}) · {suffix}",
+  "@reconnectingAttemptStatus": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "disconnected": "Disconnected",
+  "playing": "Playing",
+  "addSongsToPlayTogether": "Add songs to play them together",
+  "sessionCreatedCode": "Session created! Code: {code}",
+  "@sessionCreatedCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "noJamFoundForCode": "No jam found for this code.",
+  "hostRole": "Host",
+  "canControl": "Can control",
+  "listeningStatus": "Listening",
+  "transferHostQuestion": "Transfer Host?",
+  "transferHostMessage": "Make {name} the new host? You will lose host controls.",
+  "@transferHostMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transfer": "Transfer",
+  "removeControl": "Remove control",
+  "allowControl": "Allow control",
+  "makeHost": "Make host",
+  "live": "Live",
+  "playbackControlsJam": "your playback controls the Jam",
+  "starting": "Starting...",
+  "or": "or",
+  "joinFriendsJam": "Join a friend's Jam",
+  "startJamDescription": "Start a Jam to share music with friends.\nEveryone hears the same song in sync.",
+  "folderSettings": "Folder Settings",
+  "noFoldersAddedYet": "No folders added yet",
+  "addFolder": "Add Folder",
+  "localMusic": "Local Music",
+  "scanLocalMusicDescription": "Scan your device to find local music files and play them offline",
+  "scanForMusic": "Scan for music",
+  "addFolderLowercase": "Add folder",
+  "supportedFormats": "Supported formats: MP3, FLAC, WAV, M4A, OGG",
+  "songsFromFoldersCount": "{songs} songs from {folders} folder(s)",
+  "@songsFromFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "add": "Add",
+  "permissionRequired": "Permission Required",
+  "storagePermissionRequiredMessage": "Storage permission is required to access your music files. Please enable it in Settings.",
+  "couldNotOpenSettingsPermission": "Could not open settings. Please enable storage permission manually.",
+  "openSettings": "Open Settings",
+  "folderAdded": "Folder Added",
+  "addedFolderScanNow": "Added \"{folder}\". Would you like to scan it for music now?",
+  "@addedFolderScanNow": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanNow": "Scan Now",
+  "foundSongsCount": "Found {count} songs",
+  "@foundSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addFolderFirstThenScan": "Add a folder first, then scan for audio files.",
+  "scanFoldersCountDescription": "This will scan {count} folder(s) for audio files.",
+  "@scanFoldersCountDescription": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "foldersToScan": "Folders to scan:",
+  "andMoreFolders": "... and {count} more",
+  "@andMoreFolders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "startScan": "Start Scan",
+  "foundSongsInFoldersCount": "Found {songs} songs in {folders} folder(s)",
+  "@foundSongsInFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "scanningForMusic": "Scanning for music...",
+  "filesProgress": "{scanned} / {total} files",
+  "@filesProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "signOut": "Sign out",
+  "signInGoogleProfilePictureJams": "Sign in with Google to get your profile picture and enable Jams",
+  "sync": "Sync",
+  "lastSynced": "Last synced: {time}",
+  "@lastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedItems": "Synced {count} items",
+  "@syncedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncing": "Syncing...",
+  "syncNow": "Sync Now",
+  "cachedItems": "{count} cached items",
+  "@cachedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streams": "Streams",
+  "colors": "Colors",
+  "searches": "Searches",
+  "expiredCount": "{count} expired",
+  "@expiredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cacheCleanupComplete": "Cache cleanup complete",
+  "cleanUp": "Clean Up",
+  "clearCache": "Clear Cache",
+  "clearCachedMusicDataConfirm": "This will clear all cached music data. Continue?",
+  "clear": "Clear",
+  "cacheCleared": "Cache cleared",
+  "analytics": "Analytics",
+  "hits": "Hits",
+  "misses": "Misses",
+  "network": "Network",
+  "analyticsReset": "Analytics reset",
+  "resetStats": "Reset Stats",
+  "cacheHitRate": "Cache Hit Rate",
+  "liked": "Liked",
+  "appInfo": "App Info",
+  "releaseBuild": "Release build",
+  "updater": "Updater",
+  "available": "available",
+  "unavailable": "unavailable",
+  "loadingCompact": "loading...",
+  "errorCompact": "error",
+  "none": "none",
+  "currentPatch": "Current patch",
+  "nextPatch": "Next patch",
+  "disconnectYoutubeMusic": "Disconnect YouTube Music",
+  "disconnectYoutubeMusicQuestion": "Disconnect YouTube Music?",
+  "disconnectYoutubeMusicWarning": "This will remove your YouTube Music account from the app. Your library data will be cleared.",
+  "disconnect": "Disconnect",
+  "syncFailed": "Sync failed: {error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "justNow": "Just now",
+  "minutesAgo": "{count}m ago",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count}h ago",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count}d ago",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noSongsInTitle": "No songs in {title}",
+  "@noSongsInTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "createPlaylistDescription": "Create a playlist to organize your music",
+  "savedAlbumsFromYoutubeMusic": "Saved albums from YouTube Music",
+  "noSavedAlbumsFromYoutubeMusic": "No saved albums from YouTube Music",
+  "errorLoadingAlbums": "Error loading albums",
+  "recentlyPlayed": "Recently played",
+  "noAlbumsYet": "No albums yet",
+  "playSomeMusicToSeeAlbumsHere": "Play some music to see albums here",
+  "subscribedArtists": "Subscribed artists",
+  "noSubscribedArtists": "No subscribed artists",
+  "errorLoadingArtists": "Error loading artists",
+  "recentlyPlayedArtists": "Recently played artists",
+  "noArtistsYet": "No artists yet",
+  "playSomeMusicToSeeArtistsHere": "Play some music to see artists here",
+  "downloading": "Downloading",
+  "downloadedPlaylists": "Downloaded playlists",
+  "errorLoadingDownloads": "Error loading downloads",
+  "deleteDownload": "Delete download",
+  "deleteDownloadQuestion": "Delete download?",
+  "deleteDownloadWarning": "This will remove \"{title}\" from your device. You can download it again later.",
+  "@deleteDownloadWarning": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedTrack": "Deleted \"{title}\"",
+  "@deletedTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSongsWillAppearHere": "Downloaded songs will appear here",
+  "createPlaylist": "Create playlist",
+  "autoPlaylists": "Auto playlists",
+  "likedSongsLabel": "Liked Songs",
+  "downloadedFraction": "{downloaded}/{total} downloaded",
+  "@downloadedFraction": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "more": "More",
+  "video": "VIDEO",
+  "forgottenFavorites": "Forgotten favorites",
+  "mixedForYou": "Mixed for you",
+  "myMixOne": "My Mix 1",
+  "discoverMix": "Discover Mix",
+  "replayMix": "Replay Mix",
+  "newRelease": "New Release",
+  "chillMix": "Chill Mix",
+  "basedOnYourListening": "Based on your listening",
+  "newMusicForYou": "New music for you",
+  "yourFavorites": "Your favorites",
+  "freshTracks": "Fresh tracks",
+  "relaxingVibes": "Relaxing vibes",
+  "musicToGetYouStarted": "MUSIC TO GET YOU STARTED",
+  "welcomeUser": "Welcome {name}",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeFallbackName": "there",
+  "youtubeMusicLabel": "YouTube Music",
+  "local": "Local",
+  "recentlyAdded": "Recently added",
+  "name": "Name",
+  "duration": "Duration",
+  "searchSongsHint": "Search songs...",
+  "noLikedSongs": "No liked songs",
+  "likeSomeSongsToSeeThemHere": "Like some songs to see them here",
+  "noLocalSongs": "No local songs",
+  "scanFoldersToFindLocalMusic": "Scan folders to find local music",
+  "noResults": "No results",
+  "tryDifferentKeywords": "Try different keywords",
+  "noSongsYet": "No songs yet",
+  "playSomeMusicToBuildYourLibrary": "Play some music to build your library",
+  "albumNotFound": "Album not found",
+  "downloadAlbum": "Download album",
+  "downloadingTracksFromAlbum": "Downloading {count} tracks from {album}",
+  "@downloadingTracksFromAlbum": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "shareAlbumText": "{title} by {artist}\n{url}",
+  "@shareAlbumText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestions": "Suggestions",
+  "recentSearches": "Recent Searches",
+  "startTypingToSearch": "Start typing to search...",
+  "youtubeMusicPlaylists": "YouTube Music playlists",
+  "errorLoadingPlaylists": "Error loading playlists",
+  "yourPlaylists": "Your playlists",
+  "noYoutubeMusicPlaylistsFound": "No YouTube Music playlists found",
+  "songCountLabel": "{count, plural, one {# song} other {# songs}}",
+  "@songCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unknownAlbum": "Unknown Album",
+  "jamCodeExample": "ABC123",
+  "jamCodeHint": "CODE",
+  "yourProfile": "Your Profile",
+  "connected": "Connected",
+  "googleUser": "Google User",
+  "jamsAndProfile": "Jams & profile",
+  "yes": "yes",
+  "no": "no",
+  "foundInSettings": "Found in Settings",
+  "sharePlaylistText": "{title}\n{url}",
+  "@sharePlaylistText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "shareArtistText": "{artist}\n{url}",
+  "@shareArtistText": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "megabytesValue": "{value} MB",
+  "@megabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "gigabytesValue": "{value} GB",
+  "@gigabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxMegabytesValue": "~{value} MB",
+  "@approxMegabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxKbpsValue": "~{value} kbps",
+  "@approxKbpsValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "secondsShort": "{value}s",
+  "@secondsShort": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "speedMultiplier": "{value}x",
+  "@speedMultiplier": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

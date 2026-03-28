@@ -1,0 +1,1179 @@
+{
+  "@@locale": "ko",
+  "appTitle": "Inzx",
+  "updateDownloadedBanner": "업데이트가 다운로드되었습니다. 적용하려면 앱을 다시 시작하세요.",
+  "restart": "다시 시작",
+  "dismiss": "해고하다",
+  "newVersionAvailableBanner": "새 버전 {version}은 GitHub에서 사용할 수 있습니다.",
+  "@newVersionAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "다운로드",
+  "later": "나중에",
+  "home": "집",
+  "songs": "노래",
+  "library": "도서관",
+  "folders": "폴더",
+  "settings": "설정",
+  "searchSettingsHint": "검색 설정...",
+  "noMatchingSettings": "일치하는 설정이 없습니다.",
+  "appearance": "모습",
+  "theme": "주제",
+  "themeAuto": "자동",
+  "themeLight": "빛",
+  "themeDark": "어두운",
+  "dynamicColorsNote": "색상은 현재 트랙의 앨범 아트에 따라 동적으로 적용됩니다.",
+  "language": "언어",
+  "languageSubtitle": "앱 언어를 선택하세요",
+  "chooseLanguage": "언어를 선택하세요",
+  "searchLanguagesHint": "언어 검색...",
+  "noMatchingLanguages": "일치하는 언어가 없습니다.",
+  "useSystemLanguage": "시스템 언어 사용",
+  "languageSystem": "시스템 기본값",
+  "languageEnglish": "영어",
+  "languageTurkish": "터키어",
+  "languageRussian": "러시아인",
+  "languageHindi": "힌디 어",
+  "languageTamil": "타밀 사람",
+  "languageKannada": "칸나다어",
+  "languageTelugu": "텔루구어",
+  "languageSpanish": "스페인 사람",
+  "languageFrench": "프랑스 국민",
+  "languageGerman": "독일 사람",
+  "languageIndonesian": "인도네시아 인",
+  "languageJapanese": "일본어",
+  "languageKorean": "한국인",
+  "languageArabic": "아라비아 말",
+  "languageUkrainian": "우크라이나 말",
+  "languageThai": "태국어",
+  "languagePortugueseBrazil": "포르투갈어(브라질)",
+  "languageChineseSimplified": "중국어(간체)",
+  "languageChineseTraditional": "중국어(번체)",
+  "contentLocation": "콘텐츠 위치",
+  "contentLocationSubtitle": "권장사항 및 카탈로그 가용성에 사용되는 지역을 선택하세요.",
+  "chooseContentLocation": "콘텐츠 위치 선택",
+  "searchLocationsHint": "위치 검색...",
+  "noMatchingLocations": "일치하는 위치가 없습니다.",
+  "locationSystem": "시스템 기본값",
+  "locationUnitedStates": "미국",
+  "locationIndia": "인도",
+  "locationTurkey": "칠면조",
+  "locationRussia": "러시아 제국",
+  "quickActions": "빠른 작업",
+  "audio": "오디오",
+  "audioQuickActionsSubtitle": "스트리밍 품질, 크로스페이드 및 재생",
+  "downloads": "다운로드",
+  "downloadsQuickActionsSubtitle": "다운로드 품질, 위치 및 저장 공간",
+  "backupRestore": "백업 및 복원",
+  "backupRestoreQuickActionsSubtitle": "라이브러리 내보내기 또는 가져오기",
+  "streamingQuality": "스트리밍 품질",
+  "streamingQualitySubtitle": "스트리밍을 위한 오디오 비트 전송률 조정",
+  "crossfadeTransition": "크로스페이드 전환",
+  "crossfadeTransitionSubtitle": "트랙을 서로 원활하게 혼합",
+  "streamingCache": "스트리밍 캐시",
+  "streamingCacheSubtitle": "다음 트랙 사전 캐시, Wi-Fi 전용 옵션",
+  "downloadQuality": "품질 다운로드",
+  "downloadQualitySubtitle": "오프라인 다운로드 품질",
+  "downloadLocation": "다운로드 위치",
+  "downloadLocationSubtitle": "다운로드한 음악이 저장되는 위치",
+  "dataUsageInfo": "데이터 사용 정보",
+  "dataUsageInfoSubtitle": "노래당 예상 저장용량",
+  "createBackup": "백업 생성",
+  "createBackupSubtitle": "라이브러리 및 설정 내보내기",
+  "restoreBackup": "백업 복원",
+  "restoreBackupSubtitle": "이전 백업 파일 가져오기",
+  "connectYoutubeMusic": "YouTube 뮤직 연결",
+  "connectYoutubeMusicSubtitle": "좋아하는 노래, 재생목록 등을 동기화하세요.",
+  "connectYtMusicButton": "YT 뮤직 연결",
+  "downloadsTitle": "다운로드",
+  "clearCompleted": "클리어 완료",
+  "clearFailed": "지우기 실패",
+  "noDownloadsYet": "아직 다운로드가 없습니다.",
+  "downloadSongsToListenOffline": "노래를 다운로드하여 오프라인으로 듣기",
+  "downloadingTitle": "다운로드 중",
+  "downloadedTitle": "다운로드됨({count})",
+  "@downloadedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedTitle": "실패한",
+  "songsDownloaded": "{count} 노래 다운로드됨",
+  "@songsDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usingStorage": "{storage} 사용",
+  "@usingStorage": {
+    "placeholders": {
+      "storage": {
+        "type": "String"
+      }
+    }
+  },
+  "failedWithError": "실패: {error}",
+  "@failedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownError": "알 수 없는 오류",
+  "removeDownload": "다운로드 삭제",
+  "downloadSettingsTitle": "다운로드 설정",
+  "downloadLocationSubtitleLong": "다운로드한 음악 파일이 저장되는 곳",
+  "offlineDownloadTip": "다운로드한 트랙은 인터넷 없이 재생되며 스트리밍 데이터를 사용하지 않습니다.",
+  "estimatedStoragePerSong": "노래당 예상 저장 용량",
+  "storageLocation": "저장 위치",
+  "loading": "로드 중...",
+  "errorLoadingPath": "경로를 로드하는 중에 오류가 발생했습니다.",
+  "privateStorageDownloadsNote": "다운로드는 더 나은 안정성을 위해 앱 전용 저장소에 저장되며 권한 요구 사항이 없습니다.",
+  "qualityAutoChip": "자동",
+  "qualityLowChip": "낮은",
+  "qualityMediumChip": "중간",
+  "qualityHighChip": "높은",
+  "qualityMaxChip": "맥스",
+  "qualityHighest": "제일 높은",
+  "qualityDescriptionAuto": "자동 - 네트워크에 적응",
+  "qualityDescriptionLow": "낮음 - ~64kbps(저장 공간 절약)",
+  "qualityDescriptionMedium": "중간 - ~128kbps(균형)",
+  "qualityDescriptionHigh": "높음 - ~256kbps(권장)",
+  "qualityDescriptionMax": "최대 - 사용 가능한 최고(~256kbps)",
+  "backupRestoreTitle": "백업 및 복원",
+  "backupIncludesDescription": "백업에는 좋아하는 노래, 재생 목록, 검색 기록, 최근 재생한 항목 및 주요 앱 설정이 포함됩니다.",
+  "exportBackup": "백업 내보내기",
+  "exportBackupSubtitle": "공유하거나 저장할 백업 파일을 저장하세요.",
+  "importBackup": "백업 가져오기",
+  "importBackupSubtitle": "백업 파일에서 복원",
+  "dangerZone": "위험지대",
+  "clearAppData": "앱 데이터 지우기",
+  "clearAppDataSubtitle": "다운로드한 오디오 파일을 유지하면서 앱 데이터/설정을 재설정합니다.",
+  "backupCreatedSuccessfully": "백업이 성공적으로 생성되었습니다.",
+  "backupFailed": "백업 실패: {error}",
+  "@backupFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoredSuccessfully": "백업이 성공적으로 복원되었습니다.",
+  "restoreFailed": "복원 실패: {error}",
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearAllDataQuestion": "모든 데이터를 지우시겠습니까?",
+  "clearAllDataWarning": "이렇게 하면 로컬 앱 데이터와 설정이 재설정되지만 다운로드한 노래 파일은 유지됩니다. 이 작업은 취소할 수 없습니다.",
+  "cancel": "취소",
+  "clearAll": "모두 지우기",
+  "appDataClearedPreserved": "앱 데이터 삭제됨(다운로드한 오디오 파일은 보존됨)",
+  "failedGeneric": "실패: {error}",
+  "@failedGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupSubject": "Inzx 음악 백업",
+  "statisticsTitle": "통계",
+  "statisticsCleared": "통계가 지워졌습니다.",
+  "clearStatistics": "통계 지우기",
+  "noStatisticsYet": "아직 통계가 없습니다",
+  "startListeningStats": "통계를 보려면 듣기 시작하세요",
+  "overview": "개요",
+  "totalPlays": "총 플레이 횟수",
+  "listenTime": "청취 시간",
+  "mostPlayed": "최다 재생",
+  "playsCount": "{count} 재생",
+  "@playsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutes": "{hours}h {minutes}m",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutesOnly": "{minutes}m",
+  "@durationMinutesOnly": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "retry": "다시 해 보다",
+  "share": "공유하다",
+  "playlist": "재생목록",
+  "album": "앨범",
+  "channel": "채널",
+  "playNext": "다음 플레이",
+  "addToQueue": "대기열에 추가",
+  "addToPlaylist": "재생목록에 추가",
+  "goToAlbum": "앨범으로 이동",
+  "goToArtist": "아티스트로 이동",
+  "startRadio": "라디오 시작",
+  "playAll": "모두 재생",
+  "shuffle": "혼합",
+  "shuffleAll": "모두 섞기",
+  "radio": "라디오",
+  "follow": "따르다",
+  "following": "수행원",
+  "connectYtMusicToFollowArtists": "아티스트를 팔로우하려면 YouTube Music을 연결하세요.",
+  "couldNotFollowArtist": "{artist}을(를) 팔로우할 수 없습니다.",
+  "@couldNotFollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotUnfollowArtist": "{artist} 팔로우를 취소할 수 없습니다.",
+  "@couldNotUnfollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "followingArtist": "{artist} 팔로우",
+  "@followingArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "unfollowedArtist": "{artist} 팔로우를 취소했습니다.",
+  "@unfollowedArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingArtist": "아티스트를 로드하는 중에 오류가 발생했습니다.",
+  "subscribersCount": "{count} 구독자",
+  "@subscribersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSection": "다운로드됨",
+  "showAllDownloaded": "다운로드한 모든 {count} 표시",
+  "@showAllDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "seeAll": "모두 보기",
+  "removeFromLikedSongs": "좋아요 표시한 노래에서 삭제",
+  "addToLikedSongs": "좋아요 표시한 노래에 추가",
+  "playingTrackNext": "다음에는 '{title}' 재생",
+  "@playingTrackNext": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTrackToQueue": "대기열에 \"{title}\"을(를) 추가했습니다.",
+  "@addedTrackToQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playNextInJam": "Jam에서 다음 재생",
+  "playTrackNextInJam": "Jam에서 다음으로 '{title}'이 재생됩니다.",
+  "@playTrackNextInJam": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addToJamQueue": "Jam 대기열에 추가",
+  "addedTrackToJamQueue": "Jam 대기열에 \"{title}\"을(를) 추가했습니다.",
+  "@addedTrackToJamQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloaded": "다운로드됨",
+  "downloadingProgress": "{progress}% 다운로드 중",
+  "@downloadingProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadStartingTrack": "'{title}' 다운로드 중",
+  "@downloadStartingTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadNotificationsChannelDescription": "진행 상황 알림 다운로드",
+  "downloadStartingNotification": "다운로드 시작 중...",
+  "downloadCompleteNotification": "다운로드 완료",
+  "downloadFileNotCreated": "파일이 생성되지 않아 다운로드에 실패했습니다.",
+  "shareTrackText": "{title} 작성자: {artist}\n{url}",
+  "@shareTrackText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "createNewPlaylist": "새 재생목록 만들기",
+  "playlistName": "재생목록 이름",
+  "create": "만들다",
+  "couldNotLoadPlaylists": "재생목록을 로드할 수 없습니다.",
+  "createLocalPlaylistInstead": "대신 로컬 재생목록을 만드세요.",
+  "noPlaylistsYet": "아직 재생목록이 없습니다.",
+  "createOneToGetStarted": "시작하려면 계정을 만드세요.",
+  "songsCount": "{count} 노래",
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createdPlaylistOnYtMusicAndAddedTrack": "YT Music에서 '{playlist}'을(를) 만들고 '{track}'을(를) 추가했습니다.",
+  "@createdPlaylistOnYtMusicAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToCreatePlaylist": "재생목록을 생성하지 못했습니다.",
+  "createdPlaylistLocallyAndAddedTrack": "로컬에서 \"{playlist}\"을(를) 생성하고 \"{track}\"을(를) 추가했습니다.",
+  "@createdPlaylistLocallyAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddToPlaylist": "재생목록에 추가하지 못했습니다.",
+  "addedTrackToPlaylist": "\"{playlist}\"에 \"{track}\"을(를) 추가했습니다.",
+  "@addedTrackToPlaylist": {
+    "placeholders": {
+      "track": {
+        "type": "String"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorWithMessage": "오류: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "searchingForLyrics": "가사 검색 중...",
+  "failedToLoadLyrics": "가사를 로드하지 못했습니다.",
+  "tryAnotherProvider": "다른 제공업체를 이용해 보세요",
+  "noLyricsFound": "가사를 찾을 수 없습니다",
+  "linkLabel": "링크: {url}",
+  "@linkLabel": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "tracksCount": "{count} 트랙",
+  "@tracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFromYoutubeMusic": "YouTube Music에서 가져오기",
+  "importedPlaylistSuffix": "수입됨",
+  "importedFromYoutubeMusicDescription": "YouTube Music에서 가져옴",
+  "importedPlaylist": "\"{playlist}\"을(를) 가져왔습니다.",
+  "@importedPlaylist": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToImportPlaylist": "가져오기 실패: {error}",
+  "@failedToImportPlaylist": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadPlaylists": "재생목록을 로드하지 못했습니다.",
+  "makeSureLoggedInYoutubeMusic": "YouTube Music에 로그인했는지 확인하세요.",
+  "noPlaylistsFound": "재생목록을 찾을 수 없습니다.",
+  "createPlaylistsInYoutubeMusicFirst": "먼저 YouTube Music에서 재생목록을 만드세요.",
+  "loggedInYoutubeMusicSuccess": "YouTube Music에 성공적으로 로그인되었습니다!",
+  "signInToYoutubeMusic": "YouTube 뮤직에 로그인",
+  "loggingYouIn": "로그인 중...",
+  "signInSyncYoutubeMusicDescription": "좋아하는 노래, 재생목록, 앨범 등 YouTube Music 라이브러리를 동기화하려면 Google 계정으로 로그인하세요.",
+  "playbackSpeed": "재생 속도",
+  "normal": "정상",
+  "defaultValue": "기본",
+  "failedToLoadContent": "콘텐츠를 로드하지 못했습니다.",
+  "loadMore": "더 로드하기",
+  "audioSettingsTitle": "오디오 설정",
+  "nowPlayingLabel": "지금 재생 중",
+  "higherQualityUsesMoreData": "품질이 높을수록 더 많은 데이터가 사용됩니다.",
+  "adjustsBasedOnNetworkSpeed": "네트워크 속도에 따라 조정됩니다.",
+  "qualityLowUsesLessData": "~64kbps - 더 적은 데이터를 사용합니다.",
+  "qualityMediumBalanced": "~128kbps - 균형 잡힌",
+  "qualityHighBestForMost": "~256kbps - 대부분의 경우에 가장 적합",
+  "qualityMaximumAvailable": "사용 가능한 최고 속도(~256kbps)",
+  "recommended": "추천",
+  "blendTrackEndsIntoNext": "현재 트랙의 끝을 다음 트랙의 시작 부분에 혼합",
+  "preCachesNextTracks": "다음 트랙을 미리 캐시하고 사용 가능한 경우 로컬 캐시에서 재생합니다.",
+  "smartStreamCache": "스마트 스트림 캐시",
+  "usedCacheStorage": "사용됨: {used} / {limit}MB",
+  "@usedCacheStorage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "calculatingCacheUsage": "캐시 사용량 계산 중...",
+  "unableToReadCacheUsage": "캐시 사용량을 읽을 수 없습니다.",
+  "preCacheNetwork": "사전 캐시 네트워크",
+  "wifiOnly": "Wi-Fi 전용",
+  "wifiAndMobileData": "Wi-Fi + 모바일 데이터",
+  "preCacheRunsWifiOnly": "사전 캐시는 Wi-Fi에 연결된 경우에만 실행됩니다.",
+  "preCacheRunsWifiAndMobile": "사전 캐시는 Wi-Fi와 모바일 데이터 모두에서 실행 가능",
+  "concurrentPreCacheDownloads": "동시 사전 캐시 다운로드",
+  "higherValuesCacheFaster": "값이 높을수록 캐시 속도가 빨라지지만 네트워크와 배터리를 더 많이 사용합니다.",
+  "cacheSizeLimit": "캐시 크기 제한",
+  "off": "끄다",
+  "crossfadeDisabled": "크로스페이드 비활성화됨",
+  "currentValueLabel": "현재: {value}",
+  "@currentValueLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "audioQuality": "오디오 품질",
+  "qualityLowKbps": "낮음(64kbps)",
+  "qualityMediumKbps": "중간(128kbps)",
+  "qualityHighKbps": "높음(256kbps)",
+  "qualityMaximumKbps": "최대(~256kbps)",
+  "all": "모두",
+  "artists": "아티스트",
+  "albums": "앨범",
+  "playlists": "재생목록",
+  "singlesAndEps": "싱글 및 EP",
+  "appearsOn": "다음 날짜에 나타남",
+  "fansAlsoLike": "팬들도 좋아해요",
+  "searchMusicHint": "노래, 앨범, 아티스트 검색",
+  "searchForMusic": "음악 검색",
+  "noResultsFound": "검색결과가 없습니다",
+  "showAllLocalResults": "{count} 지역 검색결과 모두 표시",
+  "@showAllLocalResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "topResult": "상위 결과",
+  "artistLabel": "아티스트",
+  "albumByArtist": "앨범 - {artist}",
+  "@albumByArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistByAuthor": "재생목록 - {author}",
+  "@playlistByAuthor": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "구하다",
+  "upNext": "다음",
+  "lyricsTab": "가사",
+  "relatedTab": "관련된",
+  "youMightAlsoLike": "당신은 또한 좋아할 수도 있습니다",
+  "otherPerformances": "기타 공연",
+  "moreFrom": "더 많은 것",
+  "aboutArtist": "아티스트 소개",
+  "jamQueue": "잼 대기열",
+  "radioQueue": "라디오 대기열",
+  "queueLabel": "대기줄",
+  "playingFrom": "다음에서 재생 중",
+  "loadingMoreTracks": "추가 트랙 로드 중...",
+  "scrollForMore": "더 보려면 스크롤하세요.",
+  "someone": "누구",
+  "noTracksInQueue": "대기열에 트랙이 없습니다.",
+  "addSongsToJamQueue": "Jam 대기열에 노래 추가",
+  "addedByUser": "{name}님이 추가함",
+  "@addedByUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTrackPlaying": "재생 중인 트랙 없음",
+  "noRelatedTracksFound": "관련 트랙을 찾을 수 없습니다.",
+  "queueIsEmpty": "대기열이 비어 있습니다.",
+  "defaultQueueName": "내 대기열",
+  "saveQueueAsPlaylist": "대기열을 재생목록으로 저장",
+  "savedTracksToPlaylist": "{count} 트랙을 '{name}'에 저장했습니다.",
+  "@savedTracksToPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "jams": "잼",
+  "nowPlayingHeader": "지금 재생 중",
+  "browseMoodsGenresTitle": "기분과 장르",
+  "moodCategoryMoods": "기분",
+  "moodCategoryGenres": "장르",
+  "moodCategoryActivities": "활동",
+  "moodChill": "냉기",
+  "moodParty": "파티",
+  "moodWorkout": "운동하다",
+  "moodFocus": "집중하다",
+  "moodSleep": "잠",
+  "moodHappy": "행복하다",
+  "moodSad": "슬픈",
+  "moodRomance": "로맨스",
+  "moodFeelGood": "기분이 좋다",
+  "moodEnergize": "활력을 불어넣다",
+  "genrePop": "팝",
+  "genreRock": "바위",
+  "genreHipHop": "힙합",
+  "genreRnb": "알앤비",
+  "genreElectronic": "전자",
+  "genreDance": "춤",
+  "genreJazz": "재즈",
+  "genreClassical": "고전",
+  "genreCountry": "국가",
+  "genreMetal": "금속",
+  "genreIndie": "인디",
+  "genreKPop": "케이팝",
+  "genreLatin": "라틴어",
+  "genreBollywood": "발리우드",
+  "activityDriving": "운전",
+  "activityCooking": "요리",
+  "activityGaming": "노름",
+  "activityStudying": "공부하는",
+  "activityMeditation": "심사 숙고",
+  "play": "놀다",
+  "findInPlaylist": "재생목록에서 찾기...",
+  "playlistNotFoundMessage": "재생목록을 찾을 수 없습니다\n\n재생목록 ID: {id}\n\n이 재생목록은 비공개이거나 사용하지 못할 수 있습니다.",
+  "@playlistNotFoundMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineSnapshotDownloaded": "오프라인 스냅샷 - {downloaded}/{total} 다운로드됨",
+  "@offlineSnapshotDownloaded": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noMatchingTracks": "일치하는 트랙이 없습니다.",
+  "noTracksFound": "트랙을 찾을 수 없습니다.",
+  "downloadingTracksFromPlaylist": "{playlist}에서 {count} 트랙 다운로드 중",
+  "@downloadingTracksFromPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTracksToQueueCount": "대기열에 {count} 트랙을 추가했습니다.",
+  "@addedTracksToQueueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadPlaylist": "재생목록 다운로드",
+  "signInWithGoogle": "Google로 로그인",
+  "signInToUseJams": "Jam을 사용하려면 로그인하세요.",
+  "listenTogetherRealtime": "친구들과 실시간으로 함께 들어보세요",
+  "signInGoogleToStartOrJoinJam": "친구와 Jam 세션을 시작하거나 참여하려면 Google에 로그인하세요.",
+  "listenTogether": "함께 들어보세요",
+  "listenWithFriendsInSync": "친구들과 동기화하여 들어보세요",
+  "sameSongSameMoment": "같은 노래, 같은 순간",
+  "startJam": "Jam 시작",
+  "createSessionAndInviteFriends": "세션을 만들고 친구를 초대하세요",
+  "joinJam": "Jam에 참여하기",
+  "enterSixDigitCode": "6자리 코드를 입력하세요",
+  "join": "가입하다",
+  "shareThisCode": "이 코드를 공유하세요",
+  "codeCopied": "코드가 복사되었습니다!",
+  "youAreHost": "당신은 호스트입니다",
+  "hostedBy": "호스트: {name}",
+  "@hostedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listeningTogetherCount": "함께 듣기 ({count})",
+  "@listeningTogetherCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "endSession": "세션 종료",
+  "leaveSession": "세션 나가기",
+  "connected": "연결됨",
+  "reconnecting": "다시 연결하는 중",
+  "retryInSeconds": "{seconds}초 후에 다시 시도하세요.",
+  "@retryInSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectingStatus": "다시 연결하는 중 · {suffix}",
+  "@reconnectingStatus": {
+    "placeholders": {
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "reconnectingAttemptStatus": "다시 연결 중({attempt}) · {suffix}",
+  "@reconnectingAttemptStatus": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "disconnected": "연결이 끊김",
+  "playing": "재생",
+  "addSongsToPlayTogether": "노래를 추가하여 함께 연주하세요",
+  "sessionCreatedCode": "세션이 생성되었습니다! 코드: {code}",
+  "@sessionCreatedCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "noJamFoundForCode": "이 코드에는 용지 걸림이 없습니다.",
+  "hostRole": "주인",
+  "canControl": "통제할 수 있다",
+  "listeningStatus": "청취",
+  "transferHostQuestion": "호스트를 이전하시겠습니까?",
+  "transferHostMessage": "{name}을(를) 새 호스트로 만드시겠습니까? 호스트 제어권을 잃게 됩니다.",
+  "@transferHostMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transfer": "옮기다",
+  "removeControl": "컨트롤 삭제",
+  "allowControl": "제어 허용",
+  "makeHost": "호스트 만들기",
+  "live": "살다",
+  "playbackControlsJam": "재생이 Jam을 제어합니다",
+  "starting": "시작 중...",
+  "or": "또는",
+  "joinFriendsJam": "친구의 Jam에 참여하기",
+  "startJamDescription": "Jam을 시작하여 친구들과 음악을 공유하세요.\n모두가 같은 노래를 동시에 듣습니다.",
+  "folderSettings": "폴더 설정",
+  "noFoldersAddedYet": "아직 추가된 폴더가 없습니다.",
+  "addFolder": "폴더 추가",
+  "localMusic": "지역 음악",
+  "scanLocalMusicDescription": "장치를 스캔하여 로컬 음악 파일을 찾아 오프라인으로 재생하세요.",
+  "scanForMusic": "음악 검색",
+  "addFolderLowercase": "폴더 추가",
+  "supportedFormats": "지원되는 형식: MP3, FLAC, WAV, M4A, OGG",
+  "songsFromFoldersCount": "{folders} 폴더의 {songs} 노래",
+  "@songsFromFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "add": "추가하다",
+  "permissionRequired": "권한 필요",
+  "storagePermissionRequiredMessage": "음악 파일에 접근하려면 저장 권한이 필요합니다. 설정에서 활성화해 주세요.",
+  "couldNotOpenSettingsPermission": "설정을 열 수 없습니다. 저장 권한을 수동으로 활성화해 주세요.",
+  "openSettings": "설정 열기",
+  "folderAdded": "폴더가 추가됨",
+  "addedFolderScanNow": "\"{folder}\"을(를) 추가했습니다. 지금 음악을 스캔하시겠습니까?",
+  "@addedFolderScanNow": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanNow": "지금 스캔",
+  "foundSongsCount": "{count} 노래를 찾았습니다.",
+  "@foundSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addFolderFirstThenScan": "먼저 폴더를 추가한 다음 오디오 파일을 검색하세요.",
+  "scanFoldersCountDescription": "그러면 {count} 폴더에서 오디오 파일을 검색합니다.",
+  "@scanFoldersCountDescription": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "foldersToScan": "검사할 폴더:",
+  "andMoreFolders": "... 그리고 {count} 더보기",
+  "@andMoreFolders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "startScan": "스캔 시작",
+  "foundSongsInFoldersCount": "{folders} 폴더에서 {songs} 노래를 찾았습니다.",
+  "@foundSongsInFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "scanningForMusic": "음악 검색 중...",
+  "filesProgress": "{scanned} / {total} 파일",
+  "@filesProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "signOut": "로그아웃",
+  "signInGoogleProfilePictureJams": "프로필 사진을 얻고 Jam을 사용 설정하려면 Google에 로그인하세요.",
+  "sync": "동조",
+  "lastSynced": "마지막 동기화: {time}",
+  "@lastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedItems": "{count} 항목을 동기화했습니다.",
+  "@syncedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncing": "동기화 중...",
+  "syncNow": "지금 동기화",
+  "cachedItems": "{count} 캐시된 항목",
+  "@cachedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streams": "스트림",
+  "colors": "그림 물감",
+  "searches": "검색",
+  "expiredCount": "{count} 만료됨",
+  "@expiredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cacheCleanupComplete": "캐시 정리 완료",
+  "cleanUp": "정리",
+  "clearCache": "캐시 지우기",
+  "clearCachedMusicDataConfirm": "이렇게 하면 캐시된 음악 데이터가 모두 삭제됩니다. 계속하다?",
+  "clear": "분명한",
+  "cacheCleared": "캐시가 삭제되었습니다.",
+  "analytics": "해석학",
+  "hits": "조회수",
+  "misses": "미스",
+  "network": "회로망",
+  "analyticsReset": "분석 재설정",
+  "resetStats": "통계 재설정",
+  "cacheHitRate": "캐시 적중률",
+  "liked": "좋아요를 누른",
+  "appInfo": "앱 정보",
+  "releaseBuild": "릴리스 빌드",
+  "updater": "업데이터",
+  "available": "사용 가능",
+  "unavailable": "없는",
+  "loadingCompact": "로드 중...",
+  "errorCompact": "오류",
+  "none": "없음",
+  "currentPatch": "현재 패치",
+  "nextPatch": "다음 패치",
+  "disconnectYoutubeMusic": "YouTube Music 연결 해제",
+  "disconnectYoutubeMusicQuestion": "YouTube Music을 연결 해제하시겠습니까?",
+  "disconnectYoutubeMusicWarning": "앱에서 YouTube Music 계정이 삭제됩니다. 라이브러리 데이터가 삭제됩니다.",
+  "disconnect": "연결 끊기",
+  "syncFailed": "동기화 실패: {error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "justNow": "방금",
+  "minutesAgo": "{count}분 전",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count}시간 전",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count}d 전",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noSongsInTitle": "{title}에는 노래가 없습니다.",
+  "@noSongsInTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "createPlaylistDescription": "재생목록을 만들어 음악을 정리하세요",
+  "savedAlbumsFromYoutubeMusic": "YouTube Music에서 저장된 앨범",
+  "noSavedAlbumsFromYoutubeMusic": "YouTube Music에 저장된 앨범이 없습니다.",
+  "errorLoadingAlbums": "앨범을 로드하는 중에 오류가 발생했습니다.",
+  "recentlyPlayed": "최근에 플레이한",
+  "noAlbumsYet": "아직 앨범이 없습니다.",
+  "playSomeMusicToSeeAlbumsHere": "여기서 앨범을 보려면 음악을 재생하세요.",
+  "subscribedArtists": "구독 아티스트",
+  "noSubscribedArtists": "구독한 아티스트 없음",
+  "errorLoadingArtists": "아티스트를 로드하는 중에 오류가 발생했습니다.",
+  "recentlyPlayedArtists": "최근 플레이한 아티스트",
+  "noArtistsYet": "아직 아티스트가 없습니다.",
+  "playSomeMusicToSeeArtistsHere": "여기서 아티스트를 보려면 음악을 틀어 보세요.",
+  "downloading": "다운로드 중",
+  "downloadedPlaylists": "다운로드한 재생목록",
+  "errorLoadingDownloads": "다운로드를 로드하는 중에 오류가 발생했습니다.",
+  "deleteDownload": "다운로드 삭제",
+  "deleteDownloadQuestion": "다운로드를 삭제하시겠습니까?",
+  "deleteDownloadWarning": "이렇게 하면 기기에서 \"{title}\"이(가) 제거됩니다. 나중에 다시 다운로드할 수 있습니다.",
+  "@deleteDownloadWarning": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedTrack": "\"{title}\"을(를) 삭제했습니다.",
+  "@deletedTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSongsWillAppearHere": "다운로드한 노래가 여기에 표시됩니다.",
+  "createPlaylist": "재생목록 만들기",
+  "autoPlaylists": "자동 재생목록",
+  "likedSongsLabel": "좋아요를 누른 노래",
+  "downloadedFraction": "{downloaded}/{total} 다운로드됨",
+  "@downloadedFraction": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "more": "더",
+  "video": "동영상",
+  "forgottenFavorites": "잊혀진 즐겨찾기",
+  "mixedForYou": "당신을 위해 혼합",
+  "myMixOne": "내 믹스 1",
+  "discoverMix": "믹스 살펴보기",
+  "replayMix": "리플레이 믹스",
+  "newRelease": "새로운 릴리스",
+  "chillMix": "칠 믹스",
+  "basedOnYourListening": "당신의 청취를 바탕으로",
+  "newMusicForYou": "당신을 위한 새로운 음악",
+  "yourFavorites": "즐겨찾기",
+  "freshTracks": "신선한 트랙",
+  "relaxingVibes": "편안한 분위기",
+  "musicToGetYouStarted": "시작을 위한 음악",
+  "welcomeUser": "{name}님, 환영합니다",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeFallbackName": "거기",
+  "youtubeMusicLabel": "유튜브 뮤직",
+  "local": "현지의",
+  "recentlyAdded": "최근 추가됨",
+  "name": "이름",
+  "duration": "지속",
+  "searchSongsHint": "노래 검색...",
+  "noLikedSongs": "좋아요 표시한 노래 없음",
+  "likeSomeSongsToSeeThemHere": "노래에 좋아요를 표시하고 여기에서 확인하세요.",
+  "noLocalSongs": "현지 노래 없음",
+  "scanFoldersToFindLocalMusic": "폴더를 스캔하여 로컬 음악 찾기",
+  "noResults": "결과 없음",
+  "tryDifferentKeywords": "다른 키워드를 사용해 보세요",
+  "noSongsYet": "아직 노래가 없습니다.",
+  "playSomeMusicToBuildYourLibrary": "음악을 틀어 라이브러리를 구축하세요",
+  "albumNotFound": "앨범을 찾을 수 없습니다",
+  "downloadAlbum": "앨범 다운로드",
+  "downloadingTracksFromAlbum": "{album}에서 {count} 트랙 다운로드 중",
+  "@downloadingTracksFromAlbum": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "shareAlbumText": "{title} 작성자: {artist}\n{url}",
+  "@shareAlbumText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestions": "제안",
+  "recentSearches": "최근 검색",
+  "startTypingToSearch": "검색하려면 입력을 시작하세요...",
+  "youtubeMusicPlaylists": "YouTube 뮤직 재생목록",
+  "errorLoadingPlaylists": "재생목록을 로드하는 중에 오류가 발생했습니다.",
+  "yourPlaylists": "당신의 재생목록",
+  "noYoutubeMusicPlaylistsFound": "YouTube Music 재생목록을 찾을 수 없습니다.",
+  "songCountLabel": "{count, plural, one {# 노래} other {# 노래}}",
+  "@songCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unknownAlbum": "알 수 없는 앨범",
+  "jamCodeExample": "ABC123",
+  "jamCodeHint": "암호",
+  "yourProfile": "귀하의 프로필",
+  "googleUser": "구글 사용자",
+  "jamsAndProfile": "Jam 및 프로필",
+  "yes": "예",
+  "no": "아니요",
+  "foundInSettings": "설정에서 찾았습니다",
+  "sharePlaylistText": "{title}\n{url}",
+  "@sharePlaylistText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "shareArtistText": "{artist}\n{url}",
+  "@shareArtistText": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "megabytesValue": "{value}MB",
+  "@megabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "gigabytesValue": "{value}GB",
+  "@gigabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxMegabytesValue": "~{value}MB",
+  "@approxMegabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxKbpsValue": "~{value}kbps",
+  "@approxKbpsValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "secondsShort": "{value}s",
+  "@secondsShort": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "speedMultiplier": "{value}x",
+  "@speedMultiplier": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

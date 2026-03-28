@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="music_widget_description">Inzx Mini (4x1)</string>
+    <string name="music_widget_description_expanded">Inzx Şu An Çalıyor (4x2)</string>
+    <string name="music_widget_artwork">Geçerli parça kapağı</string>
+    <string name="music_widget_previous">Önceki</string>
+    <string name="music_widget_play_pause">Oynat veya duraklat</string>
+    <string name="music_widget_next">Sonraki</string>
+</resources>

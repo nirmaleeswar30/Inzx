@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import '../../core/design_system/design_system.dart';
 import '../../providers/bookmarks_and_stats_provider.dart';
 import '../../providers/providers.dart';
@@ -12,6 +13,7 @@ class StatisticsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     final stats = ref.watch(playStatisticsProvider);
@@ -29,7 +31,7 @@ class StatisticsScreen extends ConsumerWidget {
           ? InzxColors.darkBackground
           : InzxColors.background,
       appBar: AppBar(
-        title: const Text('Statistics'),
+        title: Text(l10n.statisticsTitle),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
@@ -43,14 +45,14 @@ class StatisticsScreen extends ConsumerWidget {
                 onTap: () {
                   ref.read(playStatisticsProvider.notifier).clear();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Statistics cleared')),
+                    SnackBar(content: Text(l10n.statisticsCleared)),
                   );
                 },
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Iconsax.trash, size: 20),
+                    const Icon(Iconsax.trash, size: 20),
                     SizedBox(width: 12),
-                    Text('Clear Statistics'),
+                    Text(l10n.clearStatistics),
                   ],
                 ),
               ),
@@ -59,7 +61,7 @@ class StatisticsScreen extends ConsumerWidget {
         ],
       ),
       body: stats.isEmpty
-          ? _buildEmpty(isDark)
+          ? _buildEmpty(context, isDark)
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
@@ -86,7 +88,8 @@ class StatisticsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmpty(bool isDark) {
+  Widget _buildEmpty(BuildContext context, bool isDark) {
+    final l10n = context.l10n;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -98,7 +101,7 @@ class StatisticsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'No statistics yet',
+            l10n.noStatisticsYet,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -107,7 +110,7 @@ class StatisticsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Start listening to see your stats',
+            l10n.startListeningStats,
             style: TextStyle(
               color: isDark ? Colors.white54 : InzxColors.textSecondary,
             ),
@@ -124,14 +127,13 @@ class StatisticsScreen extends ConsumerWidget {
     int totalPlays,
     Duration totalTime,
   ) {
-    final hours = totalTime.inHours;
-    final minutes = totalTime.inMinutes % 60;
+    final l10n = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Overview',
+          l10n.overview,
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -148,7 +150,7 @@ class StatisticsScreen extends ConsumerWidget {
                 colorScheme: colorScheme,
                 icon: Iconsax.play_circle,
                 value: totalPlays.toString(),
-                label: 'Total Plays',
+                label: l10n.totalPlays,
                 color: Colors.blue,
               ),
             ),
@@ -159,8 +161,8 @@ class StatisticsScreen extends ConsumerWidget {
                 isDark: isDark,
                 colorScheme: colorScheme,
                 icon: Iconsax.timer_1,
-                value: hours > 0 ? '${hours}h ${minutes}m' : '${minutes}m',
-                label: 'Listen Time',
+                value: _formatDuration(context, totalTime),
+                label: l10n.listenTime,
                 color: Colors.purple,
               ),
             ),
@@ -224,13 +226,14 @@ class StatisticsScreen extends ConsumerWidget {
     List<TrackPlayStats> mostPlayed,
     dynamic playerService,
   ) {
+    final l10n = context.l10n;
     if (mostPlayed.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Most Played',
+          l10n.mostPlayed,
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -309,14 +312,14 @@ class StatisticsScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${stat.playCount} plays',
+                    l10n.playsCount(stat.playCount),
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   Text(
-                    _formatDuration(stat.totalPlayTime),
+                    _formatDuration(context, stat.totalPlayTime),
                     style: TextStyle(
                       fontSize: 12,
                       color: isDark ? Colors.white38 : Colors.black38,
@@ -331,10 +334,11 @@ class StatisticsScreen extends ConsumerWidget {
     );
   }
 
-  String _formatDuration(Duration d) {
+  String _formatDuration(BuildContext context, Duration d) {
+    final l10n = context.l10n;
     if (d.inHours > 0) {
-      return '${d.inHours}h ${d.inMinutes % 60}m';
+      return l10n.durationHoursMinutes(d.inHours, d.inMinutes % 60);
     }
-    return '${d.inMinutes}m';
+    return l10n.durationMinutesOnly(d.inMinutes);
   }
 }

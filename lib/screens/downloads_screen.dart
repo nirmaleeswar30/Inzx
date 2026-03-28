@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import '../../core/design_system/design_system.dart';
 import '../services/download_service.dart';
 import '../providers/providers.dart';
@@ -16,13 +17,14 @@ class DownloadsScreen extends ConsumerWidget {
     final downloadState = ref.watch(downloadManagerProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: isDark
           ? InzxColors.darkBackground
           : InzxColors.background,
       appBar: AppBar(
-        title: const Text('Downloads'),
+        title: Text(l10n.downloadsTitle),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
@@ -40,21 +42,21 @@ class DownloadsScreen extends ConsumerWidget {
                 }
               },
               itemBuilder: (context) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'clear_completed',
-                  child: Text('Clear completed'),
+                  child: Text(l10n.clearCompleted),
                 ),
                 if (downloadState.failedTasks.isNotEmpty)
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'clear_failed',
-                    child: Text('Clear failed'),
+                    child: Text(l10n.clearFailed),
                   ),
               ],
             ),
         ],
       ),
       body: downloadState.tasks.isEmpty
-          ? _buildEmptyState(isDark, colorScheme)
+          ? _buildEmptyState(context, isDark, colorScheme)
           : _buildDownloadList(
               context,
               ref,
@@ -65,7 +67,12 @@ class DownloadsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState(bool isDark, ColorScheme colorScheme) {
+  Widget _buildEmptyState(
+    BuildContext context,
+    bool isDark,
+    ColorScheme colorScheme,
+  ) {
+    final l10n = context.l10n;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -89,7 +96,7 @@ class DownloadsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            'No downloads yet',
+            l10n.noDownloadsYet,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -98,7 +105,7 @@ class DownloadsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Download songs to listen offline',
+            l10n.downloadSongsToListenOffline,
             style: TextStyle(
               color: isDark ? Colors.white54 : InzxColors.textSecondary,
             ),
@@ -119,17 +126,18 @@ class DownloadsScreen extends ConsumerWidget {
 
     // Storage info
     if (state.completedTasks.isNotEmpty) {
-      sections.add(_buildStorageInfo(state, isDark, colorScheme));
+      sections.add(_buildStorageInfo(context, state, isDark, colorScheme));
     }
 
     // Active/Queued downloads
     final activeAndQueued = [...state.activeTasks, ...state.queuedTasks];
+    final l10n = context.l10n;
     if (activeAndQueued.isNotEmpty) {
       sections.add(
         _buildSection(
           context,
           ref,
-          title: 'Downloading',
+          title: l10n.downloadingTitle,
           tasks: activeAndQueued,
           isDark: isDark,
           colorScheme: colorScheme,
@@ -143,7 +151,7 @@ class DownloadsScreen extends ConsumerWidget {
         _buildSection(
           context,
           ref,
-          title: 'Downloaded (${state.completedTasks.length})',
+          title: l10n.downloadedTitle(state.completedTasks.length),
           tasks: state.completedTasks,
           isDark: isDark,
           colorScheme: colorScheme,
@@ -157,7 +165,7 @@ class DownloadsScreen extends ConsumerWidget {
         _buildSection(
           context,
           ref,
-          title: 'Failed',
+          title: l10n.failedTitle,
           tasks: state.failedTasks,
           isDark: isDark,
           colorScheme: colorScheme,
@@ -172,10 +180,12 @@ class DownloadsScreen extends ConsumerWidget {
   }
 
   Widget _buildStorageInfo(
+    BuildContext context,
     DownloadManagerState state,
     bool isDark,
     ColorScheme colorScheme,
   ) {
+    final l10n = context.l10n;
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -194,14 +204,16 @@ class DownloadsScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${state.totalCompleted} songs downloaded',
+                  l10n.songsDownloaded(state.totalCompleted),
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: isDark ? Colors.white : InzxColors.textPrimary,
                   ),
                 ),
                 Text(
-                  'Using ${state.totalStorageText}',
+                  l10n.usingStorage(
+                    formatStorageAmount(l10n, state.totalStorageBytes),
+                  ),
                   style: TextStyle(
                     fontSize: 13,
                     color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -351,7 +363,7 @@ class DownloadsScreen extends ConsumerWidget {
             ),
           if (task.status == DownloadStatus.failed)
             Text(
-              'Failed: ${task.error ?? "Unknown error"}',
+              localizeDownloadError(context.l10n, task.error),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 11, color: Colors.red),
@@ -394,16 +406,20 @@ class DownloadsScreen extends ConsumerWidget {
               .cancelDownload(task.trackId),
         );
       case DownloadStatus.completed:
+        final sizeLabel = task.totalBytes > 0
+            ? formatStorageAmount(context.l10n, task.totalBytes)
+            : '';
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              task.sizeText,
-              style: TextStyle(
-                fontSize: 12,
-                color: isDark ? Colors.white38 : InzxColors.textSecondary,
+            if (sizeLabel.isNotEmpty)
+              Text(
+                sizeLabel,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.white38 : InzxColors.textSecondary,
+                ),
               ),
-            ),
             IconButton(
               icon: Icon(
                 Icons.more_vert,
@@ -450,7 +466,7 @@ class DownloadsScreen extends ConsumerWidget {
           children: [
             ListTile(
               leading: const Icon(Iconsax.trash),
-              title: const Text('Remove download'),
+              title: Text(context.l10n.removeDownload),
               onTap: () {
                 Navigator.pop(context);
                 ref

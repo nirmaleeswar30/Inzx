@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/design_system/design_system.dart';
+import '../../core/l10n/app_localizations_x.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/providers.dart';
 import '../../models/models.dart';
 import '../../services/local_music_scanner.dart';
 import '../../services/download_service.dart';
 import '../widgets/track_options_sheet.dart';
 import '../widgets/now_playing_screen.dart';
+
+enum SongFilter { all, liked, local, downloaded }
+
+enum SongSort { recentlyAdded, name, artist, duration }
 
 /// Provider that combines all songs from multiple sources
 final allSongsProvider = Provider<List<Track>>((ref) {
@@ -55,14 +61,11 @@ class MusicSongsTab extends ConsumerStatefulWidget {
 }
 
 class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
-  String _selectedFilter = 'All';
-  String _sortBy = 'Recently added';
+  SongFilter _selectedFilter = SongFilter.all;
+  SongSort _sortBy = SongSort.recentlyAdded;
   String _searchQuery = '';
   final _searchController = TextEditingController();
   bool _isSearching = false;
-
-  final _filters = ['All', 'Liked', 'Local', 'Downloaded'];
-  final _sortOptions = ['Recently added', 'Name', 'Artist', 'Duration'];
 
   @override
   void dispose() {
@@ -75,7 +78,7 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
 
     // Apply filter
     switch (_selectedFilter) {
-      case 'Liked':
+      case SongFilter.liked:
         final likedIds = ref.read(likedSongsProvider).map((t) => t.id).toSet();
         final ytLikedIds =
             (ref.read(ytMusicLikedSongsProvider).valueOrNull ?? [])
@@ -85,13 +88,15 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
             .where((t) => likedIds.contains(t.id) || ytLikedIds.contains(t.id))
             .toList();
         break;
-      case 'Local':
+      case SongFilter.local:
         final localIds = ref.read(localTracksProvider).map((t) => t.id).toSet();
         tracks = tracks.where((t) => localIds.contains(t.id)).toList();
         break;
-      case 'Downloaded':
+      case SongFilter.downloaded:
         // Only show tracks that have a local file path (downloaded)
         tracks = tracks.where((t) => t.localFilePath != null).toList();
+        break;
+      case SongFilter.all:
         break;
     }
 
@@ -110,20 +115,19 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
 
     // Apply sort
     switch (_sortBy) {
-      case 'Name':
+      case SongSort.name:
         tracks.sort((a, b) => a.title.compareTo(b.title));
         break;
-      case 'Artist':
+      case SongSort.artist:
         tracks.sort((a, b) => a.artist.compareTo(b.artist));
         break;
-      case 'Duration':
+      case SongSort.duration:
         tracks.sort(
           (a, b) =>
               a.duration.inMilliseconds.compareTo(b.duration.inMilliseconds),
         );
         break;
-      case 'Recently added':
-      default:
+      case SongSort.recentlyAdded:
         // Keep original order (most recent first)
         break;
     }
@@ -133,10 +137,12 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     final allTracks = ref.watch(allSongsProvider);
     final filteredTracks = _getFilteredTracks(allTracks);
+    final sortOptions = SongSort.values;
 
     // Get dynamic colors from album art
     final albumColors = ref.watch(albumColorsProvider);
@@ -158,14 +164,16 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
           _buildSortRow(
             isDark,
             colorScheme,
+            l10n,
             filteredTracks.length,
             accentColor,
+            sortOptions,
           ),
 
           // Song list
           Expanded(
             child: filteredTracks.isEmpty
-                ? _buildEmptyState(isDark, colorScheme, accentColor)
+                ? _buildEmptyState(isDark, colorScheme, accentColor, l10n)
                 : _buildSongList(
                     filteredTracks,
                     isDark,
@@ -179,6 +187,7 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
   }
 
   Widget _buildHeader(bool isDark, ColorScheme colorScheme) {
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Row(
@@ -208,7 +217,7 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
                         controller: _searchController,
                         autofocus: true,
                         decoration: InputDecoration(
-                          hintText: 'Search songs...',
+                          hintText: l10n.searchSongsHint,
                           border: InputBorder.none,
                           isDense: true,
                           contentPadding: EdgeInsets.zero,
@@ -232,7 +241,7 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
             )
           else
             Text(
-              'Songs',
+              l10n.songs,
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -268,16 +277,18 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
     ColorScheme colorScheme,
     Color accentColor,
   ) {
+    final l10n = context.l10n;
+    final filters = SongFilter.values;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(
-        children: _filters.map((filter) {
+        children: filters.map((filter) {
           final isSelected = _selectedFilter == filter;
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: FilterChip(
-              label: Text(filter),
+              label: Text(_filterLabel(l10n, filter)),
               selected: isSelected,
               onSelected: (selected) {
                 if (selected) {
@@ -310,8 +321,10 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
   Widget _buildSortRow(
     bool isDark,
     ColorScheme colorScheme,
+    AppLocalizations l10n,
     int count,
     Color accentColor,
+    List<SongSort> sortOptions,
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -321,7 +334,7 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
           Row(
             children: [
               Text(
-                '$count songs',
+                l10n.songsCount(count),
                 style: TextStyle(
                   fontSize: 13,
                   color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -330,14 +343,15 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
             ],
           ),
           PopupMenuButton<String>(
-            onSelected: (value) => setState(() => _sortBy = value),
+            onSelected: (value) =>
+                setState(() => _sortBy = SongSort.values.byName(value)),
             offset: const Offset(0, 40),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            itemBuilder: (context) => _sortOptions.map((option) {
+            itemBuilder: (context) => sortOptions.map((option) {
               return PopupMenuItem(
-                value: option,
+                value: option.name,
                 child: Row(
                   children: [
                     if (_sortBy == option)
@@ -345,7 +359,7 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
                     else
                       const SizedBox(width: 18),
                     const SizedBox(width: 8),
-                    Text(option),
+                    Text(_sortLabel(l10n, option)),
                   ],
                 ),
               );
@@ -360,7 +374,7 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  _sortBy,
+                  _sortLabel(l10n, _sortBy),
                   style: TextStyle(
                     fontSize: 13,
                     color: isDark ? Colors.white70 : InzxColors.textPrimary,
@@ -383,32 +397,9 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
     bool isDark,
     ColorScheme colorScheme,
     Color accentColor,
+    AppLocalizations l10n,
   ) {
-    String message;
-    String subMessage;
-
-    switch (_selectedFilter) {
-      case 'Liked':
-        message = 'No liked songs';
-        subMessage = 'Like some songs to see them here';
-        break;
-      case 'Local':
-        message = 'No local songs';
-        subMessage = 'Scan folders to find local music';
-        break;
-      case 'Downloaded':
-        message = 'No downloads';
-        subMessage = 'Download songs to listen offline';
-        break;
-      default:
-        if (_searchQuery.isNotEmpty) {
-          message = 'No results';
-          subMessage = 'Try different keywords';
-        } else {
-          message = 'No songs yet';
-          subMessage = 'Play some music to build your library';
-        }
-    }
+    final emptyState = _emptyStateCopy(l10n);
 
     return Center(
       child: Column(
@@ -435,7 +426,7 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
           ),
           const SizedBox(height: 24),
           Text(
-            message,
+            emptyState.$1,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -444,7 +435,7 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
           ),
           const SizedBox(height: 8),
           Text(
-            subMessage,
+            emptyState.$2,
             style: TextStyle(
               color: isDark ? Colors.white54 : InzxColors.textSecondary,
             ),
@@ -503,7 +494,7 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
             child: ElevatedButton.icon(
               onPressed: () => _playAll(tracks),
               icon: const Icon(Icons.play_arrow_rounded),
-              label: const Text('Play all'),
+              label: Text(context.l10n.playAll),
               style: ElevatedButton.styleFrom(
                 backgroundColor: accentColor,
                 foregroundColor: InzxColors.contrastTextOn(accentColor),
@@ -520,7 +511,7 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
             child: OutlinedButton.icon(
               onPressed: () => _shuffleAll(tracks),
               icon: const Icon(Icons.shuffle_rounded),
-              label: const Text('Shuffle'),
+              label: Text(context.l10n.shuffle),
               style: OutlinedButton.styleFrom(
                 foregroundColor: accentColor,
                 padding: const EdgeInsets.symmetric(vertical: 12),
@@ -602,7 +593,7 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
         ),
       ),
       subtitle: Text(
-        '${track.artist} • ${track.formattedDuration}',
+        context.trackSubtitle(track.artist, track.formattedDuration),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
@@ -648,5 +639,47 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
     final playerService = ref.read(audioPlayerServiceProvider);
     await playerService.playQueue(shuffled, startIndex: 0);
     if (mounted) NowPlayingScreen.show(context);
+  }
+
+  String _filterLabel(AppLocalizations l10n, SongFilter filter) {
+    switch (filter) {
+      case SongFilter.all:
+        return l10n.all;
+      case SongFilter.liked:
+        return l10n.liked;
+      case SongFilter.local:
+        return l10n.local;
+      case SongFilter.downloaded:
+        return l10n.downloaded;
+    }
+  }
+
+  String _sortLabel(AppLocalizations l10n, SongSort sort) {
+    switch (sort) {
+      case SongSort.recentlyAdded:
+        return l10n.recentlyAdded;
+      case SongSort.name:
+        return l10n.name;
+      case SongSort.artist:
+        return l10n.artistLabel;
+      case SongSort.duration:
+        return l10n.duration;
+    }
+  }
+
+  (String, String) _emptyStateCopy(AppLocalizations l10n) {
+    switch (_selectedFilter) {
+      case SongFilter.liked:
+        return (l10n.noLikedSongs, l10n.likeSomeSongsToSeeThemHere);
+      case SongFilter.local:
+        return (l10n.noLocalSongs, l10n.scanFoldersToFindLocalMusic);
+      case SongFilter.downloaded:
+        return (l10n.noDownloadsYet, l10n.downloadSongsToListenOffline);
+      case SongFilter.all:
+        if (_searchQuery.isNotEmpty) {
+          return (l10n.noResults, l10n.tryDifferentKeywords);
+        }
+        return (l10n.noSongsYet, l10n.playSomeMusicToBuildYourLibrary);
+    }
   }
 }

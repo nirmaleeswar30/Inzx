@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="music_widget_description">Inzx Mini (4x1)</string>
+    <string name="music_widget_description_expanded">Inzx Сейчас играет (4x2)</string>
+    <string name="music_widget_artwork">Обложка текущего трека</string>
+    <string name="music_widget_previous">Предыдущий</string>
+    <string name="music_widget_play_pause">Воспроизвести или приостановить</string>
+    <string name="music_widget_next">Следующий</string>
+</resources>

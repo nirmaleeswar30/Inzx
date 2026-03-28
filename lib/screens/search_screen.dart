@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../core/l10n/app_localizations_x.dart';
 import '../core/design_system/design_system.dart';
 import '../providers/providers.dart';
 import '../models/models.dart';
@@ -206,7 +207,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         fontSize: 15,
                       ),
                       decoration: InputDecoration(
-                        hintText: 'Search songs, albums, artists',
+                        hintText: context.l10n.searchMusicHint,
                         hintStyle: TextStyle(
                           color: isDark
                               ? Colors.white54
@@ -245,11 +246,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final currentFilter = ref.watch(searchFilterProvider);
 
     final filters = [
-      (SearchFilter.all, 'All'),
-      (SearchFilter.songs, 'Songs'),
-      (SearchFilter.albums, 'Albums'),
-      (SearchFilter.artists, 'Artists'),
-      (SearchFilter.playlists, 'Playlists'),
+      (SearchFilter.all, context.l10n.all),
+      (SearchFilter.songs, context.l10n.songs),
+      (SearchFilter.albums, context.l10n.albums),
+      (SearchFilter.artists, context.l10n.artists),
+      (SearchFilter.playlists, context.l10n.playlists),
     ];
 
     return SizedBox(
@@ -301,7 +302,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         if (suggestions.isEmpty) {
           return _buildEmptyState(
             isDark,
-            'Search for music',
+            context.l10n.searchForMusic,
             Icons.search_rounded,
           );
         }
@@ -339,10 +340,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           },
         );
       },
-      loading: () =>
-          _buildEmptyState(isDark, 'Search for music', Icons.search_rounded),
-      error: (_, _) =>
-          _buildEmptyState(isDark, 'Search for music', Icons.search_rounded),
+      loading: () => _buildEmptyState(
+        isDark,
+        context.l10n.searchForMusic,
+        Icons.search_rounded,
+      ),
+      error: (_, _) => _buildEmptyState(
+        isDark,
+        context.l10n.searchForMusic,
+        Icons.search_rounded,
+      ),
     );
   }
 
@@ -355,7 +362,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         if (results.isEmpty) {
           return _buildEmptyState(
             isDark,
-            'No results found',
+            context.l10n.noResultsFound,
             Icons.search_off_rounded,
           );
         }
@@ -426,7 +433,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         }
         return _buildEmptyState(
           isDark,
-          'No results found',
+          context.l10n.noResultsFound,
           Icons.search_off_rounded,
         );
       },
@@ -471,7 +478,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                'Downloaded',
+                context.l10n.downloadedSection,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -491,7 +498,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               onPressed: () {
                 // Show all local results
               },
-              child: Text('Show all ${tracks.length} local results'),
+              child: Text(context.l10n.showAllLocalResults(tracks.length)),
             ),
           ),
         const Divider(height: 24),
@@ -510,7 +517,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Top result',
+            context.l10n.topResult,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -562,7 +569,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Artist${artist.formattedSubscribers != null ? ' • ${artist.formattedSubscribers}' : ''}',
+                    context.artistSubtitle(artist.formattedSubscribers),
                     style: TextStyle(
                       fontSize: 13,
                       color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -613,7 +620,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Album • ${album.artist}',
+                    context.l10n.albumByArtist(album.artist),
                     style: TextStyle(
                       fontSize: 13,
                       color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -658,7 +665,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Playlist • ${playlist.author ?? 'YouTube Music'}',
+                    context.l10n.playlistByAuthor(
+                      playlist.author ?? context.l10n.youtubeMusicLabel,
+                    ),
                     style: TextStyle(
                       fontSize: 13,
                       color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -704,7 +713,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
-              'Songs',
+              context.l10n.songs,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -757,7 +766,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         ),
       ),
       subtitle: Text(
-        '${track.artist}${track.formattedDuration.isNotEmpty && track.formattedDuration != '0:00' ? ' • ${track.formattedDuration}' : ''}',
+        context.trackSubtitle(track.artist, track.formattedDuration),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
@@ -797,7 +806,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
             child: Text(
-              'Artists',
+              context.l10n.artists,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -841,7 +850,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         ),
       ),
       subtitle: Text(
-        'Artist${artist.formattedSubscribers != null ? ' • ${artist.formattedSubscribers}' : ''}',
+        context.artistSubtitle(artist.formattedSubscribers),
         style: TextStyle(
           fontSize: 12,
           color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -912,7 +921,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
             child: Text(
-              'Albums',
+              context.l10n.albums,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -956,7 +965,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         ),
       ),
       subtitle: Text(
-        '${album.artist}${album.year != null ? ' • ${album.year}' : ''}',
+        context.albumSubtitle(album.artist, album.year),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
@@ -1034,7 +1043,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
             child: Text(
-              'Playlists',
+              context.l10n.playlists,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -1074,7 +1083,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         ),
       ),
       subtitle: Text(
-        '${playlist.author ?? 'Playlist'}${playlist.trackCount != null ? ' • ${playlist.trackCount} songs' : ''}',
+        context.playlistSubtitle(
+          playlist.author ?? context.l10n.playlist,
+          playlist.trackCount,
+        ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(

@@ -1,0 +1,1179 @@
+{
+  "@@locale": "zh_Hant",
+  "appTitle": "Inzx",
+  "updateDownloadedBanner": "更新已下載。重新啟動應用程式即可應用。",
+  "restart": "重新啟動",
+  "dismiss": "解僱",
+  "newVersionAvailableBanner": "新版本 {version} 已在 GitHub 上提供。",
+  "@newVersionAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "下載",
+  "later": "後來",
+  "home": "首頁",
+  "songs": "歌曲",
+  "library": "圖書館",
+  "folders": "資料夾",
+  "settings": "設定",
+  "searchSettingsHint": "搜尋設定...",
+  "noMatchingSettings": "沒有匹配的設置",
+  "appearance": "外觀",
+  "theme": "主題",
+  "themeAuto": "汽車",
+  "themeLight": "光",
+  "themeDark": "黑暗",
+  "dynamicColorsNote": "顏色根據當前曲目的專輯封面動態調整。",
+  "language": "語言",
+  "languageSubtitle": "選擇應用語言",
+  "chooseLanguage": "選擇語言",
+  "searchLanguagesHint": "搜尋語言...",
+  "noMatchingLanguages": "沒有匹配的語言",
+  "useSystemLanguage": "使用系統語言",
+  "languageSystem": "系統預設",
+  "languageEnglish": "英語",
+  "languageTurkish": "土耳其語",
+  "languageRussian": "俄文",
+  "languageHindi": "印地語",
+  "languageTamil": "泰米爾語",
+  "languageKannada": "卡納達語",
+  "languageTelugu": "泰盧固語",
+  "languageSpanish": "西班牙語",
+  "languageFrench": "法語",
+  "languageGerman": "德文",
+  "languageIndonesian": "印尼語",
+  "languageJapanese": "日語",
+  "languageKorean": "韓語",
+  "languageArabic": "阿拉伯語",
+  "languageUkrainian": "烏克蘭語",
+  "languageThai": "泰語",
+  "languagePortugueseBrazil": "葡萄牙語（巴西）",
+  "languageChineseSimplified": "中文（簡體）",
+  "languageChineseTraditional": "中文（繁體）",
+  "contentLocation": "內容位置",
+  "contentLocationSubtitle": "選擇用於推薦和目錄可用性的區域",
+  "chooseContentLocation": "選擇內容位置",
+  "searchLocationsHint": "搜尋地點...",
+  "noMatchingLocations": "沒有匹配的位置",
+  "locationSystem": "系統預設",
+  "locationUnitedStates": "美國",
+  "locationIndia": "印度",
+  "locationTurkey": "土耳其",
+  "locationRussia": "俄羅斯",
+  "quickActions": "快速行動",
+  "audio": "音訊",
+  "audioQuickActionsSubtitle": "串流品質、交叉淡入淡出和播放",
+  "downloads": "下載",
+  "downloadsQuickActionsSubtitle": "下載品質、位置和存儲",
+  "backupRestore": "備份與復原",
+  "backupRestoreQuickActionsSubtitle": "匯出或匯入您的庫",
+  "streamingQuality": "串流品質",
+  "streamingQualitySubtitle": "調整串流媒體的音訊位元率",
+  "crossfadeTransition": "淡入淡出過渡",
+  "crossfadeTransitionSubtitle": "將曲目平滑地相互融合",
+  "streamingCache": "串流緩存",
+  "streamingCacheSubtitle": "預先快取下一個曲目，僅 Wi-Fi 選項",
+  "downloadQuality": "下載品質",
+  "downloadQualitySubtitle": "離線下載的質量",
+  "downloadLocation": "下載位置",
+  "downloadLocationSubtitle": "下載的音樂的儲存位置",
+  "dataUsageInfo": "數據使用資訊",
+  "dataUsageInfoSubtitle": "每首歌曲的預計儲存空間",
+  "createBackup": "建立備份",
+  "createBackupSubtitle": "匯出您的庫和設置",
+  "restoreBackup": "恢復備份",
+  "restoreBackupSubtitle": "導入先前的備份文件",
+  "connectYoutubeMusic": "連結 YouTube 音樂",
+  "connectYoutubeMusicSubtitle": "同步您喜歡的歌曲、播放清單等",
+  "connectYtMusicButton": "連結 YouTube 音樂",
+  "downloadsTitle": "下載",
+  "clearCompleted": "清除完成",
+  "clearFailed": "清除失敗",
+  "noDownloadsYet": "還沒下載",
+  "downloadSongsToListenOffline": "下載歌曲以離線收聽",
+  "downloadingTitle": "正在下載",
+  "downloadedTitle": "已下載 ({count})",
+  "@downloadedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedTitle": "失敗",
+  "songsDownloaded": "下載{count}歌曲",
+  "@songsDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usingStorage": "使用 {storage}",
+  "@usingStorage": {
+    "placeholders": {
+      "storage": {
+        "type": "String"
+      }
+    }
+  },
+  "failedWithError": "失敗：{error}",
+  "@failedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownError": "未知錯誤",
+  "removeDownload": "刪除下載",
+  "downloadSettingsTitle": "下載設定",
+  "downloadLocationSubtitleLong": "下載的音樂檔案的儲存位置",
+  "offlineDownloadTip": "下載的曲目無需網路即可播放，且不使用串流資料。",
+  "estimatedStoragePerSong": "每首歌曲的估計存儲空間",
+  "storageLocation": "存放地點",
+  "loading": "加載中...",
+  "errorLoadingPath": "載入路徑錯誤",
+  "privateStorageDownloadsNote": "下載內容儲存在應用程式私有儲存中，以獲得更好的可靠性並且沒有權限要求。",
+  "qualityAutoChip": "汽車",
+  "qualityLowChip": "低",
+  "qualityMediumChip": "中等",
+  "qualityHighChip": "高",
+  "qualityMaxChip": "最大",
+  "qualityHighest": "最高",
+  "qualityDescriptionAuto": "自動 - 適應網絡",
+  "qualityDescriptionLow": "低 - ~64 kbps（節省儲存空間）",
+  "qualityDescriptionMedium": "中 - ~128 kbps（平衡）",
+  "qualityDescriptionHigh": "高 - ~256 kbps（建議）",
+  "qualityDescriptionMax": "最大值 - 最高可用 (~256 kbps)",
+  "backupRestoreTitle": "備份與復原",
+  "backupIncludesDescription": "備份包括喜歡的歌曲、播放清單、搜尋記錄、最近播放的歌曲和關鍵應用程式設定。",
+  "exportBackup": "匯出備份",
+  "exportBackupSubtitle": "保存備份檔案以共享或存儲",
+  "importBackup": "導入備份",
+  "importBackupSubtitle": "從備份檔案中恢復",
+  "dangerZone": "危險區",
+  "clearAppData": "清除應用程式數據",
+  "clearAppDataSubtitle": "重置應用程式資料/設置，同時保留下載的音訊文件",
+  "backupCreatedSuccessfully": "備份建立成功",
+  "backupFailed": "備份失敗：{error}",
+  "@backupFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoredSuccessfully": "備份復原成功",
+  "restoreFailed": "復原失敗：{error}",
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearAllDataQuestion": "清除所有資料？",
+  "clearAllDataWarning": "這將重置本地應用程式資料和設置，但保留下載的歌曲檔案。此操作無法撤銷。",
+  "cancel": "取消",
+  "clearAll": "全部清除",
+  "appDataClearedPreserved": "應用程式資料已清除（下載的音訊檔案保留）",
+  "failedGeneric": "失敗：{error}",
+  "@failedGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupSubject": "Inzx 音樂備份",
+  "statisticsTitle": "統計數據",
+  "statisticsCleared": "統計資料已清除",
+  "clearStatistics": "清晰的統計數據",
+  "noStatisticsYet": "還沒有統計數據",
+  "startListeningStats": "開始聆聽並查看您的統計數據",
+  "overview": "概述",
+  "totalPlays": "總播放次數",
+  "listenTime": "收聽時間",
+  "mostPlayed": "最常玩的",
+  "playsCount": "{count} 播放",
+  "@playsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutes": "{hours}h {minutes}m",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutesOnly": "{minutes}米",
+  "@durationMinutesOnly": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "retry": "重試",
+  "share": "分享",
+  "playlist": "播放清單",
+  "album": "專輯",
+  "channel": "頻道",
+  "playNext": "播放下一個",
+  "addToQueue": "添加到隊列",
+  "addToPlaylist": "新增到播放列表",
+  "goToAlbum": "前往相簿",
+  "goToArtist": "前往藝術家",
+  "startRadio": "開始廣播",
+  "playAll": "播放全部",
+  "shuffle": "隨機播放",
+  "shuffleAll": "全部隨機播放",
+  "radio": "收音機",
+  "follow": "關注",
+  "following": "正在關注",
+  "connectYtMusicToFollowArtists": "連接 YouTube Music 以關注藝術家。",
+  "couldNotFollowArtist": "無法關注 {artist}。",
+  "@couldNotFollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotUnfollowArtist": "無法取消關注 {artist}。",
+  "@couldNotUnfollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "followingArtist": "關注 {artist}",
+  "@followingArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "unfollowedArtist": "已取消追蹤 {artist}",
+  "@unfollowedArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingArtist": "加載藝術家時出錯",
+  "subscribersCount": "{count} 訂閱者",
+  "@subscribersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSection": "已下載",
+  "showAllDownloaded": "顯示所有已下載的 {count}",
+  "@showAllDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "seeAll": "看全部",
+  "removeFromLikedSongs": "從喜歡的歌曲中刪除",
+  "addToLikedSongs": "加入喜歡的歌曲",
+  "playingTrackNext": "接下來播放“{title}”",
+  "@playingTrackNext": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTrackToQueue": "將“{title}”加入到佇列中",
+  "@addedTrackToQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playNextInJam": "在 Jam 中播放下一個",
+  "playTrackNextInJam": "接下來將在 Jam 播放“{title}”",
+  "@playTrackNextInJam": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addToJamQueue": "添加到果醬隊列",
+  "addedTrackToJamQueue": "將“{title}”新增至 Jam 佇列",
+  "@addedTrackToJamQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloaded": "已下載",
+  "downloadingProgress": "正在下載 {progress}%",
+  "@downloadingProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadStartingTrack": "正在下載“{title}”",
+  "@downloadStartingTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadNotificationsChannelDescription": "下載進度通知",
+  "downloadStartingNotification": "開始下載...",
+  "downloadCompleteNotification": "下載完成",
+  "downloadFileNotCreated": "下載失敗，因為文件未創建",
+  "shareTrackText": "{title} 由 {artist} 提供\n{url}",
+  "@shareTrackText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "createNewPlaylist": "建立新的播放列表",
+  "playlistName": "播放清單名稱",
+  "create": "創建",
+  "couldNotLoadPlaylists": "無法載入播放列表",
+  "createLocalPlaylistInstead": "建立本地播放列表",
+  "noPlaylistsYet": "還沒有播放列表",
+  "createOneToGetStarted": "創建一個以開始使用",
+  "songsCount": "{count} 歌曲",
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createdPlaylistOnYtMusicAndAddedTrack": "在 YT Music 上建立了“{playlist}”並新增了“{track}”",
+  "@createdPlaylistOnYtMusicAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToCreatePlaylist": "建立播放清單失敗",
+  "createdPlaylistLocallyAndAddedTrack": "在本機上建立“{playlist}”並新增“{track}”",
+  "@createdPlaylistLocallyAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddToPlaylist": "無法新增到播放列表",
+  "addedTrackToPlaylist": "將“{track}”加入到“{playlist}”",
+  "@addedTrackToPlaylist": {
+    "placeholders": {
+      "track": {
+        "type": "String"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorWithMessage": "錯誤：{message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "searchingForLyrics": "正在搜尋歌詞...",
+  "failedToLoadLyrics": "歌詞載入失敗",
+  "tryAnotherProvider": "嘗試其他提供者",
+  "noLyricsFound": "沒找到歌詞",
+  "linkLabel": "連結：{url}",
+  "@linkLabel": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "tracksCount": "{count} 曲目",
+  "@tracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFromYoutubeMusic": "從 YouTube 音樂匯入",
+  "importedPlaylistSuffix": "進口",
+  "importedFromYoutubeMusicDescription": "從 YouTube 音樂匯入",
+  "importedPlaylist": "導入“{playlist}”",
+  "@importedPlaylist": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToImportPlaylist": "導入失敗：{error}",
+  "@failedToImportPlaylist": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadPlaylists": "無法載入播放列表",
+  "makeSureLoggedInYoutubeMusic": "確保您已登入 YouTube Music",
+  "noPlaylistsFound": "未找到播放列表",
+  "createPlaylistsInYoutubeMusicFirst": "首先在 YouTube Music 中建立一些播放列表",
+  "loggedInYoutubeMusicSuccess": "已成功登入 YouTube Music！",
+  "signInToYoutubeMusic": "登入 YouTube 音樂",
+  "loggingYouIn": "正在為您登入...",
+  "signInSyncYoutubeMusicDescription": "使用您的 Google 帳戶登入以同步您的 YouTube 音樂庫，包括喜歡的歌曲、播放清單和專輯。",
+  "playbackSpeed": "播放速度",
+  "normal": "正常",
+  "defaultValue": "預設",
+  "failedToLoadContent": "無法載入內容",
+  "loadMore": "加載更多",
+  "audioSettingsTitle": "音訊設定",
+  "nowPlayingLabel": "正在播放",
+  "higherQualityUsesMoreData": "更高的品質使用更多的數據",
+  "adjustsBasedOnNetworkSpeed": "根據網路速度調整",
+  "qualityLowUsesLessData": "~64 kbps - 使用更少的數據",
+  "qualityMediumBalanced": "~128 kbps - 平衡",
+  "qualityHighBestForMost": "~256 kbps - 最適合大多數人",
+  "qualityMaximumAvailable": "最高可用 (~256 kbps)",
+  "recommended": "推薦",
+  "blendTrackEndsIntoNext": "將目前曲目的結尾混合到下一首曲目的開頭",
+  "preCachesNextTracks": "預先快取下一個曲目並在可用時從本地快取播放",
+  "smartStreamCache": "智慧流快取",
+  "usedCacheStorage": "使用：{used} / {limit} MB",
+  "@usedCacheStorage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "calculatingCacheUsage": "正在計算快取使用情況...",
+  "unableToReadCacheUsage": "無法讀取快取使用情況",
+  "preCacheNetwork": "預緩存網絡",
+  "wifiOnly": "僅無線網路",
+  "wifiAndMobileData": "無線網路+行動數據",
+  "preCacheRunsWifiOnly": "預緩存僅在連接到 Wi-Fi 時運行",
+  "preCacheRunsWifiAndMobile": "預先緩存可以在 Wi-Fi 和行動數據上運行",
+  "concurrentPreCacheDownloads": "並發預緩存下載",
+  "higherValuesCacheFaster": "較高的值快取速度更快，但使用更多的網路和電池",
+  "cacheSizeLimit": "快取大小限制",
+  "off": "關閉",
+  "crossfadeDisabled": "禁用交叉淡入淡出",
+  "currentValueLabel": "目前：{value}",
+  "@currentValueLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "audioQuality": "音訊品質",
+  "qualityLowKbps": "低 (64 kbps)",
+  "qualityMediumKbps": "中 (128 kbps)",
+  "qualityHighKbps": "高 (256 kbps)",
+  "qualityMaximumKbps": "最大（~256 kbps）",
+  "all": "全部",
+  "artists": "藝術家",
+  "albums": "專輯",
+  "playlists": "播放清單",
+  "singlesAndEps": "單曲和EP",
+  "appearsOn": "出現於",
+  "fansAlsoLike": "粉絲還喜歡",
+  "searchMusicHint": "搜尋歌曲、專輯、藝術家",
+  "searchForMusic": "搜尋音樂",
+  "noResultsFound": "沒有找到結果",
+  "showAllLocalResults": "顯示所有 {count} 本地結果",
+  "@showAllLocalResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "topResult": "最高結果",
+  "artistLabel": "藝術家",
+  "albumByArtist": "專輯 - {artist}",
+  "@albumByArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistByAuthor": "播放清單 - {author}",
+  "@playlistByAuthor": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "儲存",
+  "upNext": "上一個",
+  "lyricsTab": "歌詞",
+  "relatedTab": "相關",
+  "youMightAlsoLike": "您可能也喜歡",
+  "otherPerformances": "其他演出",
+  "moreFrom": "更多來自",
+  "aboutArtist": "關於藝術家",
+  "jamQueue": "堵塞隊列",
+  "radioQueue": "無線電隊列",
+  "queueLabel": "佇列",
+  "playingFrom": "播放自",
+  "loadingMoreTracks": "正在加載更多曲目...",
+  "scrollForMore": "捲動查看更多",
+  "someone": "有人",
+  "noTracksInQueue": "隊列中沒有曲目",
+  "addSongsToJamQueue": "將歌曲加入即興隊列中",
+  "addedByUser": "由 {name} 加入",
+  "@addedByUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTrackPlaying": "沒有曲目播放",
+  "noRelatedTracksFound": "未找到相關曲目",
+  "queueIsEmpty": "隊列為空",
+  "defaultQueueName": "我的隊列",
+  "saveQueueAsPlaylist": "將隊列另存為播放列表",
+  "savedTracksToPlaylist": "已將 {count} 曲目儲存至“{name}”",
+  "@savedTracksToPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "jams": "果醬",
+  "nowPlayingHeader": "正在播放",
+  "browseMoodsGenresTitle": "情緒與流派",
+  "moodCategoryMoods": "心情",
+  "moodCategoryGenres": "流派",
+  "moodCategoryActivities": "活動",
+  "moodChill": "寒冷",
+  "moodParty": "派對",
+  "moodWorkout": "鍛鍊",
+  "moodFocus": "焦點",
+  "moodSleep": "睡眠",
+  "moodHappy": "快樂",
+  "moodSad": "悲傷",
+  "moodRomance": "浪漫",
+  "moodFeelGood": "感覺良好",
+  "moodEnergize": "充滿活力",
+  "genrePop": "流行音樂",
+  "genreRock": "搖滾",
+  "genreHipHop": "嘻哈音樂",
+  "genreRnb": "節奏藍調",
+  "genreElectronic": "電子",
+  "genreDance": "舞蹈",
+  "genreJazz": "爵士樂",
+  "genreClassical": "古典",
+  "genreCountry": "國家",
+  "genreMetal": "金屬",
+  "genreIndie": "獨立",
+  "genreKPop": "韓國流行音樂",
+  "genreLatin": "拉丁文",
+  "genreBollywood": "寶萊塢",
+  "activityDriving": "駕駛",
+  "activityCooking": "烹飪",
+  "activityGaming": "遊戲",
+  "activityStudying": "學習中",
+  "activityMeditation": "冥想",
+  "play": "玩",
+  "findInPlaylist": "在播放清單中尋找...",
+  "playlistNotFoundMessage": "未找到播放列表\n\n播放清單 ID：{id}\n\n該播放清單可能是私有的或不可用的。",
+  "@playlistNotFoundMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineSnapshotDownloaded": "離線快照 - 下載 {downloaded}/{total}",
+  "@offlineSnapshotDownloaded": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noMatchingTracks": "沒有匹配的曲目",
+  "noTracksFound": "未找到曲目",
+  "downloadingTracksFromPlaylist": "從 {playlist} 下載 {count} 曲目",
+  "@downloadingTracksFromPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTracksToQueueCount": "將 {count} 曲目加入到佇列中",
+  "@addedTracksToQueueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadPlaylist": "下載播放列表",
+  "signInWithGoogle": "使用 Google 登入",
+  "signInToUseJams": "登入以使用 Jams",
+  "listenTogetherRealtime": "與朋友一起即時聆聽",
+  "signInGoogleToStartOrJoinJam": "使用 Google 登入即可開始或加入與好友一起進行的 Jam 會話",
+  "listenTogether": "一起聆聽",
+  "listenWithFriendsInSync": "與朋友同步聆聽",
+  "sameSongSameMoment": "同一首歌，同一時刻",
+  "startJam": "開始即興表演",
+  "createSessionAndInviteFriends": "建立會話並邀請好友",
+  "joinJam": "參加果醬活動",
+  "enterSixDigitCode": "輸入6位數字代碼",
+  "join": "加入",
+  "shareThisCode": "分享此程式碼",
+  "codeCopied": "程式碼已複製！",
+  "youAreHost": "你是主持人",
+  "hostedBy": "主持人：{name}",
+  "@hostedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listeningTogetherCount": "一起聆聽 ({count})",
+  "@listeningTogetherCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "endSession": "結束會議",
+  "leaveSession": "離開會話",
+  "connected": "已連接",
+  "reconnecting": "重新連接",
+  "retryInSeconds": "在 {seconds}s 後重試",
+  "@retryInSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectingStatus": "重新連接 · {suffix}",
+  "@reconnectingStatus": {
+    "placeholders": {
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "reconnectingAttemptStatus": "重新連接 ({attempt}) · {suffix}",
+  "@reconnectingAttemptStatus": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "disconnected": "已斷開連接",
+  "playing": "演奏",
+  "addSongsToPlayTogether": "新增歌曲以一起播放",
+  "sessionCreatedCode": "會話已建立！代碼：{code}",
+  "@sessionCreatedCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "noJamFoundForCode": "未找到此代碼的果醬。",
+  "hostRole": "主持人",
+  "canControl": "可以控制",
+  "listeningStatus": "聽力",
+  "transferHostQuestion": "轉接主機？",
+  "transferHostMessage": "讓 {name} 成為新主機？您將失去主機控制。",
+  "@transferHostMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transfer": "轉乘",
+  "removeControl": "移除控制",
+  "allowControl": "允許控制",
+  "makeHost": "做主機",
+  "live": "直播",
+  "playbackControlsJam": "您的播放控制 Jam",
+  "starting": "開始...",
+  "or": "或",
+  "joinFriendsJam": "加入朋友的 Jam",
+  "startJamDescription": "發起 Jam 與朋友分享音樂。\n每個人都同步聽到同一首歌。",
+  "folderSettings": "資料夾設定",
+  "noFoldersAddedYet": "尚未新增資料夾",
+  "addFolder": "新增資料夾",
+  "localMusic": "本地音樂",
+  "scanLocalMusicDescription": "掃描您的裝置以查找本機音樂檔案並離線播放",
+  "scanForMusic": "掃描音樂",
+  "addFolderLowercase": "新增資料夾",
+  "supportedFormats": "支援的格式：MP3、FLAC、WAV、M4A、OGG",
+  "songsFromFoldersCount": "{folders} 資料夾中的 {songs} 首歌曲",
+  "@songsFromFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "add": "添加",
+  "permissionRequired": "需要許可",
+  "storagePermissionRequiredMessage": "存取您的音樂檔案需要儲存權限。請在“設定”中啟用它。",
+  "couldNotOpenSettingsPermission": "無法開啟設定。請手動啟用儲存權限。",
+  "openSettings": "開啟設定",
+  "folderAdded": "已新增資料夾",
+  "addedFolderScanNow": "新增了“{folder}”。您想現在掃描其中的音樂嗎？",
+  "@addedFolderScanNow": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanNow": "立即掃描",
+  "foundSongsCount": "找出 {count} 首歌曲",
+  "@foundSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addFolderFirstThenScan": "先新增資料夾，然後掃描音訊檔案。",
+  "scanFoldersCountDescription": "這將掃描 {count} 資料夾中的音訊檔案。",
+  "@scanFoldersCountDescription": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "foldersToScan": "要掃描的資料夾：",
+  "andMoreFolders": "....以及 {count} 更多",
+  "@andMoreFolders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "startScan": "開始掃描",
+  "foundSongsInFoldersCount": "在 {folders} 資料夾中找到 {songs} 首歌曲",
+  "@foundSongsInFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "scanningForMusic": "正在掃描音樂...",
+  "filesProgress": "{scanned} / {total} 文件",
+  "@filesProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "signOut": "退出",
+  "signInGoogleProfilePictureJams": "使用 Google 登入以取得您的個人資料照片並啟用 Jams",
+  "sync": "同步",
+  "lastSynced": "上次同步：{time}",
+  "@lastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedItems": "已同步 {count} 項目",
+  "@syncedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncing": "正在同步...",
+  "syncNow": "立即同步",
+  "cachedItems": "{count} 快取項目",
+  "@cachedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streams": "流",
+  "colors": "顏色",
+  "searches": "搜尋次數",
+  "expiredCount": "{count} 已過期",
+  "@expiredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cacheCleanupComplete": "快取清理完成",
+  "cleanUp": "清理",
+  "clearCache": "清除快取",
+  "clearCachedMusicDataConfirm": "這將清除所有快取的音樂資料。繼續？",
+  "clear": "清除",
+  "cacheCleared": "快取已清除",
+  "analytics": "分析",
+  "hits": "點擊次數",
+  "misses": "未命中數",
+  "network": "網路",
+  "analyticsReset": "分析重置",
+  "resetStats": "重置統計數據",
+  "cacheHitRate": "快取命中率",
+  "liked": "喜歡",
+  "appInfo": "應用程式訊息",
+  "releaseBuild": "發布版本",
+  "updater": "更新程式",
+  "available": "可用",
+  "unavailable": "不可用",
+  "loadingCompact": "正在加載...",
+  "errorCompact": "錯誤",
+  "none": "無",
+  "currentPatch": "目前補丁",
+  "nextPatch": "下一個補丁",
+  "disconnectYoutubeMusic": "斷開 YouTube 音樂連接",
+  "disconnectYoutubeMusicQuestion": "斷開 YouTube 音樂連線？",
+  "disconnectYoutubeMusicWarning": "這將從應用程式中刪除您的 YouTube Music 帳戶。您的圖書館資料將被清除。",
+  "disconnect": "斷開連接",
+  "syncFailed": "同步失敗：{error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "justNow": "剛才",
+  "minutesAgo": "{count}分鐘前",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count} 小時前",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count} 天前",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noSongsInTitle": "{title} 沒有歌曲",
+  "@noSongsInTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "createPlaylistDescription": "建立播放清單來整理您的音樂",
+  "savedAlbumsFromYoutubeMusic": "從 YouTube Music 保存的專輯",
+  "noSavedAlbumsFromYoutubeMusic": "沒有保存 YouTube Music 的專輯",
+  "errorLoadingAlbums": "載入相簿時出錯",
+  "recentlyPlayed": "最近玩過",
+  "noAlbumsYet": "還沒有專輯",
+  "playSomeMusicToSeeAlbumsHere": "播放一些音樂即可在此處查看專輯",
+  "subscribedArtists": "訂閱藝術家",
+  "noSubscribedArtists": "沒有訂閱的藝術家",
+  "errorLoadingArtists": "加載藝術家時出錯",
+  "recentlyPlayedArtists": "最近演奏的藝術家",
+  "noArtistsYet": "還沒有藝術家",
+  "playSomeMusicToSeeArtistsHere": "在這裡播放一些音樂來欣賞藝術家的作品",
+  "downloading": "正在下載",
+  "downloadedPlaylists": "下載的播放列表",
+  "errorLoadingDownloads": "載入下載時出錯",
+  "deleteDownload": "刪除下載",
+  "deleteDownloadQuestion": "刪除下載？",
+  "deleteDownloadWarning": "這將從您的裝置中刪除“{title}”。您可以稍後再次下載。",
+  "@deleteDownloadWarning": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedTrack": "刪除了“{title}”",
+  "@deletedTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSongsWillAppearHere": "下載的歌曲將出現在此處",
+  "createPlaylist": "建立播放清單",
+  "autoPlaylists": "自動播放清單",
+  "likedSongsLabel": "喜歡的歌曲",
+  "downloadedFraction": "{downloaded}/{total} 下載",
+  "@downloadedFraction": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "more": "更多",
+  "video": "影片",
+  "forgottenFavorites": "被遺忘的最愛",
+  "mixedForYou": "為你混合",
+  "myMixOne": "我的組合 1",
+  "discoverMix": "探索混合",
+  "replayMix": "重播混音",
+  "newRelease": "新發布",
+  "chillMix": "冷卻混合",
+  "basedOnYourListening": "根據您的聽力",
+  "newMusicForYou": "為您準備的新音樂",
+  "yourFavorites": "你的最愛",
+  "freshTracks": "新鮮曲目",
+  "relaxingVibes": "輕鬆的氛圍",
+  "musicToGetYouStarted": "讓您入門的音樂",
+  "welcomeUser": "歡迎{name}",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeFallbackName": "那裡",
+  "youtubeMusicLabel": "YouTube 音樂",
+  "local": "本地",
+  "recentlyAdded": "最近新增",
+  "name": "名稱",
+  "duration": "持續時間",
+  "searchSongsHint": "搜尋歌曲...",
+  "noLikedSongs": "沒有喜歡的歌曲",
+  "likeSomeSongsToSeeThemHere": "喜歡一些歌曲可以在這裡看到",
+  "noLocalSongs": "沒有本地歌曲",
+  "scanFoldersToFindLocalMusic": "掃描資料夾以查找本機音樂",
+  "noResults": "沒有結果",
+  "tryDifferentKeywords": "嘗試不同的關鍵字",
+  "noSongsYet": "還沒有歌曲",
+  "playSomeMusicToBuildYourLibrary": "播放一些音樂來建立您的音樂庫",
+  "albumNotFound": "找不到相冊",
+  "downloadAlbum": "下載專輯",
+  "downloadingTracksFromAlbum": "從 {album} 下載 {count} 曲目",
+  "@downloadingTracksFromAlbum": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "shareAlbumText": "{title} 由 {artist} 提供\n{url}",
+  "@shareAlbumText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestions": "建議",
+  "recentSearches": "最近的搜尋",
+  "startTypingToSearch": "開始輸入搜尋...",
+  "youtubeMusicPlaylists": "YouTube 音樂播放列表",
+  "errorLoadingPlaylists": "載入播放清單時出錯",
+  "yourPlaylists": "您的播放清單",
+  "noYoutubeMusicPlaylistsFound": "找不到 YouTube Music 播放列表",
+  "songCountLabel": "{count, plural, one {# 歌曲} other {# 歌曲}}",
+  "@songCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unknownAlbum": "未知專輯",
+  "jamCodeExample": "ABC123",
+  "jamCodeHint": "程式碼",
+  "yourProfile": "您的個人資料",
+  "googleUser": "Google用戶",
+  "jamsAndProfile": "果醬和輪廓",
+  "yes": "是的",
+  "no": "不",
+  "foundInSettings": "在設定中找到",
+  "sharePlaylistText": "{title}\n{url}",
+  "@sharePlaylistText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "shareArtistText": "{artist}\n{url}",
+  "@shareArtistText": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "megabytesValue": "{value} MB",
+  "@megabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "gigabytesValue": "{value} GB",
+  "@gigabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxMegabytesValue": "~{value} MB",
+  "@approxMegabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxKbpsValue": "~{value} kbps",
+  "@approxKbpsValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "secondsShort": "{value}s",
+  "@secondsShort": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "speedMultiplier": "{value}x",
+  "@speedMultiplier": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

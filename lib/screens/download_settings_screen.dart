@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import '../../core/design_system/design_system.dart';
 import '../providers/providers.dart';
 import '../services/playback/playback_data.dart';
@@ -12,6 +13,7 @@ class DownloadSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     final albumColors = ref.watch(albumColorsProvider);
@@ -28,7 +30,7 @@ class DownloadSettingsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Download Settings'),
+        title: Text(l10n.downloadSettingsTitle),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -37,7 +39,7 @@ class DownloadSettingsScreen extends ConsumerWidget {
         children: [
           // Download quality section
           Text(
-            'Download Quality',
+            l10n.downloadQuality,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -46,7 +48,7 @@ class DownloadSettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Quality for offline downloads',
+            l10n.downloadQualitySubtitle,
             style: TextStyle(
               fontSize: 14,
               color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -61,7 +63,7 @@ class DownloadSettingsScreen extends ConsumerWidget {
 
           // Download Location section
           Text(
-            'Download Location',
+            l10n.downloadLocation,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -70,7 +72,7 @@ class DownloadSettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Where downloaded music files are stored',
+            l10n.downloadLocationSubtitleLong,
             style: TextStyle(
               fontSize: 14,
               color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -83,7 +85,7 @@ class DownloadSettingsScreen extends ConsumerWidget {
           const SizedBox(height: 32),
 
           // Data usage info
-          _buildDataUsageInfo(isDark, accentColor),
+          _buildDataUsageInfo(context, isDark, accentColor),
 
           const SizedBox(height: 32),
 
@@ -100,7 +102,7 @@ class DownloadSettingsScreen extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Downloaded tracks play without internet and don\'t use streaming data.',
+                    l10n.offlineDownloadTip,
                     style: TextStyle(
                       fontSize: 13,
                       color: isDark ? Colors.white70 : InzxColors.textSecondary,
@@ -115,7 +117,12 @@ class DownloadSettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildDataUsageInfo(bool isDark, Color accentColor) {
+  Widget _buildDataUsageInfo(
+    BuildContext context,
+    bool isDark,
+    Color accentColor,
+  ) {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -139,7 +146,7 @@ class DownloadSettingsScreen extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'Estimated Storage per Song',
+                l10n.estimatedStoragePerSong,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   color: isDark ? Colors.white : InzxColors.textPrimary,
@@ -148,10 +155,26 @@ class DownloadSettingsScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 12),
-          _buildDataRow('Low', '~3 MB', isDark),
-          _buildDataRow('Medium', '~6 MB', isDark),
-          _buildDataRow('High', '~12 MB', isDark),
-          _buildDataRow('Max', '~25+ MB', isDark),
+          _buildDataRow(
+            l10n.qualityLowChip,
+            l10n.approxMegabytesValue('3'),
+            isDark,
+          ),
+          _buildDataRow(
+            l10n.qualityMediumChip,
+            l10n.approxMegabytesValue('6'),
+            isDark,
+          ),
+          _buildDataRow(
+            l10n.qualityHighChip,
+            l10n.approxMegabytesValue('12'),
+            isDark,
+          ),
+          _buildDataRow(
+            l10n.qualityMaxChip,
+            l10n.approxMegabytesValue('25+'),
+            isDark,
+          ),
         ],
       ),
     );
@@ -194,6 +217,7 @@ class _DownloadQualitySetting extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final downloadQuality = ref.watch(downloadQualityProvider);
+    final l10n = context.l10n;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -218,7 +242,7 @@ class _DownloadQualitySetting extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Download Quality',
+                      l10n.downloadQuality,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color: isDark ? Colors.white : InzxColors.textPrimary,
@@ -226,7 +250,7 @@ class _DownloadQualitySetting extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _getQualityDescription(downloadQuality),
+                      _getQualityDescription(context, downloadQuality),
                       style: TextStyle(
                         fontSize: 12,
                         color: isDark
@@ -249,32 +273,32 @@ class _DownloadQualitySetting extends ConsumerWidget {
                 context,
                 ref,
                 AudioQuality.low,
-                'Low',
-                '~64 kbps',
+                l10n.qualityLowChip,
+                l10n.approxKbpsValue('64'),
                 downloadQuality,
               ),
               _buildQualityChip(
                 context,
                 ref,
                 AudioQuality.medium,
-                'Medium',
-                '~128 kbps',
+                l10n.qualityMediumChip,
+                l10n.approxKbpsValue('128'),
                 downloadQuality,
               ),
               _buildQualityChip(
                 context,
                 ref,
                 AudioQuality.high,
-                'High',
-                '~256 kbps',
+                l10n.qualityHighChip,
+                l10n.approxKbpsValue('256'),
                 downloadQuality,
               ),
               _buildQualityChip(
                 context,
                 ref,
                 AudioQuality.max,
-                'Max',
-                'Highest',
+                l10n.qualityMaxChip,
+                l10n.qualityHighest,
                 downloadQuality,
               ),
             ],
@@ -284,18 +308,19 @@ class _DownloadQualitySetting extends ConsumerWidget {
     );
   }
 
-  String _getQualityDescription(AudioQuality quality) {
+  String _getQualityDescription(BuildContext context, AudioQuality quality) {
+    final l10n = context.l10n;
     switch (quality) {
       case AudioQuality.auto:
-        return 'Auto - Adapts to network';
+        return l10n.qualityDescriptionAuto;
       case AudioQuality.low:
-        return 'Low - ~64 kbps (saves storage)';
+        return l10n.qualityDescriptionLow;
       case AudioQuality.medium:
-        return 'Medium - ~128 kbps (balanced)';
+        return l10n.qualityDescriptionMedium;
       case AudioQuality.high:
-        return 'High - ~256 kbps (recommended)';
+        return l10n.qualityDescriptionHigh;
       case AudioQuality.max:
-        return 'Maximum - Highest available (~256 kbps)';
+        return l10n.qualityDescriptionMax;
     }
   }
 
@@ -360,6 +385,7 @@ class _DownloadPathSetting extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final downloadPathAsync = ref.watch(downloadPathProvider);
+    final l10n = context.l10n;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -384,7 +410,7 @@ class _DownloadPathSetting extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Storage Location',
+                      l10n.storageLocation,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color: isDark ? Colors.white : InzxColors.textPrimary,
@@ -404,7 +430,7 @@ class _DownloadPathSetting extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       loading: () => Text(
-                        'Loading...',
+                        l10n.loading,
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark
@@ -413,7 +439,7 @@ class _DownloadPathSetting extends ConsumerWidget {
                         ),
                       ),
                       error: (error, stackTrace) => Text(
-                        'Error loading path',
+                        l10n.errorLoadingPath,
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.red.shade300,
@@ -427,7 +453,7 @@ class _DownloadPathSetting extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Downloads are stored in app-private storage for better reliability and no permission requirements.',
+            l10n.privateStorageDownloadsNote,
             style: TextStyle(
               fontSize: 11,
               color: isDark ? Colors.white38 : InzxColors.textSecondary,

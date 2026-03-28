@@ -1,0 +1,1179 @@
+{
+  "@@locale": "uk",
+  "appTitle": "Inzx",
+  "updateDownloadedBanner": "Оновлення завантажено. Перезапустіть програму, щоб застосувати.",
+  "restart": "Перезапустіть",
+  "dismiss": "Відхилити",
+  "newVersionAvailableBanner": "Нова версія {version} доступна на GitHub.",
+  "@newVersionAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "Завантажити",
+  "later": "Пізніше",
+  "home": "додому",
+  "songs": "Пісні",
+  "library": "Бібліотека",
+  "folders": "Папки",
+  "settings": "Налаштування",
+  "searchSettingsHint": "Налаштування пошуку...",
+  "noMatchingSettings": "Немає відповідних налаштувань",
+  "appearance": "Зовнішній вигляд",
+  "theme": "Тема",
+  "themeAuto": "Авто",
+  "themeLight": "світло",
+  "themeDark": "Темний",
+  "dynamicColorsNote": "Кольори динамічно адаптуються до обкладинки альбому поточної композиції.",
+  "language": "Мова",
+  "languageSubtitle": "Виберіть мову програми",
+  "chooseLanguage": "Виберіть мову",
+  "searchLanguagesHint": "Пошук мов...",
+  "noMatchingLanguages": "Немає відповідних мов",
+  "useSystemLanguage": "Використовуйте системну мову",
+  "languageSystem": "Система за умовчанням",
+  "languageEnglish": "англійська",
+  "languageTurkish": "турецька",
+  "languageRussian": "російська",
+  "languageHindi": "Хінді",
+  "languageTamil": "тамільська",
+  "languageKannada": "каннада",
+  "languageTelugu": "Телугу",
+  "languageSpanish": "Іспанська",
+  "languageFrench": "французька",
+  "languageGerman": "Німецький",
+  "languageIndonesian": "індонезійська",
+  "languageJapanese": "Японський",
+  "languageKorean": "корейська",
+  "languageArabic": "арабська",
+  "languageUkrainian": "українська",
+  "languageThai": "тайська",
+  "languagePortugueseBrazil": "португальська (Бразилія)",
+  "languageChineseSimplified": "Китайська (спрощена)",
+  "languageChineseTraditional": "Китайська (традиційна)",
+  "contentLocation": "Розташування вмісту",
+  "contentLocationSubtitle": "Виберіть регіон, який використовується для рекомендацій і наявності каталогу",
+  "chooseContentLocation": "Виберіть розташування вмісту",
+  "searchLocationsHint": "Пошук місць...",
+  "noMatchingLocations": "Немає відповідних місць",
+  "locationSystem": "Система за умовчанням",
+  "locationUnitedStates": "США",
+  "locationIndia": "Індія",
+  "locationTurkey": "Туреччина",
+  "locationRussia": "Росія",
+  "quickActions": "Швидкі дії",
+  "audio": "Аудіо",
+  "audioQuickActionsSubtitle": "Якість потокового передавання, кросфейд і відтворення",
+  "downloads": "Завантаження",
+  "downloadsQuickActionsSubtitle": "Якість завантаження, розташування та пам’ять",
+  "backupRestore": "Резервне копіювання та відновлення",
+  "backupRestoreQuickActionsSubtitle": "Експортуйте або імпортуйте свою бібліотеку",
+  "streamingQuality": "Якість потокового передавання",
+  "streamingQualitySubtitle": "Налаштуйте бітрейт аудіо для потокового передавання",
+  "crossfadeTransition": "Кроссфейдний перехід",
+  "crossfadeTransitionSubtitle": "Плавне змішування треків одна з одною",
+  "streamingCache": "Потоковий кеш",
+  "streamingCacheSubtitle": "Попереднє кешування наступних треків, опція лише Wi-Fi",
+  "downloadQuality": "Якість завантаження",
+  "downloadQualitySubtitle": "Якість для офлайн-завантажень",
+  "downloadLocation": "Місце завантаження",
+  "downloadLocationSubtitle": "Де зберігається завантажена музика",
+  "dataUsageInfo": "Інформація про використання даних",
+  "dataUsageInfoSubtitle": "Приблизна кількість пам’яті на пісню",
+  "createBackup": "Створити резервну копію",
+  "createBackupSubtitle": "Експортуйте свою бібліотеку та налаштування",
+  "restoreBackup": "Відновити резервну копію",
+  "restoreBackupSubtitle": "Імпорт попереднього файлу резервної копії",
+  "connectYoutubeMusic": "Підключіть YouTube Music",
+  "connectYoutubeMusicSubtitle": "Синхронізуйте вподобані пісні, списки відтворення тощо",
+  "connectYtMusicButton": "Підключіть YT Music",
+  "downloadsTitle": "Завантаження",
+  "clearCompleted": "Очищення завершено",
+  "clearFailed": "Не вдалося очистити",
+  "noDownloadsYet": "Завантажень ще немає",
+  "downloadSongsToListenOffline": "Завантажуйте пісні для прослуховування офлайн",
+  "downloadingTitle": "Завантаження",
+  "downloadedTitle": "Завантажено ({count})",
+  "@downloadedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedTitle": "Не вдалося",
+  "songsDownloaded": "Завантажено пісень: {count}",
+  "@songsDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usingStorage": "Використання {storage}",
+  "@usingStorage": {
+    "placeholders": {
+      "storage": {
+        "type": "String"
+      }
+    }
+  },
+  "failedWithError": "Помилка: {error}",
+  "@failedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownError": "Невідома помилка",
+  "removeDownload": "Видалити завантаження",
+  "downloadSettingsTitle": "Налаштування завантаження",
+  "downloadLocationSubtitleLong": "Де зберігаються завантажені музичні файли",
+  "offlineDownloadTip": "Завантажені треки відтворюються без Інтернету та не використовують потокові дані.",
+  "estimatedStoragePerSong": "Приблизний обсяг пам’яті на пісню",
+  "storageLocation": "Місце зберігання",
+  "loading": "Завантаження...",
+  "errorLoadingPath": "Помилка завантаження шляху",
+  "privateStorageDownloadsNote": "Завантаження зберігаються в приватному сховищі додатка для кращої надійності та відсутності вимог до дозволу.",
+  "qualityAutoChip": "Авто",
+  "qualityLowChip": "Низький",
+  "qualityMediumChip": "Середній",
+  "qualityHighChip": "Високий",
+  "qualityMaxChip": "Макс",
+  "qualityHighest": "Найвищий",
+  "qualityDescriptionAuto": "Авто - адаптується до мережі",
+  "qualityDescriptionLow": "Низький - ~64 Кбіт/с (економить пам'ять)",
+  "qualityDescriptionMedium": "Середній - ~128 кбіт/с (збалансований)",
+  "qualityDescriptionHigh": "Високий - ~256 Кбіт/с (рекомендовано)",
+  "qualityDescriptionMax": "Максимум - найвищий доступний (~256 кбіт/с)",
+  "backupRestoreTitle": "Резервне копіювання та відновлення",
+  "backupIncludesDescription": "Резервна копія містить пісні, які сподобалися, списки відтворення, історію пошуку, нещодавно відтворені та ключові налаштування програми.",
+  "exportBackup": "Експорт резервної копії",
+  "exportBackupSubtitle": "Збережіть файл резервної копії, щоб поділитися ним або зберегти",
+  "importBackup": "Імпорт резервної копії",
+  "importBackupSubtitle": "Відновлення з файлу резервної копії",
+  "dangerZone": "Небезпечна зона",
+  "clearAppData": "Очистити дані програми",
+  "clearAppDataSubtitle": "Скинути дані/налаштування програми, зберігаючи завантажені аудіофайли",
+  "backupCreatedSuccessfully": "Резервну копію створено успішно",
+  "backupFailed": "Помилка резервного копіювання: {error}",
+  "@backupFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoredSuccessfully": "Резервну копію успішно відновлено",
+  "restoreFailed": "Не вдалося відновити: {error}",
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearAllDataQuestion": "Очистити всі дані?",
+  "clearAllDataWarning": "Це скидає дані та налаштування локальної програми, але зберігає завантажені файли пісень. Це неможливо скасувати.",
+  "cancel": "Скасувати",
+  "clearAll": "Очистити все",
+  "appDataClearedPreserved": "Дані програми очищено (завантажені аудіофайли збережено)",
+  "failedGeneric": "Помилка: {error}",
+  "@failedGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupSubject": "Резервне копіювання музики Inzx",
+  "statisticsTitle": "Статистика",
+  "statisticsCleared": "Статистика очищена",
+  "clearStatistics": "Очистити статистику",
+  "noStatisticsYet": "Статистики ще немає",
+  "startListeningStats": "Почніть слухати, щоб побачити свою статистику",
+  "overview": "Огляд",
+  "totalPlays": "Загальна кількість відтворень",
+  "listenTime": "Час слухання",
+  "mostPlayed": "Найчастіше грали",
+  "playsCount": "{count} грає",
+  "@playsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutes": "{hours}год {minutes}хв",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutesOnly": "{minutes}м",
+  "@durationMinutesOnly": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "retry": "Повторіть спробу",
+  "share": "Поділіться",
+  "playlist": "Список відтворення",
+  "album": "Альбом",
+  "channel": "Канал",
+  "playNext": "Грати далі",
+  "addToQueue": "Додати в чергу",
+  "addToPlaylist": "Додати до списку відтворення",
+  "goToAlbum": "Перейдіть до альбому",
+  "goToArtist": "Перейдіть до Виконавця",
+  "startRadio": "Запустіть радіо",
+  "playAll": "Грайте всі",
+  "shuffle": "Перетасувати",
+  "shuffleAll": "Перемішайте все",
+  "radio": "радіо",
+  "follow": "Слідуйте",
+  "following": "Слідую",
+  "connectYtMusicToFollowArtists": "Підключіть YouTube Music, щоб стежити за виконавцями.",
+  "couldNotFollowArtist": "Не вдалося підписатися на {artist}.",
+  "@couldNotFollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotUnfollowArtist": "Не вдалося скасувати підписку на {artist}.",
+  "@couldNotUnfollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "followingArtist": "Стежить за {artist}",
+  "@followingArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "unfollowedArtist": "Скасував підписку на {artist}",
+  "@unfollowedArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingArtist": "Помилка завантаження виконавця",
+  "subscribersCount": "{count} підписників",
+  "@subscribersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSection": "Завантажено",
+  "showAllDownloaded": "Показати всі завантажені {count}",
+  "@showAllDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "seeAll": "Переглянути всі",
+  "removeFromLikedSongs": "Видалити з пісень, які сподобалися",
+  "addToLikedSongs": "Додати до пісень, які сподобалися",
+  "playingTrackNext": "Далі грає \"{title}\".",
+  "@playingTrackNext": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTrackToQueue": "До черги додано \"{title}\".",
+  "@addedTrackToQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playNextInJam": "Грати далі в Jam",
+  "playTrackNextInJam": "\"{title}\" буде наступним у Jam",
+  "@playTrackNextInJam": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addToJamQueue": "Додати до черги Jam",
+  "addedTrackToJamQueue": "Додано \"{title}\" до черги Jam",
+  "@addedTrackToJamQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloaded": "Завантажено",
+  "downloadingProgress": "Завантаження {progress}%",
+  "@downloadingProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadStartingTrack": "Завантаження \"{title}\"",
+  "@downloadStartingTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadNotificationsChannelDescription": "Сповіщення про хід завантаження",
+  "downloadStartingNotification": "Початок завантаження...",
+  "downloadCompleteNotification": "Завантаження завершено",
+  "downloadFileNotCreated": "Не вдалося завантажити, оскільки файл не було створено",
+  "shareTrackText": "{title} від {artist}\n{url}",
+  "@shareTrackText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "createNewPlaylist": "Створити новий список відтворення",
+  "playlistName": "Назва списку відтворення",
+  "create": "Створити",
+  "couldNotLoadPlaylists": "Не вдалося завантажити списки відтворення",
+  "createLocalPlaylistInstead": "Натомість створіть локальний список відтворення",
+  "noPlaylistsYet": "Списків відтворення ще немає",
+  "createOneToGetStarted": "Створіть його, щоб почати",
+  "songsCount": "{count} пісень",
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createdPlaylistOnYtMusicAndAddedTrack": "Створено \"{playlist}\" на YT Music і додано \"{track}\"",
+  "@createdPlaylistOnYtMusicAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToCreatePlaylist": "Не вдалося створити список відтворення",
+  "createdPlaylistLocallyAndAddedTrack": "Створено \"{playlist}\" локально та додано \"{track}\"",
+  "@createdPlaylistLocallyAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddToPlaylist": "Не вдалося додати до списку відтворення",
+  "addedTrackToPlaylist": "Додано \"{track}\" до \"{playlist}\"",
+  "@addedTrackToPlaylist": {
+    "placeholders": {
+      "track": {
+        "type": "String"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorWithMessage": "Помилка: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "searchingForLyrics": "Пошук тексту...",
+  "failedToLoadLyrics": "Не вдалося завантажити текст пісні",
+  "tryAnotherProvider": "Спробуйте іншого провайдера",
+  "noLyricsFound": "Тексти пісень не знайдено",
+  "linkLabel": "Посилання: {url}",
+  "@linkLabel": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "tracksCount": "{count} треків",
+  "@tracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFromYoutubeMusic": "Імпортувати з YouTube Music",
+  "importedPlaylistSuffix": "Імпортні",
+  "importedFromYoutubeMusicDescription": "Імпортовано з YouTube Music",
+  "importedPlaylist": "Імпортовано \"{playlist}\"",
+  "@importedPlaylist": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToImportPlaylist": "Не вдалося імпортувати: {error}",
+  "@failedToImportPlaylist": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadPlaylists": "Не вдалося завантажити списки відтворення",
+  "makeSureLoggedInYoutubeMusic": "Переконайтеся, що ви ввійшли в YouTube Music",
+  "noPlaylistsFound": "Списків відтворення не знайдено",
+  "createPlaylistsInYoutubeMusicFirst": "Спершу створіть списки відтворення в YouTube Music",
+  "loggedInYoutubeMusicSuccess": "Успішно ввійшли в YouTube Music!",
+  "signInToYoutubeMusic": "Увійдіть у YouTube Music",
+  "loggingYouIn": "Ви входите...",
+  "signInSyncYoutubeMusicDescription": "Увійдіть у свій обліковий запис Google, щоб синхронізувати свою бібліотеку YouTube Music, зокрема пісні, списки відтворення й альбоми, які сподобалися.",
+  "playbackSpeed": "Швидкість відтворення",
+  "normal": "нормальний",
+  "defaultValue": "За замовчуванням",
+  "failedToLoadContent": "Не вдалося завантажити вміст",
+  "loadMore": "Завантажте більше",
+  "audioSettingsTitle": "Параметри звуку",
+  "nowPlayingLabel": "Зараз грає",
+  "higherQualityUsesMoreData": "Вища якість використовує більше даних",
+  "adjustsBasedOnNetworkSpeed": "Налаштовується залежно від швидкості мережі",
+  "qualityLowUsesLessData": "~64 кбіт/с – використовується менше даних",
+  "qualityMediumBalanced": "~128 кбіт/с - збалансований",
+  "qualityHighBestForMost": "~256 кбіт/с – найкраще для більшості",
+  "qualityMaximumAvailable": "Найвищий доступний (~256 Кбіт/с)",
+  "recommended": "Рекомендовано",
+  "blendTrackEndsIntoNext": "Змішайте кінець поточного треку з початком наступного",
+  "preCachesNextTracks": "Попередньо кешує наступні композиції та відтворює з локального кешу, якщо доступно",
+  "smartStreamCache": "Кеш Smart Stream",
+  "usedCacheStorage": "Використано: {used} / {limit} МБ",
+  "@usedCacheStorage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "calculatingCacheUsage": "Розрахунок використання кешу...",
+  "unableToReadCacheUsage": "Неможливо прочитати використання кешу",
+  "preCacheNetwork": "Мережа попереднього кешу",
+  "wifiOnly": "Тільки Wi-Fi",
+  "wifiAndMobileData": "Wi-Fi + мобільні дані",
+  "preCacheRunsWifiOnly": "Попереднє кешування працює лише за підключення до Wi-Fi",
+  "preCacheRunsWifiAndMobile": "Попереднє кешування може працювати як через Wi-Fi, так і через мобільні дані",
+  "concurrentPreCacheDownloads": "Одночасне завантаження попереднього кешу",
+  "higherValuesCacheFaster": "Вищі значення кешуються швидше, але споживають більше мережі та акумулятора",
+  "cacheSizeLimit": "Обмеження розміру кешу",
+  "off": "Вимкнено",
+  "crossfadeDisabled": "Кроссфейд вимкнено",
+  "currentValueLabel": "Поточний: {value}",
+  "@currentValueLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "audioQuality": "Якість звуку",
+  "qualityLowKbps": "Низький (64 кбіт/с)",
+  "qualityMediumKbps": "Середній (128 кбіт/с)",
+  "qualityHighKbps": "Високий (256 Кбіт/с)",
+  "qualityMaximumKbps": "Максимум (~256 кбіт/с)",
+  "all": "всі",
+  "artists": "Художники",
+  "albums": "Альбоми",
+  "playlists": "Списки відтворення",
+  "singlesAndEps": "Сингли та EP",
+  "appearsOn": "З'являється на",
+  "fansAlsoLike": "Шанувальникам також подобається",
+  "searchMusicHint": "Пошук пісень, альбомів, виконавців",
+  "searchForMusic": "Пошук музики",
+  "noResultsFound": "Результатів не знайдено",
+  "showAllLocalResults": "Показати всі {count} локальні результати",
+  "@showAllLocalResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "topResult": "Найвищий результат",
+  "artistLabel": "Художник",
+  "albumByArtist": "Альбом - {artist}",
+  "@albumByArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistByAuthor": "Список відтворення - {author}",
+  "@playlistByAuthor": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "зберегти",
+  "upNext": "ДАЛІ",
+  "lyricsTab": "ЛІРИКА",
+  "relatedTab": "ПОВ'ЯЗАНІ",
+  "youMightAlsoLike": "Вам також може сподобатися",
+  "otherPerformances": "Інші виступи",
+  "moreFrom": "Більше від",
+  "aboutArtist": "Про художника",
+  "jamQueue": "Черга варення",
+  "radioQueue": "Радіочерга",
+  "queueLabel": "Черга",
+  "playingFrom": "Гра з",
+  "loadingMoreTracks": "Завантаження інших композицій...",
+  "scrollForMore": "Прокрутіть, щоб дізнатися більше",
+  "someone": "Хтось",
+  "noTracksInQueue": "Немає треків у черзі",
+  "addSongsToJamQueue": "Додайте пісні до джем-черги",
+  "addedByUser": "Додав {name}",
+  "@addedByUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTrackPlaying": "Трек не відтворюється",
+  "noRelatedTracksFound": "Пов'язаних треків не знайдено",
+  "queueIsEmpty": "Черга порожня",
+  "defaultQueueName": "Моя черга",
+  "saveQueueAsPlaylist": "Зберегти чергу як список відтворення",
+  "savedTracksToPlaylist": "Збережено {count} треків у \"{name}\"",
+  "@savedTracksToPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "jams": "Джеми",
+  "nowPlayingHeader": "ЗАРАЗ ГРАЄТЬСЯ",
+  "browseMoodsGenresTitle": "Настрої та жанри",
+  "moodCategoryMoods": "Настрої",
+  "moodCategoryGenres": "Жанри",
+  "moodCategoryActivities": "Діяльність",
+  "moodChill": "Охолодити",
+  "moodParty": "вечірка",
+  "moodWorkout": "Тренування",
+  "moodFocus": "Фокус",
+  "moodSleep": "сон",
+  "moodHappy": "Щаслива",
+  "moodSad": "Сумно",
+  "moodRomance": "Романтика",
+  "moodFeelGood": "Почувайтеся добре",
+  "moodEnergize": "зарядити енергією",
+  "genrePop": "Поп",
+  "genreRock": "Рок",
+  "genreHipHop": "Хіп-хоп",
+  "genreRnb": "R&B",
+  "genreElectronic": "електронні",
+  "genreDance": "Танець",
+  "genreJazz": "Джаз",
+  "genreClassical": "Класичний",
+  "genreCountry": "Країна",
+  "genreMetal": "метал",
+  "genreIndie": "Інді",
+  "genreKPop": "K-Pop",
+  "genreLatin": "латинь",
+  "genreBollywood": "Боллівуд",
+  "activityDriving": "Водіння",
+  "activityCooking": "Приготування їжі",
+  "activityGaming": "Ігри",
+  "activityStudying": "навчання",
+  "activityMeditation": "Медитація",
+  "play": "грати",
+  "findInPlaylist": "Знайти в списку відтворення...",
+  "playlistNotFoundMessage": "Список відтворення не знайдено\n\nІдентифікатор списку відтворення: {id}\n\nЦей список відтворення може бути приватним або недоступним.",
+  "@playlistNotFoundMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineSnapshotDownloaded": "Офлайн-знімок – {downloaded}/{total} завантажено",
+  "@offlineSnapshotDownloaded": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noMatchingTracks": "Немає відповідних треків",
+  "noTracksFound": "Треків не знайдено",
+  "downloadingTracksFromPlaylist": "Завантаження {count} треків із {playlist}",
+  "@downloadingTracksFromPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTracksToQueueCount": "До черги додано {count} треків",
+  "@addedTracksToQueueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadPlaylist": "Завантажити плейлист",
+  "signInWithGoogle": "Увійдіть за допомогою Google",
+  "signInToUseJams": "Увійдіть, щоб використовувати Jams",
+  "listenTogetherRealtime": "Слухайте разом з друзями в реальному часі",
+  "signInGoogleToStartOrJoinJam": "Увійдіть за допомогою Google, щоб розпочати або приєднатися до Jam-сесії з друзями",
+  "listenTogether": "Слухайте разом",
+  "listenWithFriendsInSync": "Слухайте разом із друзями",
+  "sameSongSameMoment": "Та сама пісня, та сама мить",
+  "startJam": "Запустіть Jam",
+  "createSessionAndInviteFriends": "Створіть сеанс і запросіть друзів",
+  "joinJam": "Приєднайтеся до Jam",
+  "enterSixDigitCode": "Введіть 6-значний код",
+  "join": "Приєднуйтесь",
+  "shareThisCode": "Поділіться цим кодом",
+  "codeCopied": "Код скопійовано!",
+  "youAreHost": "Ви господар",
+  "hostedBy": "Організатор {name}",
+  "@hostedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listeningTogetherCount": "Слухаючи разом ({count})",
+  "@listeningTogetherCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "endSession": "Завершити сеанс",
+  "leaveSession": "Залишити сеанс",
+  "connected": "Підключено",
+  "reconnecting": "Повторне підключення",
+  "retryInSeconds": "Повторіть через {seconds} с",
+  "@retryInSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectingStatus": "Повторне підключення · {suffix}",
+  "@reconnectingStatus": {
+    "placeholders": {
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "reconnectingAttemptStatus": "Повторне підключення ({attempt}) · {suffix}",
+  "@reconnectingAttemptStatus": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "disconnected": "Відключено",
+  "playing": "Граючи",
+  "addSongsToPlayTogether": "Додайте пісні, щоб грати їх разом",
+  "sessionCreatedCode": "Сеанс створено! Код: {code}",
+  "@sessionCreatedCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "noJamFoundForCode": "Для цього коду не знайдено затору.",
+  "hostRole": "Хост",
+  "canControl": "Може контролювати",
+  "listeningStatus": "Слухання",
+  "transferHostQuestion": "Перенести хост?",
+  "transferHostMessage": "Зробити {name} новим хостом? Ви втратите контроль хоста.",
+  "@transferHostMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transfer": "Трансфер",
+  "removeControl": "Зняти контроль",
+  "allowControl": "Дозволити контроль",
+  "makeHost": "Зробити господарем",
+  "live": "Жити",
+  "playbackControlsJam": "ваше відтворення керує Jam",
+  "starting": "Починаючи...",
+  "or": "або",
+  "joinFriendsJam": "Приєднайтеся до Jam друга",
+  "startJamDescription": "Створіть Jam, щоб поділитися музикою з друзями.\nВсі синхронно чують одну і ту ж пісню.",
+  "folderSettings": "Параметри папки",
+  "noFoldersAddedYet": "Папки ще не додано",
+  "addFolder": "Додати папку",
+  "localMusic": "Місцева музика",
+  "scanLocalMusicDescription": "Скануйте свій пристрій, щоб знайти локальні музичні файли та відтворювати їх у режимі офлайн",
+  "scanForMusic": "Пошук музики",
+  "addFolderLowercase": "Додати папку",
+  "supportedFormats": "Підтримувані формати: MP3, FLAC, WAV, M4A, OGG",
+  "songsFromFoldersCount": "{songs} пісень із {folders} папок",
+  "@songsFromFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "add": "додати",
+  "permissionRequired": "Потрібен дозвіл",
+  "storagePermissionRequiredMessage": "Для доступу до музичних файлів потрібен дозвіл на зберігання. Увімкніть його в налаштуваннях.",
+  "couldNotOpenSettingsPermission": "Не вдалося відкрити налаштування. Увімкніть дозвіл на зберігання вручну.",
+  "openSettings": "Відкрийте налаштування",
+  "folderAdded": "Папку додано",
+  "addedFolderScanNow": "Додано \"{folder}\". Відсканувати його на наявність музики зараз?",
+  "@addedFolderScanNow": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanNow": "Сканувати зараз",
+  "foundSongsCount": "Знайдено {count} пісень",
+  "@foundSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addFolderFirstThenScan": "Спочатку додайте папку, а потім скануйте аудіофайли.",
+  "scanFoldersCountDescription": "Буде проскановано папку(и) {count} на наявність аудіофайлів.",
+  "@scanFoldersCountDescription": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "foldersToScan": "Папки для сканування:",
+  "andMoreFolders": "... і ще {count}",
+  "@andMoreFolders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "startScan": "Розпочати сканування",
+  "foundSongsInFoldersCount": "Знайдено {songs} пісень у {folders} папках",
+  "@foundSongsInFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "scanningForMusic": "Пошук музики...",
+  "filesProgress": "{scanned} / {total} файлів",
+  "@filesProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "signOut": "Вийти",
+  "signInGoogleProfilePictureJams": "Увійдіть за допомогою Google, щоб отримати зображення профілю та ввімкнути Jams",
+  "sync": "Синхронізувати",
+  "lastSynced": "Остання синхронізація: {time}",
+  "@lastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedItems": "Синхронізовано {count} елементів",
+  "@syncedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncing": "Синхронізація...",
+  "syncNow": "Синхронізувати зараз",
+  "cachedItems": "{count} кешованих елементів",
+  "@cachedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streams": "Потоки",
+  "colors": "Кольори",
+  "searches": "Пошуки",
+  "expiredCount": "{count} минув",
+  "@expiredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cacheCleanupComplete": "Очищення кешу завершено",
+  "cleanUp": "Очищення",
+  "clearCache": "Очистити кеш",
+  "clearCachedMusicDataConfirm": "Це очистить усі кешовані музичні дані. Продовжити?",
+  "clear": "ясно",
+  "cacheCleared": "Кеш очищено",
+  "analytics": "Аналітика",
+  "hits": "Хіти",
+  "misses": "Промахи",
+  "network": "Мережа",
+  "analyticsReset": "Скидання аналітики",
+  "resetStats": "Скинути статистику",
+  "cacheHitRate": "Швидкість звернень до кешу",
+  "liked": "Сподобалось",
+  "appInfo": "Інформація про додаток",
+  "releaseBuild": "Реліз збірки",
+  "updater": "Оновлення",
+  "available": "доступний",
+  "unavailable": "недоступний",
+  "loadingCompact": "завантаження...",
+  "errorCompact": "помилка",
+  "none": "немає",
+  "currentPatch": "Поточний патч",
+  "nextPatch": "Наступний патч",
+  "disconnectYoutubeMusic": "Відключити YouTube Music",
+  "disconnectYoutubeMusicQuestion": "Відключити YouTube Music?",
+  "disconnectYoutubeMusicWarning": "Ваш обліковий запис YouTube Music буде видалено з програми. Дані вашої бібліотеки буде видалено.",
+  "disconnect": "Відключити",
+  "syncFailed": "Помилка синхронізації: {error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "justNow": "Просто зараз",
+  "minutesAgo": "{count}хв тому",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count} год тому",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count} дн. тому",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noSongsInTitle": "Немає пісень у {title}",
+  "@noSongsInTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "createPlaylistDescription": "Створіть список відтворення, щоб упорядкувати свою музику",
+  "savedAlbumsFromYoutubeMusic": "Збережені альбоми з YouTube Music",
+  "noSavedAlbumsFromYoutubeMusic": "Немає збережених альбомів із YouTube Music",
+  "errorLoadingAlbums": "Помилка завантаження альбомів",
+  "recentlyPlayed": "Нещодавно грав",
+  "noAlbumsYet": "Ще немає альбомів",
+  "playSomeMusicToSeeAlbumsHere": "Слухайте музику, щоб переглянути альбоми тут",
+  "subscribedArtists": "Підписані виконавці",
+  "noSubscribedArtists": "Немає підписаних виконавців",
+  "errorLoadingArtists": "Помилка завантаження виконавців",
+  "recentlyPlayedArtists": "Нещодавно зіграні артисти",
+  "noArtistsYet": "Виконавців ще немає",
+  "playSomeMusicToSeeArtistsHere": "Увімкніть музику, щоб побачити виконавців тут",
+  "downloading": "Завантаження",
+  "downloadedPlaylists": "Завантажені плейлисти",
+  "errorLoadingDownloads": "Помилка завантаження завантажень",
+  "deleteDownload": "Видалити завантаження",
+  "deleteDownloadQuestion": "Видалити завантаження?",
+  "deleteDownloadWarning": "Це видалить \"{title}\" з вашого пристрою. Ви можете завантажити його знову пізніше.",
+  "@deleteDownloadWarning": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedTrack": "Видалено \"{title}\"",
+  "@deletedTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSongsWillAppearHere": "Тут з’являться завантажені пісні",
+  "createPlaylist": "Створити список відтворення",
+  "autoPlaylists": "Автоматичні списки відтворення",
+  "likedSongsLabel": "Сподобалися пісні",
+  "downloadedFraction": "{downloaded}/{total} завантажено",
+  "@downloadedFraction": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "more": "більше",
+  "video": "ВІДЕО",
+  "forgottenFavorites": "Забуті улюблені",
+  "mixedForYou": "Змішане для вас",
+  "myMixOne": "Мій мікс 1",
+  "discoverMix": "Відкрийте для себе суміш",
+  "replayMix": "Повторити мікс",
+  "newRelease": "Новий випуск",
+  "chillMix": "Chill Mix",
+  "basedOnYourListening": "На основі вашого прослуховування",
+  "newMusicForYou": "Нова музика для вас",
+  "yourFavorites": "Ваші улюблені",
+  "freshTracks": "Свіжі треки",
+  "relaxingVibes": "Розслаблюючі настрої",
+  "musicToGetYouStarted": "МУЗИКА ДЛЯ ПОЧАТКУ",
+  "welcomeUser": "Ласкаво просимо {name}",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeFallbackName": "там",
+  "youtubeMusicLabel": "YouTube Music",
+  "local": "Місцевий",
+  "recentlyAdded": "Нещодавно доданий",
+  "name": "Ім'я",
+  "duration": "Тривалість",
+  "searchSongsHint": "Пошук пісень...",
+  "noLikedSongs": "Немає пісень, які сподобалися",
+  "likeSomeSongsToSeeThemHere": "Подобається кілька пісень, щоб побачити їх тут",
+  "noLocalSongs": "Немає місцевих пісень",
+  "scanFoldersToFindLocalMusic": "Скануйте папки, щоб знайти місцеву музику",
+  "noResults": "Результатів немає",
+  "tryDifferentKeywords": "Спробуйте різні ключові слова",
+  "noSongsYet": "Пісень ще немає",
+  "playSomeMusicToBuildYourLibrary": "Слухайте музику, щоб створити свою бібліотеку",
+  "albumNotFound": "Альбом не знайдено",
+  "downloadAlbum": "Завантажити альбом",
+  "downloadingTracksFromAlbum": "Завантаження {count} треків із {album}",
+  "@downloadingTracksFromAlbum": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "shareAlbumText": "{title} від {artist}\n{url}",
+  "@shareAlbumText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestions": "Пропозиції",
+  "recentSearches": "Останні пошуки",
+  "startTypingToSearch": "Почніть вводити для пошуку...",
+  "youtubeMusicPlaylists": "Списки відтворення YouTube Music",
+  "errorLoadingPlaylists": "Помилка завантаження списків відтворення",
+  "yourPlaylists": "Ваші плейлисти",
+  "noYoutubeMusicPlaylistsFound": "Списків відтворення YouTube Music не знайдено",
+  "songCountLabel": "{count, plural, one {# пісня} other {# пісні}}",
+  "@songCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unknownAlbum": "Невідомий альбом",
+  "jamCodeExample": "ABC123",
+  "jamCodeHint": "КОД",
+  "yourProfile": "Ваш профіль",
+  "googleUser": "Користувач Google",
+  "jamsAndProfile": "Джеми та профіль",
+  "yes": "так",
+  "no": "немає",
+  "foundInSettings": "Знайдено в налаштуваннях",
+  "sharePlaylistText": "{title}\n{url}",
+  "@sharePlaylistText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "shareArtistText": "{artist}\n{url}",
+  "@shareArtistText": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "megabytesValue": "{value} МБ",
+  "@megabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "gigabytesValue": "{value} Гб",
+  "@gigabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxMegabytesValue": "~{value} Мб",
+  "@approxMegabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxKbpsValue": "~{value} кбіт/с",
+  "@approxKbpsValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "secondsShort": "{value}s",
+  "@secondsShort": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "speedMultiplier": "{value}x",
+  "@speedMultiplier": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

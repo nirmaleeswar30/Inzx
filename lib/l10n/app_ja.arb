@@ -1,0 +1,1179 @@
+{
+  "@@locale": "ja",
+  "appTitle": "Inzx",
+  "updateDownloadedBanner": "アップデートがダウンロードされました。適用するにはアプリを再起動してください。",
+  "restart": "再起動",
+  "dismiss": "解雇する",
+  "newVersionAvailableBanner": "新しいバージョン {version} が GitHub で入手できます。",
+  "@newVersionAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "ダウンロード",
+  "later": "後で",
+  "home": "ホーム",
+  "songs": "歌",
+  "library": "図書館",
+  "folders": "フォルダー",
+  "settings": "設定",
+  "searchSettingsHint": "検索設定...",
+  "noMatchingSettings": "一致する設定がありません",
+  "appearance": "外観",
+  "theme": "テーマ",
+  "themeAuto": "自動",
+  "themeLight": "ライト",
+  "themeDark": "暗い",
+  "dynamicColorsNote": "現在のトラックのアルバム アートから色が動的に適応されます。",
+  "language": "言語",
+  "languageSubtitle": "アプリの言語を選択してください",
+  "chooseLanguage": "言語を選択してください",
+  "searchLanguagesHint": "言語を検索...",
+  "noMatchingLanguages": "一致する言語がありません",
+  "useSystemLanguage": "システム言語を使用する",
+  "languageSystem": "システムのデフォルト",
+  "languageEnglish": "英語",
+  "languageTurkish": "トルコ語",
+  "languageRussian": "ロシア語",
+  "languageHindi": "ヒンディー語",
+  "languageTamil": "タミル語",
+  "languageKannada": "カンナダ語",
+  "languageTelugu": "テルグ語",
+  "languageSpanish": "スペイン語",
+  "languageFrench": "フランス語",
+  "languageGerman": "ドイツ語",
+  "languageIndonesian": "インドネシア語",
+  "languageJapanese": "日本語",
+  "languageKorean": "韓国人",
+  "languageArabic": "アラビア語",
+  "languageUkrainian": "ウクライナ語",
+  "languageThai": "タイ語",
+  "languagePortugueseBrazil": "ポルトガル語 (ブラジル)",
+  "languageChineseSimplified": "中国語（簡体字）",
+  "languageChineseTraditional": "中国語（繁体字）",
+  "contentLocation": "コンテンツの場所",
+  "contentLocationSubtitle": "レコメンデーションとカタログの可用性に使用するリージョンを選択します",
+  "chooseContentLocation": "コンテンツの場所を選択してください",
+  "searchLocationsHint": "場所を検索...",
+  "noMatchingLocations": "一致する場所はありません",
+  "locationSystem": "システムのデフォルト",
+  "locationUnitedStates": "米国",
+  "locationIndia": "インド",
+  "locationTurkey": "トルコ",
+  "locationRussia": "ロシア",
+  "quickActions": "クイックアクション",
+  "audio": "オーディオ",
+  "audioQuickActionsSubtitle": "ストリーミング品質、クロスフェード、再生",
+  "downloads": "ダウンロード",
+  "downloadsQuickActionsSubtitle": "ダウンロードの品質、場所、ストレージ",
+  "backupRestore": "バックアップと復元",
+  "backupRestoreQuickActionsSubtitle": "ライブラリをエクスポートまたはインポートする",
+  "streamingQuality": "ストリーミング品質",
+  "streamingQualitySubtitle": "ストリーミングのオーディオビットレートを調整する",
+  "crossfadeTransition": "クロスフェードトランジション",
+  "crossfadeTransitionSubtitle": "トラックを互いにスムーズにブレンドします",
+  "streamingCache": "ストリーミングキャッシュ",
+  "streamingCacheSubtitle": "次のトラックを事前キャッシュ、Wi-Fi のみのオプション",
+  "downloadQuality": "ダウンロード品質",
+  "downloadQualitySubtitle": "オフラインダウンロードの品質",
+  "downloadLocation": "ダウンロード場所",
+  "downloadLocationSubtitle": "ダウンロードした音楽が保存される場所",
+  "dataUsageInfo": "データ使用量情報",
+  "dataUsageInfoSubtitle": "1 曲あたりの推定ストレージ容量",
+  "createBackup": "バックアップの作成",
+  "createBackupSubtitle": "ライブラリと設定をエクスポートする",
+  "restoreBackup": "バックアップを復元する",
+  "restoreBackupSubtitle": "以前のバックアップ ファイルをインポートする",
+  "connectYoutubeMusic": "YouTube ミュージックを接続する",
+  "connectYoutubeMusicSubtitle": "お気に入りの曲やプレイリストなどを同期します",
+  "connectYtMusicButton": "YT ミュージックに接続する",
+  "downloadsTitle": "ダウンロード",
+  "clearCompleted": "クリア完了",
+  "clearFailed": "クリア失敗",
+  "noDownloadsYet": "まだダウンロードはありません",
+  "downloadSongsToListenOffline": "曲をダウンロードしてオフラインで聴く",
+  "downloadingTitle": "ダウンロード中",
+  "downloadedTitle": "ダウンロードしました ({count})",
+  "@downloadedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedTitle": "失敗しました",
+  "songsDownloaded": "{count} 曲をダウンロードしました",
+  "@songsDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usingStorage": "{storage} の使用",
+  "@usingStorage": {
+    "placeholders": {
+      "storage": {
+        "type": "String"
+      }
+    }
+  },
+  "failedWithError": "失敗しました: {error}",
+  "@failedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownError": "不明なエラー",
+  "removeDownload": "ダウンロードを削除する",
+  "downloadSettingsTitle": "ダウンロード設定",
+  "downloadLocationSubtitleLong": "ダウンロードした音楽ファイルの保存場所",
+  "offlineDownloadTip": "ダウンロードしたトラックはインターネットなしで再生され、ストリーミング データも使用しません。",
+  "estimatedStoragePerSong": "1 曲あたりの推定ストレージ容量",
+  "storageLocation": "保管場所",
+  "loading": "読み込み中...",
+  "errorLoadingPath": "パスの読み込みエラー",
+  "privateStorageDownloadsNote": "ダウンロードはアプリのプライベート ストレージに保存されるため、信頼性が向上し、許可は必要ありません。",
+  "qualityAutoChip": "自動",
+  "qualityLowChip": "低い",
+  "qualityMediumChip": "中",
+  "qualityHighChip": "高",
+  "qualityMaxChip": "マックス",
+  "qualityHighest": "最高",
+  "qualityDescriptionAuto": "自動 - ネットワークに適応します",
+  "qualityDescriptionLow": "低 - ~64 kbps (ストレージを節約)",
+  "qualityDescriptionMedium": "中 - ~128 kbps (バランス)",
+  "qualityDescriptionHigh": "高 - ~256 kbps (推奨)",
+  "qualityDescriptionMax": "最大値 - 利用可能な最高値 (~256 kbps)",
+  "backupRestoreTitle": "バックアップと復元",
+  "backupIncludesDescription": "バックアップには、気に入った曲、プレイリスト、検索履歴、最近再生したデータ、主要なアプリ設定が含まれます。",
+  "exportBackup": "バックアップのエクスポート",
+  "exportBackupSubtitle": "バックアップ ファイルを保存して共有または保存する",
+  "importBackup": "インポートバックアップ",
+  "importBackupSubtitle": "バックアップファイルから復元する",
+  "dangerZone": "危険地帯",
+  "clearAppData": "アプリデータのクリア",
+  "clearAppDataSubtitle": "ダウンロードしたオーディオファイルを保持したまま、アプリのデータ/設定をリセットします",
+  "backupCreatedSuccessfully": "バックアップが正常に作成されました",
+  "backupFailed": "バックアップに失敗しました: {error}",
+  "@backupFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoredSuccessfully": "バックアップが正常に復元されました",
+  "restoreFailed": "復元に失敗しました: {error}",
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearAllDataQuestion": "すべてのデータをクリアしますか?",
+  "clearAllDataWarning": "これにより、ローカル アプリのデータと設定がリセットされますが、ダウンロードされた曲ファイルは保持されます。これを元に戻すことはできません。",
+  "cancel": "キャンセル",
+  "clearAll": "すべてクリア",
+  "appDataClearedPreserved": "アプリデータは消去されました（ダウンロードされた音声ファイルは保持されました）",
+  "failedGeneric": "失敗しました: {error}",
+  "@failedGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupSubject": "Inzx 音楽バックアップ",
+  "statisticsTitle": "統計",
+  "statisticsCleared": "統計情報がクリアされました",
+  "clearStatistics": "明確な統計",
+  "noStatisticsYet": "まだ統計はありません",
+  "startListeningStats": "リスニングを開始して統計を確認してください",
+  "overview": "概要",
+  "totalPlays": "総再生数",
+  "listenTime": "リスニング時間",
+  "mostPlayed": "最もプレイされた",
+  "playsCount": "{count} が再生します",
+  "@playsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutes": "{hours}h {minutes}m",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutesOnly": "{minutes}分",
+  "@durationMinutesOnly": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "retry": "再試行",
+  "share": "シェアする",
+  "playlist": "プレイリスト",
+  "album": "アルバム",
+  "channel": "チャンネル",
+  "playNext": "次にプレイ",
+  "addToQueue": "キューに追加",
+  "addToPlaylist": "プレイリストに追加",
+  "goToAlbum": "アルバムに移動",
+  "goToArtist": "アーティストに移動",
+  "startRadio": "ラジオを開始する",
+  "playAll": "すべてプレイする",
+  "shuffle": "シャッフル",
+  "shuffleAll": "すべてシャッフルする",
+  "radio": "ラジオ",
+  "follow": "フォローする",
+  "following": "フォロー中",
+  "connectYtMusicToFollowArtists": "YouTube Music に接続してアーティストをフォローします。",
+  "couldNotFollowArtist": "{artist} をフォローできませんでした。",
+  "@couldNotFollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotUnfollowArtist": "{artist} のフォローを解除できませんでした。",
+  "@couldNotUnfollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "followingArtist": "{artist}をフォロー中",
+  "@followingArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "unfollowedArtist": "{artist} のフォローを解除しました",
+  "@unfollowedArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingArtist": "アーティストの読み込みエラー",
+  "subscribersCount": "{count} 人の購読者",
+  "@subscribersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSection": "ダウンロード済み",
+  "showAllDownloaded": "ダウンロードされた {count} をすべて表示",
+  "@showAllDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "seeAll": "全て見る",
+  "removeFromLikedSongs": "お気に入りの曲から削除",
+  "addToLikedSongs": "お気に入りの曲に追加",
+  "playingTrackNext": "次に「{title}」を再生します",
+  "@playingTrackNext": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTrackToQueue": "「{title}」をキューに追加しました",
+  "@addedTrackToQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playNextInJam": "Jam で次のプレイをする",
+  "playTrackNextInJam": "「{title}」は次に Jam で再生されます",
+  "@playTrackNextInJam": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addToJamQueue": "ジャムキューに追加",
+  "addedTrackToJamQueue": "ジャムキューに「{title}」を追加",
+  "@addedTrackToJamQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloaded": "ダウンロード済み",
+  "downloadingProgress": "{progress}% をダウンロード中",
+  "@downloadingProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadStartingTrack": "「{title}」をダウンロードしています",
+  "@downloadStartingTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadNotificationsChannelDescription": "ダウンロードの進行状況の通知",
+  "downloadStartingNotification": "ダウンロードを開始しています...",
+  "downloadCompleteNotification": "ダウンロード完了",
+  "downloadFileNotCreated": "ファイルが作成されていないためダウンロードに失敗しました",
+  "shareTrackText": "{title} by {artist}\n{url}",
+  "@shareTrackText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "createNewPlaylist": "新しいプレイリストを作成する",
+  "playlistName": "プレイリスト名",
+  "create": "作成",
+  "couldNotLoadPlaylists": "プレイリストを読み込めませんでした",
+  "createLocalPlaylistInstead": "代わりにローカルプレイリストを作成してください",
+  "noPlaylistsYet": "プレイリストはまだありません",
+  "createOneToGetStarted": "始めるために作成してください",
+  "songsCount": "{count}曲",
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createdPlaylistOnYtMusicAndAddedTrack": "YT Music で「{playlist}」を作成し、「{track}」を追加しました",
+  "@createdPlaylistOnYtMusicAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToCreatePlaylist": "プレイリストの作成に失敗しました",
+  "createdPlaylistLocallyAndAddedTrack": "「{playlist}」をローカルに作成し、「{track}」を追加しました",
+  "@createdPlaylistLocallyAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddToPlaylist": "プレイリストへの追加に失敗しました",
+  "addedTrackToPlaylist": "「{track}」を「{playlist}」に追加しました",
+  "@addedTrackToPlaylist": {
+    "placeholders": {
+      "track": {
+        "type": "String"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorWithMessage": "エラー: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "searchingForLyrics": "歌詞を検索中...",
+  "failedToLoadLyrics": "歌詞の読み込みに失敗しました",
+  "tryAnotherProvider": "別のプロバイダーを試す",
+  "noLyricsFound": "歌詞が見つかりませんでした",
+  "linkLabel": "リンク: {url}",
+  "@linkLabel": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "tracksCount": "{count} トラック",
+  "@tracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFromYoutubeMusic": "YouTube ミュージックからインポート",
+  "importedPlaylistSuffix": "輸入品",
+  "importedFromYoutubeMusicDescription": "YouTube Music からインポート",
+  "importedPlaylist": "「{playlist}」をインポートしました",
+  "@importedPlaylist": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToImportPlaylist": "インポートに失敗しました: {error}",
+  "@failedToImportPlaylist": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadPlaylists": "プレイリストのロードに失敗しました",
+  "makeSureLoggedInYoutubeMusic": "YouTube Music にログインしていることを確認してください",
+  "noPlaylistsFound": "プレイリストが見つかりません",
+  "createPlaylistsInYoutubeMusicFirst": "まず YouTube Music でプレイリストをいくつか作成します",
+  "loggedInYoutubeMusicSuccess": "YouTube Music に正常にログインしました。",
+  "signInToYoutubeMusic": "YouTube ミュージックにログインする",
+  "loggingYouIn": "ログインしています...",
+  "signInSyncYoutubeMusicDescription": "Google アカウントでサインインして、お気に入りの曲、プレイリスト、アルバムなどの YouTube Music ライブラリを同期します。",
+  "playbackSpeed": "再生速度",
+  "normal": "ノーマル",
+  "defaultValue": "デフォルト",
+  "failedToLoadContent": "コンテンツのロードに失敗しました",
+  "loadMore": "さらにロードする",
+  "audioSettingsTitle": "オーディオ設定",
+  "nowPlayingLabel": "プレイ中",
+  "higherQualityUsesMoreData": "品質を高くするとより多くのデータが使用されます",
+  "adjustsBasedOnNetworkSpeed": "ネットワーク速度に基づいて調整します",
+  "qualityLowUsesLessData": "~64 kbps - 使用するデータ量が少なくなります",
+  "qualityMediumBalanced": "~128 kbps - バランス",
+  "qualityHighBestForMost": "~256 kbps - ほとんどの場合に最適",
+  "qualityMaximumAvailable": "利用可能な最高値 (~256 kbps)",
+  "recommended": "おすすめ",
+  "blendTrackEndsIntoNext": "現在のトラックの終わりを次のトラックの始まりにブレンドします",
+  "preCachesNextTracks": "次のトラックを事前にキャッシュし、利用可能な場合はローカル キャッシュから再生します",
+  "smartStreamCache": "スマートストリームキャッシュ",
+  "usedCacheStorage": "使用済み: {used} / {limit} MB",
+  "@usedCacheStorage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "calculatingCacheUsage": "キャッシュ使用量を計算しています...",
+  "unableToReadCacheUsage": "キャッシュ使用量を読み取れません",
+  "preCacheNetwork": "プリキャッシュネットワーク",
+  "wifiOnly": "Wi-Fiのみ",
+  "wifiAndMobileData": "Wi-Fi + モバイルデータ",
+  "preCacheRunsWifiOnly": "事前キャッシュは Wi-Fi に接続している場合にのみ実行されます",
+  "preCacheRunsWifiAndMobile": "事前キャッシュは Wi-Fi とモバイル データの両方で実行可能",
+  "concurrentPreCacheDownloads": "同時事前キャッシュ ダウンロード",
+  "higherValuesCacheFaster": "値が大きいほどキャッシュの速度は速くなりますが、ネットワークとバッテリーの使用量が多くなります。",
+  "cacheSizeLimit": "キャッシュサイズの制限",
+  "off": "オフ",
+  "crossfadeDisabled": "クロスフェードが無効になっています",
+  "currentValueLabel": "現在: {value}",
+  "@currentValueLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "audioQuality": "オーディオ品質",
+  "qualityLowKbps": "低 (64kbps)",
+  "qualityMediumKbps": "中（128kbps）",
+  "qualityHighKbps": "高(256kbps)",
+  "qualityMaximumKbps": "最大 (~256 kbps)",
+  "all": "すべて",
+  "artists": "アーティスト",
+  "albums": "アルバム",
+  "playlists": "プレイリスト",
+  "singlesAndEps": "シングルと EP",
+  "appearsOn": "に表示されます",
+  "fansAlsoLike": "ファンも気に入っています",
+  "searchMusicHint": "曲、アルバム、アーティストを検索",
+  "searchForMusic": "音楽を検索する",
+  "noResultsFound": "結果が見つかりませんでした",
+  "showAllLocalResults": "{count} のローカル結果をすべて表示",
+  "@showAllLocalResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "topResult": "上位の結果",
+  "artistLabel": "アーティスト",
+  "albumByArtist": "アルバム - {artist}",
+  "@albumByArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistByAuthor": "プレイリスト - {author}",
+  "@playlistByAuthor": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "保存",
+  "upNext": "次へ",
+  "lyricsTab": "歌詞",
+  "relatedTab": "関連",
+  "youMightAlsoLike": "あなたも好きかもしれません",
+  "otherPerformances": "その他の公演",
+  "moreFrom": "もっと見る",
+  "aboutArtist": "アーティストについて",
+  "jamQueue": "ジャムキュー",
+  "radioQueue": "無線キュー",
+  "queueLabel": "キュー",
+  "playingFrom": "からの再生",
+  "loadingMoreTracks": "さらにトラックを読み込んでいます...",
+  "scrollForMore": "さらにスクロールしてください",
+  "someone": "誰か",
+  "noTracksInQueue": "キューにトラックがありません",
+  "addSongsToJamQueue": "曲をジャムキューに追加する",
+  "addedByUser": "{name} によって追加されました",
+  "@addedByUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTrackPlaying": "トラックが再生されていません",
+  "noRelatedTracksFound": "関連するトラックが見つかりませんでした",
+  "queueIsEmpty": "キューが空です",
+  "defaultQueueName": "私のキュー",
+  "saveQueueAsPlaylist": "キューをプレイリストとして保存",
+  "savedTracksToPlaylist": "{count} トラックを「{name}」に保存しました",
+  "@savedTracksToPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "jams": "ジャム",
+  "nowPlayingHeader": "プレイ中",
+  "browseMoodsGenresTitle": "気分とジャンル",
+  "moodCategoryMoods": "気分",
+  "moodCategoryGenres": "ジャンル",
+  "moodCategoryActivities": "活動内容",
+  "moodChill": "チル",
+  "moodParty": "パーティー",
+  "moodWorkout": "トレーニング",
+  "moodFocus": "フォーカス",
+  "moodSleep": "睡眠",
+  "moodHappy": "ハッピー",
+  "moodSad": "悲しい",
+  "moodRomance": "ロマンス",
+  "moodFeelGood": "気持ちいい",
+  "moodEnergize": "元気を与える",
+  "genrePop": "ポップ",
+  "genreRock": "ロック",
+  "genreHipHop": "ヒップホップ",
+  "genreRnb": "R&B",
+  "genreElectronic": "電子",
+  "genreDance": "ダンス",
+  "genreJazz": "ジャズ",
+  "genreClassical": "クラシック",
+  "genreCountry": "国",
+  "genreMetal": "金属",
+  "genreIndie": "インディーズ",
+  "genreKPop": "Kポップ",
+  "genreLatin": "ラテン語",
+  "genreBollywood": "ボリウッド",
+  "activityDriving": "運転",
+  "activityCooking": "料理",
+  "activityGaming": "ゲーム",
+  "activityStudying": "勉強中",
+  "activityMeditation": "瞑想",
+  "play": "遊ぶ",
+  "findInPlaylist": "プレイリストから探す...",
+  "playlistNotFoundMessage": "プレイリストが見つかりません\n\nプレイリストID: {id}\n\nこのプレイリストはプライベートであるか、利用できない可能性があります。",
+  "@playlistNotFoundMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineSnapshotDownloaded": "オフライン スナップショット - {downloaded}/{total} ダウンロードされました",
+  "@offlineSnapshotDownloaded": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noMatchingTracks": "一致するトラックがありません",
+  "noTracksFound": "トラックが見つかりません",
+  "downloadingTracksFromPlaylist": "{playlist} から {count} トラックをダウンロードしています",
+  "@downloadingTracksFromPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTracksToQueueCount": "{count} トラックをキューに追加しました",
+  "@addedTracksToQueueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadPlaylist": "プレイリストをダウンロードする",
+  "signInWithGoogle": "Googleでサインイン",
+  "signInToUseJams": "Jams を使用するにはサインインしてください",
+  "listenTogetherRealtime": "友達と一緒にリアルタイムで聴く",
+  "signInGoogleToStartOrJoinJam": "Google でサインインして、友達とのジャム セッションを開始したり参加したりできます",
+  "listenTogether": "一緒に聞いてください",
+  "listenWithFriendsInSync": "友達と一緒に同期して聴く",
+  "sameSongSameMoment": "同じ曲、同じ瞬間",
+  "startJam": "ジャムを始める",
+  "createSessionAndInviteFriends": "セッションを作成して友達を招待する",
+  "joinJam": "ジャムに参加する",
+  "enterSixDigitCode": "6桁のコードを入力してください",
+  "join": "参加する",
+  "shareThisCode": "このコードを共有する",
+  "codeCopied": "コードがコピーされました!",
+  "youAreHost": "あなたはホストです",
+  "hostedBy": "{name} が主催",
+  "@hostedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listeningTogetherCount": "一緒に聞いてください ({count})",
+  "@listeningTogetherCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "endSession": "セッションの終了",
+  "leaveSession": "セッションを離れる",
+  "connected": "接続済み",
+  "reconnecting": "再接続中",
+  "retryInSeconds": "{seconds}秒後に再試行してください",
+  "@retryInSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectingStatus": "再接続中 · {suffix}",
+  "@reconnectingStatus": {
+    "placeholders": {
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "reconnectingAttemptStatus": "再接続中 ({attempt}) · {suffix}",
+  "@reconnectingAttemptStatus": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "disconnected": "切断されました",
+  "playing": "遊ぶ",
+  "addSongsToPlayTogether": "曲を追加して一緒に再生する",
+  "sessionCreatedCode": "セッションが作成されました!コード: {code}",
+  "@sessionCreatedCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "noJamFoundForCode": "このコードのジャムは見つかりませんでした。",
+  "hostRole": "ホスト",
+  "canControl": "コントロールできる",
+  "listeningStatus": "リスニング",
+  "transferHostQuestion": "転送ホスト?",
+  "transferHostMessage": "{name} を新しいホストにしますか?ホスト制御が失われます。",
+  "@transferHostMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transfer": "転送",
+  "removeControl": "コントロールの削除",
+  "allowControl": "制御を許可する",
+  "makeHost": "ホストを作成する",
+  "live": "ライブ",
+  "playbackControlsJam": "あなたのプレイバックがジャムをコントロールします",
+  "starting": "開始中...",
+  "or": "または",
+  "joinFriendsJam": "友達のジャムに参加する",
+  "startJamDescription": "Jam を開始して友達と音楽を共有します。\n全員が同じ曲を同期して聞いています。",
+  "folderSettings": "フォルダー設定",
+  "noFoldersAddedYet": "まだフォルダが追加されていません",
+  "addFolder": "フォルダーの追加",
+  "localMusic": "地元の音楽",
+  "scanLocalMusicDescription": "デバイスをスキャンしてローカルの音楽ファイルを見つけてオフラインで再生します",
+  "scanForMusic": "音楽をスキャンする",
+  "addFolderLowercase": "フォルダーの追加",
+  "supportedFormats": "サポートされている形式: MP3、FLAC、WAV、M4A、OGG",
+  "songsFromFoldersCount": "{folders} フォルダーからの {songs} 曲",
+  "@songsFromFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "add": "追加",
+  "permissionRequired": "許可が必要です",
+  "storagePermissionRequiredMessage": "音楽ファイルにアクセスするにはストレージ権限が必要です。設定で有効にしてください。",
+  "couldNotOpenSettingsPermission": "設定を開けませんでした。ストレージ許可を手動で有効にしてください。",
+  "openSettings": "設定を開く",
+  "folderAdded": "フォルダーが追加されました",
+  "addedFolderScanNow": "「{folder}」を追加しました。今すぐスキャンして音楽を聴きますか?",
+  "@addedFolderScanNow": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanNow": "今すぐスキャン",
+  "foundSongsCount": "{count}曲を見つけました",
+  "@foundSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addFolderFirstThenScan": "まずフォルダーを追加してから、オーディオ ファイルをスキャンします。",
+  "scanFoldersCountDescription": "これにより、{count} フォルダーでオーディオ ファイルがスキャンされます。",
+  "@scanFoldersCountDescription": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "foldersToScan": "スキャンするフォルダー:",
+  "andMoreFolders": "...そして {count} 詳細",
+  "@andMoreFolders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "startScan": "スキャンの開始",
+  "foundSongsInFoldersCount": "{folders} フォルダ内に {songs} 曲が見つかりました",
+  "@foundSongsInFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "scanningForMusic": "音楽をスキャンしています...",
+  "filesProgress": "{scanned} / {total} ファイル",
+  "@filesProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "signOut": "サインアウト",
+  "signInGoogleProfilePictureJams": "Google でサインインしてプロフィール写真を取得し、Jams を有効にします",
+  "sync": "同期",
+  "lastSynced": "最終同期: {time}",
+  "@lastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedItems": "{count} アイテムを同期しました",
+  "@syncedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncing": "同期中...",
+  "syncNow": "今すぐ同期",
+  "cachedItems": "{count} キャッシュされたアイテム",
+  "@cachedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streams": "ストリーム",
+  "colors": "色",
+  "searches": "検索",
+  "expiredCount": "{count} の有効期限が切れました",
+  "@expiredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cacheCleanupComplete": "キャッシュのクリーンアップが完了しました",
+  "cleanUp": "クリーンアップ",
+  "clearCache": "キャッシュのクリア",
+  "clearCachedMusicDataConfirm": "これにより、キャッシュされたすべての音楽データが削除されます。続く？",
+  "clear": "クリア",
+  "cacheCleared": "キャッシュがクリアされました",
+  "analytics": "分析",
+  "hits": "ヒット曲",
+  "misses": "ミス",
+  "network": "ネットワーク",
+  "analyticsReset": "分析のリセット",
+  "resetStats": "統計のリセット",
+  "cacheHitRate": "キャッシュヒット率",
+  "liked": "気に入った",
+  "appInfo": "アプリ情報",
+  "releaseBuild": "リリースビルド",
+  "updater": "アップデーター",
+  "available": "利用可能",
+  "unavailable": "利用不可",
+  "loadingCompact": "読み込み中...",
+  "errorCompact": "エラー",
+  "none": "なし",
+  "currentPatch": "現在のパッチ",
+  "nextPatch": "次のパッチ",
+  "disconnectYoutubeMusic": "YouTube ミュージックの接続を解除する",
+  "disconnectYoutubeMusicQuestion": "YouTube ミュージックを切断しますか?",
+  "disconnectYoutubeMusicWarning": "これにより、アプリから YouTube Music アカウントが削除されます。ライブラリのデータは消去されます。",
+  "disconnect": "切断する",
+  "syncFailed": "同期に失敗しました: {error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "justNow": "たった今",
+  "minutesAgo": "{count}分前",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count}時間前",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count}日前",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noSongsInTitle": "{title} には曲がありません",
+  "@noSongsInTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "createPlaylistDescription": "プレイリストを作成して音楽を整理する",
+  "savedAlbumsFromYoutubeMusic": "YouTube Music から保存したアルバム",
+  "noSavedAlbumsFromYoutubeMusic": "YouTube Music からアルバムが保存されていません",
+  "errorLoadingAlbums": "アルバムの読み込みエラー",
+  "recentlyPlayed": "最近プレイした",
+  "noAlbumsYet": "まだアルバムがありません",
+  "playSomeMusicToSeeAlbumsHere": "音楽を再生すると、ここでアルバムが表示されます",
+  "subscribedArtists": "登録アーティスト",
+  "noSubscribedArtists": "登録しているアーティストはいません",
+  "errorLoadingArtists": "アーティストの読み込みエラー",
+  "recentlyPlayedArtists": "最近再生したアーティスト",
+  "noArtistsYet": "まだアーティストはいません",
+  "playSomeMusicToSeeArtistsHere": "音楽を再生してここでアーティストを確認します",
+  "downloading": "ダウンロード中",
+  "downloadedPlaylists": "ダウンロードしたプレイリスト",
+  "errorLoadingDownloads": "ダウンロードの読み込みエラー",
+  "deleteDownload": "ダウンロードの削除",
+  "deleteDownloadQuestion": "ダウンロードを削除しますか?",
+  "deleteDownloadWarning": "これにより、デバイスから「{title}」が削除されます。後で再度ダウンロードできます。",
+  "@deleteDownloadWarning": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedTrack": "「{title}」を削除しました",
+  "@deletedTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSongsWillAppearHere": "ダウンロードした曲がここに表示されます",
+  "createPlaylist": "プレイリストの作成",
+  "autoPlaylists": "自動プレイリスト",
+  "likedSongsLabel": "好きな曲",
+  "downloadedFraction": "{downloaded}/{total} がダウンロードされました",
+  "@downloadedFraction": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "more": "もっと見る",
+  "video": "ビデオ",
+  "forgottenFavorites": "忘れてしまったお気に入り",
+  "mixedForYou": "あなたのためにミックス",
+  "myMixOne": "私のミックス 1",
+  "discoverMix": "ディスカバーミックス",
+  "replayMix": "リプレイミックス",
+  "newRelease": "新作リリース",
+  "chillMix": "チルミックス",
+  "basedOnYourListening": "あなたの聞き取りに基づいて",
+  "newMusicForYou": "あなたのための新しい音楽",
+  "yourFavorites": "あなたのお気に入り",
+  "freshTracks": "新鮮なトラック",
+  "relaxingVibes": "リラックスした雰囲気",
+  "musicToGetYouStarted": "始めるための音楽",
+  "welcomeUser": "ようこそ{name}",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeFallbackName": "そこに",
+  "youtubeMusicLabel": "YouTube ミュージック",
+  "local": "ローカル",
+  "recentlyAdded": "最近追加された",
+  "name": "名前",
+  "duration": "期間",
+  "searchSongsHint": "曲を検索...",
+  "noLikedSongs": "好きな曲はありません",
+  "likeSomeSongsToSeeThemHere": "いくつかの曲をここで見るにはいいね",
+  "noLocalSongs": "ご当地ソングは無し",
+  "scanFoldersToFindLocalMusic": "フォルダーをスキャンしてローカルの音楽を見つける",
+  "noResults": "結果はありません",
+  "tryDifferentKeywords": "別のキーワードを試してください",
+  "noSongsYet": "まだ曲がありません",
+  "playSomeMusicToBuildYourLibrary": "音楽を再生してライブラリを構築する",
+  "albumNotFound": "アルバムが見つかりません",
+  "downloadAlbum": "アルバムをダウンロード",
+  "downloadingTracksFromAlbum": "{album} から {count} トラックをダウンロードしています",
+  "@downloadingTracksFromAlbum": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "shareAlbumText": "{title} by {artist}\n{url}",
+  "@shareAlbumText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestions": "提案",
+  "recentSearches": "最近の検索",
+  "startTypingToSearch": "検索するには入力を開始してください...",
+  "youtubeMusicPlaylists": "YouTube ミュージックのプレイリスト",
+  "errorLoadingPlaylists": "プレイリストの読み込みエラー",
+  "yourPlaylists": "あなたのプレイリスト",
+  "noYoutubeMusicPlaylistsFound": "YouTube Music プレイリストが見つかりません",
+  "songCountLabel": "{count, plural, one {# 歌} other {# 歌}}",
+  "@songCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unknownAlbum": "未知のアルバム",
+  "jamCodeExample": "ABC123",
+  "jamCodeHint": "コード",
+  "yourProfile": "あなたのプロフィール",
+  "googleUser": "Google ユーザー",
+  "jamsAndProfile": "ジャムとプロフィール",
+  "yes": "はい",
+  "no": "いいえ",
+  "foundInSettings": "設定にあります",
+  "sharePlaylistText": "{title}\n{url}",
+  "@sharePlaylistText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "shareArtistText": "{artist}\n{url}",
+  "@shareArtistText": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "megabytesValue": "{value} MB",
+  "@megabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "gigabytesValue": "{value} GB",
+  "@gigabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxMegabytesValue": "~{value} MB",
+  "@approxMegabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxKbpsValue": "~{value} kbps",
+  "@approxKbpsValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "secondsShort": "{value}s",
+  "@secondsShort": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "speedMultiplier": "{value}x",
+  "@speedMultiplier": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

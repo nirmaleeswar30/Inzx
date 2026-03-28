@@ -1,3 +1,5 @@
+// ignore_for_file: must_call_super
+
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:inzx/core/services/result.dart';
@@ -59,6 +61,15 @@ class CacheAnalytics extends ChangeNotifier {
     _cacheMisses = 0;
     _networkCalls = 0;
     _scheduleNotify();
+  }
+
+  @override
+  void dispose() {
+    // Intentionally a no-op.
+    // CacheAnalytics is a process-wide singleton that is referenced from
+    // background cache/network code via CacheAnalytics.instance. ProviderScope
+    // restarts should detach listeners, but must not permanently dispose the
+    // singleton itself.
   }
 
   @override

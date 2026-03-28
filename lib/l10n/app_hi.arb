@@ -1,0 +1,1179 @@
+{
+  "@@locale": "hi",
+  "appTitle": "Inzx",
+  "updateDownloadedBanner": "अद्यतन डाउनलोड किया गया. आवेदन करने के लिए ऐप को पुनः प्रारंभ करें.",
+  "restart": "पुनः प्रारंभ करें",
+  "dismiss": "ख़ारिज करें",
+  "newVersionAvailableBanner": "नया संस्करण {version} GitHub पर उपलब्ध है।",
+  "@newVersionAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "डाउनलोड करें",
+  "later": "बाद में",
+  "home": "घर",
+  "songs": "गाने",
+  "library": "पुस्तकालय",
+  "folders": "फ़ोल्डर",
+  "settings": "सेटिंग्स",
+  "searchSettingsHint": "सेटिंग खोजें...",
+  "noMatchingSettings": "कोई मेल खाती सेटिंग नहीं",
+  "appearance": "दिखावट",
+  "theme": "थीम",
+  "themeAuto": "ऑटो",
+  "themeLight": "रोशनी",
+  "themeDark": "अंधेरा",
+  "dynamicColorsNote": "रंग वर्तमान ट्रैक की एल्बम कला से गतिशील रूप से अनुकूलित होते हैं।",
+  "language": "भाषा",
+  "languageSubtitle": "ऐप भाषा चुनें",
+  "chooseLanguage": "भाषा चुनें",
+  "searchLanguagesHint": "भाषाएँ खोजें...",
+  "noMatchingLanguages": "कोई मेल खाती भाषा नहीं",
+  "useSystemLanguage": "सिस्टम भाषा का प्रयोग करें",
+  "languageSystem": "सिस्टम डिफ़ॉल्ट",
+  "languageEnglish": "अंग्रेजी",
+  "languageTurkish": "तुर्की",
+  "languageRussian": "रूसी",
+  "languageHindi": "हिंदी",
+  "languageTamil": "तमिल",
+  "languageKannada": "कन्नडा",
+  "languageTelugu": "तेलुगू",
+  "languageSpanish": "स्पैनिश",
+  "languageFrench": "फ़्रेंच",
+  "languageGerman": "जर्मन",
+  "languageIndonesian": "इन्डोनेशियाई",
+  "languageJapanese": "जापानी",
+  "languageKorean": "कोरियाई",
+  "languageArabic": "अरबी",
+  "languageUkrainian": "यूक्रेनी",
+  "languageThai": "थाई",
+  "languagePortugueseBrazil": "पुर्तगाली (ब्राजील)",
+  "languageChineseSimplified": "चीनी (सरलीकृत)",
+  "languageChineseTraditional": "चीनी (पारंपरिक)",
+  "contentLocation": "सामग्री स्थान",
+  "contentLocationSubtitle": "अनुशंसाओं और कैटलॉग उपलब्धता के लिए उपयोग किया जाने वाला क्षेत्र चुनें",
+  "chooseContentLocation": "सामग्री स्थान चुनें",
+  "searchLocationsHint": "स्थान खोजें...",
+  "noMatchingLocations": "कोई मेल खाता स्थान नहीं",
+  "locationSystem": "सिस्टम डिफ़ॉल्ट",
+  "locationUnitedStates": "संयुक्त राज्य अमेरिका",
+  "locationIndia": "भारत",
+  "locationTurkey": "टर्की",
+  "locationRussia": "रूस",
+  "quickActions": "त्वरित कार्रवाई",
+  "audio": "ऑडियो",
+  "audioQuickActionsSubtitle": "स्ट्रीमिंग गुणवत्ता, क्रॉसफ़ेड और प्लेबैक",
+  "downloads": "डाउनलोड",
+  "downloadsQuickActionsSubtitle": "डाउनलोड गुणवत्ता, स्थान और भंडारण",
+  "backupRestore": "बैकअप और पुनर्स्थापना",
+  "backupRestoreQuickActionsSubtitle": "अपनी लाइब्रेरी निर्यात या आयात करें",
+  "streamingQuality": "स्ट्रीमिंग गुणवत्ता",
+  "streamingQualitySubtitle": "स्ट्रीमिंग के लिए ऑडियो बिटरेट समायोजित करें",
+  "crossfadeTransition": "क्रॉसफ़ेड संक्रमण",
+  "crossfadeTransitionSubtitle": "ट्रैकों को एक-दूसरे में आसानी से मिलाएँ",
+  "streamingCache": "स्ट्रीमिंग कैश",
+  "streamingCacheSubtitle": "अगले ट्रैक प्री-कैश करें, केवल वाई-फ़ाई विकल्प",
+  "downloadQuality": "गुणवत्ता डाउनलोड करें",
+  "downloadQualitySubtitle": "ऑफ़लाइन डाउनलोड के लिए गुणवत्ता",
+  "downloadLocation": "स्थान डाउनलोड करें",
+  "downloadLocationSubtitle": "जहां डाउनलोड किया गया संगीत संग्रहीत किया जाता है",
+  "dataUsageInfo": "डेटा उपयोग की जानकारी",
+  "dataUsageInfoSubtitle": "प्रति गीत अनुमानित संग्रहण",
+  "createBackup": "बैकअप बनाएं",
+  "createBackupSubtitle": "अपनी लाइब्रेरी और सेटिंग्स निर्यात करें",
+  "restoreBackup": "बैकअप पुनर्स्थापित करें",
+  "restoreBackupSubtitle": "पिछली बैकअप फ़ाइल आयात करें",
+  "connectYoutubeMusic": "यूट्यूब म्यूजिक कनेक्ट करें",
+  "connectYoutubeMusicSubtitle": "अपने पसंदीदा गाने, प्लेलिस्ट और बहुत कुछ सिंक करें",
+  "connectYtMusicButton": "YT म्यूजिक कनेक्ट करें",
+  "downloadsTitle": "डाउनलोड",
+  "clearCompleted": "साफ़ पूरा हुआ",
+  "clearFailed": "साफ़ विफल रहा",
+  "noDownloadsYet": "अभी तक कोई डाउनलोड नहीं",
+  "downloadSongsToListenOffline": "ऑफ़लाइन सुनने के लिए गाने डाउनलोड करें",
+  "downloadingTitle": "डाउनलोड हो रहा है",
+  "downloadedTitle": "डाउनलोड किया गया ({count})",
+  "@downloadedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedTitle": "असफल",
+  "songsDownloaded": "{count} गाने डाउनलोड किए गए",
+  "@songsDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usingStorage": "{storage} का उपयोग करना",
+  "@usingStorage": {
+    "placeholders": {
+      "storage": {
+        "type": "String"
+      }
+    }
+  },
+  "failedWithError": "विफल: {error}",
+  "@failedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownError": "अज्ञात त्रुटि",
+  "removeDownload": "डाउनलोड हटाएँ",
+  "downloadSettingsTitle": "सेटिंग्स डाउनलोड करें",
+  "downloadLocationSubtitleLong": "जहां डाउनलोड की गई संगीत फ़ाइलें संग्रहीत की जाती हैं",
+  "offlineDownloadTip": "डाउनलोड किए गए ट्रैक इंटरनेट के बिना चलते हैं और स्ट्रीमिंग डेटा का उपयोग नहीं करते हैं।",
+  "estimatedStoragePerSong": "प्रति गीत अनुमानित संग्रहण",
+  "storageLocation": "भंडारण स्थान",
+  "loading": "लोड हो रहा है...",
+  "errorLoadingPath": "पथ लोड करने में त्रुटि",
+  "privateStorageDownloadsNote": "बेहतर विश्वसनीयता और किसी अनुमति की आवश्यकता के लिए डाउनलोड को ऐप-निजी स्टोरेज में संग्रहीत किया जाता है।",
+  "qualityAutoChip": "ऑटो",
+  "qualityLowChip": "नीचा",
+  "qualityMediumChip": "मध्यम",
+  "qualityHighChip": "ऊँचा",
+  "qualityMaxChip": "अधिकतम",
+  "qualityHighest": "उच्चतम",
+  "qualityDescriptionAuto": "ऑटो - नेटवर्क के अनुकूल",
+  "qualityDescriptionLow": "कम - ~64 केबीपीएस (भंडारण बचाता है)",
+  "qualityDescriptionMedium": "मध्यम - ~128 केबीपीएस (संतुलित)",
+  "qualityDescriptionHigh": "उच्च - ~256 केबीपीएस (अनुशंसित)",
+  "qualityDescriptionMax": "अधिकतम - उच्चतम उपलब्ध (~256 केबीपीएस)",
+  "backupRestoreTitle": "बैकअप और पुनर्स्थापना",
+  "backupIncludesDescription": "बैकअप में पसंद किए गए गाने, प्लेलिस्ट, खोज इतिहास, हाल ही में चलाए गए और मुख्य ऐप सेटिंग्स शामिल हैं।",
+  "exportBackup": "बैकअप निर्यात करें",
+  "exportBackupSubtitle": "साझा करने या संग्रहीत करने के लिए बैकअप फ़ाइल सहेजें",
+  "importBackup": "बैकअप आयात करें",
+  "importBackupSubtitle": "बैकअप फ़ाइल से पुनर्स्थापित करें",
+  "dangerZone": "ख़तरे का क्षेत्र",
+  "clearAppData": "ऐप डेटा साफ़ करें",
+  "clearAppDataSubtitle": "डाउनलोड की गई ऑडियो फ़ाइलें रखते हुए ऐप डेटा/सेटिंग्स रीसेट करें",
+  "backupCreatedSuccessfully": "बैकअप सफलतापूर्वक बनाया गया",
+  "backupFailed": "बैकअप विफल: {error}",
+  "@backupFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoredSuccessfully": "बैकअप सफलतापूर्वक बहाल हुआ",
+  "restoreFailed": "पुनर्स्थापना विफल: {error}",
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearAllDataQuestion": "सभी डेटा साफ़ करें?",
+  "clearAllDataWarning": "यह स्थानीय ऐप डेटा और सेटिंग्स को रीसेट करता है, लेकिन डाउनलोड की गई गीत फ़ाइलें रखता है। इसे असंपादित नहीं किया जा सकता है।",
+  "cancel": "रद्द करें",
+  "clearAll": "सभी साफ़ करें",
+  "appDataClearedPreserved": "ऐप डेटा साफ़ कर दिया गया (डाउनलोड की गई ऑडियो फ़ाइलें संरक्षित कर ली गईं)",
+  "failedGeneric": "विफल: {error}",
+  "@failedGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupSubject": "Inzx संगीत बैकअप",
+  "statisticsTitle": "सांख्यिकी",
+  "statisticsCleared": "आंकड़े साफ़ हो गए",
+  "clearStatistics": "स्पष्ट आँकड़े",
+  "noStatisticsYet": "अभी तक कोई आँकड़े नहीं",
+  "startListeningStats": "अपने आँकड़े देखने के लिए सुनना प्रारंभ करें",
+  "overview": "सिंहावलोकन",
+  "totalPlays": "कुल खेल",
+  "listenTime": "सुनने का समय",
+  "mostPlayed": "सर्वाधिक खेला गया",
+  "playsCount": "{count} बजाता है",
+  "@playsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutes": "{hours}h {minutes}m",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutesOnly": "{minutes}m",
+  "@durationMinutesOnly": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "retry": "पुनः प्रयास करें",
+  "share": "साझा करें",
+  "playlist": "प्लेलिस्ट",
+  "album": "एलबम",
+  "channel": "चैनल",
+  "playNext": "अगला खेलें",
+  "addToQueue": "कतार में जोड़ें",
+  "addToPlaylist": "प्लेलिस्ट में जोड़ें",
+  "goToAlbum": "एल्बम पर जाएँ",
+  "goToArtist": "कलाकार के पास जाएँ",
+  "startRadio": "रेडियो प्रारंभ करें",
+  "playAll": "सभी खेलें",
+  "shuffle": "फेरबदल",
+  "shuffleAll": "सब मिला दो",
+  "radio": "रेडियो",
+  "follow": "अनुसरण करें",
+  "following": "निम्नलिखित",
+  "connectYtMusicToFollowArtists": "कलाकारों का अनुसरण करने के लिए YouTube Music से कनेक्ट करें।",
+  "couldNotFollowArtist": "{artist} का अनुसरण नहीं किया जा सका.",
+  "@couldNotFollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotUnfollowArtist": "{artist} को अनफ़ॉलो नहीं किया जा सका.",
+  "@couldNotUnfollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "followingArtist": "निम्नलिखित {artist}",
+  "@followingArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "unfollowedArtist": "अनफ़ॉलो किया गया {artist}",
+  "@unfollowedArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingArtist": "कलाकार लोड करने में त्रुटि",
+  "subscribersCount": "{count} ग्राहक",
+  "@subscribersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSection": "डाउनलोड किया गया",
+  "showAllDownloaded": "डाउनलोड किए गए सभी {count} दिखाएं",
+  "@showAllDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "seeAll": "सभी देखें",
+  "removeFromLikedSongs": "पसंद किए गए गानों से हटाएं",
+  "addToLikedSongs": "पसंद किये गये गानों में जोड़ें",
+  "playingTrackNext": "आगे \"{title}\" बजा रहा हूँ",
+  "@playingTrackNext": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTrackToQueue": "कतार में \"{title}\" जोड़ा गया",
+  "@addedTrackToQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playNextInJam": "जैम में अगला खेलें",
+  "playTrackNextInJam": "\"{title}\" जैम में आगे चलेगा",
+  "@playTrackNextInJam": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addToJamQueue": "जाम कतार में जोड़ें",
+  "addedTrackToJamQueue": "जैम क्यू में \"{title}\" जोड़ा गया",
+  "@addedTrackToJamQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloaded": "डाउनलोड किया गया",
+  "downloadingProgress": "डाउनलोड हो रहा है {progress}%",
+  "@downloadingProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadStartingTrack": "\"{title}\" डाउनलोड हो रहा है",
+  "@downloadStartingTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadNotificationsChannelDescription": "प्रगति सूचनाएं डाउनलोड करें",
+  "downloadStartingNotification": "डाउनलोड प्रारंभ हो रहा है...",
+  "downloadCompleteNotification": "पूरा डाउनलोड करें",
+  "downloadFileNotCreated": "डाउनलोड विफल रहा क्योंकि फ़ाइल नहीं बनाई गई थी",
+  "shareTrackText": "{title} द्वारा {artist}\n{url}",
+  "@shareTrackText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "createNewPlaylist": "नई प्लेलिस्ट बनाएं",
+  "playlistName": "प्लेलिस्ट का नाम",
+  "create": "बनाएँ",
+  "couldNotLoadPlaylists": "प्लेलिस्ट लोड नहीं हो सकी",
+  "createLocalPlaylistInstead": "इसके बजाय एक स्थानीय प्लेलिस्ट बनाएं",
+  "noPlaylistsYet": "अभी तक कोई प्लेलिस्ट नहीं",
+  "createOneToGetStarted": "आरंभ करने के लिए एक बनाएं",
+  "songsCount": "{count} गाने",
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createdPlaylistOnYtMusicAndAddedTrack": "YT Music पर \"{playlist}\" बनाया और \"{track}\" जोड़ा",
+  "@createdPlaylistOnYtMusicAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToCreatePlaylist": "प्लेलिस्ट बनाने में विफल",
+  "createdPlaylistLocallyAndAddedTrack": "स्थानीय स्तर पर \"{playlist}\" बनाया गया और \"{track}\" जोड़ा गया",
+  "@createdPlaylistLocallyAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddToPlaylist": "प्लेलिस्ट में जोड़ने में विफल",
+  "addedTrackToPlaylist": "\"{track}\" को \"{playlist}\" में जोड़ा गया",
+  "@addedTrackToPlaylist": {
+    "placeholders": {
+      "track": {
+        "type": "String"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorWithMessage": "त्रुटि: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "searchingForLyrics": "गीत के बोल खोज रहे हैं...",
+  "failedToLoadLyrics": "गीत लोड करने में विफल",
+  "tryAnotherProvider": "किसी अन्य प्रदाता का प्रयास करें",
+  "noLyricsFound": "कोई गीत नहीं मिला",
+  "linkLabel": "लिंक: {url}",
+  "@linkLabel": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "tracksCount": "{count} ट्रैक",
+  "@tracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFromYoutubeMusic": "YouTube संगीत से आयात करें",
+  "importedPlaylistSuffix": "आयातित",
+  "importedFromYoutubeMusicDescription": "YouTube संगीत से आयातित",
+  "importedPlaylist": "आयातित \"{playlist}\"",
+  "@importedPlaylist": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToImportPlaylist": "आयात करने में विफल: {error}",
+  "@failedToImportPlaylist": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadPlaylists": "प्लेलिस्ट लोड करने में विफल",
+  "makeSureLoggedInYoutubeMusic": "सुनिश्चित करें कि आप YouTube Music में लॉग इन हैं",
+  "noPlaylistsFound": "कोई प्लेलिस्ट नहीं मिली",
+  "createPlaylistsInYoutubeMusicFirst": "पहले YouTube Music में कुछ प्लेलिस्ट बनाएं",
+  "loggedInYoutubeMusicSuccess": "YouTube Music में सफलतापूर्वक लॉग इन किया गया!",
+  "signInToYoutubeMusic": "YouTube संगीत में साइन इन करें",
+  "loggingYouIn": "आपको लॉग इन किया जा रहा है...",
+  "signInSyncYoutubeMusicDescription": "पसंद किए गए गाने, प्लेलिस्ट और एल्बम सहित अपनी YouTube संगीत लाइब्रेरी को सिंक करने के लिए अपने Google खाते से साइन इन करें।",
+  "playbackSpeed": "प्लेबैक गति",
+  "normal": "सामान्य",
+  "defaultValue": "डिफ़ॉल्ट",
+  "failedToLoadContent": "सामग्री लोड करने में विफल",
+  "loadMore": "और अधिक लोड करें",
+  "audioSettingsTitle": "ऑडियो सेटिंग्स",
+  "nowPlayingLabel": "अभी चल रहा है",
+  "higherQualityUsesMoreData": "उच्च गुणवत्ता अधिक डेटा का उपयोग करती है",
+  "adjustsBasedOnNetworkSpeed": "नेटवर्क स्पीड के आधार पर समायोजित होता है",
+  "qualityLowUsesLessData": "~64 केबीपीएस - कम डेटा का उपयोग करता है",
+  "qualityMediumBalanced": "~128 केबीपीएस - संतुलित",
+  "qualityHighBestForMost": "~256 केबीपीएस - अधिकांश के लिए सर्वोत्तम",
+  "qualityMaximumAvailable": "उच्चतम उपलब्ध (~256 केबीपीएस)",
+  "recommended": "अनुशंसित",
+  "blendTrackEndsIntoNext": "मौजूदा ट्रैक के अंत को अगले ट्रैक के आरंभ में मिलाएं",
+  "preCachesNextTracks": "उपलब्ध होने पर स्थानीय कैश से अगले ट्रैक और प्ले को प्री-कैश करें",
+  "smartStreamCache": "स्मार्ट स्ट्रीम कैश",
+  "usedCacheStorage": "प्रयुक्त: {used} / {limit} एमबी",
+  "@usedCacheStorage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "calculatingCacheUsage": "कैश उपयोग की गणना की जा रही है...",
+  "unableToReadCacheUsage": "कैश उपयोग को पढ़ने में असमर्थ",
+  "preCacheNetwork": "प्री-कैश नेटवर्क",
+  "wifiOnly": "केवल वाई-फ़ाई",
+  "wifiAndMobileData": "वाई-फ़ाई + मोबाइल डेटा",
+  "preCacheRunsWifiOnly": "प्री-कैश केवल वाई-फाई से कनेक्ट होने पर चलता है",
+  "preCacheRunsWifiAndMobile": "प्री-कैश वाई-फाई और मोबाइल डेटा दोनों पर चल सकता है",
+  "concurrentPreCacheDownloads": "समवर्ती प्री-कैश डाउनलोड",
+  "higherValuesCacheFaster": "उच्च मान तेजी से कैश करते हैं लेकिन अधिक नेटवर्क और बैटरी का उपयोग करते हैं",
+  "cacheSizeLimit": "कैश आकार सीमा",
+  "off": "बंद",
+  "crossfadeDisabled": "क्रॉसफ़ेड अक्षम",
+  "currentValueLabel": "वर्तमान: {value}",
+  "@currentValueLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "audioQuality": "ऑडियो गुणवत्ता",
+  "qualityLowKbps": "कम (64 केबीपीएस)",
+  "qualityMediumKbps": "मध्यम (128 केबीपीएस)",
+  "qualityHighKbps": "उच्च (256 केबीपीएस)",
+  "qualityMaximumKbps": "अधिकतम (~256 केबीपीएस)",
+  "all": "सब",
+  "artists": "कलाकार",
+  "albums": "एलबम",
+  "playlists": "प्लेलिस्ट",
+  "singlesAndEps": "एकल और ईपी",
+  "appearsOn": "पर प्रकट होता है",
+  "fansAlsoLike": "फैंस भी पसंद करते हैं",
+  "searchMusicHint": "गाने, एल्बम, कलाकार खोजें",
+  "searchForMusic": "संगीत खोजें",
+  "noResultsFound": "कोई परिणाम नहीं मिला",
+  "showAllLocalResults": "सभी {count} स्थानीय परिणाम दिखाएँ",
+  "@showAllLocalResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "topResult": "शीर्ष परिणाम",
+  "artistLabel": "कलाकार",
+  "albumByArtist": "एल्बम - {artist}",
+  "@albumByArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistByAuthor": "प्लेलिस्ट - {author}",
+  "@playlistByAuthor": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "सहेजें",
+  "upNext": "उत्तर अगला",
+  "lyricsTab": "गीत",
+  "relatedTab": "सम्बंधित",
+  "youMightAlsoLike": "आपको भी पसंद आ सकता है",
+  "otherPerformances": "अन्य प्रदर्शन",
+  "moreFrom": "से अधिक",
+  "aboutArtist": "कलाकार के बारे में",
+  "jamQueue": "जाम कतार",
+  "radioQueue": "रेडियो कतार",
+  "queueLabel": "कतार",
+  "playingFrom": "से बजाना",
+  "loadingMoreTracks": "अधिक ट्रैक लोड हो रहे हैं...",
+  "scrollForMore": "अधिक के लिए स्क्रॉल करें",
+  "someone": "कोई",
+  "noTracksInQueue": "कतार में कोई ट्रैक नहीं",
+  "addSongsToJamQueue": "जैम कतार में गाने जोड़ें",
+  "addedByUser": "{name} द्वारा जोड़ा गया",
+  "@addedByUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTrackPlaying": "कोई ट्रैक नहीं बज रहा है",
+  "noRelatedTracksFound": "कोई संबंधित ट्रैक नहीं मिला",
+  "queueIsEmpty": "कतार खाली है",
+  "defaultQueueName": "मेरी कतार",
+  "saveQueueAsPlaylist": "कतार को प्लेलिस्ट के रूप में सहेजें",
+  "savedTracksToPlaylist": "{count} ट्रैक को \"{name}\" में सहेजा गया",
+  "@savedTracksToPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "jams": "जाम",
+  "nowPlayingHeader": "अभी खेल रहा है",
+  "browseMoodsGenresTitle": "मूड और शैलियाँ",
+  "moodCategoryMoods": "मूड",
+  "moodCategoryGenres": "शैलियाँ",
+  "moodCategoryActivities": "गतिविधियाँ",
+  "moodChill": "शांत रहो",
+  "moodParty": "पार्टी",
+  "moodWorkout": "कसरत",
+  "moodFocus": "फोकस",
+  "moodSleep": "सो जाओ",
+  "moodHappy": "खुश",
+  "moodSad": "दुखद",
+  "moodRomance": "रोमांस",
+  "moodFeelGood": "अच्छा लग रहा है",
+  "moodEnergize": "ऊर्जावान बनाना",
+  "genrePop": "पॉप",
+  "genreRock": "रॉक",
+  "genreHipHop": "हिप-हॉप",
+  "genreRnb": "आर एंड बी",
+  "genreElectronic": "इलेक्ट्रॉनिक",
+  "genreDance": "नृत्य",
+  "genreJazz": "जैज़",
+  "genreClassical": "शास्त्रीय",
+  "genreCountry": "देश",
+  "genreMetal": "धातु",
+  "genreIndie": "इंडी",
+  "genreKPop": "के-पॉप",
+  "genreLatin": "लैटिन",
+  "genreBollywood": "बॉलीवुड",
+  "activityDriving": "ड्राइविंग",
+  "activityCooking": "खाना बनाना",
+  "activityGaming": "गेमिंग",
+  "activityStudying": "पढ़ाई",
+  "activityMeditation": "ध्यान",
+  "play": "खेलो",
+  "findInPlaylist": "प्लेलिस्ट में खोजें...",
+  "playlistNotFoundMessage": "प्लेलिस्ट नहीं मिली\n\nप्लेलिस्ट आईडी: {id}\n\nयह प्लेलिस्ट निजी या अनुपलब्ध हो सकती है.",
+  "@playlistNotFoundMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineSnapshotDownloaded": "ऑफ़लाइन स्नैपशॉट - {downloaded}/{total} डाउनलोड किया गया",
+  "@offlineSnapshotDownloaded": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noMatchingTracks": "कोई मेल खाता ट्रैक नहीं",
+  "noTracksFound": "कोई ट्रैक नहीं मिला",
+  "downloadingTracksFromPlaylist": "{playlist} से {count} ट्रैक डाउनलोड किया जा रहा है",
+  "@downloadingTracksFromPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTracksToQueueCount": "कतार में {count} ट्रैक जोड़े गए",
+  "@addedTracksToQueueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadPlaylist": "प्लेलिस्ट डाउनलोड करें",
+  "signInWithGoogle": "Google से साइन इन करें",
+  "signInToUseJams": "Jams का उपयोग करने के लिए साइन इन करें",
+  "listenTogetherRealtime": "वास्तविक समय में दोस्तों के साथ मिलकर सुनें",
+  "signInGoogleToStartOrJoinJam": "दोस्तों के साथ Jam सत्र शुरू करने या उसमें शामिल होने के लिए Google से साइन इन करें",
+  "listenTogether": "एक साथ सुनें",
+  "listenWithFriendsInSync": "दोस्तों के साथ तालमेल बिठाकर सुनें",
+  "sameSongSameMoment": "वही गाना, वही पल",
+  "startJam": "जाम प्रारंभ करें",
+  "createSessionAndInviteFriends": "एक सत्र बनाएं और मित्रों को आमंत्रित करें",
+  "joinJam": "एक जाम में शामिल हों",
+  "enterSixDigitCode": "6 अंकीय कोड दर्ज करें",
+  "join": "सम्मिलित हों",
+  "shareThisCode": "इस कोड को साझा करें",
+  "codeCopied": "कोड कॉपी किया गया!",
+  "youAreHost": "आप मेजबान हैं",
+  "hostedBy": "{name} द्वारा होस्ट किया गया",
+  "@hostedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listeningTogetherCount": "एक साथ सुनना ({count})",
+  "@listeningTogetherCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "endSession": "समापन सत्र",
+  "leaveSession": "सत्र छोड़ें",
+  "connected": "जुड़ा हुआ",
+  "reconnecting": "पुनः कनेक्ट हो रहा है",
+  "retryInSeconds": "{seconds}s में पुनः प्रयास करें",
+  "@retryInSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectingStatus": "पुनः कनेक्ट हो रहा है · {suffix}",
+  "@reconnectingStatus": {
+    "placeholders": {
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "reconnectingAttemptStatus": "पुनः कनेक्ट हो रहा है ({attempt}) · {suffix}",
+  "@reconnectingAttemptStatus": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "disconnected": "विच्छेदित",
+  "playing": "बजाना",
+  "addSongsToPlayTogether": "उन्हें एक साथ बजाने के लिए गाने जोड़ें",
+  "sessionCreatedCode": "सत्र बनाया गया! कोड: {code}",
+  "@sessionCreatedCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "noJamFoundForCode": "इस कोड के लिए कोई जैम नहीं मिला.",
+  "hostRole": "मेज़बान",
+  "canControl": "नियंत्रण कर सकते हैं",
+  "listeningStatus": "सुनना",
+  "transferHostQuestion": "स्थानांतरण मेज़बान?",
+  "transferHostMessage": "{name} को नया होस्ट बनाएं? आप होस्ट नियंत्रण खो देंगे.",
+  "@transferHostMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transfer": "स्थानांतरण",
+  "removeControl": "नियंत्रण हटाओ",
+  "allowControl": "नियंत्रण की अनुमति दें",
+  "makeHost": "मेज़बान बनाओ",
+  "live": "जियो",
+  "playbackControlsJam": "आपका प्लेबैक Jam को नियंत्रित करता है",
+  "starting": "प्रारंभ...",
+  "or": "या",
+  "joinFriendsJam": "किसी मित्र के Jam में शामिल हों",
+  "startJamDescription": "दोस्तों के साथ संगीत साझा करने के लिए जैम प्रारंभ करें।\nहर कोई एक ही गाना एक साथ सुनता है।",
+  "folderSettings": "फ़ोल्डर सेटिंग्स",
+  "noFoldersAddedYet": "अभी तक कोई फ़ोल्डर नहीं जोड़ा गया",
+  "addFolder": "फ़ोल्डर जोड़ें",
+  "localMusic": "स्थानीय संगीत",
+  "scanLocalMusicDescription": "स्थानीय संगीत फ़ाइलें ढूंढने और उन्हें ऑफ़लाइन चलाने के लिए अपने डिवाइस को स्कैन करें",
+  "scanForMusic": "संगीत के लिए स्कैन करें",
+  "addFolderLowercase": "फ़ोल्डर जोड़ें",
+  "supportedFormats": "समर्थित प्रारूप: MP3, FLAC, WAV, M4A, OGG",
+  "songsFromFoldersCount": "{folders} फ़ोल्डर से {songs} गाने",
+  "@songsFromFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "add": "जोड़ें",
+  "permissionRequired": "अनुमति आवश्यक है",
+  "storagePermissionRequiredMessage": "आपकी संगीत फ़ाइलों तक पहुँचने के लिए संग्रहण अनुमति आवश्यक है। कृपया इसे सेटिंग्स में सक्षम करें।",
+  "couldNotOpenSettingsPermission": "सेटिंग्स नहीं खोली जा सकीं. कृपया भंडारण अनुमति को मैन्युअल रूप से सक्षम करें।",
+  "openSettings": "सेटिंग्स खोलें",
+  "folderAdded": "फ़ोल्डर जोड़ा गया",
+  "addedFolderScanNow": "\"{folder}\" जोड़ा गया। क्या अब आप इसे संगीत के लिए स्कैन करना चाहेंगे?",
+  "@addedFolderScanNow": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanNow": "अभी स्कैन करें",
+  "foundSongsCount": "{count} गाने मिले",
+  "@foundSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addFolderFirstThenScan": "पहले एक फ़ोल्डर जोड़ें, फिर ऑडियो फ़ाइलों को स्कैन करें।",
+  "scanFoldersCountDescription": "यह ऑडियो फ़ाइलों के लिए {count} फ़ोल्डर को स्कैन करेगा।",
+  "@scanFoldersCountDescription": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "foldersToScan": "स्कैन करने योग्य फ़ोल्डर:",
+  "andMoreFolders": "... और {count} अधिक",
+  "@andMoreFolders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "startScan": "स्कैन प्रारंभ करें",
+  "foundSongsInFoldersCount": "{folders} फ़ोल्डर में {songs} गाने मिले",
+  "@foundSongsInFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "scanningForMusic": "संगीत के लिए स्कैन किया जा रहा है...",
+  "filesProgress": "{scanned} / {total} फ़ाइलें",
+  "@filesProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "signOut": "साइन आउट करें",
+  "signInGoogleProfilePictureJams": "अपना प्रोफ़ाइल चित्र प्राप्त करने और Jams सक्षम करने के लिए Google से साइन इन करें",
+  "sync": "सिंक करें",
+  "lastSynced": "अंतिम बार समन्वयित: {time}",
+  "@lastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedItems": "समन्वयित {count} आइटम",
+  "@syncedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncing": "सिंक हो रहा है...",
+  "syncNow": "अभी सिंक करें",
+  "cachedItems": "{count} कैश्ड आइटम",
+  "@cachedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streams": "धाराएँ",
+  "colors": "रंग",
+  "searches": "खोजता है",
+  "expiredCount": "{count} समाप्त हो गया",
+  "@expiredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cacheCleanupComplete": "कैश क्लीनअप पूरा हुआ",
+  "cleanUp": "साफ़ करें",
+  "clearCache": "कैश साफ़ करें",
+  "clearCachedMusicDataConfirm": "इससे सभी कैश्ड संगीत डेटा साफ़ हो जाएगा। जारी रखना?",
+  "clear": "स्पष्ट",
+  "cacheCleared": "कैश साफ़ किया गया",
+  "analytics": "विश्लेषिकी",
+  "hits": "हिट्स",
+  "misses": "याद आती है",
+  "network": "नेटवर्क",
+  "analyticsReset": "एनालिटिक्स रीसेट",
+  "resetStats": "आँकड़े रीसेट करें",
+  "cacheHitRate": "कैश हिट दर",
+  "liked": "पसंद आया",
+  "appInfo": "ऐप की जानकारी",
+  "releaseBuild": "रिलीज बिल्ड",
+  "updater": "अद्यतनकर्ता",
+  "available": "उपलब्ध",
+  "unavailable": "अनुपलब्ध",
+  "loadingCompact": "लोड हो रहा है...",
+  "errorCompact": "त्रुटि",
+  "none": "कोई नहीं",
+  "currentPatch": "वर्तमान पैच",
+  "nextPatch": "अगला पैच",
+  "disconnectYoutubeMusic": "YouTube संगीत डिस्कनेक्ट करें",
+  "disconnectYoutubeMusicQuestion": "YouTube संगीत डिस्कनेक्ट करें?",
+  "disconnectYoutubeMusicWarning": "यह आपके YouTube Music खाते को ऐप से हटा देगा। आपका लाइब्रेरी डेटा साफ़ कर दिया जाएगा.",
+  "disconnect": "डिस्कनेक्ट करें",
+  "syncFailed": "समन्वयन विफल: {error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "justNow": "अभी अभी",
+  "minutesAgo": "{count}m पहले",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count}h पहले",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count}d पहले",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noSongsInTitle": "{title} में कोई गाना नहीं",
+  "@noSongsInTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "createPlaylistDescription": "अपने संगीत को व्यवस्थित करने के लिए एक प्लेलिस्ट बनाएं",
+  "savedAlbumsFromYoutubeMusic": "YouTube Music से सहेजे गए एल्बम",
+  "noSavedAlbumsFromYoutubeMusic": "YouTube Music से कोई सहेजा गया एल्बम नहीं",
+  "errorLoadingAlbums": "एल्बम लोड करने में त्रुटि",
+  "recentlyPlayed": "हाल ही में खेला गया",
+  "noAlbumsYet": "अभी तक कोई एल्बम नहीं",
+  "playSomeMusicToSeeAlbumsHere": "यहां एल्बम देखने के लिए कुछ संगीत चलाएं",
+  "subscribedArtists": "सदस्यता प्राप्त कलाकार",
+  "noSubscribedArtists": "कोई सदस्यता प्राप्त कलाकार नहीं",
+  "errorLoadingArtists": "कलाकारों को लोड करने में त्रुटि",
+  "recentlyPlayedArtists": "हाल ही में कलाकारों ने भूमिका निभाई",
+  "noArtistsYet": "अभी तक कोई कलाकार नहीं",
+  "playSomeMusicToSeeArtistsHere": "यहां कलाकारों को देखने के लिए कुछ संगीत बजाएं",
+  "downloading": "डाउनलोड हो रहा है",
+  "downloadedPlaylists": "डाउनलोड की गई प्लेलिस्ट",
+  "errorLoadingDownloads": "डाउनलोड लोड करने में त्रुटि",
+  "deleteDownload": "डाउनलोड हटाएँ",
+  "deleteDownloadQuestion": "डाउनलोड हटाएँ?",
+  "deleteDownloadWarning": "यह आपके डिवाइस से \"{title}\" हटा देगा। आप इसे बाद में दोबारा डाउनलोड कर सकते हैं.",
+  "@deleteDownloadWarning": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedTrack": "\"{title}\" हटा दिया गया",
+  "@deletedTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSongsWillAppearHere": "डाउनलोड किए गए गाने यहां दिखाई देंगे",
+  "createPlaylist": "प्लेलिस्ट बनाएं",
+  "autoPlaylists": "ऑटो प्लेलिस्ट",
+  "likedSongsLabel": "पसंद किये गये गाने",
+  "downloadedFraction": "{downloaded}/{total} डाउनलोड किया गया",
+  "@downloadedFraction": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "more": "अधिक",
+  "video": "वीडियो",
+  "forgottenFavorites": "भूले हुए पसंदीदा",
+  "mixedForYou": "आपके लिए मिश्रित",
+  "myMixOne": "मेरा मिश्रण 1",
+  "discoverMix": "मिक्स खोजें",
+  "replayMix": "मिक्स रीप्ले",
+  "newRelease": "नई रिलीज",
+  "chillMix": "ठंडा मिश्रण",
+  "basedOnYourListening": "आपके सुनने के आधार पर",
+  "newMusicForYou": "आपके लिए नया संगीत",
+  "yourFavorites": "आपके पसंदीदा",
+  "freshTracks": "ताज़ा ट्रैक",
+  "relaxingVibes": "आरामदायक वाइब्स",
+  "musicToGetYouStarted": "आपको आरंभ करने के लिए संगीत",
+  "welcomeUser": "स्वागत है {name}",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeFallbackName": "वहाँ",
+  "youtubeMusicLabel": "यूट्यूब संगीत",
+  "local": "स्थानीय",
+  "recentlyAdded": "हाल ही में जोड़ा गया",
+  "name": "नाम",
+  "duration": "अवधि",
+  "searchSongsHint": "गाने खोजें...",
+  "noLikedSongs": "कोई पसंदीदा गाना नहीं",
+  "likeSomeSongsToSeeThemHere": "उन्हें यहां देखने के लिए कुछ गाने पसंद हैं",
+  "noLocalSongs": "कोई स्थानीय गीत नहीं",
+  "scanFoldersToFindLocalMusic": "स्थानीय संगीत खोजने के लिए फ़ोल्डर्स को स्कैन करें",
+  "noResults": "कोई परिणाम नहीं",
+  "tryDifferentKeywords": "अलग-अलग कीवर्ड आज़माएं",
+  "noSongsYet": "अभी तक कोई गाना नहीं",
+  "playSomeMusicToBuildYourLibrary": "अपनी लाइब्रेरी बनाने के लिए कुछ संगीत बजाएं",
+  "albumNotFound": "एल्बम नहीं मिला",
+  "downloadAlbum": "एल्बम डाउनलोड करें",
+  "downloadingTracksFromAlbum": "{album} से {count} ट्रैक डाउनलोड किया जा रहा है",
+  "@downloadingTracksFromAlbum": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "shareAlbumText": "{title} द्वारा {artist}\n{url}",
+  "@shareAlbumText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestions": "सुझाव",
+  "recentSearches": "हाल की खोजें",
+  "startTypingToSearch": "खोजने के लिए टाइप करना प्रारंभ करें...",
+  "youtubeMusicPlaylists": "यूट्यूब संगीत प्लेलिस्ट",
+  "errorLoadingPlaylists": "प्लेलिस्ट लोड करने में त्रुटि",
+  "yourPlaylists": "आपकी प्लेलिस्ट",
+  "noYoutubeMusicPlaylistsFound": "कोई YouTube संगीत प्लेलिस्ट नहीं मिली",
+  "songCountLabel": "{count, plural, one {# गाना} other {# गीत}}",
+  "@songCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unknownAlbum": "अज्ञात एल्बम",
+  "jamCodeExample": "एबीसी123",
+  "jamCodeHint": "कोड",
+  "yourProfile": "आपकी प्रोफ़ाइल",
+  "googleUser": "गूगल उपयोगकर्ता",
+  "jamsAndProfile": "जैम और प्रोफ़ाइल",
+  "yes": "हाँ",
+  "no": "नहीं",
+  "foundInSettings": "सेटिंग्स में मिला",
+  "sharePlaylistText": "{title}\n{url}",
+  "@sharePlaylistText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "shareArtistText": "{artist}\n{url}",
+  "@shareArtistText": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "megabytesValue": "{value} एमबी",
+  "@megabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "gigabytesValue": "{value} जीबी",
+  "@gigabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxMegabytesValue": "~{value} MB",
+  "@approxMegabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxKbpsValue": "~{value} kbps",
+  "@approxKbpsValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "secondsShort": "{value}s",
+  "@secondsShort": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "speedMultiplier": "{value}x",
+  "@speedMultiplier": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

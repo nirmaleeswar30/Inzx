@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/design_system/design_system.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import '../../providers/providers.dart';
 import '../../models/models.dart';
 import '../../services/local_music_scanner.dart';
@@ -34,13 +35,14 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
   }
 
   Widget _buildHeader(bool isDark, ColorScheme colorScheme) {
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Folders',
+            l10n.folders,
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -75,6 +77,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
   }
 
   void _showSettingsDialog() {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final folders = ref.read(localMusicFoldersProvider);
 
@@ -91,7 +94,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Folder Settings',
+              l10n.folderSettings,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -101,7 +104,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
             const SizedBox(height: 16),
             if (folders.isEmpty)
               Text(
-                'No folders added yet',
+                l10n.noFoldersAddedYet,
                 style: TextStyle(
                   color: isDark ? Colors.white54 : InzxColors.textSecondary,
                 ),
@@ -150,7 +153,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
                       _pickFolder();
                     },
                     icon: const Icon(Icons.add_rounded),
-                    label: const Text('Add Folder'),
+                    label: Text(l10n.addFolder),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -166,7 +169,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
                                 .clear();
                           },
                     icon: const Icon(Icons.delete_sweep_rounded),
-                    label: const Text('Clear All'),
+                    label: Text(l10n.clearAll),
                   ),
                 ),
               ],
@@ -179,6 +182,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
   }
 
   Widget _buildContent(bool isDark, ColorScheme colorScheme) {
+    final l10n = context.l10n;
     final localTracks = ref.watch(localTracksProvider);
     final folders = ref.watch(localMusicFoldersProvider);
 
@@ -213,7 +217,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Local Music',
+              l10n.localMusic,
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -222,7 +226,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Scan your device to find local music files and play them offline',
+              l10n.scanLocalMusicDescription,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,
@@ -234,7 +238,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
             FilledButton.icon(
               onPressed: _showScanDialog,
               icon: const Icon(Icons.document_scanner_rounded),
-              label: const Text('Scan for music'),
+              label: Text(l10n.scanForMusic),
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -246,7 +250,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
             OutlinedButton.icon(
               onPressed: _pickFolder,
               icon: const Icon(Icons.create_new_folder_rounded),
-              label: const Text('Add folder'),
+              label: Text(l10n.addFolderLowercase),
             ),
             const SizedBox(height: 48),
             // Info card
@@ -271,7 +275,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Supported formats: MP3, FLAC, WAV, M4A, OGG',
+                      l10n.supportedFormats,
                       style: TextStyle(
                         fontSize: 13,
                         color: isDark
@@ -295,6 +299,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
     bool isDark,
     ColorScheme colorScheme,
   ) {
+    final l10n = context.l10n;
     final playerService = ref.watch(audioPlayerServiceProvider);
 
     return Column(
@@ -307,7 +312,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${tracks.length} songs from ${folders.length} folder(s)',
+                l10n.songsFromFoldersCount(tracks.length, folders.length),
                 style: TextStyle(
                   color: isDark ? Colors.white54 : InzxColors.textSecondary,
                 ),
@@ -315,7 +320,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
               TextButton.icon(
                 onPressed: _pickFolder,
                 icon: const Icon(Icons.create_new_folder_rounded, size: 18),
-                label: const Text('Add'),
+                label: Text(l10n.add),
               ),
             ],
           ),
@@ -401,6 +406,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
   }
 
   void _showPermissionDialog({bool isPermanentlyDenied = false}) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showDialog(
@@ -413,7 +419,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Permission Required',
+                l10n.permissionRequired,
                 style: TextStyle(
                   color: isDark ? Colors.white : InzxColors.textPrimary,
                 ),
@@ -422,7 +428,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
           ],
         ),
         content: Text(
-          'Storage permission is required to access your music files. Please enable it in Settings.',
+          l10n.storagePermissionRequiredMessage,
           style: TextStyle(
             color: isDark ? Colors.white70 : InzxColors.textSecondary,
           ),
@@ -430,7 +436,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton.icon(
             onPressed: () async {
@@ -440,16 +446,12 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
               if (!opened) {
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Could not open settings. Please enable storage permission manually.',
-                    ),
-                  ),
+                  SnackBar(content: Text(l10n.couldNotOpenSettingsPermission)),
                 );
               }
             },
             icon: const Icon(Icons.settings_rounded),
-            label: const Text('Open Settings'),
+            label: Text(l10n.openSettings),
           ),
         ],
       ),
@@ -457,6 +459,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
   }
 
   void _showScanNewFolderDialog(String folderPath) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final folderName = folderPath.split('/').last;
 
@@ -465,13 +468,13 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
       builder: (context) => AlertDialog(
         backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         title: Text(
-          'Folder Added',
+          l10n.folderAdded,
           style: TextStyle(
             color: isDark ? Colors.white : InzxColors.textPrimary,
           ),
         ),
         content: Text(
-          'Added "$folderName". Would you like to scan it for music now?',
+          l10n.addedFolderScanNow(folderName),
           style: TextStyle(
             color: isDark ? Colors.white70 : InzxColors.textSecondary,
           ),
@@ -479,14 +482,14 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Later'),
+            child: Text(l10n.later),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
               _scanFolder(folderPath);
             },
-            child: const Text('Scan Now'),
+            child: Text(l10n.scanNow),
           ),
         ],
       ),
@@ -494,6 +497,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
   }
 
   Future<void> _scanFolder(String path) async {
+    final l10n = context.l10n;
     _showScanningProgress();
 
     final tracks = await LocalMusicScanner.scanDirectory(
@@ -510,13 +514,14 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
     if (mounted) {
       Navigator.of(context).pop(); // Close progress dialog
       ref.read(localTracksProvider.notifier).addTracks(tracks);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Found ${tracks.length} songs')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.foundSongsCount(tracks.length))),
+      );
     }
   }
 
   void _showScanDialog() {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final folders = ref.read(localMusicFoldersProvider);
 
@@ -532,7 +537,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
             ),
             const SizedBox(width: 12),
             Text(
-              'Scan for music',
+              l10n.scanForMusic,
               style: TextStyle(
                 color: isDark ? Colors.white : InzxColors.textPrimary,
               ),
@@ -545,8 +550,8 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
           children: [
             Text(
               folders.isEmpty
-                  ? 'Add a folder first, then scan for audio files.'
-                  : 'This will scan ${folders.length} folder(s) for audio files.',
+                  ? l10n.addFolderFirstThenScan
+                  : l10n.scanFoldersCountDescription(folders.length),
               style: TextStyle(
                 color: isDark ? Colors.white70 : InzxColors.textSecondary,
               ),
@@ -554,7 +559,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
             if (folders.isNotEmpty) ...[
               const SizedBox(height: 12),
               Text(
-                'Folders to scan:',
+                l10n.foldersToScan,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -566,7 +571,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
                   .take(3)
                   .map(
                     (f) => Text(
-                      '• ${f.split('/').last}',
+                      '\u2022 ${f.split('/').last}',
                       style: TextStyle(
                         fontSize: 12,
                         color: isDark
@@ -577,7 +582,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
                   ),
               if (folders.length > 3)
                 Text(
-                  '... and ${folders.length - 3} more',
+                  l10n.andMoreFolders(folders.length - 3),
                   style: TextStyle(
                     fontSize: 12,
                     color: isDark ? Colors.white38 : InzxColors.textSecondary,
@@ -589,7 +594,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           if (folders.isEmpty)
             FilledButton(
@@ -597,7 +602,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
                 Navigator.pop(context);
                 _pickFolder();
               },
-              child: const Text('Add Folder'),
+              child: Text(l10n.addFolder),
             )
           else
             FilledButton(
@@ -605,7 +610,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
                 Navigator.pop(context);
                 _startScanning();
               },
-              child: const Text('Start Scan'),
+              child: Text(l10n.startScan),
             ),
         ],
       ),
@@ -613,6 +618,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
   }
 
   Future<void> _startScanning() async {
+    final l10n = context.l10n;
     final folders = ref.read(localMusicFoldersProvider);
     if (folders.isEmpty) return;
 
@@ -639,7 +645,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Found ${allTracks.length} songs in ${folders.length} folder(s)',
+            l10n.foundSongsInFoldersCount(allTracks.length, folders.length),
           ),
         ),
       );
@@ -647,6 +653,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
   }
 
   void _showScanningProgress() {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showDialog(
@@ -663,7 +670,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
                 CircularProgressIndicator(value: progress?.progress),
                 const SizedBox(height: 24),
                 Text(
-                  'Scanning for music...',
+                  l10n.scanningForMusic,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: isDark ? Colors.white : InzxColors.textPrimary,
@@ -672,7 +679,10 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
                 const SizedBox(height: 8),
                 if (progress != null) ...[
                   Text(
-                    '${progress.scannedFiles} / ${progress.totalFiles} files',
+                    l10n.filesProgress(
+                      progress.scannedFiles,
+                      progress.totalFiles,
+                    ),
                     style: TextStyle(
                       fontSize: 13,
                       color: isDark ? Colors.white54 : InzxColors.textSecondary,

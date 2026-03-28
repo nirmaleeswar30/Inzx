@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../services/download_service.dart';
@@ -28,6 +29,7 @@ class TrackOptionsSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     final backgroundColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
@@ -124,8 +126,8 @@ class TrackOptionsSheet extends ConsumerWidget {
                 icon: isLiked ? Iconsax.heart5 : Iconsax.heart,
                 iconColor: isLiked ? Colors.red : textColor,
                 title: isLiked
-                    ? 'Remove from Liked Songs'
-                    : 'Add to Liked Songs',
+                    ? l10n.removeFromLikedSongs
+                    : l10n.addToLikedSongs,
                 textColor: textColor,
                 onTap: () async {
                   // Use explicit like/unlike based on current state
@@ -166,13 +168,13 @@ class TrackOptionsSheet extends ConsumerWidget {
               _buildOption(
                 context,
                 icon: Iconsax.music_playlist,
-                title: 'Play Next',
+                title: l10n.playNext,
                 textColor: textColor,
                 onTap: () {
                   playerService.playNext(track);
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Playing "${track.title}" next')),
+                    SnackBar(content: Text(l10n.playingTrackNext(track.title))),
                   );
                 },
               ),
@@ -180,13 +182,15 @@ class TrackOptionsSheet extends ConsumerWidget {
               _buildOption(
                 context,
                 icon: Iconsax.add_square,
-                title: 'Add to Queue',
+                title: l10n.addToQueue,
                 textColor: textColor,
                 onTap: () {
                   playerService.addToQueue([track]);
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Added "${track.title}" to queue')),
+                    SnackBar(
+                      content: Text(l10n.addedTrackToQueue(track.title)),
+                    ),
                   );
                 },
               ),
@@ -206,7 +210,7 @@ class TrackOptionsSheet extends ConsumerWidget {
                     context,
                     icon: Iconsax.music_playlist,
                     iconColor: Colors.purple,
-                    title: 'Play Next in Jam',
+                    title: l10n.playNextInJam,
                     textColor: textColor,
                     onTap: () async {
                       final jamsService = ref.read(jamsServiceProvider);
@@ -223,9 +227,7 @@ class TrackOptionsSheet extends ConsumerWidget {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(
-                              '"${track.title}" will play next in Jam',
-                            ),
+                            content: Text(l10n.playTrackNextInJam(track.title)),
                           ),
                         );
                       }
@@ -249,7 +251,7 @@ class TrackOptionsSheet extends ConsumerWidget {
                     context,
                     icon: Iconsax.profile_2user,
                     iconColor: Colors.purple,
-                    title: 'Add to Jam Queue',
+                    title: l10n.addToJamQueue,
                     textColor: textColor,
                     onTap: () async {
                       final jamsService = ref.read(jamsServiceProvider);
@@ -267,7 +269,7 @@ class TrackOptionsSheet extends ConsumerWidget {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              'Added "${track.title}" to Jam Queue',
+                              l10n.addedTrackToJamQueue(track.title),
                             ),
                           ),
                         );
@@ -280,7 +282,7 @@ class TrackOptionsSheet extends ConsumerWidget {
               _buildOption(
                 context,
                 icon: Iconsax.music_square_add,
-                title: 'Add to Playlist',
+                title: l10n.addToPlaylist,
                 textColor: textColor,
                 onTap: () {
                   Navigator.pop(context);
@@ -305,10 +307,10 @@ class TrackOptionsSheet extends ConsumerWidget {
                         : Iconsax.document_download,
                     iconColor: isDownloaded ? Colors.green : null,
                     title: isDownloaded
-                        ? 'Downloaded'
+                        ? l10n.downloaded
                         : progress != null
-                        ? 'Downloading ${(progress * 100).toInt()}%'
-                        : 'Download',
+                        ? l10n.downloadingProgress((progress * 100).toInt())
+                        : l10n.download,
                     textColor: textColor,
                     onTap: isDownloaded || progress != null
                         ? () => Navigator.pop(context)
@@ -319,7 +321,9 @@ class TrackOptionsSheet extends ConsumerWidget {
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Downloading "${track.title}"'),
+                                content: Text(
+                                  l10n.downloadStartingTrack(track.title),
+                                ),
                               ),
                             );
                           },
@@ -331,7 +335,7 @@ class TrackOptionsSheet extends ConsumerWidget {
                 _buildOption(
                   context,
                   icon: Iconsax.music_dashboard,
-                  title: 'Go to Album',
+                  title: l10n.goToAlbum,
                   textColor: textColor,
                   onTap: () {
                     Navigator.pop(context);
@@ -348,7 +352,7 @@ class TrackOptionsSheet extends ConsumerWidget {
                 _buildOption(
                   context,
                   icon: Iconsax.profile_2user,
-                  title: 'Go to Artist',
+                  title: l10n.goToArtist,
                   textColor: textColor,
                   onTap: () {
                     Navigator.pop(context);
@@ -363,7 +367,7 @@ class TrackOptionsSheet extends ConsumerWidget {
               _buildOption(
                 context,
                 icon: Iconsax.radio,
-                title: 'Start Radio',
+                title: l10n.startRadio,
                 textColor: textColor,
                 onTap: () {
                   playerService.playTrack(track, enableRadio: true);
@@ -374,13 +378,15 @@ class TrackOptionsSheet extends ConsumerWidget {
               _buildOption(
                 context,
                 icon: Iconsax.share,
-                title: 'Share',
+                title: l10n.share,
                 textColor: textColor,
                 onTap: () {
                   Navigator.pop(context);
                   final url = 'https://music.youtube.com/watch?v=${track.id}';
                   SharePlus.instance.share(
-                    ShareParams(text: '${track.title} by ${track.artist}\n$url'),
+                    ShareParams(
+                      text: l10n.shareTrackText(track.title, track.artist, url),
+                    ),
                   );
                 },
               ),

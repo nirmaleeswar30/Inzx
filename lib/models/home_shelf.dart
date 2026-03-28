@@ -186,6 +186,7 @@ class HomeShelf extends Equatable {
   final bool isPlayable; // Can the entire shelf be played as a playlist?
   final String? playlistId; // Playlist ID if playable
   final String? strapline; // Small text above title
+  final String? headerThumbnailUrl; // Optional header avatar/artwork
   final String? browseId; // For "See all" navigation
   final String?
   params; // Required params for some browse endpoints (e.g., artist songs)
@@ -199,6 +200,7 @@ class HomeShelf extends Equatable {
     this.isPlayable = false,
     this.playlistId,
     this.strapline,
+    this.headerThumbnailUrl,
     this.browseId,
     this.params,
   });
@@ -256,6 +258,7 @@ class HomeShelf extends Equatable {
     'isPlayable': isPlayable,
     'playlistId': playlistId,
     'strapline': strapline,
+    'headerThumbnailUrl': headerThumbnailUrl,
     'browseId': browseId,
     'params': params,
   };
@@ -274,6 +277,7 @@ class HomeShelf extends Equatable {
     isPlayable: json['isPlayable'] as bool? ?? false,
     playlistId: json['playlistId'] as String?,
     strapline: json['strapline'] as String?,
+    headerThumbnailUrl: json['headerThumbnailUrl'] as String?,
     browseId: json['browseId'] as String?,
     params: json['params'] as String?,
   );
@@ -373,4 +377,26 @@ class BrowseShelfResult {
   });
 
   bool get hasMore => continuationToken != null;
+}
+
+class WatchRelatedContent extends Equatable {
+  final List<HomeShelf> shelves;
+  final String? aboutTitle;
+  final String? aboutDescription;
+
+  const WatchRelatedContent({
+    required this.shelves,
+    this.aboutTitle,
+    this.aboutDescription,
+  });
+
+  static const empty = WatchRelatedContent(shelves: []);
+
+  bool get hasAboutSection =>
+      aboutDescription != null && aboutDescription!.trim().isNotEmpty;
+
+  bool get isEmpty => shelves.isEmpty && !hasAboutSection;
+
+  @override
+  List<Object?> get props => [shelves, aboutTitle, aboutDescription];
 }

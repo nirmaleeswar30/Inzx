@@ -14,11 +14,15 @@ import '../../services/audio_player_service.dart' as player;
 import '../../services/lyrics/lyrics_service.dart';
 import '../../services/lyrics/lyrics_models.dart';
 import '../../core/design_system/colors.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import 'artist_screen.dart';
+import 'album_screen.dart' show AlbumScreen;
+import 'playlist_screen.dart' show PlaylistScreen;
 import 'track_options_sheet.dart';
 import 'lyrics_view.dart';
 import 'ytm_drawer.dart';
 import 'jams_panel.dart';
+import 'home_shelves.dart' show TrackListShelf;
 
 /// Progress bar widget that only rebuilds on position changes (isolated)
 class _NowPlayingProgressBar extends ConsumerWidget {
@@ -149,7 +153,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   AlbumColors _targetColors = AlbumColors.defaultColors();
   String? _lastLyricsTrackId;
   String? _lastRelatedTrackId; // Cache key for related tracks
-  Future<List<Track>>? _relatedTracksFuture; // Cached future for related tracks
+  Future<WatchRelatedContent>? _relatedContentFuture;
   // ignore: unused_field - reserved for future panel toggle features
   bool _showLyrics = false;
   // ignore: unused_field - reserved for future panel toggle features
@@ -519,6 +523,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     Color secondaryColor,
     Color surfaceColor,
   ) {
+    final l10n = context.l10n;
     final queue = ref.watch(queueProvider);
     final currentTrack = ref.watch(currentTrackProvider);
     final isRadioMode = ref.watch(isRadioModeProvider);
@@ -533,13 +538,13 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     String queueLabel;
     IconData? queueIcon;
     if (isInJam) {
-      queueLabel = 'Jam Queue';
+      queueLabel = l10n.jamQueue;
       queueIcon = Iconsax.profile_2user;
     } else if (isRadioMode) {
-      queueLabel = 'Radio Queue';
+      queueLabel = l10n.radioQueue;
       queueIcon = Icons.all_inclusive;
     } else {
-      queueLabel = 'Queue';
+      queueLabel = l10n.queueLabel;
       queueIcon = null;
     }
 
@@ -571,7 +576,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Playing from',
+                    l10n.playingFrom,
                     style: TextStyle(fontSize: 12, color: secondaryColor),
                   ),
                   const SizedBox(height: 4),
@@ -603,7 +608,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                     size: 18,
                     color: textColor,
                   ),
-                  label: Text('Save', style: TextStyle(color: textColor)),
+                  label: Text(l10n.save, style: TextStyle(color: textColor)),
                 ),
             ],
           ),
@@ -674,7 +679,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                                 ),
                                 const SizedBox(width: 12),
                                 Text(
-                                  'Loading more tracks...',
+                                  l10n.loadingMoreTracks,
                                   style: TextStyle(
                                     color: secondaryColor,
                                     fontSize: 14,
@@ -692,7 +697,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'Scroll for more',
+                                  l10n.scrollForMore,
                                   style: TextStyle(
                                     color: secondaryColor,
                                     fontSize: 14,
@@ -741,7 +746,10 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                         ),
                       ),
                       subtitle: Text(
-                        '${track.artist} • ${_formatDuration(track.duration)}',
+                        context.trackSubtitle(
+                          track.artist,
+                          _formatDuration(track.duration),
+                        ),
                         maxLines: 1,
                         style: TextStyle(color: secondaryColor, fontSize: 12),
                       ),
@@ -778,12 +786,13 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     bool isHost,
     bool canControlPlayback,
   ) {
+    final l10n = context.l10n;
     // Find participant names from session
     String getAddedByName(String oderId) {
       final participant = session?.participants
           .where((p) => p.id == oderId)
           .firstOrNull;
-      return participant?.name ?? 'Someone';
+      return participant?.name ?? l10n.someone;
     }
 
     return Column(
@@ -799,7 +808,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Playing from',
+                    l10n.playingFrom,
                     style: TextStyle(fontSize: 12, color: secondaryColor),
                   ),
                   const SizedBox(height: 4),
@@ -823,7 +832,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
               ),
               // Show track count
               Text(
-                '${jamQueue.length} tracks',
+                l10n.tracksCount(jamQueue.length),
                 style: TextStyle(color: secondaryColor, fontSize: 12),
               ),
             ],
@@ -840,12 +849,12 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                       Icon(Iconsax.music, size: 48, color: secondaryColor),
                       const SizedBox(height: 16),
                       Text(
-                        'No tracks in queue',
+                        l10n.noTracksInQueue,
                         style: TextStyle(color: secondaryColor),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Add songs to the jam queue',
+                        l10n.addSongsToJamQueue,
                         style: TextStyle(color: secondaryColor, fontSize: 12),
                       ),
                     ],
@@ -896,7 +905,10 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                             style: TextStyle(color: textColor),
                           ),
                           subtitle: Text(
-                            '${track.artist} • Added by $addedByName',
+                            context.metadataLine([
+                              track.artist,
+                              l10n.addedByUser(addedByName),
+                            ]),
                             maxLines: 1,
                             style: TextStyle(
                               color: secondaryColor,
@@ -1004,35 +1016,34 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
   /// Related content placeholder
   Widget _buildRelatedContent(Color textColor, Color secondaryColor) {
+    final l10n = context.l10n;
     final currentTrack = ref.watch(currentTrackProvider);
     if (currentTrack == null) {
       return Center(
         child: Text(
-          'No track playing',
+          l10n.noTrackPlaying,
           style: TextStyle(color: secondaryColor),
         ),
       );
     }
 
-    final ytService = ref.watch(youtubeServiceProvider);
-
     // Cache the future to prevent re-fetching on every rebuild
     if (_lastRelatedTrackId != currentTrack.id) {
       _lastRelatedTrackId = currentTrack.id;
-      _relatedTracksFuture = ytService.getRelatedTracks(
-        currentTrack.id,
-        limit: 20,
-      );
+      _relatedContentFuture = _loadRelatedContent(currentTrack);
     }
 
-    return FutureBuilder<List<Track>>(
-      future: _relatedTracksFuture,
+    return FutureBuilder<WatchRelatedContent>(
+      future: _relatedContentFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+        if (snapshot.hasError ||
+            !snapshot.hasData ||
+            snapshot.data == null ||
+            snapshot.data!.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1040,7 +1051,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                 Icon(Iconsax.music_filter, size: 48, color: secondaryColor),
                 const SizedBox(height: 12),
                 Text(
-                  'No related tracks found',
+                  l10n.noRelatedTracksFound,
                   style: TextStyle(color: secondaryColor),
                 ),
               ],
@@ -1048,60 +1059,540 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
           );
         }
 
-        final relatedTracks = snapshot.data!;
+        final relatedContent = snapshot.data!;
 
-        return ListView.builder(
+        return ListView(
           physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          itemCount: relatedTracks.length,
-          itemExtent: 72, // Fixed height for faster scrolling
-          itemBuilder: (context, index) {
-            final track = relatedTracks[index];
-            return RepaintBoundary(
-              child: ListTile(
-                leading: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: track.thumbnailUrl != null
-                        ? CachedNetworkImage(
-                            imageUrl: track.thumbnailUrl!,
-                            fit: BoxFit.cover,
-                            memCacheWidth: 96,
-                            memCacheHeight: 96,
-                            fadeInDuration: Duration.zero,
-                            fadeOutDuration: Duration.zero,
-                          )
-                        : Container(color: Colors.grey),
-                  ),
-                ),
-                title: Text(
-                  track.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: textColor),
-                ),
-                subtitle: Text(
-                  track.artist,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: secondaryColor, fontSize: 12),
-                ),
-                onTap: () {
-                  // Play this track and add related as queue
-                  ref
-                      .read(audioPlayerServiceProvider)
-                      .playQueue(relatedTracks, startIndex: index);
-                },
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
+          children: [
+            for (final shelf in relatedContent.shelves)
+              _buildRelatedShelfSection(shelf, textColor, secondaryColor),
+            if (relatedContent.hasAboutSection)
+              _buildAboutArtistSection(
+                relatedContent,
+                textColor,
+                secondaryColor,
               ),
-            );
-          },
+          ],
         );
       },
     );
+  }
+
+  Future<WatchRelatedContent> _loadRelatedContent(Track currentTrack) async {
+    final innerTube = ref.read(innerTubeServiceProvider);
+    final ytService = ref.read(youtubeServiceProvider);
+    final relatedTabTitle = context.l10n.relatedTab;
+
+    final relatedContent = await innerTube.getWatchRelatedContent(
+      currentTrack.id,
+      limitPerShelf: 12,
+    );
+    if (!relatedContent.isEmpty) {
+      return relatedContent;
+    }
+
+    final fallbackTracks = await innerTube.getWatchPlaylist(
+      currentTrack.id,
+      limit: 20,
+    );
+    final filteredFallback = fallbackTracks
+        .where((track) => track.id != currentTrack.id)
+        .take(20)
+        .toList();
+    if (filteredFallback.isNotEmpty) {
+      return WatchRelatedContent(
+        shelves: [
+          HomeShelf(
+            id: 'related_fallback_${currentTrack.id}',
+            title: relatedTabTitle,
+            type: HomeShelfType.unknown,
+            items: filteredFallback.map(_trackToShelfItem).toList(),
+          ),
+        ],
+      );
+    }
+
+    final genericTracks = await ytService.getRelatedTracks(
+      currentTrack.id,
+      limit: 20,
+    );
+    final filteredGeneric = genericTracks
+        .where((track) => track.id != currentTrack.id)
+        .take(20)
+        .toList();
+
+    if (filteredGeneric.isNotEmpty) {
+      return WatchRelatedContent(
+        shelves: [
+          HomeShelf(
+            id: 'related_generic_${currentTrack.id}',
+            title: relatedTabTitle,
+            type: HomeShelfType.unknown,
+            items: filteredGeneric.map(_trackToShelfItem).toList(),
+          ),
+        ],
+      );
+    }
+
+    return WatchRelatedContent.empty;
+  }
+
+  HomeShelfItem _trackToShelfItem(Track track) {
+    return HomeShelfItem(
+      id: track.id,
+      title: track.title,
+      subtitle: track.artist,
+      thumbnailUrl: track.thumbnailUrl,
+      navigationId: track.id,
+      itemType: HomeShelfItemType.song,
+      videoId: track.id,
+      artistId: track.artistId.isNotEmpty ? track.artistId : null,
+    );
+  }
+
+  Widget _buildRelatedShelfSection(
+    HomeShelf shelf,
+    Color textColor,
+    Color secondaryColor,
+  ) {
+    if (_usesHomeQuickPicksLayout(shelf)) {
+      final theme = Theme.of(context);
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 24),
+        child: TrackListShelf(
+          shelf: shelf,
+          isDark: theme.brightness == Brightness.dark,
+          colorScheme: theme.colorScheme,
+          showPlayButton: false,
+          headerHorizontalPadding: 8,
+          listHorizontalPadding: 4,
+          enableDynamicColors: false,
+          showCurrentTrackHighlight: false,
+        ),
+      );
+    }
+
+    final primaryType = _primaryRelatedItemType(shelf);
+    final title = _relatedShelfTitle(shelf);
+    final titlePrefix = _relatedShelfTitlePrefix(shelf);
+    final titleMain = _relatedShelfTitleMain(shelf);
+    final showTitle = !_isRedundantRelatedTitle(title);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (showTitle)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+              child: titlePrefix == null
+                  ? Text(
+                      title,
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    )
+                  : Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        if ((shelf.headerThumbnailUrl ?? '').isNotEmpty) ...[
+                          ClipOval(
+                            child: SizedBox(
+                              width: 44,
+                              height: 44,
+                              child: CachedNetworkImage(
+                                imageUrl: shelf.headerThumbnailUrl!,
+                                fit: BoxFit.cover,
+                                memCacheWidth: 88,
+                                memCacheHeight: 88,
+                                fadeInDuration: Duration.zero,
+                                fadeOutDuration: Duration.zero,
+                                errorWidget: (_, _, _) =>
+                                    Container(color: Colors.grey.shade800),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                        ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                titlePrefix,
+                                style: TextStyle(
+                                  color: secondaryColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                titleMain,
+                                style: TextStyle(
+                                  color: textColor,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          if (primaryType == HomeShelfItemType.song)
+            ..._buildRelatedTrackTiles(shelf, textColor, secondaryColor)
+          else
+            SizedBox(
+              height: primaryType == HomeShelfItemType.artist ? 200 : 220,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: shelf.items.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 14),
+                itemBuilder: (context, index) {
+                  final item = shelf.items[index];
+                  if (primaryType == HomeShelfItemType.artist) {
+                    return _buildRelatedArtistCard(
+                      shelf,
+                      item,
+                      textColor,
+                      secondaryColor,
+                    );
+                  }
+                  return _buildRelatedMediaCard(
+                    shelf,
+                    item,
+                    textColor,
+                    secondaryColor,
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildRelatedTrackTiles(
+    HomeShelf shelf,
+    Color textColor,
+    Color secondaryColor,
+  ) {
+    final tracks = shelf.items
+        .map((item) => item.toTrack())
+        .whereType<Track>()
+        .toList();
+
+    return List<Widget>.generate(shelf.items.length, (index) {
+      final item = shelf.items[index];
+      final track = index < tracks.length ? tracks[index] : item.toTrack();
+      return RepaintBoundary(
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 4,
+            vertical: 2,
+          ),
+          leading: ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: SizedBox(
+              width: 52,
+              height: 52,
+              child: item.thumbnailUrl != null
+                  ? CachedNetworkImage(
+                      imageUrl: item.thumbnailUrl!,
+                      fit: BoxFit.cover,
+                      memCacheWidth: 104,
+                      memCacheHeight: 104,
+                      fadeInDuration: Duration.zero,
+                      fadeOutDuration: Duration.zero,
+                    )
+                  : Container(color: Colors.grey.shade800),
+            ),
+          ),
+          title: Text(
+            item.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          subtitle: Text(
+            item.subtitle ?? track?.artist ?? '',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: secondaryColor, fontSize: 12),
+          ),
+          onTap: track == null
+              ? null
+              : () {
+                  ref
+                      .read(audioPlayerServiceProvider)
+                      .playQueue(
+                        tracks,
+                        startIndex: math.min(index, tracks.length - 1),
+                      );
+                },
+        ),
+      );
+    });
+  }
+
+  Widget _buildRelatedArtistCard(
+    HomeShelf shelf,
+    HomeShelfItem item,
+    Color textColor,
+    Color secondaryColor,
+  ) {
+    return GestureDetector(
+      onTap: () => _handleRelatedItemTap(shelf, item),
+      child: SizedBox(
+        width: 112,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipOval(
+              child: SizedBox(
+                width: 112,
+                height: 112,
+                child: item.thumbnailUrl != null
+                    ? CachedNetworkImage(
+                        imageUrl: item.thumbnailUrl!,
+                        fit: BoxFit.cover,
+                      )
+                    : Container(color: Colors.grey.shade800),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              item.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if ((item.subtitle ?? '').isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  item.subtitle!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: secondaryColor, fontSize: 12),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRelatedMediaCard(
+    HomeShelf shelf,
+    HomeShelfItem item,
+    Color textColor,
+    Color secondaryColor,
+  ) {
+    return GestureDetector(
+      onTap: () => _handleRelatedItemTap(shelf, item),
+      child: SizedBox(
+        width: 140,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: SizedBox(
+                width: 140,
+                height: 140,
+                child: item.thumbnailUrl != null
+                    ? CachedNetworkImage(
+                        imageUrl: item.thumbnailUrl!,
+                        fit: BoxFit.cover,
+                      )
+                    : Container(color: Colors.grey.shade800),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              item.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if ((item.subtitle ?? '').isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  item.subtitle!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: secondaryColor, fontSize: 12),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAboutArtistSection(
+    WatchRelatedContent relatedContent,
+    Color textColor,
+    Color secondaryColor,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+            child: Text(
+              relatedContent.aboutTitle ?? context.l10n.aboutArtist,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: textColor.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              relatedContent.aboutDescription!,
+              style: TextStyle(
+                color: secondaryColor,
+                fontSize: 14,
+                height: 1.45,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  HomeShelfItemType _primaryRelatedItemType(HomeShelf shelf) {
+    final counts = <HomeShelfItemType, int>{};
+    for (final item in shelf.items) {
+      counts.update(item.itemType, (value) => value + 1, ifAbsent: () => 1);
+    }
+
+    return counts.entries.isEmpty
+        ? HomeShelfItemType.unknown
+        : counts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+  }
+
+  bool _isRedundantRelatedTitle(String title) {
+    final normalizedTitle = title.trim().toLowerCase();
+    final normalizedRelated = context.l10n.relatedTab.trim().toLowerCase();
+    return normalizedTitle.isEmpty || normalizedTitle == normalizedRelated;
+  }
+
+  String _relatedShelfTitle(HomeShelf shelf) {
+    final baseTitle = shelf.title.trim().isEmpty
+        ? context.l10n.relatedTab
+        : shelf.title.trim();
+    if (_usesArtistHeaderLayout(shelf)) {
+      return '${context.l10n.moreFrom} $baseTitle';
+    }
+
+    return baseTitle;
+  }
+
+  String? _relatedShelfTitlePrefix(HomeShelf shelf) {
+    return _usesArtistHeaderLayout(shelf) ? context.l10n.moreFrom : null;
+  }
+
+  String _relatedShelfTitleMain(HomeShelf shelf) {
+    return shelf.title.trim().isEmpty
+        ? context.l10n.relatedTab
+        : shelf.title.trim();
+  }
+
+  bool _usesHomeQuickPicksLayout(HomeShelf shelf) {
+    final primaryType = _primaryRelatedItemType(shelf);
+    return primaryType == HomeShelfItemType.song &&
+        !_isRedundantRelatedTitle(shelf.title) &&
+        !_usesArtistHeaderLayout(shelf);
+  }
+
+  bool _usesArtistHeaderLayout(HomeShelf shelf) {
+    final strapline = shelf.strapline?.trim();
+    return strapline != null &&
+        strapline.isNotEmpty &&
+        (shelf.headerThumbnailUrl?.trim().isNotEmpty ?? false) &&
+        _primaryRelatedItemType(shelf) != HomeShelfItemType.artist;
+  }
+
+  void _handleRelatedItemTap(HomeShelf shelf, HomeShelfItem item) {
+    switch (item.itemType) {
+      case HomeShelfItemType.playlist:
+      case HomeShelfItemType.mix:
+        final playlistId = item.playlistId ?? item.navigationId ?? item.id;
+        PlaylistScreen.open(
+          context,
+          playlistId: playlistId,
+          title: item.title,
+          thumbnailUrl: item.thumbnailUrl,
+        );
+        break;
+      case HomeShelfItemType.album:
+        final albumId = item.navigationId ?? item.id;
+        AlbumScreen.open(
+          context,
+          albumId: albumId,
+          title: item.title,
+          thumbnailUrl: item.thumbnailUrl,
+        );
+        break;
+      case HomeShelfItemType.artist:
+        final artistId = item.navigationId ?? item.id;
+        ArtistScreen.open(
+          context,
+          artistId: artistId,
+          name: item.title,
+          thumbnailUrl: item.thumbnailUrl,
+        );
+        break;
+      default:
+        final tracks = shelf.items
+            .map((entry) => entry.toTrack())
+            .whereType<Track>()
+            .toList();
+        final index = tracks.indexWhere(
+          (track) => track.id == (item.videoId ?? item.id),
+        );
+        if (tracks.isNotEmpty) {
+          ref
+              .read(audioPlayerServiceProvider)
+              .playQueue(tracks, startIndex: index >= 0 ? index : 0);
+        }
+    }
   }
 
   String _formatDuration(Duration? d) {
@@ -1116,14 +1607,15 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     List<Track> queue,
     Color textColor,
   ) {
+    final l10n = context.l10n;
     if (queue.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Queue is empty')));
+      ).showSnackBar(SnackBar(content: Text(l10n.queueIsEmpty)));
       return;
     }
 
-    final controller = TextEditingController(text: 'My Queue');
+    final controller = TextEditingController(text: l10n.defaultQueueName);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
 
@@ -1132,7 +1624,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
       builder: (context) => AlertDialog(
         backgroundColor: backgroundColor,
         title: Text(
-          'Save Queue as Playlist',
+          l10n.saveQueueAsPlaylist,
           style: TextStyle(color: textColor),
         ),
         content: TextField(
@@ -1140,7 +1632,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
           autofocus: true,
           style: TextStyle(color: textColor),
           decoration: InputDecoration(
-            hintText: 'Playlist name',
+            hintText: l10n.playlistName,
             hintStyle: TextStyle(color: textColor.withValues(alpha: 0.5)),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
@@ -1149,7 +1641,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Cancel',
+              l10n.cancel,
               style: TextStyle(color: textColor.withValues(alpha: 0.7)),
             ),
           ),
@@ -1172,12 +1664,14 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Saved ${queue.length} tracks to "$name"'),
+                    content: Text(
+                      l10n.savedTracksToPlaylist(queue.length, name),
+                    ),
                   ),
                 );
               }
             },
-            child: const Text('Save'),
+            child: Text(l10n.save),
           ),
         ],
       ),
@@ -1201,7 +1695,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
           Column(
             children: [
               Text(
-                'NOW PLAYING',
+                context.l10n.nowPlayingHeader,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -1790,7 +2284,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
             color: isInSession ? accentColor : textColor,
             size: 24,
           ),
-          tooltip: 'Jams',
+          tooltip: context.l10n.jams,
         ),
         // Active session indicator
         if (isInSession && session != null)
@@ -1943,10 +2437,10 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
         fontWeight: FontWeight.w500,
         letterSpacing: 0.5,
       ),
-      tabs: const [
-        Tab(text: 'UP NEXT'),
-        Tab(text: 'LYRICS'),
-        Tab(text: 'RELATED'),
+      tabs: [
+        Tab(text: context.l10n.upNext),
+        Tab(text: context.l10n.lyricsTab),
+        Tab(text: context.l10n.relatedTab),
       ],
       onTap: (index) {
         setState(() {

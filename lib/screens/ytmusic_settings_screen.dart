@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart' show debugPrint, kReleaseMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/l10n/app_localizations_x.dart';
+import '../../core/providers/locale_provider.dart';
 import '../../core/design_system/design_system.dart';
 import '../providers/providers.dart';
 import '../providers/repository_providers.dart';
@@ -10,6 +12,7 @@ import '../services/auth/google_auth_service.dart';
 import '../services/ytmusic_sync_service.dart';
 import 'package:shorebird_code_push/shorebird_code_push.dart';
 import '../../core/providers/theme_provider.dart';
+import '../../main.dart';
 import 'ytmusic_login_screen.dart';
 import 'audio_settings_screen.dart';
 import 'download_settings_screen.dart';
@@ -76,84 +79,95 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       _isDark ? InzxColors.darkTextTertiary : InzxColors.textTertiary;
 
   /// Deep-link searchable items from nested screens (Audio, Downloads, Backup)
-  List<_SearchableItem> get _deepSearchItems => [
-    // Audio Settings
-    _SearchableItem(
-      tags: [
-        'streaming',
-        'quality',
-        'audio',
-        'bitrate',
-        'kbps',
-        'auto',
-        'low',
-        'medium',
-        'high',
-        'max',
-      ],
-      title: 'Streaming Quality',
-      subtitle: 'Adjust audio bitrate for streaming',
-      icon: Iconsax.volume_high,
-      screen: const AudioSettingsScreen(),
-    ),
-    _SearchableItem(
-      tags: ['crossfade', 'transition', 'blend', 'gapless', 'playback'],
-      title: 'Crossfade Transition',
-      subtitle: 'Blend tracks smoothly into each other',
-      icon: Iconsax.blend,
-      screen: const AudioSettingsScreen(),
-    ),
-    _SearchableItem(
-      tags: ['streaming', 'cache', 'buffer', 'preload', 'wifi'],
-      title: 'Streaming Cache',
-      subtitle: 'Pre-cache next tracks, Wi-Fi only option',
-      icon: Iconsax.cpu,
-      screen: const AudioSettingsScreen(),
-    ),
-    // Download Settings
-    _SearchableItem(
-      tags: ['download', 'quality', 'offline', 'bitrate'],
-      title: 'Download Quality',
-      subtitle: 'Quality for offline downloads',
-      icon: Iconsax.document_download,
-      screen: const DownloadSettingsScreen(),
-    ),
-    _SearchableItem(
-      tags: ['download', 'location', 'path', 'folder', 'storage', 'directory'],
-      title: 'Download Location',
-      subtitle: 'Where downloaded music is stored',
-      icon: Iconsax.folder_2,
-      screen: const DownloadSettingsScreen(),
-    ),
-    _SearchableItem(
-      tags: ['data', 'usage', 'network', 'bandwidth', 'mobile'],
-      title: 'Data Usage Info',
-      subtitle: 'Estimated storage per song',
-      icon: Iconsax.chart_1,
-      screen: const DownloadSettingsScreen(),
-    ),
-    // Backup & Restore
-    _SearchableItem(
-      tags: ['backup', 'export', 'save', 'file'],
-      title: 'Create Backup',
-      subtitle: 'Export your library and settings',
-      icon: Iconsax.export_1,
-      screen: const BackupRestoreScreen(),
-    ),
-    _SearchableItem(
-      tags: ['restore', 'import', 'load', 'file'],
-      title: 'Restore Backup',
-      subtitle: 'Import a previous backup file',
-      icon: Iconsax.import_1,
-      screen: const BackupRestoreScreen(),
-    ),
-  ];
+  List<_SearchableItem> get _deepSearchItems {
+    final l10n = context.l10n;
+    return [
+      // Audio Settings
+      _SearchableItem(
+        tags: [
+          'streaming',
+          'quality',
+          'audio',
+          'bitrate',
+          'kbps',
+          'auto',
+          'low',
+          'medium',
+          'high',
+          'max',
+        ],
+        title: l10n.streamingQuality,
+        subtitle: l10n.streamingQualitySubtitle,
+        icon: Iconsax.volume_high,
+        screen: const AudioSettingsScreen(),
+      ),
+      _SearchableItem(
+        tags: ['crossfade', 'transition', 'blend', 'gapless', 'playback'],
+        title: l10n.crossfadeTransition,
+        subtitle: l10n.crossfadeTransitionSubtitle,
+        icon: Iconsax.blend,
+        screen: const AudioSettingsScreen(),
+      ),
+      _SearchableItem(
+        tags: ['streaming', 'cache', 'buffer', 'preload', 'wifi'],
+        title: l10n.streamingCache,
+        subtitle: l10n.streamingCacheSubtitle,
+        icon: Iconsax.cpu,
+        screen: const AudioSettingsScreen(),
+      ),
+      // Download Settings
+      _SearchableItem(
+        tags: ['download', 'quality', 'offline', 'bitrate'],
+        title: l10n.downloadQuality,
+        subtitle: l10n.downloadQualitySubtitle,
+        icon: Iconsax.document_download,
+        screen: const DownloadSettingsScreen(),
+      ),
+      _SearchableItem(
+        tags: [
+          'download',
+          'location',
+          'path',
+          'folder',
+          'storage',
+          'directory',
+        ],
+        title: l10n.downloadLocation,
+        subtitle: l10n.downloadLocationSubtitle,
+        icon: Iconsax.folder_2,
+        screen: const DownloadSettingsScreen(),
+      ),
+      _SearchableItem(
+        tags: ['data', 'usage', 'network', 'bandwidth', 'mobile'],
+        title: l10n.dataUsageInfo,
+        subtitle: l10n.dataUsageInfoSubtitle,
+        icon: Iconsax.chart_1,
+        screen: const DownloadSettingsScreen(),
+      ),
+      // Backup & Restore
+      _SearchableItem(
+        tags: ['backup', 'export', 'save', 'file'],
+        title: l10n.createBackup,
+        subtitle: l10n.createBackupSubtitle,
+        icon: Iconsax.export_1,
+        screen: const BackupRestoreScreen(),
+      ),
+      _SearchableItem(
+        tags: ['restore', 'import', 'load', 'file'],
+        title: l10n.restoreBackup,
+        subtitle: l10n.restoreBackupSubtitle,
+        icon: Iconsax.import_1,
+        screen: const BackupRestoreScreen(),
+      ),
+    ];
+  }
 
   // ── build ──────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(ytMusicAuthStateProvider);
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: _backgroundColor,
@@ -175,7 +189,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                   flexibleSpace: FlexibleSpaceBar(
                     background: Container(color: _backgroundColor),
                     title: Text(
-                      'Settings',
+                      l10n.settings,
                       style: TextStyle(
                         color: _textPrimary,
                         fontWeight: FontWeight.w700,
@@ -236,7 +250,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
             setState(() => _searchQuery = value.toLowerCase()),
         style: TextStyle(fontSize: 14, color: _textPrimary),
         decoration: InputDecoration(
-          hintText: 'Search settings…',
+          hintText: context.l10n.searchSettingsHint,
           hintStyle: TextStyle(fontSize: 14, color: _textTertiary),
           prefixIcon: Icon(
             Iconsax.search_normal,
@@ -282,12 +296,12 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
 
     // Search through main sections
     final matchedSections = tagged
-        .where((t) => t.tags.any((tag) => tag.contains(_searchQuery)))
+        .where((t) => _matchesSearchQuery(t.tags))
         .toList();
 
     // Search through deep-link items (Audio, Downloads, Backup settings)
     final matchedItems = _deepSearchItems
-        .where((item) => item.tags.any((tag) => tag.contains(_searchQuery)))
+        .where((item) => _matchesSearchQuery(item.searchTerms))
         .toList();
 
     if (matchedSections.isEmpty && matchedItems.isEmpty) {
@@ -299,7 +313,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
               Icon(Iconsax.search_normal, size: 40, color: _textTertiary),
               const SizedBox(height: 12),
               Text(
-                'No matching settings',
+                context.l10n.noMatchingSettings,
                 style: TextStyle(color: _textSecondary, fontSize: 14),
               ),
             ],
@@ -325,11 +339,15 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
     return widgets;
   }
 
+  bool _matchesSearchQuery(Iterable<String> values) {
+    return values.any((value) => value.toLowerCase().contains(_searchQuery));
+  }
+
   /// Build a card showing search results from nested screens
   Widget _buildSearchResultsCard(List<_SearchableItem> items) {
     return _sectionCard(
       children: [
-        _sectionHeader('Found in Settings', Iconsax.search_status),
+        _sectionHeader(context.l10n.foundInSettings, Iconsax.search_status),
         const SizedBox(height: 12),
         ...items.asMap().entries.map((entry) {
           final index = entry.key;
@@ -362,18 +380,28 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
 
   List<_TaggedSection> _loggedOutSections() => [
     _TaggedSection([
+      context.l10n.yourProfile,
+      context.l10n.signInWithGoogle,
+      context.l10n.googleUser,
       'profile',
       'google',
       'account',
       'sign in',
     ], _buildGoogleAccountSection()),
     _TaggedSection([
+      context.l10n.connectYoutubeMusic,
+      context.l10n.connectYoutubeMusicSubtitle,
+      context.l10n.connectYtMusicButton,
       'youtube',
       'yt music',
       'connect',
       'login',
     ], _buildYTMusicConnectCard()),
     _TaggedSection([
+      context.l10n.appearance,
+      context.l10n.theme,
+      context.l10n.language,
+      context.l10n.dynamicColorsNote,
       'appearance',
       'theme',
       'dark',
@@ -381,6 +409,12 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       'mode',
     ], _buildAppearanceSection()),
     _TaggedSection([
+      context.l10n.quickActions,
+      context.l10n.audio,
+      context.l10n.downloads,
+      context.l10n.backupRestore,
+      context.l10n.streamingQuality,
+      context.l10n.downloadQuality,
       'audio',
       'streaming',
       'quality',
@@ -388,6 +422,8 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       'cache',
     ], _buildQuickActions()),
     _TaggedSection([
+      context.l10n.appInfo,
+      context.l10n.settings,
       'app',
       'info',
       'ota',
@@ -399,6 +435,11 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
 
   List<_TaggedSection> _loggedInSections(YTMusicAuthState authState) => [
     _TaggedSection([
+      context.l10n.yourProfile,
+      context.l10n.signInWithGoogle,
+      context.l10n.googleUser,
+      context.l10n.connected,
+      context.l10n.youtubeMusicLabel,
       'profile',
       'google',
       'account',
@@ -408,6 +449,10 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       'connected',
     ], _buildGoogleAccountSection(ytMusicAuth: authState)),
     _TaggedSection([
+      context.l10n.appearance,
+      context.l10n.theme,
+      context.l10n.language,
+      context.l10n.dynamicColorsNote,
       'appearance',
       'theme',
       'dark',
@@ -415,6 +460,13 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       'mode',
     ], _buildAppearanceSection()),
     _TaggedSection([
+      context.l10n.quickActions,
+      context.l10n.audio,
+      context.l10n.downloads,
+      context.l10n.backupRestore,
+      context.l10n.streamingQuality,
+      context.l10n.downloadQuality,
+      context.l10n.restoreBackup,
       'audio',
       'streaming',
       'quality',
@@ -423,8 +475,20 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       'backup',
       'restore',
     ], _buildQuickActions()),
-    _TaggedSection(['sync', 'refresh', 'library'], _buildSyncSection()),
     _TaggedSection([
+      context.l10n.sync,
+      context.l10n.syncNow,
+      context.l10n.library,
+      'sync',
+      'refresh',
+      'library',
+    ], _buildSyncSection()),
+    _TaggedSection([
+      context.l10n.library,
+      context.l10n.likedSongsLabel,
+      context.l10n.albums,
+      context.l10n.playlists,
+      context.l10n.artists,
       'library',
       'liked',
       'albums',
@@ -432,12 +496,16 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       'artists',
     ], _buildLibraryStats()),
     _TaggedSection([
+      context.l10n.streamingCache,
+      context.l10n.cleanUp,
+      context.l10n.clearCache,
       'cache',
       'storage',
       'cleanup',
       'clear',
     ], _buildCacheSection()),
     _TaggedSection([
+      context.l10n.analytics,
       'analytics',
       'hits',
       'misses',
@@ -445,6 +513,8 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       'stats',
     ], _buildAnalyticsSection()),
     _TaggedSection([
+      context.l10n.appInfo,
+      context.l10n.settings,
       'app',
       'info',
       'ota',
@@ -452,7 +522,12 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       'version',
       'update',
     ], _buildOtaDebugSection()),
-    _TaggedSection(['logout', 'disconnect', 'sign out'], _buildLogoutButton()),
+    _TaggedSection([
+      context.l10n.signOut,
+      'logout',
+      'disconnect',
+      'sign out',
+    ], _buildLogoutButton()),
   ];
 
   // ── Reusable card container ────────────────────────────────────────
@@ -507,6 +582,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
   // ── YT Music Connect (logged-out) ─────────────────────────────────
 
   Widget _buildYTMusicConnectCard() {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
       decoration: BoxDecoration(
@@ -535,7 +611,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Connect YouTube Music',
+            l10n.connectYoutubeMusic,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -544,7 +620,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Sync your liked songs, playlists, and more',
+            l10n.connectYoutubeMusicSubtitle,
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 14, color: _textSecondary),
           ),
@@ -552,7 +628,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           FilledButton.icon(
             onPressed: _login,
             icon: const Icon(Icons.login_rounded, size: 18),
-            label: const Text('Connect YT Music'),
+            label: Text(l10n.connectYtMusicButton),
             style: FilledButton.styleFrom(
               backgroundColor: _accentColor,
               foregroundColor: _colors.onPrimary,
@@ -575,15 +651,18 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
 
   Widget _buildAppearanceSection() {
     final currentThemeMode = ref.watch(themeModeProvider);
+    final currentLocale = ref.watch(appLocaleProvider);
+    final currentContentCountry = ref.watch(appContentCountryProvider);
+    final l10n = context.l10n;
 
     return _sectionCard(
       children: [
-        _sectionHeader('Appearance', Iconsax.brush_1),
+        _sectionHeader(l10n.appearance, Iconsax.brush_1),
         const SizedBox(height: 16),
 
         // Theme mode selector
         Text(
-          'Theme',
+          l10n.theme,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
@@ -595,10 +674,10 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           children: InzxThemeMode.values.map((mode) {
             final selected = mode == currentThemeMode;
             final label = mode == InzxThemeMode.system
-                ? 'Auto'
+                ? l10n.themeAuto
                 : mode == InzxThemeMode.light
-                ? 'Light'
-                : 'Dark';
+                ? l10n.themeLight
+                : l10n.themeDark;
             final icon = mode == InzxThemeMode.system
                 ? Iconsax.autobrightness
                 : mode == InzxThemeMode.light
@@ -673,7 +752,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Colors adapt dynamically from the album art of the current track.',
+                  l10n.dynamicColorsNote,
                   style: TextStyle(
                     fontSize: 12,
                     color: _textSecondary,
@@ -684,6 +763,25 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
             ],
           ),
         ),
+        const SizedBox(height: 14),
+        _settingsTile(
+          icon: Iconsax.language_square,
+          iconBg: _accentColor,
+          title: l10n.language,
+          subtitle: _languageLabel(currentLocale),
+          onTap: _showLanguageSelector,
+        ),
+        Divider(
+          height: 1,
+          color: _isDark ? InzxColors.darkDivider : InzxColors.divider,
+        ),
+        _settingsTile(
+          icon: Icons.public_rounded,
+          iconBg: _colors.secondary,
+          title: l10n.contentLocation,
+          subtitle: _contentLocationLabel(currentContentCountry),
+          onTap: _showContentLocationSelector,
+        ),
       ],
     );
   }
@@ -691,15 +789,16 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
   // ── Quick Actions (Audio, Downloads, Backup) ──────────────────────
 
   Widget _buildQuickActions() {
+    final l10n = context.l10n;
     return _sectionCard(
       children: [
-        _sectionHeader('Quick Actions', Iconsax.setting_2),
+        _sectionHeader(l10n.quickActions, Iconsax.setting_2),
         const SizedBox(height: 12),
         _settingsTile(
           icon: Iconsax.music,
           iconBg: _accentColor,
-          title: 'Audio',
-          subtitle: 'Streaming quality, crossfade & playback',
+          title: l10n.audio,
+          subtitle: l10n.audioQuickActionsSubtitle,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const AudioSettingsScreen()),
@@ -712,8 +811,8 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
         _settingsTile(
           icon: Iconsax.document_download,
           iconBg: _colors.tertiary,
-          title: 'Downloads',
-          subtitle: 'Download quality, location & storage',
+          title: l10n.downloads,
+          subtitle: l10n.downloadsQuickActionsSubtitle,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const DownloadSettingsScreen()),
@@ -726,8 +825,8 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
         _settingsTile(
           icon: Iconsax.document_upload,
           iconBg: _colors.secondary,
-          title: 'Backup & Restore',
-          subtitle: 'Export or import your library',
+          title: l10n.backupRestore,
+          subtitle: l10n.backupRestoreQuickActionsSubtitle,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const BackupRestoreScreen()),
@@ -774,12 +873,507 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
 
   // ── Google Account ─────────────────────────────────────────────────
 
+  String _languageLabel(Locale? locale) {
+    final l10n = context.l10n;
+    switch (appLanguageOptionFromLocale(locale)) {
+      case AppLanguageOption.system:
+        return l10n.languageSystem;
+      case AppLanguageOption.english:
+        return l10n.languageEnglish;
+      case AppLanguageOption.turkish:
+        return l10n.languageTurkish;
+      case AppLanguageOption.russian:
+        return l10n.languageRussian;
+      case AppLanguageOption.hindi:
+        return l10n.languageHindi;
+      case AppLanguageOption.tamil:
+        return l10n.languageTamil;
+      case AppLanguageOption.kannada:
+        return l10n.languageKannada;
+      case AppLanguageOption.telugu:
+        return l10n.languageTelugu;
+      case AppLanguageOption.spanish:
+        return l10n.languageSpanish;
+      case AppLanguageOption.french:
+        return l10n.languageFrench;
+      case AppLanguageOption.german:
+        return l10n.languageGerman;
+      case AppLanguageOption.indonesian:
+        return l10n.languageIndonesian;
+      case AppLanguageOption.japanese:
+        return l10n.languageJapanese;
+      case AppLanguageOption.korean:
+        return l10n.languageKorean;
+      case AppLanguageOption.arabic:
+        return l10n.languageArabic;
+      case AppLanguageOption.ukrainian:
+        return l10n.languageUkrainian;
+      case AppLanguageOption.thai:
+        return l10n.languageThai;
+      case AppLanguageOption.portugueseBrazil:
+        return l10n.languagePortugueseBrazil;
+      case AppLanguageOption.chineseSimplified:
+        return l10n.languageChineseSimplified;
+      case AppLanguageOption.chineseTraditional:
+        return l10n.languageChineseTraditional;
+    }
+  }
+
+  String _contentLocationLabel(String? countryCode) {
+    final l10n = context.l10n;
+    switch (appContentLocationOptionFromCountryCode(countryCode)) {
+      case AppContentLocationOption.system:
+        return l10n.locationSystem;
+      case AppContentLocationOption.unitedStates:
+        return l10n.locationUnitedStates;
+      case AppContentLocationOption.india:
+        return l10n.locationIndia;
+      case AppContentLocationOption.turkey:
+        return l10n.locationTurkey;
+      case AppContentLocationOption.russia:
+        return l10n.locationRussia;
+    }
+  }
+
+  List<String> _languageSearchTerms(AppLanguageOption option, String label) {
+    switch (option) {
+      case AppLanguageOption.system:
+        return [label, 'system', 'default', 'auto'];
+      case AppLanguageOption.english:
+        return [label, 'english', 'en'];
+      case AppLanguageOption.turkish:
+        return [label, 'turkish', 'turkce', 'tuerkce', 'tr'];
+      case AppLanguageOption.russian:
+        return [label, 'russian', 'russian', 'русский', 'ru'];
+      case AppLanguageOption.hindi:
+        return [label, 'hindi', 'हिन्दी', 'hi'];
+      case AppLanguageOption.tamil:
+        return [label, 'tamil', 'தமிழ்', 'ta'];
+      case AppLanguageOption.kannada:
+        return [label, 'kannada', 'ಕನ್ನಡ', 'kn'];
+      case AppLanguageOption.telugu:
+        return [label, 'telugu', 'తెలుగు', 'te'];
+      case AppLanguageOption.spanish:
+        return [label, 'spanish', 'espanol', 'español', 'es'];
+      case AppLanguageOption.french:
+        return [label, 'french', 'francais', 'français', 'fr'];
+      case AppLanguageOption.german:
+        return [label, 'german', 'deutsch', 'de'];
+      case AppLanguageOption.indonesian:
+        return [label, 'indonesian', 'bahasa indonesia', 'id'];
+      case AppLanguageOption.japanese:
+        return [label, 'japanese', '日本語', 'ja'];
+      case AppLanguageOption.korean:
+        return [label, 'korean', '한국어', 'ko'];
+      case AppLanguageOption.arabic:
+        return [label, 'arabic', 'العربية', 'ar'];
+      case AppLanguageOption.ukrainian:
+        return [label, 'ukrainian', 'українська', 'uk'];
+      case AppLanguageOption.thai:
+        return [label, 'thai', 'ไทย', 'th'];
+      case AppLanguageOption.portugueseBrazil:
+        return [
+          label,
+          'portuguese',
+          'brazilian portuguese',
+          'português',
+          'pt-br',
+        ];
+      case AppLanguageOption.chineseSimplified:
+        return [label, 'chinese', 'simplified chinese', '简体中文', 'zh-hans'];
+      case AppLanguageOption.chineseTraditional:
+        return [label, 'chinese', 'traditional chinese', '繁體中文', 'zh-hant'];
+    }
+  }
+
+  List<String> _contentLocationSearchTerms(
+    AppContentLocationOption option,
+    String label,
+  ) {
+    switch (option) {
+      case AppContentLocationOption.system:
+        return [label, 'system', 'default', 'auto'];
+      case AppContentLocationOption.unitedStates:
+        return [label, 'united states', 'usa', 'us', 'america'];
+      case AppContentLocationOption.india:
+        return [label, 'india', 'in'];
+      case AppContentLocationOption.turkey:
+        return [label, 'turkey', 'turkiye', 'tr'];
+      case AppContentLocationOption.russia:
+        return [label, 'russia', 'ru'];
+    }
+  }
+
+  Future<void> _showLanguageSelector() async {
+    final currentOption = appLanguageOptionFromLocale(
+      ref.read(appLocaleProvider),
+    );
+    final l10n = context.l10n;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: _backgroundColor,
+      builder: (sheetContext) {
+        var query = '';
+        final options = <(AppLanguageOption option, String label)>[
+          (AppLanguageOption.system, l10n.languageSystem),
+          (AppLanguageOption.english, l10n.languageEnglish),
+          (AppLanguageOption.turkish, l10n.languageTurkish),
+          (AppLanguageOption.russian, l10n.languageRussian),
+          (AppLanguageOption.hindi, l10n.languageHindi),
+          (AppLanguageOption.tamil, l10n.languageTamil),
+          (AppLanguageOption.kannada, l10n.languageKannada),
+          (AppLanguageOption.telugu, l10n.languageTelugu),
+          (AppLanguageOption.spanish, l10n.languageSpanish),
+          (AppLanguageOption.french, l10n.languageFrench),
+          (AppLanguageOption.german, l10n.languageGerman),
+          (AppLanguageOption.indonesian, l10n.languageIndonesian),
+          (AppLanguageOption.japanese, l10n.languageJapanese),
+          (AppLanguageOption.korean, l10n.languageKorean),
+          (AppLanguageOption.arabic, l10n.languageArabic),
+          (AppLanguageOption.ukrainian, l10n.languageUkrainian),
+          (AppLanguageOption.thai, l10n.languageThai),
+          (AppLanguageOption.portugueseBrazil, l10n.languagePortugueseBrazil),
+          (AppLanguageOption.chineseSimplified, l10n.languageChineseSimplified),
+          (
+            AppLanguageOption.chineseTraditional,
+            l10n.languageChineseTraditional,
+          ),
+        ];
+
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.82,
+              minChildSize: 0.55,
+              maxChildSize: 0.95,
+              builder: (context, scrollController) {
+                final normalizedQuery = query.trim().toLowerCase();
+                final filteredOptions = options.where((item) {
+                  if (normalizedQuery.isEmpty) return true;
+                  return _languageSearchTerms(
+                    item.$1,
+                    item.$2,
+                  ).any((term) => term.toLowerCase().contains(normalizedQuery));
+                }).toList();
+
+                return SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: _isDark
+                                  ? Colors.white24
+                                  : Colors.grey.shade300,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                l10n.chooseLanguage,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: _textPrimary,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () => Navigator.pop(sheetContext),
+                              icon: Icon(
+                                Icons.close_rounded,
+                                color: _textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          onChanged: (value) {
+                            setModalState(() {
+                              query = value;
+                            });
+                          },
+                          style: TextStyle(color: _textPrimary),
+                          decoration: InputDecoration(
+                            hintText: l10n.searchLanguagesHint,
+                            prefixIcon: Icon(
+                              Icons.search_rounded,
+                              color: _textTertiary,
+                            ),
+                            filled: true,
+                            fillColor: _isDark
+                                ? Colors.white.withValues(alpha: 0.06)
+                                : Colors.black.withValues(alpha: 0.04),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Expanded(
+                          child: filteredOptions.isEmpty
+                              ? Center(
+                                  child: Text(
+                                    l10n.noMatchingLanguages,
+                                    style: TextStyle(color: _textSecondary),
+                                  ),
+                                )
+                              : ListView.builder(
+                                  controller: scrollController,
+                                  itemCount: filteredOptions.length,
+                                  itemBuilder: (context, index) {
+                                    final item = filteredOptions[index];
+                                    return ListTile(
+                                      contentPadding: EdgeInsets.zero,
+                                      title: Text(
+                                        item.$2,
+                                        style: TextStyle(color: _textPrimary),
+                                      ),
+                                      trailing: item.$1 == currentOption
+                                          ? Icon(
+                                              Icons.check_rounded,
+                                              color: _accentColor,
+                                            )
+                                          : null,
+                                      onTap: () async {
+                                        final selectedLocale =
+                                            localeForAppLanguageOption(item.$1);
+                                        final activeLocale = ref.read(
+                                          appLocaleProvider,
+                                        );
+                                        final activeCode = activeLocale == null
+                                            ? ''
+                                            : appLocaleStorageKey(activeLocale);
+                                        final selectedCode =
+                                            selectedLocale == null
+                                            ? ''
+                                            : appLocaleStorageKey(
+                                                selectedLocale,
+                                              );
+
+                                        if (activeCode == selectedCode) {
+                                          Navigator.pop(sheetContext);
+                                          return;
+                                        }
+
+                                        Navigator.pop(sheetContext);
+                                        await ref
+                                            .read(appLocaleProvider.notifier)
+                                            .setLocale(selectedLocale);
+                                        requestAppRestart?.call();
+                                      },
+                                    );
+                                  },
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _showContentLocationSelector() async {
+    final currentOption = appContentLocationOptionFromCountryCode(
+      ref.read(appContentCountryProvider),
+    );
+    final l10n = context.l10n;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: _backgroundColor,
+      builder: (sheetContext) {
+        var query = '';
+        final options = <(AppContentLocationOption option, String label)>[
+          (AppContentLocationOption.system, l10n.locationSystem),
+          (AppContentLocationOption.unitedStates, l10n.locationUnitedStates),
+          (AppContentLocationOption.india, l10n.locationIndia),
+          (AppContentLocationOption.turkey, l10n.locationTurkey),
+          (AppContentLocationOption.russia, l10n.locationRussia),
+        ];
+
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.72,
+              minChildSize: 0.45,
+              maxChildSize: 0.9,
+              builder: (context, scrollController) {
+                final normalizedQuery = query.trim().toLowerCase();
+                final filteredOptions = options.where((item) {
+                  if (normalizedQuery.isEmpty) return true;
+                  return _contentLocationSearchTerms(
+                    item.$1,
+                    item.$2,
+                  ).any((term) => term.toLowerCase().contains(normalizedQuery));
+                }).toList();
+
+                return SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: _isDark
+                                  ? Colors.white24
+                                  : Colors.grey.shade300,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                l10n.chooseContentLocation,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: _textPrimary,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () => Navigator.pop(sheetContext),
+                              icon: Icon(
+                                Icons.close_rounded,
+                                color: _textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          onChanged: (value) {
+                            setModalState(() {
+                              query = value;
+                            });
+                          },
+                          style: TextStyle(color: _textPrimary),
+                          decoration: InputDecoration(
+                            hintText: l10n.searchLocationsHint,
+                            prefixIcon: Icon(
+                              Icons.search_rounded,
+                              color: _textTertiary,
+                            ),
+                            filled: true,
+                            fillColor: _isDark
+                                ? Colors.white.withValues(alpha: 0.06)
+                                : Colors.black.withValues(alpha: 0.04),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Expanded(
+                          child: filteredOptions.isEmpty
+                              ? Center(
+                                  child: Text(
+                                    l10n.noMatchingLocations,
+                                    style: TextStyle(color: _textSecondary),
+                                  ),
+                                )
+                              : ListView.builder(
+                                  controller: scrollController,
+                                  itemCount: filteredOptions.length,
+                                  itemBuilder: (context, index) {
+                                    final item = filteredOptions[index];
+                                    return ListTile(
+                                      contentPadding: EdgeInsets.zero,
+                                      title: Text(
+                                        item.$2,
+                                        style: TextStyle(color: _textPrimary),
+                                      ),
+                                      trailing: item.$1 == currentOption
+                                          ? Icon(
+                                              Icons.check_rounded,
+                                              color: _accentColor,
+                                            )
+                                          : null,
+                                      onTap: () async {
+                                        final selectedCountryCode =
+                                            countryCodeForContentLocationOption(
+                                              item.$1,
+                                            );
+                                        final activeCountryCode =
+                                            normalizeContentCountryCode(
+                                              ref.read(
+                                                appContentCountryProvider,
+                                              ),
+                                            );
+                                        final selectedCode =
+                                            normalizeContentCountryCode(
+                                              selectedCountryCode,
+                                            );
+
+                                        if (activeCountryCode == selectedCode) {
+                                          Navigator.pop(sheetContext);
+                                          return;
+                                        }
+
+                                        Navigator.pop(sheetContext);
+                                        await ref
+                                            .read(
+                                              appContentCountryProvider
+                                                  .notifier,
+                                            )
+                                            .setCountryCode(
+                                              selectedCountryCode,
+                                            );
+                                        requestAppRestart?.call();
+                                      },
+                                    );
+                                  },
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildGoogleAccountSection({YTMusicAuthState? ytMusicAuth}) {
     final googleAuthState = ref.watch(googleAuthStateProvider);
+    final l10n = context.l10n;
 
     return _sectionCard(
       children: [
-        _sectionHeader('Your Profile', Iconsax.user),
+        _sectionHeader(l10n.yourProfile, Iconsax.user),
         const SizedBox(height: 16),
         if (googleAuthState.isLoading)
           Center(
@@ -802,6 +1396,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
   }
 
   Widget _buildYTMusicConnectedRow(YTMusicAuthState authState) {
+    final l10n = context.l10n;
     final connectedColor = _isDark
         ? _accentColor
         : HSLColor.fromColor(_accentColor).withLightness(0.3).toColor();
@@ -841,7 +1436,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'YouTube Music',
+                  l10n.youtubeMusicLabel,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -850,7 +1445,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  authState.account?.name ?? 'Connected',
+                  authState.account?.name ?? l10n.connected,
                   style: TextStyle(color: _textSecondary, fontSize: 12),
                 ),
               ],
@@ -863,7 +1458,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
-              'Connected',
+              l10n.connected,
               style: TextStyle(
                 color: connectedColor,
                 fontSize: 11,
@@ -877,6 +1472,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
   }
 
   Widget _buildGoogleSignedInRow(GoogleUserProfile user) {
+    final l10n = context.l10n;
     return Row(
       children: [
         Container(
@@ -934,7 +1530,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                user.displayName ?? 'Google User',
+                user.displayName ?? l10n.googleUser,
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -954,7 +1550,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  'Jams & profile',
+                  l10n.jamsAndProfile,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
@@ -970,17 +1566,18 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
             await ref.read(googleAuthStateProvider.notifier).signOut();
           },
           icon: Icon(Iconsax.logout, color: _textTertiary, size: 20),
-          tooltip: 'Sign out',
+          tooltip: context.l10n.signOut,
         ),
       ],
     );
   }
 
   Widget _buildGoogleSignInButton() {
+    final l10n = context.l10n;
     return Column(
       children: [
         Text(
-          'Sign in with Google to get your profile picture and enable Jams',
+          l10n.signInGoogleProfilePictureJams,
           style: TextStyle(fontSize: 13, color: _textSecondary),
         ),
         const SizedBox(height: 12),
@@ -996,7 +1593,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
               height: 18,
               errorBuilder: (_, _, _) => const Icon(Icons.person, size: 18),
             ),
-            label: const Text('Sign in with Google'),
+            label: Text(l10n.signInWithGoogle),
             style: OutlinedButton.styleFrom(
               foregroundColor: _textPrimary,
               side: BorderSide(
@@ -1016,11 +1613,12 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
   // ── Sync Section ───────────────────────────────────────────────────
 
   Widget _buildSyncSection() {
+    final l10n = context.l10n;
     final syncService = ref.watch(ytMusicSyncServiceProvider);
 
     return _sectionCard(
       children: [
-        _sectionHeader('Sync', Iconsax.refresh),
+        _sectionHeader(l10n.sync, Iconsax.refresh),
         const SizedBox(height: 12),
         if (syncService.lastSync != null)
           Padding(
@@ -1030,7 +1628,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                 Icon(Iconsax.clock, size: 14, color: _textTertiary),
                 const SizedBox(width: 6),
                 Text(
-                  'Last synced: ${_formatDate(syncService.lastSync!)}',
+                  l10n.lastSynced(_formatDate(syncService.lastSync!)),
                   style: TextStyle(color: _textSecondary, fontSize: 13),
                 ),
               ],
@@ -1055,7 +1653,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Synced ${_lastSyncResult!.itemsSynced} items',
+                      l10n.syncedItems(_lastSyncResult!.itemsSynced),
                       style: TextStyle(
                         color: _accentColor,
                         fontWeight: FontWeight.w500,
@@ -1080,7 +1678,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                     ),
                   )
                 : const Icon(Iconsax.refresh, size: 18),
-            label: Text(_isSyncing ? 'Syncing…' : 'Sync Now'),
+            label: Text(_isSyncing ? l10n.syncing : l10n.syncNow),
             style: FilledButton.styleFrom(
               backgroundColor: _accentColor,
               foregroundColor: _colors.onPrimary,
@@ -1098,11 +1696,12 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
   // ── Cache Management ───────────────────────────────────────────────
 
   Widget _buildCacheSection() {
+    final l10n = context.l10n;
     final cacheManager = ref.watch(cacheManagementProvider);
 
     return _sectionCard(
       children: [
-        _sectionHeader('Cache', Iconsax.cpu),
+        _sectionHeader(l10n.streamingCache, Iconsax.cpu),
         const SizedBox(height: 12),
         FutureBuilder(
           future: cacheManager.getCacheStats(),
@@ -1115,7 +1714,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${stats.totalItemCount} cached items',
+                      l10n.cachedItems(stats.totalItemCount),
                       style: TextStyle(
                         color: _textPrimary,
                         fontSize: 14,
@@ -1127,20 +1726,20 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        _cacheChip('Streams', stats.streamUrlsCount),
-                        _cacheChip('Home', stats.homePageCount),
-                        _cacheChip('Lyrics', stats.lyricsCount),
-                        _cacheChip('Albums', stats.albumsCount),
-                        _cacheChip('Artists', stats.artistsCount),
-                        _cacheChip('Playlists', stats.playlistsCount),
-                        _cacheChip('Colors', stats.colorsCount),
-                        _cacheChip('Searches', stats.cachedSearchesCount),
+                        _cacheChip(l10n.streams, stats.streamUrlsCount),
+                        _cacheChip(l10n.home, stats.homePageCount),
+                        _cacheChip(l10n.lyricsTab, stats.lyricsCount),
+                        _cacheChip(l10n.albums, stats.albumsCount),
+                        _cacheChip(l10n.artists, stats.artistsCount),
+                        _cacheChip(l10n.playlists, stats.playlistsCount),
+                        _cacheChip(l10n.colors, stats.colorsCount),
+                        _cacheChip(l10n.searches, stats.cachedSearchesCount),
                       ],
                     ),
                     if (stats.expiredEntriesCount > 0) ...[
                       const SizedBox(height: 8),
                       Text(
-                        '${stats.expiredEntriesCount} expired',
+                        l10n.expiredCount(stats.expiredEntriesCount),
                         style: TextStyle(color: _textTertiary, fontSize: 12),
                       ),
                     ],
@@ -1168,7 +1767,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: const Text('Cache cleanup complete'),
+                        content: Text(l10n.cacheCleanupComplete),
                         backgroundColor: _colors.inverseSurface,
                       ),
                     );
@@ -1176,7 +1775,10 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                   }
                 },
                 icon: Icon(Iconsax.refresh, size: 16, color: _accentColor),
-                label: Text('Clean Up', style: TextStyle(color: _accentColor)),
+                label: Text(
+                  l10n.cleanUp,
+                  style: TextStyle(color: _accentColor),
+                ),
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(color: _accentColor.withValues(alpha: 0.3)),
                   shape: RoundedRectangleBorder(
@@ -1193,19 +1795,17 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                   final confirmed = await showDialog<bool>(
                     context: context,
                     builder: (ctx) => AlertDialog(
-                      title: const Text('Clear Cache'),
-                      content: const Text(
-                        'This will clear all cached music data. Continue?',
-                      ),
+                      title: Text(l10n.clearCache),
+                      content: Text(l10n.clearCachedMusicDataConfirm),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(ctx, false),
-                          child: const Text('Cancel'),
+                          child: Text(l10n.cancel),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(ctx, true),
                           child: Text(
-                            'Clear',
+                            l10n.clear,
                             style: TextStyle(color: _colors.error),
                           ),
                         ),
@@ -1217,7 +1817,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: const Text('Cache cleared'),
+                          content: Text(l10n.cacheCleared),
                           backgroundColor: _colors.inverseSurface,
                         ),
                       );
@@ -1227,7 +1827,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                 },
                 icon: Icon(Iconsax.trash, size: 16, color: _colors.error),
                 label: Text(
-                  'Clear All',
+                  l10n.clearAll,
                   style: TextStyle(color: _colors.error),
                 ),
                 style: OutlinedButton.styleFrom(
@@ -1266,22 +1866,27 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
   // ── Cache Analytics ────────────────────────────────────────────────
 
   Widget _buildAnalyticsSection() {
+    final l10n = context.l10n;
     final analytics = ref.watch(cacheAnalyticsProvider);
 
     return _sectionCard(
       children: [
-        _sectionHeader('Analytics', Iconsax.chart_2),
+        _sectionHeader(l10n.analytics, Iconsax.chart_2),
         const SizedBox(height: 14),
         // Hit rate progress indicator
         _buildHitRateIndicator(analytics.hitRate),
         const SizedBox(height: 16),
         Row(
           children: [
-            _analyticsPill('Hits', analytics.cacheHits, _accentColor),
+            _analyticsPill(l10n.hits, analytics.cacheHits, _accentColor),
             const SizedBox(width: 8),
-            _analyticsPill('Misses', analytics.cacheMisses, _colors.error),
+            _analyticsPill(l10n.misses, analytics.cacheMisses, _colors.error),
             const SizedBox(width: 8),
-            _analyticsPill('Network', analytics.networkCalls, _colors.tertiary),
+            _analyticsPill(
+              l10n.network,
+              analytics.networkCalls,
+              _colors.tertiary,
+            ),
           ],
         ),
         const SizedBox(height: 14),
@@ -1293,14 +1898,14 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
               setState(() {});
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Text('Analytics reset'),
+                  content: Text(l10n.analyticsReset),
                   backgroundColor: _colors.inverseSurface,
                 ),
               );
             },
             icon: Icon(Iconsax.refresh, size: 16, color: _textSecondary),
             label: Text(
-              'Reset Stats',
+              l10n.resetStats,
               style: TextStyle(color: _textSecondary, fontSize: 13),
             ),
           ),
@@ -1310,6 +1915,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
   }
 
   Widget _buildHitRateIndicator(double hitRate) {
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1317,7 +1923,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Cache Hit Rate',
+              l10n.cacheHitRate,
               style: TextStyle(fontSize: 13, color: _textSecondary),
             ),
             Text(
@@ -1373,6 +1979,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
   // ── Library Stats ──────────────────────────────────────────────────
 
   Widget _buildLibraryStats() {
+    final l10n = context.l10n;
     final likedSongs = ref.watch(ytMusicLikedSongsProvider);
     final savedAlbums = ref.watch(ytMusicSavedAlbumsProvider);
     final savedPlaylists = ref.watch(ytMusicSavedPlaylistsProvider);
@@ -1380,13 +1987,13 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
 
     return _sectionCard(
       children: [
-        _sectionHeader('Library', Iconsax.music_library_2),
+        _sectionHeader(l10n.library, Iconsax.music_library_2),
         const SizedBox(height: 16),
         Row(
           children: [
             _libraryStat(
               Iconsax.heart5,
-              'Liked',
+              l10n.liked,
               likedSongs.when(
                 data: (s) => '${s.length}',
                 loading: () => '…',
@@ -1395,7 +2002,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
             ),
             _libraryStat(
               Iconsax.music_square,
-              'Albums',
+              l10n.albums,
               savedAlbums.when(
                 data: (a) => '${a.length}',
                 loading: () => '…',
@@ -1404,7 +2011,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
             ),
             _libraryStat(
               Iconsax.music_playlist,
-              'Playlists',
+              l10n.playlists,
               savedPlaylists.when(
                 data: (p) => '${p.length}',
                 loading: () => '…',
@@ -1413,7 +2020,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
             ),
             _libraryStat(
               Iconsax.user,
-              'Artists',
+              l10n.artists,
               subscribedArtists.when(
                 data: (a) => '${a.length}',
                 loading: () => '…',
@@ -1450,38 +2057,42 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
   // ── OTA Debug ──────────────────────────────────────────────────────
 
   Widget _buildOtaDebugSection() {
+    final l10n = context.l10n;
     final updater = ShorebirdUpdater();
 
     return _sectionCard(
       children: [
-        _sectionHeader('App Info', Iconsax.info_circle),
+        _sectionHeader(l10n.appInfo, Iconsax.info_circle),
         const SizedBox(height: 12),
-        _debugRow('Release build', kReleaseMode ? 'yes' : 'no'),
-        _debugRow('Updater', updater.isAvailable ? 'available' : 'unavailable'),
+        _debugRow(l10n.releaseBuild, kReleaseMode ? l10n.yes : l10n.no),
+        _debugRow(
+          l10n.updater,
+          updater.isAvailable ? l10n.available : l10n.unavailable,
+        ),
         FutureBuilder<Patch?>(
           future: updater.readCurrentPatch(),
           builder: (context, snapshot) {
             final label = snapshot.connectionState == ConnectionState.waiting
-                ? 'loading…'
+                ? l10n.loadingCompact
                 : snapshot.hasError
-                ? 'error'
+                ? l10n.errorCompact
                 : snapshot.data == null
-                ? 'none'
+                ? l10n.none
                 : '#${snapshot.data!.number}';
-            return _debugRow('Current patch', label);
+            return _debugRow(l10n.currentPatch, label);
           },
         ),
         FutureBuilder<Patch?>(
           future: updater.readNextPatch(),
           builder: (context, snapshot) {
             final label = snapshot.connectionState == ConnectionState.waiting
-                ? 'loading…'
+                ? l10n.loadingCompact
                 : snapshot.hasError
-                ? 'error'
+                ? l10n.errorCompact
                 : snapshot.data == null
-                ? 'none'
+                ? l10n.none
                 : '#${snapshot.data!.number}';
-            return _debugRow('Next patch', label);
+            return _debugRow(l10n.nextPatch, label);
           },
         ),
       ],
@@ -1511,6 +2122,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
   // ── Logout ─────────────────────────────────────────────────────────
 
   Widget _buildLogoutButton() {
+    final l10n = context.l10n;
     // Use a more visible error color for light mode
     final errorColor = _isDark ? _colors.error : const Color(0xFFC62828);
 
@@ -1519,7 +2131,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       child: OutlinedButton.icon(
         onPressed: _logout,
         icon: Icon(Iconsax.logout, color: errorColor, size: 18),
-        label: const Text('Disconnect YouTube Music'),
+        label: Text(l10n.disconnectYoutubeMusic),
         style: OutlinedButton.styleFrom(
           foregroundColor: errorColor,
           side: BorderSide(color: errorColor.withValues(alpha: 0.5)),
@@ -1549,6 +2161,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
   }
 
   Future<void> _sync() async {
+    final l10n = context.l10n;
     setState(() => _isSyncing = true);
 
     final syncService = ref.read(ytMusicSyncServiceProvider);
@@ -1567,7 +2180,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Sync failed: ${result.error}'),
+          content: Text(l10n.syncFailed(result.error ?? 'unknown')),
           backgroundColor: _colors.error,
         ),
       );
@@ -1575,22 +2188,21 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
   }
 
   Future<void> _logout() async {
+    final l10n = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Disconnect YouTube Music?'),
-        content: const Text(
-          'This will remove your YouTube Music account from the app. Your library data will be cleared.',
-        ),
+        title: Text(l10n.disconnectYoutubeMusicQuestion),
+        content: Text(l10n.disconnectYoutubeMusicWarning),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: _colors.error),
-            child: const Text('Disconnect'),
+            child: Text(l10n.disconnect),
           ),
         ],
       ),
@@ -1619,17 +2231,18 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
   }
 
   String _formatDate(DateTime date) {
+    final l10n = context.l10n;
     final now = DateTime.now();
     final diff = now.difference(date);
 
     if (diff.inMinutes < 1) {
-      return 'Just now';
+      return l10n.justNow;
     } else if (diff.inHours < 1) {
-      return '${diff.inMinutes}m ago';
+      return l10n.minutesAgo(diff.inMinutes);
     } else if (diff.inDays < 1) {
-      return '${diff.inHours}h ago';
+      return l10n.hoursAgo(diff.inHours);
     } else {
-      return '${diff.inDays}d ago';
+      return l10n.daysAgo(diff.inDays);
     }
   }
 }
@@ -1648,6 +2261,9 @@ class _SearchableItem {
   final String subtitle;
   final IconData icon;
   final Widget screen;
+
+  List<String> get searchTerms => [...tags, title, subtitle];
+
   const _SearchableItem({
     required this.tags,
     required this.title,

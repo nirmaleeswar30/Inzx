@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../../core/design_system/design_system.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import '../../providers/providers.dart';
 import '../../models/models.dart';
 
@@ -76,6 +77,80 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
     Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (context) => const SearchScreen()));
+  }
+
+  HomeShelf? _firstShelfWhere(
+    Iterable<HomeShelf> shelves,
+    bool Function(HomeShelf shelf) test,
+  ) {
+    for (final shelf in shelves) {
+      if (test(shelf)) return shelf;
+    }
+    return null;
+  }
+
+  bool _looksLikeQuickPicksTitle(String title) {
+    final lowerTitle = title.toLowerCase();
+    return lowerTitle.contains('quick picks') ||
+        lowerTitle.contains('hızlı seçimler') ||
+        lowerTitle.contains('быстрый выбор') ||
+        lowerTitle.contains('быстрые подборки');
+  }
+
+  bool _isApiWelcomeShelf(HomeShelf shelf) {
+    if (shelf.type != HomeShelfType.unknown) return false;
+
+    final title = shelf.title.toLowerCase();
+    final strapline = shelf.strapline?.toLowerCase() ?? '';
+    final subtitle = shelf.subtitle?.toLowerCase() ?? '';
+
+    return title.startsWith('welcome') ||
+        strapline.contains('music to get you started') ||
+        subtitle.contains('music to get you started');
+  }
+
+  HomeShelf? _selectWelcomeShelf(List<HomeShelf> shelves) {
+    final typedQuickPicks = _firstShelfWhere(
+      shelves,
+      (s) => s.type == HomeShelfType.quickPicks,
+    );
+    if (typedQuickPicks != null) return typedQuickPicks;
+
+    final titleMatchedQuickPicks = _firstShelfWhere(
+      shelves,
+      (s) => _looksLikeQuickPicksTitle(s.title),
+    );
+    if (titleMatchedQuickPicks != null) return titleMatchedQuickPicks;
+
+    final apiWelcomeShelf = _firstShelfWhere(shelves, _isApiWelcomeShelf);
+    if (apiWelcomeShelf != null) return apiWelcomeShelf;
+
+    final songShelves = shelves.where((shelf) {
+      final songCount = shelf.items
+          .where((item) => item.itemType == HomeShelfItemType.song)
+          .length;
+      return songCount >= 4;
+    }).toList();
+
+    if (songShelves.isEmpty) return null;
+
+    songShelves.sort((a, b) {
+      int score(HomeShelf shelf) {
+        final songCount = shelf.items
+            .where((item) => item.itemType == HomeShelfItemType.song)
+            .length;
+        final allItemsAreSongs = songCount == shelf.items.length;
+        final hasQuickPicksLikeTitle = _looksLikeQuickPicksTitle(shelf.title);
+
+        return (hasQuickPicksLikeTitle ? 1000 : 0) +
+            (allItemsAreSongs ? 100 : 0) +
+            songCount;
+      }
+
+      return score(b).compareTo(score(a));
+    });
+
+    return songShelves.first;
   }
 
   /// Navigate to content based on item type (playlist, album, artist)
@@ -231,6 +306,7 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
   }
 
   Widget _buildSearchBar(bool isDark, ColorScheme colorScheme) {
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Row(
@@ -262,7 +338,7 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Search songs, albums, artists',
+                        l10n.searchMusicHint,
                         style: TextStyle(
                           color: _textColors.tertiary,
                           fontSize: 15,
@@ -294,6 +370,7 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
   Widget _buildHomeContent(bool isDark, ColorScheme colorScheme) {
     final ytAuthState = ref.watch(ytMusicAuthStateProvider);
     final homeState = ref.watch(ytMusicHomePageStateProvider);
+    final localeCode = Localizations.localeOf(context).languageCode;
 
     // Eagerly trigger liked songs fetch when logged in
     // This ensures liked status shows correctly when playing songs
@@ -335,7 +412,7 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
             // YT Music Home Page Shelves - use Builder to ensure proper rebuilds
             Builder(
               key: ValueKey(
-                'shelves_${homeState.shelves.length}_${homeState.isLoading}',
+                'shelves_${localeCode}_${homeState.shelves.length}_${homeState.isLoading}',
               ),
               builder: (context) {
                 if (homeState.isLoading && homeState.shelves.isEmpty) {
@@ -390,52 +467,9 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
 
     final widgets = <Widget>[];
 
-    // Find a suitable shelf for the "Welcome" section
-    // Priority 1: "Quick Picks" (User request: Always fetch first)
-    // Priority 2: "Music to get you started"
-    // Priority 3: First shelf that contains songs
-
-    HomeShelf? welcomeShelf;
-
-    // Priority 1: Quick Picks
-    try {
-      welcomeShelf = shelves.firstWhere(
-        (s) =>
-            s.type == HomeShelfType.quickPicks ||
-            s.title.toLowerCase().contains('quick picks'),
-      );
-    } catch (_) {
-      // Not found
-    }
-
-    // Priority 2: "Music to get you started"
-    if (welcomeShelf == null) {
-      try {
-        welcomeShelf = shelves.firstWhere(
-          (s) =>
-              (s.strapline?.toLowerCase() ?? '').contains(
-                'music to get you started',
-              ) ||
-              (s.subtitle?.toLowerCase() ?? '').contains(
-                'music to get you started',
-              ) ||
-              s.title.startsWith('Welcome'),
-        );
-      } catch (_) {
-        // Not found
-      }
-    }
-
-    // Priority 3: First shelf with songs
-    if (welcomeShelf == null) {
-      try {
-        welcomeShelf = shelves.firstWhere(
-          (s) =>
-              s.items.any((i) => i.itemType == HomeShelfItemType.song) &&
-              s.items.length >= 4,
-        );
-      } catch (_) {}
-    }
+    // Prefer typed shelves first, and only fall back to title sniffing for
+    // API responses that still come through as unknown.
+    final welcomeShelf = _selectWelcomeShelf(shelves);
 
     // Render Welcome Shelf first if found
     if (welcomeShelf != null) {
@@ -609,6 +643,7 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
   }
 
   Widget _buildYTMusicLoginCard(bool isDark, ColorScheme colorScheme) {
+    final l10n = context.l10n;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       decoration: BoxDecoration(
@@ -658,8 +693,8 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Connect YouTube Music',
+                      Text(
+                        l10n.connectYoutubeMusic,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -668,7 +703,7 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Sync your liked songs, playlists & more',
+                        l10n.connectYoutubeMusicSubtitle,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.8),
                           fontSize: 13,
@@ -687,6 +722,7 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
   }
 
   Widget _buildForgottenFavorites(bool isDark, ColorScheme colorScheme) {
+    final l10n = context.l10n;
     final recentlyPlayed = ref.watch(recentlyPlayedProvider);
 
     // Only show if user has some history
@@ -711,7 +747,7 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'Forgotten favorites',
+            l10n.forgottenFavorites,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -797,13 +833,14 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
   }
 
   Widget _buildMixedForYou(bool isDark, ColorScheme colorScheme) {
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'Mixed for you',
+            l10n.mixedForYou,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -820,11 +857,11 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
             itemCount: 5,
             itemBuilder: (context, index) {
               final mixes = [
-                ('My Mix 1', 'Based on your listening', Colors.indigo),
-                ('Discover Mix', 'New music for you', Colors.teal),
-                ('Replay Mix', 'Your favorites', Colors.orange),
-                ('New Release', 'Fresh tracks', Colors.pink),
-                ('Chill Mix', 'Relaxing vibes', Colors.blue),
+                (l10n.myMixOne, l10n.basedOnYourListening, Colors.indigo),
+                (l10n.discoverMix, l10n.newMusicForYou, Colors.teal),
+                (l10n.replayMix, l10n.yourFavorites, Colors.orange),
+                (l10n.newRelease, l10n.freshTracks, Colors.pink),
+                (l10n.chillMix, l10n.relaxingVibes, Colors.blue),
               ];
               return _buildMixCard(
                 mixes[index].$1,
@@ -910,11 +947,12 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
     bool isDark,
     ColorScheme colorScheme,
   ) {
+    final l10n = context.l10n;
     final ytAuthState = ref.watch(ytMusicAuthStateProvider);
     final googleAuthState = ref.watch(googleAuthStateProvider);
 
     // Try to get name from Google Auth first, then YT Music, then fallback
-    String userName = 'there';
+    String userName = l10n.welcomeFallbackName;
     if (googleAuthState.isSignedIn &&
         googleAuthState.user?.displayName != null) {
       userName = googleAuthState.user!.displayName!.split(' ').first;
@@ -922,11 +960,11 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
       userName = ytAuthState.account!.name!.split(' ').first;
     }
 
-    // Determine title: Use shelf title if it starts with "Welcome", otherwise "Welcome [Name]"
-    // This handles the fallback case where we pick "Quick Picks" but want to show "Welcome User"
-    final displayTitle = shelf.title.startsWith('Welcome')
-        ? shelf.title
-        : 'Welcome $userName';
+    // Quick Picks works best as a personalized welcome header. If the API
+    // gives us an explicit welcome shelf, keep its title.
+    final displayTitle = shelf.type == HomeShelfType.quickPicks
+        ? l10n.welcomeUser(userName)
+        : shelf.title;
 
     // Convert items to tracks
     final songs = shelf.items
@@ -950,7 +988,7 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'MUSIC TO GET YOU STARTED',
+                      l10n.musicToGetYouStarted,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -1011,19 +1049,23 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab> {
     bool isDark,
     ColorScheme colorScheme,
   ) {
+    const tracksPerPage = 4;
     final playerService = ref.watch(audioPlayerServiceProvider);
 
     // Calculate number of pages (4 songs per page)
-    final pageCount = (songs.length / 4).ceil();
+    final pageCount = (songs.length / tracksPerPage).ceil();
 
     return SizedBox(
       height: 292,
       child: PageView.builder(
+        key: ValueKey(
+          'welcome_grid_${Localizations.localeOf(context).languageCode}_${songs.length}_${songs.isNotEmpty ? songs.first.id : 'empty'}',
+        ),
         controller: PageController(viewportFraction: 0.92),
         itemCount: pageCount,
         itemBuilder: (context, pageIndex) {
-          final startIndex = pageIndex * 4;
-          final pageSongs = songs.skip(startIndex).take(4).toList();
+          final startIndex = pageIndex * tracksPerPage;
+          final pageSongs = songs.skip(startIndex).take(tracksPerPage).toList();
 
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),

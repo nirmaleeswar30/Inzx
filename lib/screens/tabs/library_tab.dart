@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/design_system/design_system.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import '../../providers/providers.dart';
 import '../../providers/bookmarks_and_stats_provider.dart';
 import '../../models/models.dart';
@@ -20,7 +21,6 @@ class MusicLibraryTab extends ConsumerStatefulWidget {
 
 class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
   int _selectedCategory = 0;
-  final _categories = ['Playlists', 'Albums', 'Artists', 'Downloads'];
 
   @override
   Widget build(BuildContext context) {
@@ -44,13 +44,14 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
   }
 
   Widget _buildHeader(bool isDark, ColorScheme colorScheme) {
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Library',
+            l10n.library,
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -90,18 +91,25 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
   }
 
   Widget _buildCategoryTabs(bool isDark, ColorScheme colorScheme) {
+    final l10n = context.l10n;
     final accentColor = ref.watch(effectiveAccentColorProvider);
+    final categories = [
+      l10n.playlists,
+      l10n.albums,
+      l10n.artists,
+      l10n.downloads,
+    ];
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(
-        children: List.generate(_categories.length, (index) {
+        children: List.generate(categories.length, (index) {
           final isSelected = _selectedCategory == index;
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: FilterChip(
-              label: Text(_categories[index]),
+              label: Text(categories[index]),
               selected: isSelected,
               onSelected: (selected) {
                 if (selected) {
@@ -148,6 +156,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
   }
 
   Widget _buildPlaylistsView(bool isDark, ColorScheme colorScheme) {
+    final l10n = context.l10n;
     final ytAuthState = ref.watch(ytMusicAuthStateProvider);
     final ytPlaylistsAsync = ytAuthState.isLoggedIn
         ? ref.watch(ytMusicSavedPlaylistsProvider)
@@ -164,23 +173,29 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
 
     // Auto playlists with dynamic counts
     final autoPlaylists = [
-      ('Liked Songs', Icons.favorite_rounded, Colors.pink, totalLiked, 'liked'),
       (
-        'Most Played',
+        l10n.likedSongsLabel,
+        Icons.favorite_rounded,
+        Colors.pink,
+        totalLiked,
+        'liked',
+      ),
+      (
+        l10n.mostPlayed,
         Icons.bar_chart_rounded,
         Colors.blue,
         mostPlayed.length,
         'most_played',
       ),
       (
-        'Recently Played',
+        l10n.recentlyPlayed,
         Icons.history_rounded,
         Colors.orange,
         recentlyPlayed.length,
         'recent',
       ),
       (
-        'Downloaded',
+        l10n.downloaded,
         Icons.download_rounded,
         Colors.green,
         downloadedTracks.length,
@@ -195,7 +210,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
           child: Text(
-            'Auto playlists',
+            l10n.autoPlaylists,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -239,7 +254,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
                 Icon(Icons.music_note, size: 16, color: Colors.red),
                 const SizedBox(width: 6),
                 Text(
-                  'YouTube Music playlists',
+                  context.l10n.youtubeMusicPlaylists,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -268,7 +283,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Text(
-                  'Error loading playlists',
+                  context.l10n.errorLoadingPlaylists,
                   style: TextStyle(color: Colors.red.shade300),
                 ),
               ),
@@ -281,7 +296,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
           child: Text(
-            'Your playlists',
+            context.l10n.yourPlaylists,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -341,7 +356,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
             ),
           ),
           subtitle: Text(
-            '$displayCount songs',
+            context.l10n.songsCount(displayCount),
             style: TextStyle(
               fontSize: 12,
               color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -384,7 +399,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Text(
-        'No YouTube Music playlists found',
+        context.l10n.noYoutubeMusicPlaylistsFound,
         style: TextStyle(
           color: isDark ? Colors.white38 : InzxColors.textSecondary,
         ),
@@ -426,7 +441,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
             ),
           ),
           Text(
-            '$count songs',
+            context.l10n.songsCount(count),
             style: TextStyle(
               fontSize: 12,
               color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -484,9 +499,9 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
     }
 
     if (tracks.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('No songs in $title')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.noSongsInTitle(title))),
+      );
       return;
     }
 
@@ -569,7 +584,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
               ),
             ),
             Text(
-              '${tracks.length} songs',
+              context.l10n.songsCount(tracks.length),
               style: TextStyle(
                 color: isDark ? Colors.white54 : InzxColors.textSecondary,
               ),
@@ -639,6 +654,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
   }
 
   Widget _buildEmptyPlaylistsState(bool isDark, ColorScheme colorScheme) {
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.all(32),
       child: Center(
@@ -663,7 +679,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
             ),
             const SizedBox(height: 16),
             Text(
-              'No playlists yet',
+              l10n.noPlaylistsYet,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -672,7 +688,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Create a playlist to organize your music',
+              l10n.createPlaylistDescription,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -682,7 +698,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
             OutlinedButton.icon(
               onPressed: _showCreatePlaylistDialog,
               icon: const Icon(Icons.add_rounded),
-              label: const Text('Create playlist'),
+              label: Text(l10n.createPlaylist),
             ),
           ],
         ),
@@ -691,6 +707,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
   }
 
   Widget _buildAlbumsView(bool isDark, ColorScheme colorScheme) {
+    final l10n = context.l10n;
     final ytAuthState = ref.watch(ytMusicAuthStateProvider);
     final ytAlbumsAsync = ytAuthState.isLoggedIn
         ? ref.watch(ytMusicSavedAlbumsProvider)
@@ -701,7 +718,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
     // Group locally played by album
     final albumsMap = <String, List<dynamic>>{};
     for (final track in recentlyPlayed) {
-      final albumKey = track.album ?? 'Unknown Album';
+      final albumKey = track.album ?? l10n.unknownAlbum;
       albumsMap.putIfAbsent(albumKey, () => []).add(track);
     }
 
@@ -717,7 +734,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
                 Icon(Icons.music_note, size: 16, color: Colors.red),
                 const SizedBox(width: 6),
                 Text(
-                  'Saved albums from YouTube Music',
+                  l10n.savedAlbumsFromYoutubeMusic,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -732,7 +749,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
                 ? Padding(
                     padding: const EdgeInsets.all(16),
                     child: Text(
-                      'No saved albums from YouTube Music',
+                      l10n.noSavedAlbumsFromYoutubeMusic,
                       style: TextStyle(
                         color: isDark
                             ? Colors.white38
@@ -747,7 +764,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 0.85,
+                          childAspectRatio: 0.78,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),
@@ -775,7 +792,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Text(
-                  'Error loading albums',
+                  l10n.errorLoadingAlbums,
                   style: TextStyle(color: Colors.red.shade300),
                 ),
               ),
@@ -789,7 +806,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Text(
-              'Recently played',
+              l10n.recentlyPlayed,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -803,7 +820,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.85,
+              childAspectRatio: 0.78,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),
@@ -840,6 +857,10 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
     ColorScheme colorScheme, {
     bool isYTMusic = false,
   }) {
+    final subtitle = context.metadataLine([
+      artist,
+      trackCount > 0 ? context.l10n.songsCount(trackCount) : null,
+    ]);
     return InkWell(
       onTap: () {
         // TODO: Open album
@@ -897,7 +918,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
             ),
           ),
           Text(
-            '$artist${trackCount > 0 ? ' • $trackCount songs' : ''}',
+            subtitle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
@@ -911,6 +932,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
   }
 
   Widget _buildEmptyAlbumsState(bool isDark, ColorScheme colorScheme) {
+    final l10n = context.l10n;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -934,7 +956,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No albums yet',
+            l10n.noAlbumsYet,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -943,7 +965,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Play some music to see albums here',
+            l10n.playSomeMusicToSeeAlbumsHere,
             style: TextStyle(
               color: isDark ? Colors.white54 : InzxColors.textSecondary,
             ),
@@ -954,6 +976,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
   }
 
   Widget _buildArtistsView(bool isDark, ColorScheme colorScheme) {
+    final l10n = context.l10n;
     final ytAuthState = ref.watch(ytMusicAuthStateProvider);
     final ytArtistsAsync = ytAuthState.isLoggedIn
         ? ref.watch(ytMusicSubscribedArtistsProvider)
@@ -982,7 +1005,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
                 Icon(Icons.music_note, size: 16, color: Colors.red),
                 const SizedBox(width: 6),
                 Text(
-                  'Subscribed artists',
+                  l10n.subscribedArtists,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -997,7 +1020,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
                 ? Padding(
                     padding: const EdgeInsets.all(16),
                     child: Text(
-                      'No subscribed artists',
+                      l10n.noSubscribedArtists,
                       style: TextStyle(
                         color: isDark
                             ? Colors.white38
@@ -1031,7 +1054,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Text(
-                  'Error loading artists',
+                  l10n.errorLoadingArtists,
                   style: TextStyle(color: Colors.red.shade300),
                 ),
               ),
@@ -1045,7 +1068,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Text(
-              'Recently played artists',
+              l10n.recentlyPlayedArtists,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -1109,7 +1132,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
       ),
       subtitle: songCount > 0
           ? Text(
-              '$songCount ${songCount == 1 ? 'song' : 'songs'}',
+              context.l10n.songsCount(songCount),
               style: TextStyle(
                 fontSize: 13,
                 color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -1123,6 +1146,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
   }
 
   Widget _buildEmptyArtistsState(bool isDark, ColorScheme colorScheme) {
+    final l10n = context.l10n;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1146,7 +1170,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No artists yet',
+            l10n.noArtistsYet,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -1155,7 +1179,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Play some music to see artists here',
+            l10n.playSomeMusicToSeeArtistsHere,
             style: TextStyle(
               color: isDark ? Colors.white54 : InzxColors.textSecondary,
             ),
@@ -1173,6 +1197,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
   }
 
   Widget _buildDownloadsView(bool isDark, ColorScheme colorScheme) {
+    final l10n = context.l10n;
     final downloadsAsync = ref.watch(downloadedTracksProvider);
     final downloadedPlaylists =
         ref.watch(downloadedPlaylistsProvider).valueOrNull ??
@@ -1193,7 +1218,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
           return _buildEmptyDownloadsState(isDark, colorScheme);
         }
 
-        final downloadPath = downloadPathAsync.valueOrNull ?? 'Loading...';
+        final downloadPath = downloadPathAsync.valueOrNull ?? l10n.loading;
 
         return ListView(
           padding: const EdgeInsets.only(bottom: 100),
@@ -1230,7 +1255,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
                     ),
                   ),
                   Text(
-                    '${tracks.length} songs',
+                    l10n.songsCount(tracks.length),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -1246,7 +1271,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                 child: Text(
-                  'Downloading',
+                  l10n.downloading,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -1268,7 +1293,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                 child: Text(
-                  'Downloaded playlists',
+                  l10n.downloadedPlaylists,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -1291,7 +1316,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Downloaded',
+                      l10n.downloaded,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -1303,7 +1328,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
                     TextButton.icon(
                       onPressed: () => _playAllDownloads(tracks),
                       icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                      label: const Text('Play all'),
+                      label: Text(l10n.playAll),
                       style: TextButton.styleFrom(
                         foregroundColor: colorScheme.primary,
                       ),
@@ -1334,7 +1359,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
             Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
             const SizedBox(height: 16),
             Text(
-              'Error loading downloads',
+              l10n.errorLoadingDownloads,
               style: TextStyle(
                 color: isDark ? Colors.white70 : InzxColors.textSecondary,
               ),
@@ -1392,7 +1417,10 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
         style: TextStyle(color: isDark ? Colors.white : InzxColors.textPrimary),
       ),
       subtitle: Text(
-        '${snapshot.downloadedTracks}/${snapshot.totalTracks} downloaded',
+        context.l10n.downloadedFraction(
+          snapshot.downloadedTracks,
+          snapshot.totalTracks,
+        ),
         style: TextStyle(
           fontSize: 12,
           color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -1508,6 +1536,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
     bool isDark,
     ColorScheme colorScheme,
   ) {
+    final l10n = context.l10n;
     return ListTile(
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(4),
@@ -1577,7 +1606,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'Delete download',
+                      l10n.deleteDownload,
                       style: TextStyle(color: Colors.red.shade400),
                     ),
                   ],
@@ -1608,18 +1637,19 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
     bool isDark,
     ColorScheme colorScheme,
   ) {
+    final l10n = context.l10n;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         title: Text(
-          'Delete download?',
+          l10n.deleteDownloadQuestion,
           style: TextStyle(
             color: isDark ? Colors.white : InzxColors.textPrimary,
           ),
         ),
         content: Text(
-          'This will remove "${track.title}" from your device. You can download it again later.',
+          l10n.deleteDownloadWarning(track.title),
           style: TextStyle(
             color: isDark ? Colors.white70 : InzxColors.textSecondary,
           ),
@@ -1628,7 +1658,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Cancel',
+              l10n.cancel,
               style: TextStyle(color: isDark ? Colors.white54 : Colors.grey),
             ),
           ),
@@ -1640,13 +1670,13 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
                   .removeDownload(track.id);
               ScaffoldMessenger.of(this.context).showSnackBar(
                 SnackBar(
-                  content: Text('Deleted "${track.title}"'),
+                  content: Text(l10n.deletedTrack(track.title)),
                   behavior: SnackBarBehavior.floating,
                 ),
               );
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(l10n.deleteDownload),
           ),
         ],
       ),
@@ -1654,6 +1684,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
   }
 
   Widget _buildEmptyDownloadsState(bool isDark, ColorScheme colorScheme) {
+    final l10n = context.l10n;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1665,7 +1696,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No downloads yet',
+            l10n.noDownloadsYet,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -1674,7 +1705,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Downloaded songs will appear here',
+            l10n.downloadedSongsWillAppearHere,
             style: TextStyle(
               color: isDark ? Colors.white38 : InzxColors.textSecondary,
             ),
@@ -1698,6 +1729,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
   }
 
   void _showCreatePlaylistDialog() {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final controller = TextEditingController();
 
@@ -1706,7 +1738,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
       builder: (context) => AlertDialog(
         backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         title: Text(
-          'Create playlist',
+          l10n.createPlaylist,
           style: TextStyle(
             color: isDark ? Colors.white : InzxColors.textPrimary,
           ),
@@ -1718,7 +1750,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
             color: isDark ? Colors.white : InzxColors.textPrimary,
           ),
           decoration: InputDecoration(
-            hintText: 'Playlist name',
+            hintText: l10n.playlistName,
             hintStyle: TextStyle(
               color: isDark ? Colors.white38 : InzxColors.textSecondary,
             ),
@@ -1727,14 +1759,14 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () {
               // TODO: Create playlist
               Navigator.pop(context);
             },
-            child: const Text('Create'),
+            child: Text(l10n.create),
           ),
         ],
       ),

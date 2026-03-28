@@ -1,0 +1,1179 @@
+{
+  "@@locale": "id",
+  "appTitle": "Inzx",
+  "updateDownloadedBanner": "Pembaruan diunduh. Mulai ulang aplikasi untuk menerapkan.",
+  "restart": "Mulai ulang",
+  "dismiss": "Membubarkan",
+  "newVersionAvailableBanner": "Versi baru {version} tersedia di GitHub.",
+  "@newVersionAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "Unduh",
+  "later": "Nanti",
+  "home": "Rumah",
+  "songs": "Lagu",
+  "library": "Perpustakaan",
+  "folders": "Folder",
+  "settings": "Pengaturan",
+  "searchSettingsHint": "Setelan penelusuran...",
+  "noMatchingSettings": "Tidak ada pengaturan yang cocok",
+  "appearance": "Penampilan",
+  "theme": "Tema",
+  "themeAuto": "Mobil",
+  "themeLight": "Lampu",
+  "themeDark": "Gelap",
+  "dynamicColorsNote": "Warna beradaptasi secara dinamis dari sampul album lagu saat ini.",
+  "language": "Bahasa",
+  "languageSubtitle": "Pilih bahasa aplikasi",
+  "chooseLanguage": "Pilih bahasa",
+  "searchLanguagesHint": "Telusuri bahasa...",
+  "noMatchingLanguages": "Tidak ada bahasa yang cocok",
+  "useSystemLanguage": "Gunakan bahasa sistem",
+  "languageSystem": "Bawaan sistem",
+  "languageEnglish": "Bahasa inggris",
+  "languageTurkish": "Turki",
+  "languageRussian": "Rusia",
+  "languageHindi": "Hindi",
+  "languageTamil": "Tamil",
+  "languageKannada": "Kannada",
+  "languageTelugu": "Telugu",
+  "languageSpanish": "Spanyol",
+  "languageFrench": "Perancis",
+  "languageGerman": "Jerman",
+  "languageIndonesian": "Indonesia",
+  "languageJapanese": "Jepang",
+  "languageKorean": "Korea",
+  "languageArabic": "Arab",
+  "languageUkrainian": "Ukraina",
+  "languageThai": "Thai",
+  "languagePortugueseBrazil": "Portugis (Brasil)",
+  "languageChineseSimplified": "Cina (Sederhana)",
+  "languageChineseTraditional": "Cina (Tradisional)",
+  "contentLocation": "Lokasi konten",
+  "contentLocationSubtitle": "Pilih wilayah yang digunakan untuk rekomendasi dan ketersediaan katalog",
+  "chooseContentLocation": "Pilih lokasi konten",
+  "searchLocationsHint": "Cari lokasi...",
+  "noMatchingLocations": "Tidak ada lokasi yang cocok",
+  "locationSystem": "Bawaan sistem",
+  "locationUnitedStates": "Amerika Serikat",
+  "locationIndia": "India",
+  "locationTurkey": "Turki",
+  "locationRussia": "Rusia",
+  "quickActions": "Tindakan Cepat",
+  "audio": "Audio",
+  "audioQuickActionsSubtitle": "Kualitas streaming, crossfade & pemutaran",
+  "downloads": "Unduhan",
+  "downloadsQuickActionsSubtitle": "Kualitas unduhan, lokasi & penyimpanan",
+  "backupRestore": "Cadangkan & Pulihkan",
+  "backupRestoreQuickActionsSubtitle": "Ekspor atau impor perpustakaan Anda",
+  "streamingQuality": "Kualitas Streaming",
+  "streamingQualitySubtitle": "Sesuaikan bitrate audio untuk streaming",
+  "crossfadeTransition": "Transisi Crossfade",
+  "crossfadeTransitionSubtitle": "Padukan trek dengan lancar satu sama lain",
+  "streamingCache": "Tembolok Streaming",
+  "streamingCacheSubtitle": "Pra-cache lagu berikutnya, opsi Wi-Fi saja",
+  "downloadQuality": "Kualitas Unduhan",
+  "downloadQualitySubtitle": "Kualitas untuk unduhan offline",
+  "downloadLocation": "Unduh Lokasi",
+  "downloadLocationSubtitle": "Tempat musik yang diunduh disimpan",
+  "dataUsageInfo": "Info Penggunaan Data",
+  "dataUsageInfoSubtitle": "Perkiraan penyimpanan per lagu",
+  "createBackup": "Buat Cadangan",
+  "createBackupSubtitle": "Ekspor perpustakaan dan pengaturan Anda",
+  "restoreBackup": "Pulihkan Cadangan",
+  "restoreBackupSubtitle": "Impor file cadangan sebelumnya",
+  "connectYoutubeMusic": "Hubungkan YouTube Musik",
+  "connectYoutubeMusicSubtitle": "Sinkronkan lagu, daftar putar, dan lainnya yang Anda sukai",
+  "connectYtMusicButton": "Hubungkan Musik YT",
+  "downloadsTitle": "Unduhan",
+  "clearCompleted": "Jelas selesai",
+  "clearFailed": "Hapus gagal",
+  "noDownloadsYet": "Belum ada unduhan",
+  "downloadSongsToListenOffline": "Unduh lagu untuk didengarkan secara offline",
+  "downloadingTitle": "Mengunduh",
+  "downloadedTitle": "Diunduh ({count})",
+  "@downloadedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedTitle": "Gagal",
+  "songsDownloaded": "{count} lagu diunduh",
+  "@songsDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usingStorage": "Menggunakan {storage}",
+  "@usingStorage": {
+    "placeholders": {
+      "storage": {
+        "type": "String"
+      }
+    }
+  },
+  "failedWithError": "Gagal: {error}",
+  "@failedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownError": "Kesalahan tidak diketahui",
+  "removeDownload": "Hapus unduhan",
+  "downloadSettingsTitle": "Unduh Pengaturan",
+  "downloadLocationSubtitleLong": "Tempat menyimpan file musik yang diunduh",
+  "offlineDownloadTip": "Lagu yang diunduh diputar tanpa internet dan tidak menggunakan data streaming.",
+  "estimatedStoragePerSong": "Perkiraan Penyimpanan per Lagu",
+  "storageLocation": "Lokasi Penyimpanan",
+  "loading": "Memuat...",
+  "errorLoadingPath": "Terjadi kesalahan saat memuat jalur",
+  "privateStorageDownloadsNote": "Unduhan disimpan di penyimpanan pribadi aplikasi untuk keandalan yang lebih baik dan tidak ada persyaratan izin.",
+  "qualityAutoChip": "Mobil",
+  "qualityLowChip": "Rendah",
+  "qualityMediumChip": "Sedang",
+  "qualityHighChip": "Tinggi",
+  "qualityMaxChip": "Maks",
+  "qualityHighest": "Paling tinggi",
+  "qualityDescriptionAuto": "Otomatis - Beradaptasi dengan jaringan",
+  "qualityDescriptionLow": "Rendah - ~64 kbps (menghemat penyimpanan)",
+  "qualityDescriptionMedium": "Sedang - ~128 kbps (seimbang)",
+  "qualityDescriptionHigh": "Tinggi - ~256 kbps (disarankan)",
+  "qualityDescriptionMax": "Maksimum - Tertinggi yang tersedia (~256 kbps)",
+  "backupRestoreTitle": "Cadangkan & Pulihkan",
+  "backupIncludesDescription": "Cadangan mencakup lagu yang disukai, daftar putar, riwayat pencarian, yang terakhir diputar, dan pengaturan aplikasi utama.",
+  "exportBackup": "Ekspor Cadangan",
+  "exportBackupSubtitle": "Simpan file cadangan untuk dibagikan atau disimpan",
+  "importBackup": "Impor Cadangan",
+  "importBackupSubtitle": "Pulihkan dari file cadangan",
+  "dangerZone": "Zona Bahaya",
+  "clearAppData": "Hapus Data Aplikasi",
+  "clearAppDataSubtitle": "Setel ulang data/pengaturan aplikasi sambil menyimpan file audio yang diunduh",
+  "backupCreatedSuccessfully": "Cadangan berhasil dibuat",
+  "backupFailed": "Pencadangan gagal: {error}",
+  "@backupFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoredSuccessfully": "Cadangan berhasil dipulihkan",
+  "restoreFailed": "Pemulihan gagal: {error}",
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearAllDataQuestion": "Hapus Semua Data?",
+  "clearAllDataWarning": "Ini mengatur ulang data dan pengaturan aplikasi lokal, tetapi tetap menyimpan file lagu yang diunduh. Hal ini tidak dapat dibatalkan.",
+  "cancel": "Membatalkan",
+  "clearAll": "Hapus Semua",
+  "appDataClearedPreserved": "Data aplikasi dihapus (file audio yang diunduh dipertahankan)",
+  "failedGeneric": "Gagal: {error}",
+  "@failedGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupSubject": "Cadangan Musik Inzx",
+  "statisticsTitle": "Statistik",
+  "statisticsCleared": "Statistik dihapus",
+  "clearStatistics": "Hapus Statistik",
+  "noStatisticsYet": "Belum ada statistik",
+  "startListeningStats": "Mulailah mendengarkan untuk melihat statistik Anda",
+  "overview": "Ringkasan",
+  "totalPlays": "Jumlah Pemutaran",
+  "listenTime": "Dengarkan Waktu",
+  "mostPlayed": "Paling Banyak Dimainkan",
+  "playsCount": "{count} diputar",
+  "@playsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutes": "{hours}h {minutes}m",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutesOnly": "{minutes}m",
+  "@durationMinutesOnly": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "retry": "Mencoba kembali",
+  "share": "Membagikan",
+  "playlist": "Daftar putar",
+  "album": "Album",
+  "channel": "Saluran",
+  "playNext": "Mainkan Berikutnya",
+  "addToQueue": "Tambahkan ke Antrean",
+  "addToPlaylist": "Tambahkan ke Daftar Putar",
+  "goToAlbum": "Buka Album",
+  "goToArtist": "Pergi ke Artis",
+  "startRadio": "Mulai Radio",
+  "playAll": "Mainkan semuanya",
+  "shuffle": "Acak",
+  "shuffleAll": "Kocok semuanya",
+  "radio": "Radio",
+  "follow": "Mengikuti",
+  "following": "Mengikuti",
+  "connectYtMusicToFollowArtists": "Hubungkan YouTube Music untuk mengikuti artis.",
+  "couldNotFollowArtist": "Tidak dapat mengikuti {artist}.",
+  "@couldNotFollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotUnfollowArtist": "Tidak dapat berhenti mengikuti {artist}.",
+  "@couldNotUnfollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "followingArtist": "Mengikuti {artist}",
+  "@followingArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "unfollowedArtist": "Berhenti mengikuti {artist}",
+  "@unfollowedArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingArtist": "Terjadi kesalahan saat memuat artis",
+  "subscribersCount": "{count} pelanggan",
+  "@subscribersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSection": "Diunduh",
+  "showAllDownloaded": "Tampilkan semua {count} yang diunduh",
+  "@showAllDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "seeAll": "Lihat semuanya",
+  "removeFromLikedSongs": "Hapus dari Lagu yang Disukai",
+  "addToLikedSongs": "Tambahkan ke Lagu yang Disukai",
+  "playingTrackNext": "Memutar \"{title}\" berikutnya",
+  "@playingTrackNext": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTrackToQueue": "Menambahkan \"{title}\" ke antrian",
+  "@addedTrackToQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playNextInJam": "Mainkan Berikutnya di Jam",
+  "playTrackNextInJam": "\"{title}\" akan diputar berikutnya di Jam",
+  "@playTrackNextInJam": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addToJamQueue": "Tambahkan ke Antrian Jam",
+  "addedTrackToJamQueue": "Menambahkan \"{title}\" ke Antrian Jam",
+  "@addedTrackToJamQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloaded": "Diunduh",
+  "downloadingProgress": "Mengunduh {progress}%",
+  "@downloadingProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadStartingTrack": "Mengunduh \"{title}\"",
+  "@downloadStartingTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadNotificationsChannelDescription": "Unduh pemberitahuan kemajuan",
+  "downloadStartingNotification": "Mulai mengunduh...",
+  "downloadCompleteNotification": "Pengunduhan selesai",
+  "downloadFileNotCreated": "Pengunduhan gagal karena file tidak dibuat",
+  "shareTrackText": "{title} oleh {artist}\n{url}",
+  "@shareTrackText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "createNewPlaylist": "Buat Daftar Putar Baru",
+  "playlistName": "Nama daftar putar",
+  "create": "Membuat",
+  "couldNotLoadPlaylists": "Tidak dapat memuat daftar putar",
+  "createLocalPlaylistInstead": "Buatlah playlist lokal sebagai gantinya",
+  "noPlaylistsYet": "Belum ada playlist",
+  "createOneToGetStarted": "Buat satu untuk memulai",
+  "songsCount": "{count} lagu",
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createdPlaylistOnYtMusicAndAddedTrack": "Membuat \"{playlist}\" di YT Music dan menambahkan \"{track}\"",
+  "@createdPlaylistOnYtMusicAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToCreatePlaylist": "Gagal membuat daftar putar",
+  "createdPlaylistLocallyAndAddedTrack": "Membuat \"{playlist}\" secara lokal dan menambahkan \"{track}\"",
+  "@createdPlaylistLocallyAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddToPlaylist": "Gagal menambahkan ke daftar putar",
+  "addedTrackToPlaylist": "Menambahkan \"{track}\" ke \"{playlist}\"",
+  "@addedTrackToPlaylist": {
+    "placeholders": {
+      "track": {
+        "type": "String"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorWithMessage": "Kesalahan: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "searchingForLyrics": "Mencari lirik...",
+  "failedToLoadLyrics": "Gagal memuat lirik",
+  "tryAnotherProvider": "Coba penyedia lain",
+  "noLyricsFound": "Lirik tidak ditemukan",
+  "linkLabel": "Tautan: {url}",
+  "@linkLabel": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "tracksCount": "{count} trek",
+  "@tracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFromYoutubeMusic": "Impor dari YouTube Musik",
+  "importedPlaylistSuffix": "Impor",
+  "importedFromYoutubeMusicDescription": "Diimpor dari YouTube Musik",
+  "importedPlaylist": "Mengimpor \"{playlist}\"",
+  "@importedPlaylist": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToImportPlaylist": "Gagal mengimpor: {error}",
+  "@failedToImportPlaylist": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadPlaylists": "Gagal memuat daftar putar",
+  "makeSureLoggedInYoutubeMusic": "Pastikan Anda masuk ke YouTube Music",
+  "noPlaylistsFound": "Tidak ada daftar putar yang ditemukan",
+  "createPlaylistsInYoutubeMusicFirst": "Buat beberapa playlist di YouTube Music terlebih dahulu",
+  "loggedInYoutubeMusicSuccess": "Berhasil masuk ke YouTube Music!",
+  "signInToYoutubeMusic": "Masuk ke YouTube Musik",
+  "loggingYouIn": "Memasukkan Anda...",
+  "signInSyncYoutubeMusicDescription": "Masuk dengan akun Google Anda untuk menyinkronkan perpustakaan YouTube Music Anda, termasuk lagu, daftar putar, dan album yang disukai.",
+  "playbackSpeed": "Kecepatan Pemutaran",
+  "normal": "Normal",
+  "defaultValue": "Bawaan",
+  "failedToLoadContent": "Gagal memuat konten",
+  "loadMore": "Muat lebih banyak",
+  "audioSettingsTitle": "Pengaturan Audio",
+  "nowPlayingLabel": "Sedang Dimainkan",
+  "higherQualityUsesMoreData": "Kualitas yang lebih tinggi menggunakan lebih banyak data",
+  "adjustsBasedOnNetworkSpeed": "Menyesuaikan berdasarkan kecepatan jaringan",
+  "qualityLowUsesLessData": "~64 kbps - Menggunakan lebih sedikit data",
+  "qualityMediumBalanced": "~128 kbps - Seimbang",
+  "qualityHighBestForMost": "~256 kbps - Terbaik untuk sebagian besar",
+  "qualityMaximumAvailable": "Tertinggi yang tersedia (~256 kbps)",
+  "recommended": "Direkomendasikan",
+  "blendTrackEndsIntoNext": "Padukan akhir lagu saat ini dengan awal lagu berikutnya",
+  "preCachesNextTracks": "Pra-cache lagu berikutnya dan putar dari cache lokal bila tersedia",
+  "smartStreamCache": "Cache Aliran Cerdas",
+  "usedCacheStorage": "Digunakan: {used} / {limit} MB",
+  "@usedCacheStorage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "calculatingCacheUsage": "Menghitung penggunaan cache...",
+  "unableToReadCacheUsage": "Tidak dapat membaca penggunaan cache",
+  "preCacheNetwork": "Jaringan Pra-cache",
+  "wifiOnly": "Hanya Wi-Fi",
+  "wifiAndMobileData": "Wi-Fi + data seluler",
+  "preCacheRunsWifiOnly": "Pra-cache hanya berjalan saat terhubung ke Wi-Fi",
+  "preCacheRunsWifiAndMobile": "Pra-cache dapat berjalan di Wi-Fi dan data seluler",
+  "concurrentPreCacheDownloads": "Unduhan Pra-cache Secara Bersamaan",
+  "higherValuesCacheFaster": "Nilai cache yang lebih tinggi lebih cepat tetapi menggunakan lebih banyak jaringan dan baterai",
+  "cacheSizeLimit": "Batas Ukuran Cache",
+  "off": "Mati",
+  "crossfadeDisabled": "Crossfade dinonaktifkan",
+  "currentValueLabel": "Saat ini: {value}",
+  "@currentValueLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "audioQuality": "Kualitas Audio",
+  "qualityLowKbps": "Rendah (64 kbps)",
+  "qualityMediumKbps": "Sedang (128 kbps)",
+  "qualityHighKbps": "Tinggi (256 kbps)",
+  "qualityMaximumKbps": "Maksimum (~256 kbps)",
+  "all": "Semua",
+  "artists": "Artis",
+  "albums": "Album",
+  "playlists": "Daftar Putar",
+  "singlesAndEps": "Single & EP",
+  "appearsOn": "Muncul Aktif",
+  "fansAlsoLike": "Penggemar Juga Suka",
+  "searchMusicHint": "Cari lagu, album, artis",
+  "searchForMusic": "Cari musik",
+  "noResultsFound": "Tidak ada hasil yang ditemukan",
+  "showAllLocalResults": "Tampilkan semua hasil lokal {count}",
+  "@showAllLocalResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "topResult": "Hasil teratas",
+  "artistLabel": "Artis",
+  "albumByArtist": "Album - {artist}",
+  "@albumByArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistByAuthor": "Daftar Putar - {author}",
+  "@playlistByAuthor": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "Menyimpan",
+  "upNext": "BERIKUTNYA",
+  "lyricsTab": "LIRIK",
+  "relatedTab": "TERKAIT",
+  "youMightAlsoLike": "Anda mungkin juga menyukainya",
+  "otherPerformances": "Pertunjukan lainnya",
+  "moreFrom": "Lebih lanjut dari",
+  "aboutArtist": "Tentang artis",
+  "jamQueue": "Antrean Selai",
+  "radioQueue": "Antrian Radio",
+  "queueLabel": "Antre",
+  "playingFrom": "Memutar dari",
+  "loadingMoreTracks": "Memuat lebih banyak lagu...",
+  "scrollForMore": "Gulir untuk mengetahui lebih lanjut",
+  "someone": "Seseorang",
+  "noTracksInQueue": "Tidak ada trek dalam antrian",
+  "addSongsToJamQueue": "Tambahkan lagu ke antrean selai",
+  "addedByUser": "Ditambahkan oleh {name}",
+  "@addedByUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTrackPlaying": "Tidak ada pemutaran lagu",
+  "noRelatedTracksFound": "Tidak ada trek terkait yang ditemukan",
+  "queueIsEmpty": "Antrian kosong",
+  "defaultQueueName": "Antrean saya",
+  "saveQueueAsPlaylist": "Simpan Antrean sebagai Daftar Putar",
+  "savedTracksToPlaylist": "Menyimpan {count} trek ke \"{name}\"",
+  "@savedTracksToPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "jams": "macet",
+  "nowPlayingHeader": "SEKARANG BERMAIN",
+  "browseMoodsGenresTitle": "Suasana & Genre",
+  "moodCategoryMoods": "suasana hati",
+  "moodCategoryGenres": "Genre",
+  "moodCategoryActivities": "Kegiatan",
+  "moodChill": "Santai",
+  "moodParty": "Berpesta",
+  "moodWorkout": "Olahraga",
+  "moodFocus": "Fokus",
+  "moodSleep": "Tidur",
+  "moodHappy": "Senang",
+  "moodSad": "Sedih",
+  "moodRomance": "Roman",
+  "moodFeelGood": "Merasa Baik",
+  "moodEnergize": "Berikan energi",
+  "genrePop": "Pop",
+  "genreRock": "Batu",
+  "genreHipHop": "Hip-Hop",
+  "genreRnb": "R&B",
+  "genreElectronic": "Elektronik",
+  "genreDance": "Menari",
+  "genreJazz": "Jazz",
+  "genreClassical": "Klasik",
+  "genreCountry": "Negara",
+  "genreMetal": "Logam",
+  "genreIndie": "India",
+  "genreKPop": "K Pop",
+  "genreLatin": "Latin",
+  "genreBollywood": "Bollywood",
+  "activityDriving": "Penggerak",
+  "activityCooking": "Memasak",
+  "activityGaming": "Permainan",
+  "activityStudying": "Mempelajari",
+  "activityMeditation": "Meditasi",
+  "play": "Bermain",
+  "findInPlaylist": "Temukan di daftar putar...",
+  "playlistNotFoundMessage": "Daftar putar tidak ditemukan\n\nID Daftar Putar: {id}\n\nDaftar putar ini mungkin bersifat pribadi atau tidak tersedia.",
+  "@playlistNotFoundMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineSnapshotDownloaded": "Cuplikan offline - {downloaded}/{total} diunduh",
+  "@offlineSnapshotDownloaded": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noMatchingTracks": "Tidak ada trek yang cocok",
+  "noTracksFound": "Tidak ada jejak yang ditemukan",
+  "downloadingTracksFromPlaylist": "Mengunduh lagu {count} dari {playlist}",
+  "@downloadingTracksFromPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTracksToQueueCount": "Menambahkan trek {count} ke antrean",
+  "@addedTracksToQueueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadPlaylist": "Unduh daftar putar",
+  "signInWithGoogle": "Masuk dengan Google",
+  "signInToUseJams": "Masuk untuk menggunakan Jams",
+  "listenTogetherRealtime": "Dengarkan bersama teman secara real-time",
+  "signInGoogleToStartOrJoinJam": "Masuk dengan Google untuk memulai atau bergabung dalam sesi Jam bersama teman",
+  "listenTogether": "Dengarkan Bersama",
+  "listenWithFriendsInSync": "Dengarkan bersama teman secara sinkron",
+  "sameSongSameMoment": "Lagu yang sama, momen yang sama",
+  "startJam": "Mulai Jam",
+  "createSessionAndInviteFriends": "Buat sesi dan undang teman",
+  "joinJam": "Bergabunglah dengan Jam",
+  "enterSixDigitCode": "Masukkan kode 6 digit",
+  "join": "Bergabung",
+  "shareThisCode": "Bagikan kode ini",
+  "codeCopied": "Kode disalin!",
+  "youAreHost": "Anda adalah tuan rumahnya",
+  "hostedBy": "Diselenggarakan oleh {name}",
+  "@hostedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listeningTogetherCount": "Mendengarkan Bersama ({count})",
+  "@listeningTogetherCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "endSession": "Akhiri Sesi",
+  "leaveSession": "Tinggalkan Sesi",
+  "connected": "Terhubung",
+  "reconnecting": "Menghubungkan kembali",
+  "retryInSeconds": "Coba lagi dalam {seconds}s",
+  "@retryInSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectingStatus": "Menghubungkan kembali · {suffix}",
+  "@reconnectingStatus": {
+    "placeholders": {
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "reconnectingAttemptStatus": "Menyambungkan kembali ({attempt}) · {suffix}",
+  "@reconnectingAttemptStatus": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "disconnected": "Terputus",
+  "playing": "Bermain",
+  "addSongsToPlayTogether": "Tambahkan lagu untuk diputar bersama",
+  "sessionCreatedCode": "Sesi dibuat! Kode: {code}",
+  "@sessionCreatedCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "noJamFoundForCode": "Tidak ditemukan kemacetan untuk kode ini.",
+  "hostRole": "Tuan rumah",
+  "canControl": "Dapat mengendalikan",
+  "listeningStatus": "Mendengarkan",
+  "transferHostQuestion": "Transfer Tuan Rumah?",
+  "transferHostMessage": "Jadikan {name} sebagai host baru? Anda akan kehilangan kendali host.",
+  "@transferHostMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transfer": "Transfer",
+  "removeControl": "Hapus kendali",
+  "allowControl": "Izinkan kontrol",
+  "makeHost": "Jadikan tuan rumah",
+  "live": "Hidup",
+  "playbackControlsJam": "pemutaran Anda mengontrol Jam",
+  "starting": "Mulai...",
+  "or": "atau",
+  "joinFriendsJam": "Bergabunglah dengan Jam teman",
+  "startJamDescription": "Mulai Jam untuk berbagi musik dengan teman.\nSemua orang mendengar lagu yang sama secara sinkron.",
+  "folderSettings": "Pengaturan Folder",
+  "noFoldersAddedYet": "Belum ada folder yang ditambahkan",
+  "addFolder": "Tambahkan Map",
+  "localMusic": "Musik Lokal",
+  "scanLocalMusicDescription": "Pindai perangkat Anda untuk menemukan file musik lokal dan memutarnya secara offline",
+  "scanForMusic": "Pindai musik",
+  "addFolderLowercase": "Tambahkan map",
+  "supportedFormats": "Format yang didukung: MP3, FLAC, WAV, M4A, OGG",
+  "songsFromFoldersCount": "{songs} lagu dari folder {folders}",
+  "@songsFromFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "add": "Menambahkan",
+  "permissionRequired": "Izin Diperlukan",
+  "storagePermissionRequiredMessage": "Izin penyimpanan diperlukan untuk mengakses file musik Anda. Silakan aktifkan di Pengaturan.",
+  "couldNotOpenSettingsPermission": "Tidak dapat membuka pengaturan. Harap aktifkan izin penyimpanan secara manual.",
+  "openSettings": "Buka Pengaturan",
+  "folderAdded": "Folder Ditambahkan",
+  "addedFolderScanNow": "Menambahkan \"{folder}\". Apakah Anda ingin memindainya untuk mencari musik sekarang?",
+  "@addedFolderScanNow": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanNow": "Pindai Sekarang",
+  "foundSongsCount": "Menemukan {count} lagu",
+  "@foundSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addFolderFirstThenScan": "Tambahkan folder terlebih dahulu, lalu pindai file audio.",
+  "scanFoldersCountDescription": "Ini akan memindai folder {count} untuk mencari file audio.",
+  "@scanFoldersCountDescription": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "foldersToScan": "Folder yang akan dipindai:",
+  "andMoreFolders": "... dan {count} lainnya",
+  "@andMoreFolders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "startScan": "Mulai Pindai",
+  "foundSongsInFoldersCount": "Menemukan {songs} lagu di folder {folders}",
+  "@foundSongsInFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "scanningForMusic": "Memindai musik...",
+  "filesProgress": "{scanned} / {total} file",
+  "@filesProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "signOut": "Keluar",
+  "signInGoogleProfilePictureJams": "Masuk dengan Google untuk mendapatkan gambar profil Anda dan mengaktifkan Jams",
+  "sync": "Sinkronisasi",
+  "lastSynced": "Terakhir disinkronkan: {time}",
+  "@lastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedItems": "Item {count} yang disinkronkan",
+  "@syncedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncing": "Menyinkronkan...",
+  "syncNow": "Sinkronkan Sekarang",
+  "cachedItems": "{count} item yang di-cache",
+  "@cachedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streams": "Aliran",
+  "colors": "Warna",
+  "searches": "Pencarian",
+  "expiredCount": "{count} kedaluwarsa",
+  "@expiredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cacheCleanupComplete": "Pembersihan cache selesai",
+  "cleanUp": "Membersihkan",
+  "clearCache": "Hapus Tembolok",
+  "clearCachedMusicDataConfirm": "Ini akan menghapus semua data musik yang di-cache. Melanjutkan?",
+  "clear": "Jernih",
+  "cacheCleared": "Tembolok dibersihkan",
+  "analytics": "Analisis",
+  "hits": "Pukulan",
+  "misses": "meleset",
+  "network": "Jaringan",
+  "analyticsReset": "Penyetelan ulang analisis",
+  "resetStats": "Atur Ulang Statistik",
+  "cacheHitRate": "Tingkat Hit Cache",
+  "liked": "Menyukai",
+  "appInfo": "Info Aplikasi",
+  "releaseBuild": "Rilis membangun",
+  "updater": "Pembaru",
+  "available": "tersedia",
+  "unavailable": "tidak tersedia",
+  "loadingCompact": "memuat...",
+  "errorCompact": "kesalahan",
+  "none": "tidak ada",
+  "currentPatch": "Tambalan saat ini",
+  "nextPatch": "Tambalan berikutnya",
+  "disconnectYoutubeMusic": "Putuskan sambungan YouTube Musik",
+  "disconnectYoutubeMusicQuestion": "Putuskan sambungan YouTube Musik?",
+  "disconnectYoutubeMusicWarning": "Tindakan ini akan menghapus akun YouTube Music Anda dari aplikasi. Data perpustakaan Anda akan dihapus.",
+  "disconnect": "Memutuskan",
+  "syncFailed": "Sinkronisasi gagal: {error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "justNow": "Baru saja",
+  "minutesAgo": "{count}m yang lalu",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count}jam yang lalu",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count} hari yang lalu",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noSongsInTitle": "Tidak ada lagu di {title}",
+  "@noSongsInTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "createPlaylistDescription": "Buat daftar putar untuk mengatur musik Anda",
+  "savedAlbumsFromYoutubeMusic": "Album tersimpan dari YouTube Music",
+  "noSavedAlbumsFromYoutubeMusic": "Tidak ada album tersimpan dari YouTube Music",
+  "errorLoadingAlbums": "Terjadi kesalahan saat memuat album",
+  "recentlyPlayed": "Baru-baru ini diputar",
+  "noAlbumsYet": "Belum ada album",
+  "playSomeMusicToSeeAlbumsHere": "Putar musik untuk melihat album di sini",
+  "subscribedArtists": "Artis yang berlangganan",
+  "noSubscribedArtists": "Tidak ada artis yang berlangganan",
+  "errorLoadingArtists": "Terjadi kesalahan saat memuat artis",
+  "recentlyPlayedArtists": "Artis yang baru saja bermain",
+  "noArtistsYet": "Belum ada artis",
+  "playSomeMusicToSeeArtistsHere": "Putar musik untuk melihat artis di sini",
+  "downloading": "Mengunduh",
+  "downloadedPlaylists": "Daftar putar yang diunduh",
+  "errorLoadingDownloads": "Terjadi kesalahan saat memuat unduhan",
+  "deleteDownload": "Hapus unduhan",
+  "deleteDownloadQuestion": "Hapus unduhan?",
+  "deleteDownloadWarning": "Ini akan menghapus \"{title}\" dari perangkat Anda. Anda dapat mendownloadnya lagi nanti.",
+  "@deleteDownloadWarning": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedTrack": "Menghapus \"{title}\"",
+  "@deletedTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSongsWillAppearHere": "Lagu yang diunduh akan muncul di sini",
+  "createPlaylist": "Buat daftar putar",
+  "autoPlaylists": "Daftar putar otomatis",
+  "likedSongsLabel": "Lagu yang Disukai",
+  "downloadedFraction": "{downloaded}/{total} diunduh",
+  "@downloadedFraction": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "more": "Lagi",
+  "video": "VIDEO",
+  "forgottenFavorites": "Favorit yang terlupakan",
+  "mixedForYou": "Dicampur untuk Anda",
+  "myMixOne": "Campuran saya 1",
+  "discoverMix": "Temukan Campuran",
+  "replayMix": "Putar Ulang Campuran",
+  "newRelease": "Rilis Baru",
+  "chillMix": "Campuran Dingin",
+  "basedOnYourListening": "Berdasarkan pendengaran Anda",
+  "newMusicForYou": "Musik baru untuk Anda",
+  "yourFavorites": "Favorit Anda",
+  "freshTracks": "Lagu baru",
+  "relaxingVibes": "Getaran santai",
+  "musicToGetYouStarted": "MUSIK UNTUK MEMULAI ANDA",
+  "welcomeUser": "Selamat datang {name}",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeFallbackName": "di sana",
+  "youtubeMusicLabel": "Musik YouTube",
+  "local": "Lokal",
+  "recentlyAdded": "Baru-baru ini ditambahkan",
+  "name": "Nama",
+  "duration": "Lamanya",
+  "searchSongsHint": "Cari lagu...",
+  "noLikedSongs": "Tidak ada lagu yang disukai",
+  "likeSomeSongsToSeeThemHere": "Suka beberapa lagu untuk melihatnya di sini",
+  "noLocalSongs": "Tidak ada lagu lokal",
+  "scanFoldersToFindLocalMusic": "Pindai folder untuk menemukan musik lokal",
+  "noResults": "Tidak ada hasil",
+  "tryDifferentKeywords": "Coba kata kunci yang berbeda",
+  "noSongsYet": "Belum ada lagu",
+  "playSomeMusicToBuildYourLibrary": "Putar musik untuk membangun perpustakaan Anda",
+  "albumNotFound": "Album tidak ditemukan",
+  "downloadAlbum": "Unduh album",
+  "downloadingTracksFromAlbum": "Mengunduh lagu {count} dari {album}",
+  "@downloadingTracksFromAlbum": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "shareAlbumText": "{title} oleh {artist}\n{url}",
+  "@shareAlbumText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestions": "Saran",
+  "recentSearches": "Pencarian Terbaru",
+  "startTypingToSearch": "Mulai mengetik untuk mencari...",
+  "youtubeMusicPlaylists": "Daftar putar YouTube Musik",
+  "errorLoadingPlaylists": "Terjadi kesalahan saat memuat daftar putar",
+  "yourPlaylists": "Daftar putar Anda",
+  "noYoutubeMusicPlaylistsFound": "Tidak ada playlist YouTube Music yang ditemukan",
+  "songCountLabel": "{count, plural, one {# lagu} other {# lagu}}",
+  "@songCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unknownAlbum": "Album Tidak Diketahui",
+  "jamCodeExample": "ABC123",
+  "jamCodeHint": "KODE",
+  "yourProfile": "Profil Anda",
+  "googleUser": "Pengguna Google",
+  "jamsAndProfile": "Kemacetan & profil",
+  "yes": "Ya",
+  "no": "TIDAK",
+  "foundInSettings": "Ditemukan di Pengaturan",
+  "sharePlaylistText": "{title}\n{url}",
+  "@sharePlaylistText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "shareArtistText": "{artist}\n{url}",
+  "@shareArtistText": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "megabytesValue": "{value}MB",
+  "@megabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "gigabytesValue": "{value} GB",
+  "@gigabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxMegabytesValue": "~{value}MB",
+  "@approxMegabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxKbpsValue": "~{value} kbps",
+  "@approxKbpsValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "secondsShort": "{value}s",
+  "@secondsShort": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "speedMultiplier": "{value}x",
+  "@speedMultiplier": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

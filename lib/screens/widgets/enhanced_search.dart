@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import '../../providers/search_history_provider.dart';
 import '../../providers/providers.dart'
     hide searchHistoryProvider, recentlyPlayedProvider;
@@ -86,6 +87,7 @@ class _EnhancedSearchBarState extends ConsumerState<EnhancedSearchBar> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final history = ref.watch(searchHistoryProvider);
 
@@ -106,7 +108,7 @@ class _EnhancedSearchBarState extends ConsumerState<EnhancedSearchBar> {
             focusNode: _focusNode,
             style: TextStyle(color: isDark ? Colors.white : Colors.black),
             decoration: InputDecoration(
-              hintText: 'Search songs, albums, artists...',
+              hintText: l10n.searchMusicHint,
               hintStyle: TextStyle(
                 color: isDark ? Colors.white54 : Colors.black45,
               ),
@@ -174,7 +176,7 @@ class _EnhancedSearchBarState extends ConsumerState<EnhancedSearchBar> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                       child: Text(
-                        'Suggestions',
+                        l10n.suggestions,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -196,7 +198,7 @@ class _EnhancedSearchBarState extends ConsumerState<EnhancedSearchBar> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Recent Searches',
+                            l10n.recentSearches,
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -207,9 +209,9 @@ class _EnhancedSearchBarState extends ConsumerState<EnhancedSearchBar> {
                             onPressed: () => ref
                                 .read(searchHistoryProvider.notifier)
                                 .clearHistory(),
-                            child: const Text(
-                              'Clear',
-                              style: TextStyle(fontSize: 12),
+                            child: Text(
+                              l10n.clear,
+                              style: const TextStyle(fontSize: 12),
                             ),
                           ),
                         ],
@@ -229,7 +231,7 @@ class _EnhancedSearchBarState extends ConsumerState<EnhancedSearchBar> {
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: Text(
-                        'Start typing to search...',
+                        l10n.startTypingToSearch,
                         style: TextStyle(
                           color: isDark ? Colors.white54 : Colors.black45,
                         ),
@@ -299,6 +301,7 @@ class RecentlyPlayedSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final recentlyPlayed = ref.watch(recentlyPlayedProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final playerService = ref.watch(audioPlayerServiceProvider);
@@ -316,7 +319,7 @@ class RecentlyPlayedSection extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Recently Played',
+                l10n.recentlyPlayed,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -326,7 +329,7 @@ class RecentlyPlayedSection extends ConsumerWidget {
               TextButton(
                 onPressed: () =>
                     ref.read(recentlyPlayedProvider.notifier).clearHistory(),
-                child: const Text('Clear'),
+                child: Text(l10n.clear),
               ),
             ],
           ),

@@ -1,0 +1,1179 @@
+{
+  "@@locale": "th",
+  "appTitle": "Inzx",
+  "updateDownloadedBanner": "ดาวน์โหลดอัปเดตแล้ว รีสตาร์ทแอปเพื่อใช้",
+  "restart": "รีสตาร์ท",
+  "dismiss": "ยกเลิก",
+  "newVersionAvailableBanner": "เวอร์ชันใหม่ {version} พร้อมใช้งานบน GitHub",
+  "@newVersionAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "ดาวน์โหลด",
+  "later": "ต่อมา",
+  "home": "บ้าน",
+  "songs": "เพลง",
+  "library": "ห้องสมุด",
+  "folders": "โฟลเดอร์",
+  "settings": "การตั้งค่า",
+  "searchSettingsHint": "การตั้งค่าการค้นหา...",
+  "noMatchingSettings": "ไม่มีการตั้งค่าที่ตรงกัน",
+  "appearance": "ลักษณะที่ปรากฏ",
+  "theme": "ธีม",
+  "themeAuto": "อัตโนมัติ",
+  "themeLight": "เบา",
+  "themeDark": "มืด",
+  "dynamicColorsNote": "สีจะปรับแบบไดนามิกจากปกอัลบั้มของแทร็กปัจจุบัน",
+  "language": "ภาษา",
+  "languageSubtitle": "เลือกภาษาของแอป",
+  "chooseLanguage": "เลือกภาษา",
+  "searchLanguagesHint": "ค้นหาภาษา...",
+  "noMatchingLanguages": "ไม่มีภาษาที่ตรงกัน",
+  "useSystemLanguage": "ใช้ภาษาของระบบ",
+  "languageSystem": "ค่าเริ่มต้นของระบบ",
+  "languageEnglish": "อังกฤษ",
+  "languageTurkish": "ภาษาตุรกี",
+  "languageRussian": "ภาษารัสเซีย",
+  "languageHindi": "ฮินดี",
+  "languageTamil": "ทมิฬ",
+  "languageKannada": "กันนาดา",
+  "languageTelugu": "เตลูกู",
+  "languageSpanish": "สเปน",
+  "languageFrench": "ฝรั่งเศส",
+  "languageGerman": "เยอรมัน",
+  "languageIndonesian": "ชาวอินโดนีเซีย",
+  "languageJapanese": "ภาษาญี่ปุ่น",
+  "languageKorean": "เกาหลี",
+  "languageArabic": "ภาษาอาหรับ",
+  "languageUkrainian": "ภาษายูเครน",
+  "languageThai": "ไทย",
+  "languagePortugueseBrazil": "โปรตุเกส (บราซิล)",
+  "languageChineseSimplified": "จีน (ตัวย่อ)",
+  "languageChineseTraditional": "จีน (ตัวเต็ม)",
+  "contentLocation": "ตำแหน่งเนื้อหา",
+  "contentLocationSubtitle": "เลือกภูมิภาคที่ใช้สำหรับคำแนะนำและความพร้อมใช้งานของแคตตาล็อก",
+  "chooseContentLocation": "เลือกตำแหน่งเนื้อหา",
+  "searchLocationsHint": "ค้นหาสถานที่...",
+  "noMatchingLocations": "ไม่มีสถานที่ที่ตรงกัน",
+  "locationSystem": "ค่าเริ่มต้นของระบบ",
+  "locationUnitedStates": "สหรัฐอเมริกา",
+  "locationIndia": "อินเดีย",
+  "locationTurkey": "ตุรกี",
+  "locationRussia": "รัสเซีย",
+  "quickActions": "การดำเนินการด่วน",
+  "audio": "เสียง",
+  "audioQuickActionsSubtitle": "คุณภาพการสตรีม ครอสเฟด และการเล่น",
+  "downloads": "ดาวน์โหลด",
+  "downloadsQuickActionsSubtitle": "ดาวน์โหลดคุณภาพ ตำแหน่ง และพื้นที่เก็บข้อมูล",
+  "backupRestore": "สำรองและกู้คืน",
+  "backupRestoreQuickActionsSubtitle": "ส่งออกหรือนำเข้าห้องสมุดของคุณ",
+  "streamingQuality": "คุณภาพการสตรีม",
+  "streamingQualitySubtitle": "ปรับบิตเรตเสียงสำหรับการสตรีม",
+  "crossfadeTransition": "การเปลี่ยนภาพแบบครอสเฟด",
+  "crossfadeTransitionSubtitle": "ผสมผสานแทร็กเข้าด้วยกันอย่างราบรื่น",
+  "streamingCache": "สตรีมมิ่งแคช",
+  "streamingCacheSubtitle": "แคชเพลงถัดไปล่วงหน้า ตัวเลือก Wi-Fi เท่านั้น",
+  "downloadQuality": "คุณภาพการดาวน์โหลด",
+  "downloadQualitySubtitle": "คุณภาพสำหรับการดาวน์โหลดแบบออฟไลน์",
+  "downloadLocation": "ดาวน์โหลดตำแหน่ง",
+  "downloadLocationSubtitle": "ตำแหน่งที่จัดเก็บเพลงที่ดาวน์โหลดไว้",
+  "dataUsageInfo": "ข้อมูลการใช้ข้อมูล",
+  "dataUsageInfoSubtitle": "พื้นที่เก็บข้อมูลโดยประมาณต่อเพลง",
+  "createBackup": "สร้างข้อมูลสำรอง",
+  "createBackupSubtitle": "ส่งออกห้องสมุดและการตั้งค่าของคุณ",
+  "restoreBackup": "คืนค่าการสำรองข้อมูล",
+  "restoreBackupSubtitle": "นำเข้าไฟล์สำรองข้อมูลก่อนหน้า",
+  "connectYoutubeMusic": "เชื่อมต่อเพลง YouTube",
+  "connectYoutubeMusicSubtitle": "ซิงค์เพลงที่ชอบ เพลย์ลิสต์ และอื่นๆ",
+  "connectYtMusicButton": "เชื่อมต่อ YT เพลง",
+  "downloadsTitle": "ดาวน์โหลด",
+  "clearCompleted": "เคลียร์เสร็จแล้ว",
+  "clearFailed": "ล้างข้อมูลไม่สำเร็จ",
+  "noDownloadsYet": "ยังไม่มีการดาวน์โหลด",
+  "downloadSongsToListenOffline": "ดาวน์โหลดเพลงเพื่อฟังแบบออฟไลน์",
+  "downloadingTitle": "กำลังดาวน์โหลด",
+  "downloadedTitle": "ดาวน์โหลดแล้ว ({count})",
+  "@downloadedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedTitle": "ล้มเหลว",
+  "songsDownloaded": "ดาวน์โหลดแล้ว {count} เพลง",
+  "@songsDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usingStorage": "การใช้ {storage}",
+  "@usingStorage": {
+    "placeholders": {
+      "storage": {
+        "type": "String"
+      }
+    }
+  },
+  "failedWithError": "ล้มเหลว: {error}",
+  "@failedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownError": "ข้อผิดพลาดที่ไม่รู้จัก",
+  "removeDownload": "ลบการดาวน์โหลด",
+  "downloadSettingsTitle": "ดาวน์โหลดการตั้งค่า",
+  "downloadLocationSubtitleLong": "ตำแหน่งที่จัดเก็บไฟล์เพลงที่ดาวน์โหลดไว้",
+  "offlineDownloadTip": "แทร็กที่ดาวน์โหลดจะเล่นได้โดยไม่ต้องใช้อินเทอร์เน็ตและไม่ใช้ข้อมูลสตรีมมิ่ง",
+  "estimatedStoragePerSong": "พื้นที่เก็บข้อมูลโดยประมาณต่อเพลง",
+  "storageLocation": "สถานที่จัดเก็บ",
+  "loading": "กำลังโหลด...",
+  "errorLoadingPath": "เกิดข้อผิดพลาดในการโหลดเส้นทาง",
+  "privateStorageDownloadsNote": "การดาวน์โหลดจะถูกจัดเก็บไว้ในที่เก็บข้อมูลส่วนตัวของแอปเพื่อความน่าเชื่อถือที่ดีขึ้นและไม่มีข้อกำหนดในการอนุญาต",
+  "qualityAutoChip": "อัตโนมัติ",
+  "qualityLowChip": "ต่ำ",
+  "qualityMediumChip": "ปานกลาง",
+  "qualityHighChip": "สูง",
+  "qualityMaxChip": "สูงสุด",
+  "qualityHighest": "สูงสุด",
+  "qualityDescriptionAuto": "อัตโนมัติ - ปรับให้เข้ากับเครือข่าย",
+  "qualityDescriptionLow": "ต่ำ - ~64 kbps (ประหยัดพื้นที่เก็บข้อมูล)",
+  "qualityDescriptionMedium": "ปานกลาง - ~128 kbps (บาลานซ์)",
+  "qualityDescriptionHigh": "สูง - ~256 kbps (แนะนำ)",
+  "qualityDescriptionMax": "สูงสุด - สูงสุดที่มีอยู่ (~256 kbps)",
+  "backupRestoreTitle": "สำรองและกู้คืน",
+  "backupIncludesDescription": "ข้อมูลสำรองรวมถึงเพลงที่ชอบ เพลย์ลิสต์ ประวัติการค้นหา เล่นล่าสุด และการตั้งค่าแอปที่สำคัญ",
+  "exportBackup": "ส่งออกข้อมูลสำรอง",
+  "exportBackupSubtitle": "บันทึกไฟล์สำรองเพื่อแชร์หรือจัดเก็บ",
+  "importBackup": "นำเข้าข้อมูลสำรอง",
+  "importBackupSubtitle": "กู้คืนจากไฟล์สำรอง",
+  "dangerZone": "โซนอันตราย",
+  "clearAppData": "ล้างข้อมูลแอป",
+  "clearAppDataSubtitle": "รีเซ็ตข้อมูล/การตั้งค่าแอปในขณะที่เก็บไฟล์เสียงที่ดาวน์โหลดไว้",
+  "backupCreatedSuccessfully": "สร้างข้อมูลสำรองเรียบร้อยแล้ว",
+  "backupFailed": "การสำรองข้อมูลล้มเหลว: {error}",
+  "@backupFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoredSuccessfully": "กู้คืนข้อมูลสำรองเรียบร้อยแล้ว",
+  "restoreFailed": "การคืนค่าล้มเหลว: {error}",
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearAllDataQuestion": "ล้างข้อมูลทั้งหมดใช่ไหม",
+  "clearAllDataWarning": "วิธีนี้จะรีเซ็ตข้อมูลและการตั้งค่าแอปในเครื่อง แต่จะเก็บไฟล์เพลงที่ดาวน์โหลดไว้ สิ่งนี้ไม่สามารถยกเลิกได้",
+  "cancel": "ยกเลิก",
+  "clearAll": "ล้างทั้งหมด",
+  "appDataClearedPreserved": "ล้างข้อมูลแอปแล้ว (ไฟล์เสียงที่ดาวน์โหลดถูกเก็บรักษาไว้)",
+  "failedGeneric": "ล้มเหลว: {error}",
+  "@failedGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupSubject": "การสำรองข้อมูลเพลง Inzx",
+  "statisticsTitle": "สถิติ",
+  "statisticsCleared": "ล้างสถิติแล้ว",
+  "clearStatistics": "ล้างสถิติ",
+  "noStatisticsYet": "ยังไม่มีสถิติ",
+  "startListeningStats": "เริ่มฟังเพื่อดูสถิติของคุณ",
+  "overview": "ภาพรวม",
+  "totalPlays": "การเล่นทั้งหมด",
+  "listenTime": "ฟังไทม์",
+  "mostPlayed": "เล่นมากที่สุด",
+  "playsCount": "{count} เล่น",
+  "@playsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutes": "{hours}ชม {minutes}ม",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutesOnly": "{minutes}ม",
+  "@durationMinutesOnly": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "retry": "ลองอีกครั้ง",
+  "share": "แบ่งปัน",
+  "playlist": "เพลย์ลิสต์",
+  "album": "อัลบั้ม",
+  "channel": "ช่อง",
+  "playNext": "เล่นถัดไป",
+  "addToQueue": "เพิ่มเข้าคิว",
+  "addToPlaylist": "เพิ่มลงในเพลย์ลิสต์",
+  "goToAlbum": "ไปที่อัลบั้ม",
+  "goToArtist": "ไปที่ศิลปิน",
+  "startRadio": "เริ่มวิทยุ",
+  "playAll": "เล่นทั้งหมด",
+  "shuffle": "สับเปลี่ยน",
+  "shuffleAll": "สุ่มทั้งหมด",
+  "radio": "วิทยุ",
+  "follow": "ติดตาม",
+  "following": "กำลังติดตาม",
+  "connectYtMusicToFollowArtists": "เชื่อมต่อ YouTube Music เพื่อติดตามศิลปิน",
+  "couldNotFollowArtist": "ไม่สามารถติดตาม {artist} ได้",
+  "@couldNotFollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotUnfollowArtist": "ไม่สามารถเลิกติดตาม {artist}",
+  "@couldNotUnfollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "followingArtist": "กำลังติดตาม {artist}",
+  "@followingArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "unfollowedArtist": "เลิกติดตาม {artist}",
+  "@unfollowedArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingArtist": "เกิดข้อผิดพลาดในการโหลดศิลปิน",
+  "subscribersCount": "{count} สมาชิก",
+  "@subscribersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSection": "ดาวน์โหลดแล้ว",
+  "showAllDownloaded": "แสดง {count} ที่ดาวน์โหลดทั้งหมด",
+  "@showAllDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "seeAll": "ดูทั้งหมด",
+  "removeFromLikedSongs": "ลบออกจากเพลงที่ชอบ",
+  "addToLikedSongs": "เพิ่มในเพลงที่ชอบ",
+  "playingTrackNext": "กำลังเล่น \"{title}\" ต่อไป",
+  "@playingTrackNext": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTrackToQueue": "เพิ่ม \"{title}\" ลงในคิว",
+  "@addedTrackToQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playNextInJam": "เล่นถัดไปใน Jam",
+  "playTrackNextInJam": "\"{title}\" จะเล่นถัดไปใน Jam",
+  "@playTrackNextInJam": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addToJamQueue": "เพิ่มลงในคิว Jam",
+  "addedTrackToJamQueue": "เพิ่ม \"{title}\" ลงใน Jam Queue",
+  "@addedTrackToJamQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloaded": "ดาวน์โหลดแล้ว",
+  "downloadingProgress": "กำลังดาวน์โหลด {progress}%",
+  "@downloadingProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadStartingTrack": "กำลังดาวน์โหลด \"{title}\"",
+  "@downloadStartingTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadNotificationsChannelDescription": "ดาวน์โหลดการแจ้งเตือนความคืบหน้า",
+  "downloadStartingNotification": "กำลังเริ่มดาวน์โหลด...",
+  "downloadCompleteNotification": "ดาวน์โหลดเสร็จสมบูรณ์",
+  "downloadFileNotCreated": "การดาวน์โหลดล้มเหลวเนื่องจากไม่ได้สร้างไฟล์",
+  "shareTrackText": "{title} โดย {artist}\n{url}",
+  "@shareTrackText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "createNewPlaylist": "สร้างเพลย์ลิสต์ใหม่",
+  "playlistName": "ชื่อเพลย์ลิสต์",
+  "create": "สร้าง",
+  "couldNotLoadPlaylists": "ไม่สามารถโหลดเพลย์ลิสต์",
+  "createLocalPlaylistInstead": "สร้างเพลย์ลิสต์ท้องถิ่นแทน",
+  "noPlaylistsYet": "ยังไม่มีเพลย์ลิสต์",
+  "createOneToGetStarted": "สร้างหนึ่งรายการเพื่อเริ่มต้น",
+  "songsCount": "{count} เพลง",
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createdPlaylistOnYtMusicAndAddedTrack": "สร้าง \"{playlist}\" บน YT Music และเพิ่ม \"{track}\"",
+  "@createdPlaylistOnYtMusicAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToCreatePlaylist": "ไม่สามารถสร้างเพลย์ลิสต์",
+  "createdPlaylistLocallyAndAddedTrack": "สร้าง \"{playlist}\" ในเครื่องและเพิ่ม \"{track}\"",
+  "@createdPlaylistLocallyAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddToPlaylist": "ไม่สามารถเพิ่มลงในเพลย์ลิสต์",
+  "addedTrackToPlaylist": "เพิ่ม \"{track}\" ใน \"{playlist}\"",
+  "@addedTrackToPlaylist": {
+    "placeholders": {
+      "track": {
+        "type": "String"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorWithMessage": "ข้อผิดพลาด: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "searchingForLyrics": "กำลังค้นหาเนื้อเพลง...",
+  "failedToLoadLyrics": "โหลดเนื้อเพลงไม่สำเร็จ",
+  "tryAnotherProvider": "ลองผู้ให้บริการรายอื่น",
+  "noLyricsFound": "ไม่พบเนื้อเพลง",
+  "linkLabel": "ลิงค์: {url}",
+  "@linkLabel": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "tracksCount": "{count} แทร็ก",
+  "@tracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFromYoutubeMusic": "นำเข้าจาก YouTube Music",
+  "importedPlaylistSuffix": "นำเข้า",
+  "importedFromYoutubeMusicDescription": "นำเข้าจาก YouTube Music",
+  "importedPlaylist": "นำเข้า \"{playlist}\" แล้ว",
+  "@importedPlaylist": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToImportPlaylist": "ไม่สามารถนำเข้า: {error}",
+  "@failedToImportPlaylist": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadPlaylists": "ไม่สามารถโหลดเพลย์ลิสต์",
+  "makeSureLoggedInYoutubeMusic": "ตรวจสอบให้แน่ใจว่าคุณลงชื่อเข้าใช้ YouTube Music แล้ว",
+  "noPlaylistsFound": "ไม่พบเพลย์ลิสต์",
+  "createPlaylistsInYoutubeMusicFirst": "สร้างเพลย์ลิสต์ใน YouTube Music ก่อน",
+  "loggedInYoutubeMusicSuccess": "ลงชื่อเข้าใช้ YouTube Music สำเร็จแล้ว!",
+  "signInToYoutubeMusic": "ลงชื่อเข้าใช้ YouTube Music",
+  "loggingYouIn": "กำลังเข้าสู่ระบบ...",
+  "signInSyncYoutubeMusicDescription": "ลงชื่อเข้าใช้ด้วยบัญชี Google ของคุณเพื่อซิงค์คลังเพลง YouTube ของคุณ รวมถึงเพลงที่ชอบ เพลย์ลิสต์ และอัลบั้ม",
+  "playbackSpeed": "ความเร็วในการเล่น",
+  "normal": "ปกติ",
+  "defaultValue": "ค่าเริ่มต้น",
+  "failedToLoadContent": "โหลดเนื้อหาไม่สำเร็จ",
+  "loadMore": "โหลดเพิ่ม",
+  "audioSettingsTitle": "การตั้งค่าเสียง",
+  "nowPlayingLabel": "กำลังเล่นอยู่",
+  "higherQualityUsesMoreData": "คุณภาพที่สูงขึ้นจะใช้ข้อมูลมากขึ้น",
+  "adjustsBasedOnNetworkSpeed": "ปรับตามความเร็วเครือข่าย",
+  "qualityLowUsesLessData": "~64 kbps - ใช้ข้อมูลน้อยลง",
+  "qualityMediumBalanced": "~128 kbps - สมดุล",
+  "qualityHighBestForMost": "~256 kbps - ดีที่สุดสำหรับคนส่วนใหญ่",
+  "qualityMaximumAvailable": "สูงสุดที่มีอยู่ (~256 kbps)",
+  "recommended": "แนะนำ",
+  "blendTrackEndsIntoNext": "ผสมผสานจุดสิ้นสุดของแทร็กปัจจุบันเข้ากับจุดเริ่มต้นของแทร็กถัดไป",
+  "preCachesNextTracks": "แคชล่วงหน้าแทร็กถัดไปและเล่นจากแคชในเครื่องเมื่อพร้อมใช้งาน",
+  "smartStreamCache": "แคชสตรีมอัจฉริยะ",
+  "usedCacheStorage": "ใช้แล้ว: {used} / {limit} เมกะไบต์",
+  "@usedCacheStorage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "calculatingCacheUsage": "กำลังคำนวณการใช้แคช...",
+  "unableToReadCacheUsage": "ไม่สามารถอ่านการใช้งานแคชได้",
+  "preCacheNetwork": "เครือข่ายแคชล่วงหน้า",
+  "wifiOnly": "อินเตอร์เน็ตไร้สายเท่านั้น",
+  "wifiAndMobileData": "Wi-Fi + ข้อมูลมือถือ",
+  "preCacheRunsWifiOnly": "แคชล่วงหน้าจะทำงานเมื่อเชื่อมต่อกับ Wi-Fi เท่านั้น",
+  "preCacheRunsWifiAndMobile": "แคชล่วงหน้าสามารถทำงานได้ทั้งบน Wi-Fi และข้อมูลมือถือ",
+  "concurrentPreCacheDownloads": "ดาวน์โหลดแคชล่วงหน้าพร้อมกัน",
+  "higherValuesCacheFaster": "ค่าที่สูงกว่าแคชเร็วกว่าแต่ใช้เครือข่ายและแบตเตอรี่มากกว่า",
+  "cacheSizeLimit": "ขีดจำกัดขนาดแคช",
+  "off": "ปิด",
+  "crossfadeDisabled": "ปิดการใช้งาน Crossfade",
+  "currentValueLabel": "ปัจจุบัน: {value}",
+  "@currentValueLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "audioQuality": "คุณภาพเสียง",
+  "qualityLowKbps": "ต่ำ (64 kbps)",
+  "qualityMediumKbps": "ปานกลาง (128 kbps)",
+  "qualityHighKbps": "สูง (256 kbps)",
+  "qualityMaximumKbps": "สูงสุด (~256 kbps)",
+  "all": "ทั้งหมด",
+  "artists": "ศิลปิน",
+  "albums": "อัลบั้ม",
+  "playlists": "เพลย์ลิสต์",
+  "singlesAndEps": "ซิงเกิลและอีพี",
+  "appearsOn": "ปรากฏบน",
+  "fansAlsoLike": "แฟนๆก็ชอบเช่นกัน",
+  "searchMusicHint": "ค้นหาเพลง อัลบั้ม ศิลปิน",
+  "searchForMusic": "ค้นหาเพลง",
+  "noResultsFound": "ไม่พบผลลัพธ์",
+  "showAllLocalResults": "แสดงผลลัพธ์ท้องถิ่น {count} ทั้งหมด",
+  "@showAllLocalResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "topResult": "ผลลัพธ์อันดับต้นๆ",
+  "artistLabel": "ศิลปิน",
+  "albumByArtist": "อัลบั้ม - {artist}",
+  "@albumByArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistByAuthor": "เพลย์ลิสต์ - {author}",
+  "@playlistByAuthor": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "บันทึก",
+  "upNext": "ถัดไป",
+  "lyricsTab": "เนื้อเพลง",
+  "relatedTab": "ที่เกี่ยวข้อง",
+  "youMightAlsoLike": "คุณอาจจะชอบ",
+  "otherPerformances": "การแสดงอื่นๆ",
+  "moreFrom": "เพิ่มเติมจาก",
+  "aboutArtist": "เกี่ยวกับศิลปิน",
+  "jamQueue": "คิวแจม",
+  "radioQueue": "คิววิทยุ",
+  "queueLabel": "คิว",
+  "playingFrom": "เล่นจาก",
+  "loadingMoreTracks": "กำลังโหลดแทร็กเพิ่มเติม...",
+  "scrollForMore": "เลื่อนดูเพิ่มเติม",
+  "someone": "ใครบางคน",
+  "noTracksInQueue": "ไม่มีแทร็กในคิว",
+  "addSongsToJamQueue": "เพิ่มเพลงลงในคิวแจม",
+  "addedByUser": "เพิ่มโดย {name}",
+  "@addedByUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTrackPlaying": "ไม่มีการเล่นแทร็ก",
+  "noRelatedTracksFound": "ไม่พบเพลงที่เกี่ยวข้อง",
+  "queueIsEmpty": "คิวว่าง",
+  "defaultQueueName": "คิวของฉัน",
+  "saveQueueAsPlaylist": "บันทึกคิวเป็นเพลย์ลิสต์",
+  "savedTracksToPlaylist": "บันทึก {count} แทร็กไปที่ \"{name}\"",
+  "@savedTracksToPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "jams": "แยม",
+  "nowPlayingHeader": "กำลังเล่นอยู่",
+  "browseMoodsGenresTitle": "อารมณ์และประเภท",
+  "moodCategoryMoods": "อารมณ์",
+  "moodCategoryGenres": "ประเภท",
+  "moodCategoryActivities": "กิจกรรม",
+  "moodChill": "ชิล",
+  "moodParty": "ปาร์ตี้",
+  "moodWorkout": "ออกกำลังกาย",
+  "moodFocus": "โฟกัส",
+  "moodSleep": "นอน",
+  "moodHappy": "มีความสุข",
+  "moodSad": "เศร้า",
+  "moodRomance": "โรแมนติก",
+  "moodFeelGood": "รู้สึกดี",
+  "moodEnergize": "เพิ่มพลัง",
+  "genrePop": "ป๊อป",
+  "genreRock": "ร็อค",
+  "genreHipHop": "ฮิปฮอป",
+  "genreRnb": "อาร์แอนด์บี",
+  "genreElectronic": "อิเล็กทรอนิกส์",
+  "genreDance": "เต้น",
+  "genreJazz": "แจ๊ส",
+  "genreClassical": "คลาสสิค",
+  "genreCountry": "ประเทศ",
+  "genreMetal": "โลหะ",
+  "genreIndie": "อินดี้",
+  "genreKPop": "เคป๊อป",
+  "genreLatin": "ละติน",
+  "genreBollywood": "บอลลีวูด",
+  "activityDriving": "ขับรถ",
+  "activityCooking": "ทำอาหาร",
+  "activityGaming": "การเล่นเกม",
+  "activityStudying": "กำลังศึกษาอยู่",
+  "activityMeditation": "การทำสมาธิ",
+  "play": "เล่น",
+  "findInPlaylist": "ค้นหาในเพลย์ลิสต์...",
+  "playlistNotFoundMessage": "ไม่พบเพลย์ลิสต์\n\nรหัสเพลย์ลิสต์: {id}\n\nเพลย์ลิสต์นี้อาจเป็นส่วนตัวหรือไม่พร้อมใช้งาน",
+  "@playlistNotFoundMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineSnapshotDownloaded": "สแนปช็อตออฟไลน์ - ดาวน์โหลด {downloaded}/{total} แล้ว",
+  "@offlineSnapshotDownloaded": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noMatchingTracks": "ไม่มีแทร็กที่ตรงกัน",
+  "noTracksFound": "ไม่พบเพลง",
+  "downloadingTracksFromPlaylist": "กำลังดาวน์โหลด {count} แทร็กจาก {playlist}",
+  "@downloadingTracksFromPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTracksToQueueCount": "เพิ่ม {count} แทร็กลงในคิว",
+  "@addedTracksToQueueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadPlaylist": "ดาวน์โหลดเพลย์ลิสต์",
+  "signInWithGoogle": "ลงชื่อเข้าใช้งานด้วย Google",
+  "signInToUseJams": "ลงชื่อเข้าใช้เพื่อใช้ Jams",
+  "listenTogetherRealtime": "ฟังร่วมกับเพื่อนแบบเรียลไทม์",
+  "signInGoogleToStartOrJoinJam": "ลงชื่อเข้าใช้ด้วย Google เพื่อเริ่มหรือเข้าร่วมเซสชัน Jam กับเพื่อนๆ",
+  "listenTogether": "ฟังด้วยกัน",
+  "listenWithFriendsInSync": "ฟังกับเพื่อนพร้อมๆ กัน",
+  "sameSongSameMoment": "เพลงเดียวกันช่วงเวลาเดียวกัน",
+  "startJam": "เริ่ม Jam",
+  "createSessionAndInviteFriends": "สร้างเซสชันและเชิญเพื่อน",
+  "joinJam": "เข้าร่วม Jam",
+  "enterSixDigitCode": "กรอกรหัส 6 หลัก",
+  "join": "เข้าร่วม",
+  "shareThisCode": "แชร์รหัสนี้",
+  "codeCopied": "คัดลอกรหัสแล้ว!",
+  "youAreHost": "คุณเป็นเจ้าบ้าน",
+  "hostedBy": "ดำเนินรายการโดย {name}",
+  "@hostedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listeningTogetherCount": "ฟังด้วยกัน ({count})",
+  "@listeningTogetherCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "endSession": "สิ้นสุดเซสชัน",
+  "leaveSession": "ออกจากเซสชัน",
+  "connected": "เชื่อมต่อแล้ว",
+  "reconnecting": "กำลังเชื่อมต่อใหม่",
+  "retryInSeconds": "ลองอีกครั้งใน {seconds}s",
+  "@retryInSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectingStatus": "กำลังเชื่อมต่อใหม่ · {suffix}",
+  "@reconnectingStatus": {
+    "placeholders": {
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "reconnectingAttemptStatus": "กำลังเชื่อมต่อใหม่ ({attempt}) · {suffix}",
+  "@reconnectingAttemptStatus": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "disconnected": "ตัดการเชื่อมต่อแล้ว",
+  "playing": "กำลังเล่น",
+  "addSongsToPlayTogether": "เพิ่มเพลงเพื่อเล่นด้วยกัน",
+  "sessionCreatedCode": "สร้างเซสชั่นแล้ว! รหัส: {code}",
+  "@sessionCreatedCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "noJamFoundForCode": "ไม่พบ Jam สำหรับรหัสนี้",
+  "hostRole": "โฮสต์",
+  "canControl": "สามารถควบคุม",
+  "listeningStatus": "การฟัง",
+  "transferHostQuestion": "โอนโฮสต์?",
+  "transferHostMessage": "ทำให้ {name} เป็นโฮสต์ใหม่หรือไม่ คุณจะสูญเสียการควบคุมของผู้จัด",
+  "@transferHostMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transfer": "โอน",
+  "removeControl": "ลบการควบคุม",
+  "allowControl": "อนุญาตให้มีการควบคุม",
+  "makeHost": "ตั้งเจ้าภาพ",
+  "live": "สด",
+  "playbackControlsJam": "การเล่นของคุณจะควบคุม Jam",
+  "starting": "กำลังเริ่ม...",
+  "or": "หรือ",
+  "joinFriendsJam": "เข้าร่วม Jam ของเพื่อน",
+  "startJamDescription": "เริ่ม Jam เพื่อแชร์เพลงกับเพื่อนๆ\nทุกคนได้ยินเพลงเดียวกันพร้อมกัน",
+  "folderSettings": "การตั้งค่าโฟลเดอร์",
+  "noFoldersAddedYet": "ยังไม่มีการเพิ่มโฟลเดอร์",
+  "addFolder": "เพิ่มโฟลเดอร์",
+  "localMusic": "ดนตรีท้องถิ่น",
+  "scanLocalMusicDescription": "สแกนอุปกรณ์ของคุณเพื่อค้นหาไฟล์เพลงในเครื่องและเล่นแบบออฟไลน์",
+  "scanForMusic": "สแกนหาเพลง",
+  "addFolderLowercase": "เพิ่มโฟลเดอร์",
+  "supportedFormats": "รูปแบบที่รองรับ: MP3, FLAC, WAV, M4A, OGG",
+  "songsFromFoldersCount": "{songs} เพลงจากโฟลเดอร์ {folders}",
+  "@songsFromFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "add": "เพิ่ม",
+  "permissionRequired": "ต้องได้รับอนุญาต",
+  "storagePermissionRequiredMessage": "ต้องได้รับอนุญาตจากพื้นที่เก็บข้อมูลเพื่อเข้าถึงไฟล์เพลงของคุณ โปรดเปิดใช้งานในการตั้งค่า",
+  "couldNotOpenSettingsPermission": "ไม่สามารถเปิดการตั้งค่าได้ โปรดเปิดใช้งานการอนุญาตพื้นที่เก็บข้อมูลด้วยตนเอง",
+  "openSettings": "เปิดการตั้งค่า",
+  "folderAdded": "เพิ่มโฟลเดอร์แล้ว",
+  "addedFolderScanNow": "เพิ่ม \"{folder}\" คุณต้องการสแกนหาเพลงตอนนี้หรือไม่?",
+  "@addedFolderScanNow": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanNow": "สแกนเลย",
+  "foundSongsCount": "พบ {count} เพลง",
+  "@foundSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addFolderFirstThenScan": "เพิ่มโฟลเดอร์ก่อน จากนั้นจึงสแกนหาไฟล์เสียง",
+  "scanFoldersCountDescription": "วิธีนี้จะสแกนโฟลเดอร์ {count} เพื่อหาไฟล์เสียง",
+  "@scanFoldersCountDescription": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "foldersToScan": "โฟลเดอร์ที่จะสแกน:",
+  "andMoreFolders": "... และ {count} เพิ่มเติม",
+  "@andMoreFolders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "startScan": "เริ่มการสแกน",
+  "foundSongsInFoldersCount": "พบ {songs} เพลงในโฟลเดอร์ {folders}",
+  "@foundSongsInFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "scanningForMusic": "กำลังสแกนหาเพลง...",
+  "filesProgress": "{scanned} / {total} ไฟล์",
+  "@filesProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "signOut": "ออกจากระบบ",
+  "signInGoogleProfilePictureJams": "ลงชื่อเข้าใช้ด้วย Google เพื่อรับรูปโปรไฟล์และเปิดใช้ Jams",
+  "sync": "ซิงค์",
+  "lastSynced": "ซิงค์ครั้งล่าสุด: {time}",
+  "@lastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedItems": "ซิงค์ {count} รายการแล้ว",
+  "@syncedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncing": "กำลังซิงค์...",
+  "syncNow": "ซิงค์ทันที",
+  "cachedItems": "{count} รายการแคช",
+  "@cachedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streams": "สตรีม",
+  "colors": "สี",
+  "searches": "ค้นหา",
+  "expiredCount": "{count} หมดอายุแล้ว",
+  "@expiredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cacheCleanupComplete": "การล้างแคชเสร็จสมบูรณ์",
+  "cleanUp": "ทำความสะอาด",
+  "clearCache": "ล้างแคช",
+  "clearCachedMusicDataConfirm": "การดำเนินการนี้จะล้างข้อมูลเพลงที่แคชไว้ทั้งหมด ดำเนินการต่อ?",
+  "clear": "ชัดเจน",
+  "cacheCleared": "ล้างแคชแล้ว",
+  "analytics": "การวิเคราะห์",
+  "hits": "ฮิต",
+  "misses": "คิดถึง",
+  "network": "เครือข่าย",
+  "analyticsReset": "รีเซ็ตการวิเคราะห์แล้ว",
+  "resetStats": "รีเซ็ตสถิติ",
+  "cacheHitRate": "อัตราการเข้าชมแคช",
+  "liked": "ชอบ",
+  "appInfo": "ข้อมูลแอพ",
+  "releaseBuild": "ปล่อยบิลด์",
+  "updater": "ตัวอัพเดต",
+  "available": "ใช้ได้",
+  "unavailable": "ไม่พร้อมใช้งาน",
+  "loadingCompact": "กำลังโหลด...",
+  "errorCompact": "ข้อผิดพลาด",
+  "none": "ไม่มี",
+  "currentPatch": "แพทช์ปัจจุบัน",
+  "nextPatch": "แพทช์ถัดไป",
+  "disconnectYoutubeMusic": "ตัดการเชื่อมต่อเพลง YouTube",
+  "disconnectYoutubeMusicQuestion": "ตัดการเชื่อมต่อ YouTube Music ใช่ไหม",
+  "disconnectYoutubeMusicWarning": "การดำเนินการนี้จะนำบัญชี YouTube Music ของคุณออกจากแอป ข้อมูลห้องสมุดของคุณจะถูกล้าง",
+  "disconnect": "ตัดการเชื่อมต่อ",
+  "syncFailed": "การซิงค์ล้มเหลว: {error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "justNow": "แค่ตอนนี้",
+  "minutesAgo": "{count}นาทีที่แล้ว",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count}h ที่แล้ว",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count}d ที่แล้ว",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noSongsInTitle": "ไม่มีเพลงใน {title}",
+  "@noSongsInTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "createPlaylistDescription": "สร้างเพลย์ลิสต์เพื่อจัดระเบียบเพลงของคุณ",
+  "savedAlbumsFromYoutubeMusic": "อัลบั้มที่บันทึกไว้จาก YouTube Music",
+  "noSavedAlbumsFromYoutubeMusic": "ไม่มีอัลบั้มที่บันทึกไว้จาก YouTube Music",
+  "errorLoadingAlbums": "เกิดข้อผิดพลาดในการโหลดอัลบั้ม",
+  "recentlyPlayed": "เพิ่งเล่น",
+  "noAlbumsYet": "ยังไม่มีอัลบั้ม",
+  "playSomeMusicToSeeAlbumsHere": "เล่นเพลงเพื่อดูอัลบั้มที่นี่",
+  "subscribedArtists": "ศิลปินที่ติดตาม",
+  "noSubscribedArtists": "ไม่มีศิลปินที่ติดตาม",
+  "errorLoadingArtists": "เกิดข้อผิดพลาดในการโหลดศิลปิน",
+  "recentlyPlayedArtists": "ศิลปินที่เล่นล่าสุด",
+  "noArtistsYet": "ยังไม่มีศิลปิน",
+  "playSomeMusicToSeeArtistsHere": "เล่นดนตรีเพื่อดูศิลปินที่นี่",
+  "downloading": "กำลังดาวน์โหลด",
+  "downloadedPlaylists": "เพลย์ลิสต์ที่ดาวน์โหลด",
+  "errorLoadingDownloads": "เกิดข้อผิดพลาดในการโหลดการดาวน์โหลด",
+  "deleteDownload": "ลบการดาวน์โหลด",
+  "deleteDownloadQuestion": "ลบการดาวน์โหลดใช่ไหม",
+  "deleteDownloadWarning": "การดำเนินการนี้จะลบ \"{title}\" ออกจากอุปกรณ์ของคุณ คุณสามารถดาวน์โหลดได้อีกครั้งในภายหลัง",
+  "@deleteDownloadWarning": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedTrack": "ลบ \"{title}\" แล้ว",
+  "@deletedTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSongsWillAppearHere": "เพลงที่ดาวน์โหลดจะปรากฏที่นี่",
+  "createPlaylist": "สร้างเพลย์ลิสต์",
+  "autoPlaylists": "เพลย์ลิสต์อัตโนมัติ",
+  "likedSongsLabel": "เพลงที่ชอบ",
+  "downloadedFraction": "{downloaded}/{total} ดาวน์โหลดแล้ว",
+  "@downloadedFraction": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "more": "เพิ่มเติม",
+  "video": "วิดีโอ",
+  "forgottenFavorites": "ของโปรดที่ถูกลืม",
+  "mixedForYou": "ผสมสำหรับคุณ",
+  "myMixOne": "มิกซ์ของฉัน1",
+  "discoverMix": "ค้นพบมิกซ์",
+  "replayMix": "เล่นซ้ำมิกซ์",
+  "newRelease": "รุ่นใหม่",
+  "chillMix": "มิกซ์ชิลล์",
+  "basedOnYourListening": "จากการฟังของคุณ",
+  "newMusicForYou": "เพลงใหม่สำหรับคุณ",
+  "yourFavorites": "รายการโปรดของคุณ",
+  "freshTracks": "เพลงสด",
+  "relaxingVibes": "รู้สึกผ่อนคลาย",
+  "musicToGetYouStarted": "เพลงที่จะช่วยให้คุณเริ่มต้น",
+  "welcomeUser": "ยินดีต้อนรับ{name}",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeFallbackName": "ที่นั่น",
+  "youtubeMusicLabel": "ยูทูปมิวสิค",
+  "local": "ท้องถิ่น",
+  "recentlyAdded": "เพิ่มล่าสุด",
+  "name": "ชื่อ",
+  "duration": "ระยะเวลา",
+  "searchSongsHint": "ค้นหาเพลง...",
+  "noLikedSongs": "ไม่มีเพลงที่ชอบ",
+  "likeSomeSongsToSeeThemHere": "ชอบบางเพลงเพื่อดูพวกเขาที่นี่",
+  "noLocalSongs": "ไม่มีเพลงท้องถิ่น",
+  "scanFoldersToFindLocalMusic": "สแกนโฟลเดอร์เพื่อค้นหาเพลงท้องถิ่น",
+  "noResults": "ไม่มีผลลัพธ์",
+  "tryDifferentKeywords": "ลองใช้คำหลักอื่น",
+  "noSongsYet": "ยังไม่มีเพลง",
+  "playSomeMusicToBuildYourLibrary": "เล่นเพลงเพื่อสร้างห้องสมุดของคุณ",
+  "albumNotFound": "ไม่พบอัลบั้ม",
+  "downloadAlbum": "ดาวน์โหลดอัลบั้ม",
+  "downloadingTracksFromAlbum": "กำลังดาวน์โหลด {count} แทร็กจาก {album}",
+  "@downloadingTracksFromAlbum": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "shareAlbumText": "{title} โดย {artist}\n{url}",
+  "@shareAlbumText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestions": "ข้อเสนอแนะ",
+  "recentSearches": "การค้นหาล่าสุด",
+  "startTypingToSearch": "เริ่มพิมพ์เพื่อค้นหา...",
+  "youtubeMusicPlaylists": "เพลย์ลิสต์เพลง YouTube",
+  "errorLoadingPlaylists": "เกิดข้อผิดพลาดในการโหลดเพลย์ลิสต์",
+  "yourPlaylists": "เพลย์ลิสต์ของคุณ",
+  "noYoutubeMusicPlaylistsFound": "ไม่พบเพลย์ลิสต์เพลง YouTube",
+  "songCountLabel": "{count, plural, one {# เพลง} other {# เพลง}}",
+  "@songCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unknownAlbum": "อัลบั้มที่ไม่รู้จัก",
+  "jamCodeExample": "เอบีซี123",
+  "jamCodeHint": "รหัส",
+  "yourProfile": "โปรไฟล์ของคุณ",
+  "googleUser": "ผู้ใช้ Google",
+  "jamsAndProfile": "แยมและโปรไฟล์",
+  "yes": "ใช่",
+  "no": "ไม่",
+  "foundInSettings": "พบได้ในการตั้งค่า",
+  "sharePlaylistText": "{title}\n{url}",
+  "@sharePlaylistText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "shareArtistText": "{artist}\n{url}",
+  "@shareArtistText": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "megabytesValue": "{value} เมกะไบต์",
+  "@megabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "gigabytesValue": "{value} GB",
+  "@gigabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxMegabytesValue": "~{value} เมกะไบต์",
+  "@approxMegabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxKbpsValue": "~{value}กิโลบิตต่อวินาที",
+  "@approxKbpsValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "secondsShort": "{value}ส",
+  "@secondsShort": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "speedMultiplier": "{value}x",
+  "@speedMultiplier": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

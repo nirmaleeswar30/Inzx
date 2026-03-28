@@ -1,6 +1,11 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
+import 'dart:ui' as ui;
+import '../core/l10n/app_localizations_x.dart';
+import '../core/providers/locale_provider.dart';
+import '../l10n/generated/app_localizations.dart';
 
 /// Service to handle download progress notifications
 class DownloadNotificationService {
@@ -13,11 +18,11 @@ class DownloadNotificationService {
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
+  AppLocalizations? _cachedL10n;
+  String? _cachedLocaleKey;
 
   // Notification channel for downloads
   static const String _channelId = 'download_channel';
-  static const String _channelName = 'Downloads';
-  static const String _channelDescription = 'Download progress notifications';
 
   // Base notification ID (we'll add track hash to make unique IDs)
   static const int _baseNotificationId = 1000;
@@ -25,6 +30,7 @@ class DownloadNotificationService {
   /// Initialize the notification service
   Future<void> initialize() async {
     if (_isInitialized) return;
+    final l10n = await _resolveL10n();
 
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',
@@ -44,10 +50,10 @@ class DownloadNotificationService {
 
     if (androidPlugin != null) {
       await androidPlugin.createNotificationChannel(
-        const AndroidNotificationChannel(
+        AndroidNotificationChannel(
           _channelId,
-          _channelName,
-          description: _channelDescription,
+          l10n.downloads,
+          description: l10n.downloadNotificationsChannelDescription,
           importance: Importance.low, // Low so it doesn't make sound
           showBadge: false,
         ),
@@ -75,13 +81,14 @@ class DownloadNotificationService {
   /// Show download started notification
   Future<void> showDownloadStarted(String trackId, String trackTitle) async {
     if (!_isInitialized) await initialize();
+    final l10n = await _resolveL10n();
 
     final notificationId = _getNotificationId(trackId);
 
     final androidDetails = AndroidNotificationDetails(
       _channelId,
-      _channelName,
-      channelDescription: _channelDescription,
+      l10n.downloads,
+      channelDescription: l10n.downloadNotificationsChannelDescription,
       importance: Importance.low,
       priority: Priority.low,
       showProgress: true,
@@ -91,13 +98,13 @@ class DownloadNotificationService {
       autoCancel: false,
       onlyAlertOnce: true,
       icon: '@mipmap/ic_launcher',
-      subText: 'Downloading',
+      subText: l10n.downloading,
     );
 
     await _notifications.show(
       notificationId,
       trackTitle,
-      'Starting download...',
+      l10n.downloadStartingNotification,
       NotificationDetails(android: androidDetails),
       payload: trackId,
     );
@@ -110,14 +117,15 @@ class DownloadNotificationService {
     double progress,
   ) async {
     if (!_isInitialized) await initialize();
+    final l10n = await _resolveL10n();
 
     final notificationId = _getNotificationId(trackId);
     final progressPercent = (progress * 100).toInt();
 
     final androidDetails = AndroidNotificationDetails(
       _channelId,
-      _channelName,
-      channelDescription: _channelDescription,
+      l10n.downloads,
+      channelDescription: l10n.downloadNotificationsChannelDescription,
       importance: Importance.low,
       priority: Priority.low,
       showProgress: true,
@@ -133,7 +141,7 @@ class DownloadNotificationService {
     await _notifications.show(
       notificationId,
       trackTitle,
-      'Downloading...',
+      l10n.downloadingProgress(progressPercent),
       NotificationDetails(android: androidDetails),
       payload: trackId,
     );
@@ -142,13 +150,14 @@ class DownloadNotificationService {
   /// Show download completed notification
   Future<void> showDownloadCompleted(String trackId, String trackTitle) async {
     if (!_isInitialized) await initialize();
+    final l10n = await _resolveL10n();
 
     final notificationId = _getNotificationId(trackId);
 
     final androidDetails = AndroidNotificationDetails(
       _channelId,
-      _channelName,
-      channelDescription: _channelDescription,
+      l10n.downloads,
+      channelDescription: l10n.downloadNotificationsChannelDescription,
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
       ongoing: false,
@@ -159,7 +168,7 @@ class DownloadNotificationService {
     await _notifications.show(
       notificationId,
       trackTitle,
-      'Download complete',
+      l10n.downloadCompleteNotification,
       NotificationDetails(android: androidDetails),
       payload: trackId,
     );
@@ -177,13 +186,14 @@ class DownloadNotificationService {
     String error,
   ) async {
     if (!_isInitialized) await initialize();
+    final l10n = await _resolveL10n();
 
     final notificationId = _getNotificationId(trackId);
 
     final androidDetails = AndroidNotificationDetails(
       _channelId,
-      _channelName,
-      channelDescription: _channelDescription,
+      l10n.downloads,
+      channelDescription: l10n.downloadNotificationsChannelDescription,
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
       ongoing: false,
@@ -194,10 +204,32 @@ class DownloadNotificationService {
     await _notifications.show(
       notificationId,
       trackTitle,
-      'Download failed: $error',
+      localizeDownloadError(l10n, error),
       NotificationDetails(android: androidDetails),
       payload: trackId,
     );
+  }
+
+  Future<AppLocalizations> _resolveL10n() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedCode = prefs.getString(AppLocaleNotifier.localePrefKey);
+    final systemLocale = ui.PlatformDispatcher.instance.locale;
+    final cacheKey =
+        '${storedCode ?? 'system'}|${appLocaleStorageKey(resolveEffectiveAppLocale(systemLocale: systemLocale))}';
+
+    if (_cachedL10n != null && _cachedLocaleKey == cacheKey) {
+      return _cachedL10n!;
+    }
+
+    final locale = resolveEffectiveAppLocale(
+      storedCode: storedCode,
+      systemLocale: systemLocale,
+    );
+
+    final l10n = lookupAppLocalizations(locale);
+    _cachedL10n = l10n;
+    _cachedLocaleKey = cacheKey;
+    return l10n;
   }
 
   /// Cancel notification for a track

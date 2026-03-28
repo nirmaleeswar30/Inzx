@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:ui' as ui;
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart' show compute, kDebugMode;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/providers/locale_provider.dart';
 import '../models/models.dart';
 
 /// InnerTube API client for YouTube Music
@@ -12,7 +14,7 @@ class InnerTubeService {
   static const String _baseUrl = 'https://music.youtube.com/youtubei/v1';
   static const String _apiKey = 'AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30';
 
-  // Client context for requests
+  // Fixed fallback context used by a few low-level playback fallbacks.
   static const Map<String, dynamic> _clientContext = {
     'client': {
       'clientName': 'WEB_REMIX',
@@ -60,13 +62,16 @@ class InnerTubeService {
   }
 
   /// Build headers for API requests
-  Map<String, String> _buildHeaders({bool authenticated = false}) {
+  Map<String, String> _buildHeaders({
+    bool authenticated = false,
+    String acceptLanguage = 'en-US,en;q=0.9',
+  }) {
     final headers = <String, String>{
       'Content-Type': 'application/json',
       'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       'Accept': '*/*',
-      'Accept-Language': 'en-US,en;q=0.9',
+      'Accept-Language': acceptLanguage,
       'Origin': 'https://music.youtube.com',
       'Referer': 'https://music.youtube.com/',
       'X-Goog-Visitor-Id': _generateVisitorId(),
@@ -109,12 +114,28 @@ class InnerTubeService {
         final url = Uri.parse(
           '$_baseUrl/$endpoint?key=$_apiKey&prettyPrint=false',
         );
-
-        final requestBody = {'context': _clientContext, ...body};
+        final locale = await _resolveRequestLocale();
+        final languageCode = requestLanguageCodeForLocale(locale);
+        final countryCode = await _resolveRequestCountryCode();
+        final requestBody = body.containsKey('context')
+            ? body
+            : {
+                'context': _buildMusicContext(
+                  languageCode: languageCode,
+                  countryCode: countryCode,
+                ),
+                ...body,
+              };
 
         final response = await http.post(
           url,
-          headers: _buildHeaders(authenticated: authenticated),
+          headers: _buildHeaders(
+            authenticated: authenticated,
+            acceptLanguage: _acceptLanguageHeader(
+              languageCode: languageCode,
+              countryCode: countryCode,
+            ),
+          ),
           body: jsonEncode(requestBody),
         );
 
@@ -917,6 +938,89 @@ class InnerTubeService {
     return _parseWatchPlaylist(response, videoId, limit);
   }
 
+  /// Get the actual YouTube Music "Related" tab content for a video.
+  Future<WatchRelatedContent> getWatchRelatedContent(
+    String videoId, {
+    String? playlistId,
+    int limitPerShelf = 12,
+  }) async {
+    final languageCode = requestLanguageCodeForLocale(
+      await _resolveRequestLocale(),
+    );
+    final radioPlaylistId = playlistId ?? 'RDAMVM$videoId';
+
+    final body = <String, dynamic>{
+      'videoId': videoId,
+      'playlistId': radioPlaylistId,
+      'isAudioOnly': true,
+      'params': 'wAEB',
+    };
+
+    final response = await _request(
+      'next',
+      body,
+      authenticated: isAuthenticated,
+    );
+
+    if (response == null) {
+      return WatchRelatedContent.empty;
+    }
+
+    final relatedBrowseId = _extractWatchRelatedBrowseId(response);
+    if (relatedBrowseId != null) {
+      final relatedResponse = await _request('browse', {
+        'browseId': relatedBrowseId,
+      }, authenticated: isAuthenticated);
+
+      if (relatedResponse != null) {
+        var relatedContent = _parseWatchRelatedBrowseContent(
+          relatedResponse,
+          videoId,
+          limitPerShelf,
+        );
+        if (!relatedContent.hasAboutSection && languageCode != 'en') {
+          final englishAboutContent = await _fetchEnglishRelatedAboutContent(
+            relatedBrowseId,
+            videoId,
+            limitPerShelf,
+          );
+          relatedContent = _mergeRelatedAboutContent(
+            relatedContent,
+            englishAboutContent,
+          );
+        }
+        if (!relatedContent.isEmpty) {
+          return relatedContent;
+        }
+      }
+    }
+
+    var fallbackContent = _parseWatchRelatedContent(
+      response,
+      videoId,
+      limitPerShelf,
+    );
+    if (!fallbackContent.hasAboutSection && languageCode != 'en') {
+      final englishRelatedBrowseId = await _fetchEnglishRelatedBrowseId(
+        videoId,
+        radioPlaylistId,
+      );
+      if (englishRelatedBrowseId != null) {
+        final englishAboutContent = await _fetchEnglishRelatedAboutContent(
+          englishRelatedBrowseId,
+          videoId,
+          limitPerShelf,
+        );
+        fallbackContent = _mergeRelatedAboutContent(
+          fallbackContent,
+          englishAboutContent,
+        );
+      }
+    }
+
+    return fallbackContent;
+  }
+
   /// Parse the watch playlist response to extract tracks
   List<Track> _parseWatchPlaylist(
     Map<String, dynamic> response,
@@ -1029,6 +1133,243 @@ class InnerTubeService {
       }
       return [];
     }
+  }
+
+  WatchRelatedContent _parseWatchRelatedContent(
+    Map<String, dynamic> response,
+    String currentVideoId,
+    int limitPerShelf,
+  ) {
+    try {
+      final tabs =
+          _navigateJson(response, [
+                'contents',
+                'singleColumnMusicWatchNextResultsRenderer',
+                'tabbedRenderer',
+                'watchNextTabbedResultsRenderer',
+                'tabs',
+              ])
+              as List?;
+
+      if (tabs == null || tabs.isEmpty) {
+        return WatchRelatedContent.empty;
+      }
+
+      for (final tab in tabs) {
+        final tabRenderer = tab['tabRenderer'] as Map<String, dynamic>?;
+        if (tabRenderer == null) continue;
+
+        final content = tabRenderer['content'] as Map<String, dynamic>?;
+        if (content == null) continue;
+
+        // Skip the queue tab; we only want the actual Related tab sections.
+        if (content['musicQueueRenderer'] != null) continue;
+
+        final sectionList =
+            content['sectionListRenderer']?['contents'] as List?;
+        final sections = sectionList ?? [content];
+        return _parseWatchRelatedSections(
+          sections,
+          currentVideoId,
+          limitPerShelf,
+        );
+      }
+
+      return WatchRelatedContent.empty;
+    } catch (e) {
+      if (kDebugMode) {
+        print('WatchRelated: Error parsing: $e');
+      }
+      return WatchRelatedContent.empty;
+    }
+  }
+
+  WatchRelatedContent _parseWatchRelatedBrowseContent(
+    Map<String, dynamic> response,
+    String currentVideoId,
+    int limitPerShelf,
+  ) {
+    try {
+      final sections =
+          _navigateJson(response, [
+                'contents',
+                'sectionListRenderer',
+                'contents',
+              ])
+              as List?;
+
+      if (sections == null || sections.isEmpty) {
+        return WatchRelatedContent.empty;
+      }
+
+      return _parseWatchRelatedSections(
+        sections,
+        currentVideoId,
+        limitPerShelf,
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('WatchRelatedBrowse: Error parsing: $e');
+      }
+      return WatchRelatedContent.empty;
+    }
+  }
+
+  WatchRelatedContent _parseWatchRelatedSections(
+    List<dynamic> rawSections,
+    String currentVideoId,
+    int limitPerShelf,
+  ) {
+    final shelves = <HomeShelf>[];
+    String? aboutTitle;
+    String? aboutDescription;
+    var shelfIndex = 0;
+
+    for (final rawSection in rawSections) {
+      final section = rawSection as Map<String, dynamic>;
+
+      final descriptionRenderer =
+          section['musicDescriptionShelfRenderer'] as Map<String, dynamic>?;
+      if (descriptionRenderer != null) {
+        aboutTitle ??= _extractText(
+          descriptionRenderer['header'] ??
+              descriptionRenderer['title'] ??
+              descriptionRenderer['subheader'],
+        );
+        aboutDescription ??=
+            _extractText(descriptionRenderer['description']) ??
+            _extractText(descriptionRenderer['subheader']) ??
+            _extractText(descriptionRenderer['footer']);
+        continue;
+      }
+
+      final shelf = _parseHomeShelf(section, shelfIndex);
+      if (shelf == null || shelf.items.isEmpty) continue;
+
+      final filteredItems = shelf.items
+          .where((item) {
+            if (item.itemType != HomeShelfItemType.song) {
+              return true;
+            }
+            final itemVideoId = item.videoId ?? item.id;
+            return itemVideoId.isNotEmpty && itemVideoId != currentVideoId;
+          })
+          .take(limitPerShelf)
+          .toList();
+
+      if (filteredItems.isEmpty) continue;
+
+      shelves.add(
+        HomeShelf(
+          id: shelf.id,
+          title: shelf.title,
+          subtitle: shelf.subtitle,
+          type: shelf.type,
+          items: filteredItems,
+          isPlayable: shelf.isPlayable,
+          playlistId: shelf.playlistId,
+          strapline: shelf.strapline,
+          headerThumbnailUrl: shelf.headerThumbnailUrl,
+          browseId: shelf.browseId,
+          params: shelf.params,
+        ),
+      );
+      shelfIndex++;
+    }
+
+    return WatchRelatedContent(
+      shelves: shelves,
+      aboutTitle: aboutTitle,
+      aboutDescription: aboutDescription,
+    );
+  }
+
+  String? _extractWatchRelatedBrowseId(Map<String, dynamic> response) {
+    final tabs =
+        _navigateJson(response, [
+              'contents',
+              'singleColumnMusicWatchNextResultsRenderer',
+              'tabbedRenderer',
+              'watchNextTabbedResultsRenderer',
+              'tabs',
+            ])
+            as List?;
+
+    if (tabs == null || tabs.isEmpty) return null;
+
+    for (final tab in tabs) {
+      final tabRenderer = tab['tabRenderer'] as Map<String, dynamic>?;
+      if (tabRenderer == null) continue;
+
+      final browseEndpoint =
+          tabRenderer['endpoint']?['browseEndpoint'] as Map<String, dynamic>?;
+      final pageType =
+          browseEndpoint?['browseEndpointContextSupportedConfigs']?['browseEndpointContextMusicConfig']?['pageType']
+              as String?;
+      if (pageType == 'MUSIC_PAGE_TYPE_TRACK_RELATED') {
+        return browseEndpoint?['browseId'] as String?;
+      }
+    }
+
+    return null;
+  }
+
+  Future<String?> _fetchEnglishRelatedBrowseId(
+    String videoId,
+    String playlistId,
+  ) async {
+    final englishResponse = await _request('next', {
+      'context': _buildMusicContext(
+        languageCode: 'en',
+        countryCode: await _resolveRequestCountryCode(),
+      ),
+      'videoId': videoId,
+      'playlistId': playlistId,
+      'isAudioOnly': true,
+      'params': 'wAEB',
+    }, authenticated: isAuthenticated);
+
+    if (englishResponse == null) return null;
+    return _extractWatchRelatedBrowseId(englishResponse);
+  }
+
+  Future<WatchRelatedContent> _fetchEnglishRelatedAboutContent(
+    String relatedBrowseId,
+    String videoId,
+    int limitPerShelf,
+  ) async {
+    final englishResponse = await _request('browse', {
+      'context': _buildMusicContext(
+        languageCode: 'en',
+        countryCode: await _resolveRequestCountryCode(),
+      ),
+      'browseId': relatedBrowseId,
+    }, authenticated: isAuthenticated);
+
+    if (englishResponse == null) {
+      return WatchRelatedContent.empty;
+    }
+
+    return _parseWatchRelatedBrowseContent(
+      englishResponse,
+      videoId,
+      limitPerShelf,
+    );
+  }
+
+  WatchRelatedContent _mergeRelatedAboutContent(
+    WatchRelatedContent primary,
+    WatchRelatedContent fallback,
+  ) {
+    if (primary.hasAboutSection || !fallback.hasAboutSection) {
+      return primary;
+    }
+
+    return WatchRelatedContent(
+      shelves: primary.shelves.isNotEmpty ? primary.shelves : fallback.shelves,
+      aboutTitle: fallback.aboutTitle ?? primary.aboutTitle,
+      aboutDescription: fallback.aboutDescription ?? primary.aboutDescription,
+    );
   }
 
   /// Parse a playlistPanelVideoRenderer into a Track
@@ -3050,19 +3391,83 @@ class InnerTubeService {
   bool _isMetadataTypeToken(String value, {required bool hasMultipleChunks}) {
     if (!hasMultipleChunks) return false;
 
-    final text = value.trim().toLowerCase();
+    final text = value.trim().toLowerCase().replaceFirst(RegExp(r'^#+'), '');
     const typeTokens = {
       'song',
       'songs',
+      'track',
+      'tracks',
       'video',
       'videos',
       'album',
       'single',
       'ep',
       'playlist',
+      'playlists',
       'artist',
+      'artists',
+      'şarkı',
+      'şarkılar',
+      'parça',
+      'parçalar',
+      'video klip',
+      'video klipler',
+      'videolar',
+      'albüm',
+      'tekli',
+      'oynatma listesi',
+      'oynatma listeleri',
+      'sanatçı',
+      'sanatçılar',
+      'песня',
+      'песни',
+      'трек',
+      'треки',
+      'видео',
+      'видеоклип',
+      'видеоклипы',
+      'альбом',
+      'сингл',
+      'плейлист',
+      'плейлисты',
+      'исполнитель',
+      'исполнители',
+      'артист',
+      'артисты',
     };
     return typeTokens.contains(text);
+  }
+
+  String _sanitizeSubtitleText(List runs, {String fallback = ''}) {
+    final parts = <String>[];
+
+    for (final run in runs) {
+      if (run is! Map) continue;
+
+      final rawText = run['text'] as String?;
+      if (rawText == null || rawText.trim().isEmpty) continue;
+
+      final normalizedText = rawText.replaceAll('Ã¢â‚¬Â¢', 'â€¢');
+      final splitParts = normalizedText
+          .split(RegExp(r'\s*[â€¢•·|]\s*'))
+          .map((part) => part.trim())
+          .where((part) => part.isNotEmpty);
+
+      for (final part in splitParts) {
+        if (_isDurationToken(part) ||
+            RegExp(r'^\d{4}$').hasMatch(part) ||
+            _isMetadataTypeToken(part, hasMultipleChunks: true)) {
+          continue;
+        }
+        parts.add(part);
+      }
+    }
+
+    if (parts.isNotEmpty) {
+      return parts.join(' • ');
+    }
+
+    return fallback;
   }
 
   List<Album> _parseLibraryAlbums(Map<String, dynamic> response) {
@@ -4442,22 +4847,24 @@ class InnerTubeService {
           final musicShelf = section['musicShelfRenderer'];
           if (musicShelf != null) {
             final title = musicShelf['title']?['runs']?[0]?['text'] as String?;
-            if (title == 'Songs' || title == 'Top songs') {
-              // Extract "See all" browse ID and params for songs
+            final contents = musicShelf['contents'] as List?;
+            final parsedTracks = <Track>[];
+            if (contents != null) {
+              for (final item in contents) {
+                final track = _parseTrackItem(item);
+                if (track != null) parsedTracks.add(track);
+              }
+            }
+
+            if (parsedTracks.isNotEmpty &&
+                (topTracks.isEmpty || _isArtistSongsSectionTitle(title))) {
               final moreButton =
                   musicShelf['bottomEndpoint']?['browseEndpoint'];
               if (moreButton != null) {
                 songsBrowseId = moreButton['browseId'] as String?;
                 songsParams = moreButton['params'] as String?;
               }
-
-              final contents = musicShelf['contents'] as List?;
-              if (contents != null) {
-                for (final item in contents) {
-                  final track = _parseTrackItem(item);
-                  if (track != null) topTracks.add(track);
-                }
-              }
+              topTracks.addAll(parsedTracks);
             }
           }
 
@@ -4471,7 +4878,6 @@ class InnerTubeService {
             final contents = musicCarousel['contents'] as List?;
             if (contents == null) continue;
 
-            // Parse album items from carousel
             final parsedAlbums = <Album>[];
             for (final item in contents) {
               final r = item['musicTwoRowItemRenderer'];
@@ -4593,6 +4999,126 @@ class InnerTubeService {
               }
             }
           }
+
+          if (musicCarousel != null) {
+            final fallbackTitle =
+                musicCarousel['header']?['musicCarouselShelfBasicHeaderRenderer']?['title']?['runs']?[0]?['text']
+                    as String?;
+            final fallbackLowerTitle = fallbackTitle?.toLowerCase() ?? '';
+            final recognizedByLegacy =
+                fallbackLowerTitle.contains('albums') ||
+                fallbackLowerTitle.contains('singles') ||
+                fallbackLowerTitle.contains('eps') ||
+                fallbackLowerTitle.contains('appears on') ||
+                fallbackLowerTitle.contains('featured on') ||
+                fallbackLowerTitle.contains('playlist') ||
+                fallbackLowerTitle.contains('featuring') ||
+                fallbackLowerTitle.contains('fans also like') ||
+                fallbackLowerTitle.contains('similar artists') ||
+                fallbackLowerTitle.contains('related artists');
+
+            if (!recognizedByLegacy) {
+              final fallbackContents = musicCarousel['contents'] as List?;
+              if (fallbackContents != null) {
+                final parsedArtists = <Artist>[];
+                final parsedPlaylists = <Playlist>[];
+                final parsedAlbums = <Album>[];
+
+                for (final item in fallbackContents) {
+                  final renderer = item['musicTwoRowItemRenderer'];
+                  if (renderer == null) continue;
+
+                  final browseEndpoint =
+                      renderer['navigationEndpoint']?['browseEndpoint']
+                          as Map<String, dynamic>?;
+                  final browseId = browseEndpoint?['browseId'] as String?;
+                  if (browseId == null) continue;
+
+                  final pageType =
+                      browseEndpoint?['browseEndpointContextSupportedConfigs']?['browseEndpointContextMusicConfig']?['pageType']
+                          as String?;
+                  final itemTitle =
+                      renderer['title']?['runs']?[0]?['text'] ?? 'Unknown';
+                  final thumb =
+                      renderer['thumbnailRenderer']?['musicThumbnailRenderer']?['thumbnail']?['thumbnails']
+                          ?.last['url'];
+
+                  if (pageType == 'MUSIC_PAGE_TYPE_ARTIST' ||
+                      browseId.startsWith('UC')) {
+                    parsedArtists.add(
+                      Artist(
+                        id: browseId,
+                        name: itemTitle,
+                        thumbnailUrl: thumb,
+                      ),
+                    );
+                    continue;
+                  }
+
+                  if (pageType == 'MUSIC_PAGE_TYPE_PLAYLIST' ||
+                      browseId.startsWith('VL')) {
+                    final subtitleRuns = renderer['subtitle']?['runs'] as List?;
+                    parsedPlaylists.add(
+                      Playlist(
+                        id: browseId.startsWith('VL')
+                            ? browseId.replaceFirst('VL', '')
+                            : browseId,
+                        title: itemTitle,
+                        thumbnailUrl: thumb,
+                        author: subtitleRuns?.isNotEmpty == true
+                            ? subtitleRuns!.first['text'] as String?
+                            : null,
+                      ),
+                    );
+                    continue;
+                  }
+
+                  final subtitleRuns = renderer['subtitle']?['runs'] as List?;
+                  String? year;
+                  if (subtitleRuns != null) {
+                    final subtitleText = subtitleRuns
+                        .map((r) => r['text'])
+                        .join();
+                    final yearMatch = RegExp(
+                      r'\b(19|20)\d{2}\b',
+                    ).firstMatch(subtitleText);
+                    if (yearMatch != null) {
+                      year = yearMatch.group(0);
+                    }
+                  }
+
+                  parsedAlbums.add(
+                    Album(
+                      id: browseId,
+                      title: itemTitle,
+                      artist: name,
+                      thumbnailUrl: thumb,
+                      year: year,
+                    ),
+                  );
+                }
+
+                final normalizedFallbackTitle = _normalizeArtistSectionTitle(
+                  fallbackTitle,
+                );
+                if (parsedArtists.isNotEmpty) {
+                  similarArtists.addAll(parsedArtists);
+                } else if (parsedPlaylists.isNotEmpty) {
+                  playlists.addAll(parsedPlaylists);
+                } else if (parsedAlbums.isNotEmpty) {
+                  if (_isArtistSinglesSectionTitle(normalizedFallbackTitle)) {
+                    singles.addAll(parsedAlbums);
+                  } else if (_isArtistAppearsOnSectionTitle(
+                    normalizedFallbackTitle,
+                  )) {
+                    appearsOn.addAll(parsedAlbums);
+                  } else {
+                    albums.addAll(parsedAlbums);
+                  }
+                }
+              }
+            }
+          }
         }
       }
 
@@ -4639,6 +5165,129 @@ class InnerTubeService {
       }
     }
     return current;
+  }
+
+  String? _extractText(dynamic node) {
+    if (node == null) return null;
+    if (node is String) return node.trim().isEmpty ? null : node.trim();
+
+    if (node is Map) {
+      final simpleText = node['simpleText'] as String?;
+      if (simpleText != null && simpleText.trim().isNotEmpty) {
+        return simpleText.trim();
+      }
+
+      final runs = node['runs'] as List?;
+      if (runs != null && runs.isNotEmpty) {
+        final text = runs
+            .map((run) => run['text'] as String? ?? '')
+            .join()
+            .trim();
+        return text.isEmpty ? null : text;
+      }
+    }
+
+    if (node is List) {
+      final text = node
+          .map((item) => _extractText(item) ?? '')
+          .where((item) => item.isNotEmpty)
+          .join()
+          .trim();
+      return text.isEmpty ? null : text;
+    }
+
+    return null;
+  }
+
+  Map<String, dynamic> _buildMusicContext({
+    required String languageCode,
+    required String countryCode,
+  }) {
+    return {
+      'client': {
+        'clientName': 'WEB_REMIX',
+        'clientVersion': '1.20231204.01.00',
+        'hl': languageCode,
+        'gl': countryCode,
+        'experimentIds': <dynamic>[],
+        'experimentsToken': '',
+        'browserName': 'Chrome',
+        'browserVersion': '120.0.0.0',
+        'osName': 'Windows',
+        'osVersion': '10.0',
+        'platform': 'DESKTOP',
+        'utcOffsetMinutes': 0,
+      },
+      'user': {'lockedSafetyMode': false},
+    };
+  }
+
+  Future<ui.Locale> _resolveRequestLocale() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return resolveEffectiveAppLocale(
+        storedCode: prefs.getString(AppLocaleNotifier.localePrefKey),
+      );
+    } catch (_) {
+      return resolveEffectiveAppLocale();
+    }
+  }
+
+  Future<String> _resolveRequestCountryCode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return resolveAppContentCountryCode(
+        storedCountryCode: prefs.getString(
+          AppContentLocationNotifier.contentLocationPrefKey,
+        ),
+      );
+    } catch (_) {
+      return resolveSystemContentCountryCode();
+    }
+  }
+
+  String _acceptLanguageHeader({
+    required String languageCode,
+    required String countryCode,
+  }) {
+    return '$languageCode-$countryCode,$languageCode;q=0.9,en;q=0.8';
+  }
+
+  String _normalizeArtistSectionTitle(String? title) {
+    return (title ?? '').trim().toLowerCase();
+  }
+
+  bool _isArtistSongsSectionTitle(String? title) {
+    final normalized = _normalizeArtistSectionTitle(title);
+    return normalized == 'songs' ||
+        normalized == 'top songs' ||
+        normalized == 'şarkılar' ||
+        normalized == 'en popüler şarkılar' ||
+        normalized == 'песни' ||
+        normalized == 'популярные треки';
+  }
+
+  bool _isArtistSinglesSectionTitle(String normalizedTitle) {
+    return normalizedTitle.contains('single') ||
+        normalizedTitle.contains('singles') ||
+        normalizedTitle.contains('eps') ||
+        normalizedTitle.contains('ep') ||
+        normalizedTitle.contains('tekli') ||
+        normalizedTitle.contains('tekliler') ||
+        normalizedTitle.contains('single ve ep') ||
+        normalizedTitle.contains('сингл') ||
+        normalizedTitle.contains('синглы') ||
+        normalizedTitle.contains('ep и синглы');
+  }
+
+  bool _isArtistAppearsOnSectionTitle(String normalizedTitle) {
+    return normalizedTitle.contains('appears on') ||
+        normalizedTitle.contains('featured on') ||
+        normalizedTitle.contains('yer aldığı') ||
+        normalizedTitle.contains('öne çıkan') ||
+        normalizedTitle.contains('katıldığı') ||
+        normalizedTitle.contains('при участии') ||
+        normalizedTitle.contains('участвует');
   }
 
   Duration _parseDuration(String text) {
@@ -4772,13 +5421,21 @@ class InnerTubeService {
     final straplineRuns = header['strapline']?['runs'] as List?;
     final strapline = straplineRuns?.map((r) => r['text']).join();
 
+    final headerThumbnails =
+        header['thumbnail']?['musicThumbnailRenderer']?['thumbnail']?['thumbnails']
+            as List?;
+    final headerThumbnailUrl =
+        headerThumbnails != null && headerThumbnails.isNotEmpty
+        ? headerThumbnails.last['url'] as String?
+        : null;
+
     // Get browse endpoint for "See all"
     final browseEndpoint =
         header['title']?['runs']?[0]?['navigationEndpoint']?['browseEndpoint'];
     final browseId = browseEndpoint?['browseId'] as String?;
 
     // Determine shelf type from title
-    final shelfType = _determineShelfType(title, strapline);
+    var shelfType = _determineShelfType(title, strapline);
 
     // Parse items
     final contents = renderer['contents'] as List? ?? [];
@@ -4789,10 +5446,17 @@ class InnerTubeService {
       if (item != null) items.add(item);
     }
 
+    shelfType = _inferStructuralShelfType(
+      currentType: shelfType,
+      items: items,
+      isPlayable: browseId != null,
+    );
+
     return HomeShelf(
       id: 'shelf_$index',
       title: title,
       strapline: strapline,
+      headerThumbnailUrl: headerThumbnailUrl,
       type: shelfType,
       items: items,
       browseId: browseId,
@@ -4806,7 +5470,7 @@ class InnerTubeService {
     final titleRuns = renderer['title']?['runs'] as List?;
     final title = titleRuns?.map((r) => r['text']).join() ?? 'Recommendations';
 
-    final shelfType = _determineShelfType(title, null);
+    var shelfType = _determineShelfType(title, null);
 
     final contents = renderer['contents'] as List? ?? [];
     final items = <HomeShelfItem>[];
@@ -4824,6 +5488,12 @@ class InnerTubeService {
           playButton['buttonRenderer']?['navigationEndpoint']?['watchEndpoint']?['playlistId']
               as String?;
     }
+
+    shelfType = _inferStructuralShelfType(
+      currentType: shelfType,
+      items: items,
+      isPlayable: playlistId != null,
+    );
 
     return HomeShelf(
       id: 'shelf_$index',
@@ -4936,7 +5606,10 @@ class InnerTubeService {
 
     // Quick picks
     if (lowerTitle.contains('quick picks') ||
-        lowerTitle.contains('start radio')) {
+        lowerTitle.contains('start radio') ||
+        lowerTitle.contains('hızlı seçimler') ||
+        lowerTitle.contains('быстрый выбор') ||
+        lowerTitle.contains('быстрые подборки')) {
       return HomeShelfType.quickPicks;
     }
 
@@ -5045,6 +5718,29 @@ class InnerTubeService {
     return HomeShelfType.unknown;
   }
 
+  HomeShelfType _inferStructuralShelfType({
+    required HomeShelfType currentType,
+    required List<HomeShelfItem> items,
+    required bool isPlayable,
+  }) {
+    if (currentType != HomeShelfType.unknown || items.isEmpty) {
+      return currentType;
+    }
+
+    final songCount = items
+        .where((item) => item.itemType == HomeShelfItemType.song)
+        .length;
+
+    // Locale-safe Quick Picks detection:
+    // YT Music's first song shelf can be fully localized, but it still comes
+    // through as a playable all-song shelf with a larger item count.
+    if (isPlayable && songCount >= 8 && songCount == items.length) {
+      return HomeShelfType.quickPicks;
+    }
+
+    return currentType;
+  }
+
   HomeShelfItem? _parseCarouselItem(
     Map<String, dynamic> content,
     HomeShelfType shelfType,
@@ -5105,6 +5801,7 @@ class InnerTubeService {
       String? playlistId;
       String? videoId;
       HomeShelfItemType itemType = HomeShelfItemType.unknown;
+      String? artistId;
 
       if (browseEndpoint != null) {
         navigationId = browseEndpoint['browseId'] as String?;
@@ -5142,15 +5839,32 @@ class InnerTubeService {
         itemType = HomeShelfItemType.artist;
       }
 
+      String displaySubtitle = subtitle;
+      if (subtitleRuns != null && subtitleRuns.isNotEmpty) {
+        if (itemType == HomeShelfItemType.song) {
+          final parsed = _extractArtistInfoFromSubtitleRuns(subtitleRuns);
+          displaySubtitle = parsed.$1;
+          artistId = parsed.$2;
+        } else if (itemType == HomeShelfItemType.album ||
+            itemType == HomeShelfItemType.playlist ||
+            itemType == HomeShelfItemType.mix) {
+          displaySubtitle = _sanitizeSubtitleText(
+            subtitleRuns,
+            fallback: subtitle,
+          );
+        }
+      }
+
       return HomeShelfItem(
         id: navigationId ?? title.hashCode.toString(),
         title: title,
-        subtitle: subtitle,
+        subtitle: displaySubtitle,
         thumbnailUrl: thumbnailUrl,
         navigationId: navigationId,
         itemType: itemType,
         playlistId: playlistId,
         videoId: videoId,
+        artistId: artistId,
       );
     } catch (e) {
       return null;
@@ -5175,26 +5889,12 @@ class InnerTubeService {
         final artistRuns =
             flexColumns[1]['musicResponsiveListItemFlexColumnRenderer']?['text']?['runs']
                 as List?;
-        if (artistRuns != null) {
-          // Build artist string and extract first artist's browseId
-          final artistParts = <String>[];
-          for (final run in artistRuns) {
-            final text = run['text'] as String?;
-            if (text != null) artistParts.add(text);
-            // Extract artistId from first artist with browse endpoint
-            if (artistId == null) {
-              final browseEndpoint =
-                  run['navigationEndpoint']?['browseEndpoint'];
-              if (browseEndpoint != null) {
-                final browseId = browseEndpoint['browseId'] as String?;
-                // Artist IDs start with 'UC'
-                if (browseId != null && browseId.startsWith('UC')) {
-                  artistId = browseId;
-                }
-              }
-            }
-          }
-          artist = artistParts.join();
+        if (artistRuns != null && artistRuns.isNotEmpty) {
+          final parsed = _extractArtistInfoFromSubtitleRuns(artistRuns);
+          artist = parsed.$1 == 'Unknown Artist'
+              ? _sanitizeSubtitleText(artistRuns, fallback: parsed.$1)
+              : parsed.$1;
+          artistId = parsed.$2;
         }
       }
 

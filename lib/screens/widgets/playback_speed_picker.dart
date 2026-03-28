@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import '../../providers/providers.dart';
+
+String _formatPlaybackSpeed(double speed) {
+  final rounded = speed.toStringAsFixed(
+    speed.truncateToDouble() == speed ? 0 : 2,
+  );
+  return rounded.endsWith('0')
+      ? speed.toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '')
+      : rounded;
+}
 
 /// Playback speed picker bottom sheet
 class PlaybackSpeedPicker extends ConsumerWidget {
@@ -45,7 +55,7 @@ class PlaybackSpeedPicker extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
-              'Playback Speed',
+              context.l10n.playbackSpeed,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -85,7 +95,9 @@ class PlaybackSpeedPicker extends ConsumerWidget {
     required ColorScheme colorScheme,
     required VoidCallback onTap,
   }) {
-    final label = speed == 1.0 ? 'Normal' : '${speed}x';
+    final label = speed == 1.0
+        ? context.l10n.normal
+        : context.l10n.speedMultiplier(_formatPlaybackSpeed(speed));
 
     return ListTile(
       leading: Icon(
@@ -109,7 +121,7 @@ class PlaybackSpeedPicker extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                'Default',
+                context.l10n.defaultValue,
                 style: TextStyle(fontSize: 11, color: colorScheme.primary),
               ),
             )
@@ -142,7 +154,7 @@ class PlaybackSpeedButton extends ConsumerWidget {
           border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
         ),
         child: Text(
-          speed == 1.0 ? '1x' : '${speed}x',
+          context.l10n.speedMultiplier(_formatPlaybackSpeed(speed)),
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,

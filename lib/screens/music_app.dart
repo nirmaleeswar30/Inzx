@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import '../models/models.dart';
 import '../../../core/design_system/design_system.dart';
 import '../providers/providers.dart';
@@ -205,13 +206,6 @@ class _ModernFloatingNavState extends State<_ModernFloatingNav>
   late Animation<double> _bounceAnimation;
   int _previousIndex = 0;
 
-  static const _navItems = [
-    (Icons.home_outlined, Icons.home_rounded, 'Home'),
-    (Icons.music_note_outlined, Icons.music_note_rounded, 'Songs'),
-    (Icons.library_music_outlined, Icons.library_music_rounded, 'Library'),
-    (Icons.folder_outlined, Icons.folder_rounded, 'Folders'),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -280,6 +274,13 @@ class _ModernFloatingNavState extends State<_ModernFloatingNav>
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final l10n = context.l10n;
+    final navItems = [
+      (Icons.home_outlined, Icons.home_rounded, l10n.home),
+      (Icons.music_note_outlined, Icons.music_note_rounded, l10n.songs),
+      (Icons.library_music_outlined, Icons.library_music_rounded, l10n.library),
+      (Icons.folder_outlined, Icons.folder_rounded, l10n.folders),
+    ];
 
     return ClipRect(
       child: BackdropFilter(
@@ -375,8 +376,8 @@ class _ModernFloatingNavState extends State<_ModernFloatingNav>
                   // Nav items
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: List.generate(_navItems.length, (index) {
-                      final item = _navItems[index];
+                    children: List.generate(navItems.length, (index) {
+                      final item = navItems[index];
                       final isSelected = widget.currentIndex == index;
 
                       return GestureDetector(

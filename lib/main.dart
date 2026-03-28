@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'core/design_system/design_system.dart';
+import 'core/l10n/app_localizations_x.dart';
+import 'core/providers/locale_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/services/cache/hive_service.dart';
+import 'l10n/generated/app_localizations.dart';
 import 'services/audio_handler.dart';
 import 'services/github_release_update_service.dart';
 import 'services/jams/jams_background_service_native.dart';
@@ -19,6 +23,7 @@ import 'screens/music_app.dart';
 InzxAudioHandler? audioHandler;
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
+VoidCallback? requestAppRestart;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,15 +79,57 @@ void main() async {
     DeviceOrientation.landscapeRight,
   ]);
 
-  runApp(
-    ProviderScope(
+  runApp(RestartableApp(audioHandler: audioHandler));
+}
+
+class RestartableApp extends StatefulWidget {
+  final InzxAudioHandler? audioHandler;
+
+  const RestartableApp({super.key, required this.audioHandler});
+
+  static void restart(BuildContext context) {
+    final state = context.findAncestorStateOfType<_RestartableAppState>();
+    state?.restart();
+  }
+
+  @override
+  State<RestartableApp> createState() => _RestartableAppState();
+}
+
+class _RestartableAppState extends State<RestartableApp> {
+  Key _providerScopeKey = UniqueKey();
+
+  @override
+  void initState() {
+    super.initState();
+    requestAppRestart = restart;
+  }
+
+  @override
+  void dispose() {
+    if (identical(requestAppRestart, restart)) {
+      requestAppRestart = null;
+    }
+    super.dispose();
+  }
+
+  void restart() {
+    setState(() {
+      _providerScopeKey = UniqueKey();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ProviderScope(
+      key: _providerScopeKey,
       overrides: [
-        if (audioHandler != null)
-          audioHandlerProvider.overrideWithValue(audioHandler),
+        if (widget.audioHandler != null)
+          audioHandlerProvider.overrideWithValue(widget.audioHandler),
       ],
       child: const InzxApp(),
-    ),
-  );
+    );
+  }
 }
 
 /// The root widget of the Inzx music app
@@ -126,21 +173,22 @@ class _InzxAppState extends ConsumerState<InzxApp> {
   void _showPatchUpdateBanner() {
     final messenger = rootScaffoldMessengerKey.currentState;
     if (messenger == null) return;
+    final l10n = context.l10n;
     messenger.clearMaterialBanners();
     messenger.showMaterialBanner(
       MaterialBanner(
-        content: const Text('Update downloaded. Restart the app to apply.'),
+        content: Text(l10n.updateDownloadedBanner),
         actions: [
           TextButton(
             onPressed: () {
               // Close the app so the update applies on next launch.
               SystemNavigator.pop();
             },
-            child: const Text('Restart'),
+            child: Text(l10n.restart),
           ),
           TextButton(
             onPressed: () => messenger.hideCurrentMaterialBanner(),
-            child: const Text('Dismiss'),
+            child: Text(l10n.dismiss),
           ),
         ],
       ),
@@ -150,12 +198,13 @@ class _InzxAppState extends ConsumerState<InzxApp> {
   void _showNewReleaseBanner(GithubReleaseInfo releaseInfo) {
     final messenger = rootScaffoldMessengerKey.currentState;
     if (messenger == null) return;
+    final l10n = context.l10n;
 
     messenger.clearMaterialBanners();
     messenger.showMaterialBanner(
       MaterialBanner(
         content: Text(
-          'New version ${releaseInfo.latestVersion} is available on GitHub.',
+          l10n.newVersionAvailableBanner(releaseInfo.latestVersion),
         ),
         actions: [
           TextButton(
@@ -163,11 +212,11 @@ class _InzxAppState extends ConsumerState<InzxApp> {
               final uri = Uri.parse(releaseInfo.downloadUrl);
               await launchUrl(uri, mode: LaunchMode.externalApplication);
             },
-            child: const Text('Download'),
+            child: Text(l10n.download),
           ),
           TextButton(
             onPressed: () => messenger.hideCurrentMaterialBanner(),
-            child: const Text('Later'),
+            child: Text(l10n.later),
           ),
         ],
       ),
@@ -177,6 +226,7 @@ class _InzxAppState extends ConsumerState<InzxApp> {
   @override
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
+    final locale = ref.watch(appLocaleProvider);
 
     // Get accent color
     final accentColorEnum = ref.watch(accentColorProvider);
@@ -187,9 +237,17 @@ class _InzxAppState extends ConsumerState<InzxApp> {
     ThemeData darkTheme = InzxTheme.darkWithAccent(darkAccent);
 
     return MaterialApp(
-      title: 'Inzx',
+      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: rootScaffoldMessengerKey,
+      locale: locale,
+      supportedLocales: supportedAppLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: toFlutterThemeMode(themeMode),

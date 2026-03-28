@@ -1,0 +1,1179 @@
+{
+  "@@locale": "zh_Hans",
+  "appTitle": "Inzx",
+  "updateDownloadedBanner": "更新已下载。重新启动应用程序即可应用。",
+  "restart": "重新启动",
+  "dismiss": "解雇",
+  "newVersionAvailableBanner": "新版本 {version} 已在 GitHub 上提供。",
+  "@newVersionAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "下载",
+  "later": "后来",
+  "home": "首页",
+  "songs": "歌曲",
+  "library": "图书馆",
+  "folders": "文件夹",
+  "settings": "设置",
+  "searchSettingsHint": "搜索设置...",
+  "noMatchingSettings": "没有匹配的设置",
+  "appearance": "外观",
+  "theme": "主题",
+  "themeAuto": "汽车",
+  "themeLight": "光",
+  "themeDark": "黑暗",
+  "dynamicColorsNote": "颜色根据当前曲目的专辑封面动态调整。",
+  "language": "语言",
+  "languageSubtitle": "选择应用语言",
+  "chooseLanguage": "选择语言",
+  "searchLanguagesHint": "搜索语言...",
+  "noMatchingLanguages": "没有匹配的语言",
+  "useSystemLanguage": "使用系统语言",
+  "languageSystem": "系统默认",
+  "languageEnglish": "英语",
+  "languageTurkish": "土耳其语",
+  "languageRussian": "俄语",
+  "languageHindi": "印地语",
+  "languageTamil": "泰米尔语",
+  "languageKannada": "卡纳达语",
+  "languageTelugu": "泰卢固语",
+  "languageSpanish": "西班牙语",
+  "languageFrench": "法语",
+  "languageGerman": "德语",
+  "languageIndonesian": "印度尼西亚语",
+  "languageJapanese": "日语",
+  "languageKorean": "韩语",
+  "languageArabic": "阿拉伯语",
+  "languageUkrainian": "乌克兰语",
+  "languageThai": "泰语",
+  "languagePortugueseBrazil": "葡萄牙语（巴西）",
+  "languageChineseSimplified": "中文（简体）",
+  "languageChineseTraditional": "中文（繁体）",
+  "contentLocation": "内容位置",
+  "contentLocationSubtitle": "选择用于推荐和目录可用性的区域",
+  "chooseContentLocation": "选择内容位置",
+  "searchLocationsHint": "搜索地点...",
+  "noMatchingLocations": "没有匹配的位置",
+  "locationSystem": "系统默认",
+  "locationUnitedStates": "美国",
+  "locationIndia": "印度",
+  "locationTurkey": "土耳其",
+  "locationRussia": "俄罗斯",
+  "quickActions": "快速行动",
+  "audio": "音频",
+  "audioQuickActionsSubtitle": "流媒体质量、交叉淡入淡出和播放",
+  "downloads": "下载",
+  "downloadsQuickActionsSubtitle": "下载质量、位置和存储",
+  "backupRestore": "备份与恢复",
+  "backupRestoreQuickActionsSubtitle": "导出或导入您的库",
+  "streamingQuality": "流媒体质量",
+  "streamingQualitySubtitle": "调整流媒体的音频比特率",
+  "crossfadeTransition": "淡入淡出过渡",
+  "crossfadeTransitionSubtitle": "将曲目平滑地相互融合",
+  "streamingCache": "流缓存",
+  "streamingCacheSubtitle": "预缓存下一个曲目，仅 Wi-Fi 选项",
+  "downloadQuality": "下载质量",
+  "downloadQualitySubtitle": "离线下载的质量",
+  "downloadLocation": "下载位置",
+  "downloadLocationSubtitle": "下载的音乐的存储位置",
+  "dataUsageInfo": "数据使用信息",
+  "dataUsageInfoSubtitle": "每首歌曲的预计存储空间",
+  "createBackup": "创建备份",
+  "createBackupSubtitle": "导出您的库和设置",
+  "restoreBackup": "恢复备份",
+  "restoreBackupSubtitle": "导入以前的备份文件",
+  "connectYoutubeMusic": "连接 YouTube 音乐",
+  "connectYoutubeMusicSubtitle": "同步您喜欢的歌曲、播放列表等",
+  "connectYtMusicButton": "连接 YouTube 音乐",
+  "downloadsTitle": "下载",
+  "clearCompleted": "清除完成",
+  "clearFailed": "清除失败",
+  "noDownloadsYet": "还没有下载",
+  "downloadSongsToListenOffline": "下载歌曲以离线收听",
+  "downloadingTitle": "正在下载",
+  "downloadedTitle": "已下载 ({count})",
+  "@downloadedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedTitle": "失败",
+  "songsDownloaded": "下载{count}歌曲",
+  "@songsDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usingStorage": "使用 {storage}",
+  "@usingStorage": {
+    "placeholders": {
+      "storage": {
+        "type": "String"
+      }
+    }
+  },
+  "failedWithError": "失败：{error}",
+  "@failedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownError": "未知错误",
+  "removeDownload": "删除下载",
+  "downloadSettingsTitle": "下载设置",
+  "downloadLocationSubtitleLong": "下载的音乐文件的存储位置",
+  "offlineDownloadTip": "下载的曲目无需互联网即可播放，并且不使用流数据。",
+  "estimatedStoragePerSong": "每首歌曲的估计存储空间",
+  "storageLocation": "存放地点",
+  "loading": "加载中...",
+  "errorLoadingPath": "加载路径错误",
+  "privateStorageDownloadsNote": "下载内容存储在应用程序私有存储中，以获得更好的可靠性并且没有权限要求。",
+  "qualityAutoChip": "汽车",
+  "qualityLowChip": "低",
+  "qualityMediumChip": "中等",
+  "qualityHighChip": "高",
+  "qualityMaxChip": "最大",
+  "qualityHighest": "最高",
+  "qualityDescriptionAuto": "自动 - 适应网络",
+  "qualityDescriptionLow": "低 - ~64 kbps（节省存储空间）",
+  "qualityDescriptionMedium": "中 - ~128 kbps（平衡）",
+  "qualityDescriptionHigh": "高 - ~256 kbps（推荐）",
+  "qualityDescriptionMax": "最大值 - 最高可用 (~256 kbps)",
+  "backupRestoreTitle": "备份与恢复",
+  "backupIncludesDescription": "备份包括喜欢的歌曲、播放列表、搜索历史记录、最近播放的歌曲和关键应用程序设置。",
+  "exportBackup": "导出备份",
+  "exportBackupSubtitle": "保存备份文件以共享或存储",
+  "importBackup": "导入备份",
+  "importBackupSubtitle": "从备份文件恢复",
+  "dangerZone": "危险区",
+  "clearAppData": "清除应用程序数据",
+  "clearAppDataSubtitle": "重置应用程序数据/设置，同时保留下载的音频文件",
+  "backupCreatedSuccessfully": "备份创建成功",
+  "backupFailed": "备份失败：{error}",
+  "@backupFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoredSuccessfully": "备份恢复成功",
+  "restoreFailed": "恢复失败：{error}",
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearAllDataQuestion": "清除所有数据？",
+  "clearAllDataWarning": "这将重置本地应用程序数据和设置，但保留下载的歌曲文件。此操作无法撤消。",
+  "cancel": "取消",
+  "clearAll": "全部清除",
+  "appDataClearedPreserved": "应用程序数据已清除（下载的音频文件被保留）",
+  "failedGeneric": "失败：{error}",
+  "@failedGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupSubject": "Inzx 音乐备份",
+  "statisticsTitle": "统计数据",
+  "statisticsCleared": "统计数据已清除",
+  "clearStatistics": "清晰的统计数据",
+  "noStatisticsYet": "还没有统计数据",
+  "startListeningStats": "开始聆听并查看您的统计数据",
+  "overview": "概述",
+  "totalPlays": "总播放次数",
+  "listenTime": "收听时间",
+  "mostPlayed": "最常玩的",
+  "playsCount": "{count} 播放",
+  "@playsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutes": "{hours}h {minutes}m",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutesOnly": "{minutes}米",
+  "@durationMinutesOnly": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "retry": "重试",
+  "share": "分享",
+  "playlist": "播放列表",
+  "album": "专辑",
+  "channel": "频道",
+  "playNext": "播放下一个",
+  "addToQueue": "添加到队列",
+  "addToPlaylist": "添加到播放列表",
+  "goToAlbum": "前往相册",
+  "goToArtist": "前往艺术家",
+  "startRadio": "开始广播",
+  "playAll": "播放全部",
+  "shuffle": "随机播放",
+  "shuffleAll": "全部随机播放",
+  "radio": "收音机",
+  "follow": "关注",
+  "following": "正在关注",
+  "connectYtMusicToFollowArtists": "连接 YouTube Music 以关注艺术家。",
+  "couldNotFollowArtist": "无法关注 {artist}。",
+  "@couldNotFollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotUnfollowArtist": "无法取消关注 {artist}。",
+  "@couldNotUnfollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "followingArtist": "关注 {artist}",
+  "@followingArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "unfollowedArtist": "已取消关注 {artist}",
+  "@unfollowedArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingArtist": "加载艺术家时出错",
+  "subscribersCount": "{count} 订阅者",
+  "@subscribersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSection": "已下载",
+  "showAllDownloaded": "显示所有已下载的 {count}",
+  "@showAllDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "seeAll": "查看全部",
+  "removeFromLikedSongs": "从喜欢的歌曲中删除",
+  "addToLikedSongs": "添加到喜欢的歌曲",
+  "playingTrackNext": "接下来播放“{title}”",
+  "@playingTrackNext": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTrackToQueue": "将“{title}”添加到队列中",
+  "@addedTrackToQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playNextInJam": "在 Jam 中播放下一个",
+  "playTrackNextInJam": "接下来将在 Jam 中播放“{title}”",
+  "@playTrackNextInJam": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addToJamQueue": "添加到果酱队列",
+  "addedTrackToJamQueue": "将“{title}”添加到 Jam 队列",
+  "@addedTrackToJamQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloaded": "已下载",
+  "downloadingProgress": "正在下载 {progress}%",
+  "@downloadingProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadStartingTrack": "正在下载“{title}”",
+  "@downloadStartingTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadNotificationsChannelDescription": "下载进度通知",
+  "downloadStartingNotification": "开始下载...",
+  "downloadCompleteNotification": "下载完成",
+  "downloadFileNotCreated": "下载失败，因为文件未创建",
+  "shareTrackText": "{title} 由 {artist} 提供\n{url}",
+  "@shareTrackText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "createNewPlaylist": "创建新的播放列表",
+  "playlistName": "播放列表名称",
+  "create": "创建",
+  "couldNotLoadPlaylists": "无法加载播放列表",
+  "createLocalPlaylistInstead": "创建本地播放列表",
+  "noPlaylistsYet": "还没有播放列表",
+  "createOneToGetStarted": "创建一个以开始使用",
+  "songsCount": "{count} 歌曲",
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createdPlaylistOnYtMusicAndAddedTrack": "在 YT Music 上创建了“{playlist}”并添加了“{track}”",
+  "@createdPlaylistOnYtMusicAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToCreatePlaylist": "创建播放列表失败",
+  "createdPlaylistLocallyAndAddedTrack": "在本地创建“{playlist}”并添加“{track}”",
+  "@createdPlaylistLocallyAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddToPlaylist": "无法添加到播放列表",
+  "addedTrackToPlaylist": "将“{track}”添加到“{playlist}”",
+  "@addedTrackToPlaylist": {
+    "placeholders": {
+      "track": {
+        "type": "String"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorWithMessage": "错误：{message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "searchingForLyrics": "正在搜索歌词...",
+  "failedToLoadLyrics": "歌词加载失败",
+  "tryAnotherProvider": "尝试其他提供商",
+  "noLyricsFound": "没有找到歌词",
+  "linkLabel": "链接：{url}",
+  "@linkLabel": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "tracksCount": "{count} 曲目",
+  "@tracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFromYoutubeMusic": "从 YouTube 音乐导入",
+  "importedPlaylistSuffix": "进口",
+  "importedFromYoutubeMusicDescription": "从 YouTube 音乐导入",
+  "importedPlaylist": "导入“{playlist}”",
+  "@importedPlaylist": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToImportPlaylist": "导入失败：{error}",
+  "@failedToImportPlaylist": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadPlaylists": "无法加载播放列表",
+  "makeSureLoggedInYoutubeMusic": "确保您已登录 YouTube Music",
+  "noPlaylistsFound": "未找到播放列表",
+  "createPlaylistsInYoutubeMusicFirst": "首先在 YouTube Music 中创建一些播放列表",
+  "loggedInYoutubeMusicSuccess": "已成功登录 YouTube Music！",
+  "signInToYoutubeMusic": "登录 YouTube 音乐",
+  "loggingYouIn": "正在为您登录...",
+  "signInSyncYoutubeMusicDescription": "使用您的 Google 帐户登录以同步您的 YouTube 音乐库，包括喜欢的歌曲、播放列表和专辑。",
+  "playbackSpeed": "播放速度",
+  "normal": "正常",
+  "defaultValue": "默认",
+  "failedToLoadContent": "无法加载内容",
+  "loadMore": "加载更多",
+  "audioSettingsTitle": "音频设置",
+  "nowPlayingLabel": "正在播放",
+  "higherQualityUsesMoreData": "更高的质量使用更多的数据",
+  "adjustsBasedOnNetworkSpeed": "根据网络速度调整",
+  "qualityLowUsesLessData": "~64 kbps - 使用更少的数据",
+  "qualityMediumBalanced": "~128 kbps - 平衡",
+  "qualityHighBestForMost": "~256 kbps - 最适合大多数人",
+  "qualityMaximumAvailable": "最高可用 (~256 kbps)",
+  "recommended": "推荐",
+  "blendTrackEndsIntoNext": "将当前曲目的结尾混合到下一首曲目的开头",
+  "preCachesNextTracks": "预缓存下一个曲目并在可用时从本地缓存播放",
+  "smartStreamCache": "智能流缓存",
+  "usedCacheStorage": "使用：{used} / {limit} MB",
+  "@usedCacheStorage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "calculatingCacheUsage": "正在计算缓存使用情况...",
+  "unableToReadCacheUsage": "无法读取缓存使用情况",
+  "preCacheNetwork": "预缓存网络",
+  "wifiOnly": "仅无线网络",
+  "wifiAndMobileData": "无线网络+移动数据",
+  "preCacheRunsWifiOnly": "预缓存仅在连接到 Wi-Fi 时运行",
+  "preCacheRunsWifiAndMobile": "预缓存可以在 Wi-Fi 和移动数据上运行",
+  "concurrentPreCacheDownloads": "并发预缓存下载",
+  "higherValuesCacheFaster": "较高的值缓存速度更快，但使用更多的网络和电池",
+  "cacheSizeLimit": "缓存大小限制",
+  "off": "关闭",
+  "crossfadeDisabled": "禁用交叉淡入淡出",
+  "currentValueLabel": "当前：{value}",
+  "@currentValueLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "audioQuality": "音频质量",
+  "qualityLowKbps": "低 (64 kbps)",
+  "qualityMediumKbps": "中 (128 kbps)",
+  "qualityHighKbps": "高 (256 kbps)",
+  "qualityMaximumKbps": "最大（~256 kbps）",
+  "all": "全部",
+  "artists": "艺术家",
+  "albums": "专辑",
+  "playlists": "播放列表",
+  "singlesAndEps": "单曲和EP",
+  "appearsOn": "出现于",
+  "fansAlsoLike": "粉丝还喜欢",
+  "searchMusicHint": "搜索歌曲、专辑、艺术家",
+  "searchForMusic": "搜索音乐",
+  "noResultsFound": "没有找到结果",
+  "showAllLocalResults": "显示所有 {count} 本地结果",
+  "@showAllLocalResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "topResult": "最高结果",
+  "artistLabel": "艺术家",
+  "albumByArtist": "专辑 - {artist}",
+  "@albumByArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistByAuthor": "播放列表 - {author}",
+  "@playlistByAuthor": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "保存",
+  "upNext": "上一个",
+  "lyricsTab": "歌词",
+  "relatedTab": "相关",
+  "youMightAlsoLike": "您可能还喜欢",
+  "otherPerformances": "其他演出",
+  "moreFrom": "更多来自",
+  "aboutArtist": "关于艺术家",
+  "jamQueue": "堵塞队列",
+  "radioQueue": "无线电队列",
+  "queueLabel": "队列",
+  "playingFrom": "播放自",
+  "loadingMoreTracks": "正在加载更多曲目...",
+  "scrollForMore": "滚动查看更多",
+  "someone": "有人",
+  "noTracksInQueue": "队列中没有曲目",
+  "addSongsToJamQueue": "将歌曲添加到即兴队列中",
+  "addedByUser": "由 {name} 添加",
+  "@addedByUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTrackPlaying": "没有曲目播放",
+  "noRelatedTracksFound": "未找到相关曲目",
+  "queueIsEmpty": "队列为空",
+  "defaultQueueName": "我的队列",
+  "saveQueueAsPlaylist": "将队列另存为播放列表",
+  "savedTracksToPlaylist": "已将 {count} 曲目保存到“{name}”",
+  "@savedTracksToPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "jams": "果酱",
+  "nowPlayingHeader": "正在播放",
+  "browseMoodsGenresTitle": "情绪与流派",
+  "moodCategoryMoods": "心情",
+  "moodCategoryGenres": "流派",
+  "moodCategoryActivities": "活动",
+  "moodChill": "寒冷",
+  "moodParty": "派对",
+  "moodWorkout": "锻炼",
+  "moodFocus": "焦点",
+  "moodSleep": "睡眠",
+  "moodHappy": "快乐",
+  "moodSad": "悲伤",
+  "moodRomance": "浪漫",
+  "moodFeelGood": "感觉良好",
+  "moodEnergize": "充满活力",
+  "genrePop": "流行音乐",
+  "genreRock": "摇滚",
+  "genreHipHop": "嘻哈音乐",
+  "genreRnb": "节奏蓝调",
+  "genreElectronic": "电子",
+  "genreDance": "舞蹈",
+  "genreJazz": "爵士乐",
+  "genreClassical": "古典",
+  "genreCountry": "国家",
+  "genreMetal": "金属",
+  "genreIndie": "独立",
+  "genreKPop": "韩国流行音乐",
+  "genreLatin": "拉丁语",
+  "genreBollywood": "宝莱坞",
+  "activityDriving": "驾驶",
+  "activityCooking": "烹饪",
+  "activityGaming": "游戏",
+  "activityStudying": "学习中",
+  "activityMeditation": "冥想",
+  "play": "玩",
+  "findInPlaylist": "在播放列表中查找...",
+  "playlistNotFoundMessage": "未找到播放列表\n\n播放列表 ID：{id}\n\n该播放列表可能是私有的或不可用的。",
+  "@playlistNotFoundMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineSnapshotDownloaded": "离线快照 - 下载 {downloaded}/{total}",
+  "@offlineSnapshotDownloaded": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noMatchingTracks": "没有匹配的曲目",
+  "noTracksFound": "未找到曲目",
+  "downloadingTracksFromPlaylist": "从 {playlist} 下载 {count} 曲目",
+  "@downloadingTracksFromPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTracksToQueueCount": "将 {count} 曲目添加到队列中",
+  "@addedTracksToQueueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadPlaylist": "下载播放列表",
+  "signInWithGoogle": "使用 Google 登录",
+  "signInToUseJams": "登录以使用 Jams",
+  "listenTogetherRealtime": "与朋友一起实时聆听",
+  "signInGoogleToStartOrJoinJam": "使用 Google 登录即可开始或加入与好友一起进行的 Jam 会话",
+  "listenTogether": "一起聆听",
+  "listenWithFriendsInSync": "与朋友同步聆听",
+  "sameSongSameMoment": "同一首歌，同一时刻",
+  "startJam": "开始即兴表演",
+  "createSessionAndInviteFriends": "创建会话并邀请好友",
+  "joinJam": "参加果酱活动",
+  "enterSixDigitCode": "输入6位数字代码",
+  "join": "加入",
+  "shareThisCode": "分享此代码",
+  "codeCopied": "代码已复制！",
+  "youAreHost": "你是主持人",
+  "hostedBy": "主持人：{name}",
+  "@hostedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listeningTogetherCount": "一起聆听 ({count})",
+  "@listeningTogetherCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "endSession": "结束会议",
+  "leaveSession": "离开会话",
+  "connected": "已连接",
+  "reconnecting": "重新连接",
+  "retryInSeconds": "在 {seconds}s 后重试",
+  "@retryInSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectingStatus": "重新连接 · {suffix}",
+  "@reconnectingStatus": {
+    "placeholders": {
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "reconnectingAttemptStatus": "重新连接 ({attempt}) · {suffix}",
+  "@reconnectingAttemptStatus": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "disconnected": "已断开连接",
+  "playing": "演奏",
+  "addSongsToPlayTogether": "添加歌曲以一起播放",
+  "sessionCreatedCode": "会话已创建！代码：{code}",
+  "@sessionCreatedCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "noJamFoundForCode": "未找到此代码的果酱。",
+  "hostRole": "主持人",
+  "canControl": "可以控制",
+  "listeningStatus": "听力",
+  "transferHostQuestion": "转接主机？",
+  "transferHostMessage": "让 {name} 成为新主机？您将失去主机控制。",
+  "@transferHostMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transfer": "转乘",
+  "removeControl": "移除控制",
+  "allowControl": "允许控制",
+  "makeHost": "做主机",
+  "live": "直播",
+  "playbackControlsJam": "您的播放控制 Jam",
+  "starting": "开始...",
+  "or": "或",
+  "joinFriendsJam": "加入朋友的 Jam",
+  "startJamDescription": "发起 Jam 与朋友分享音乐。\n每个人都同步听到同一首歌。",
+  "folderSettings": "文件夹设置",
+  "noFoldersAddedYet": "尚未添加文件夹",
+  "addFolder": "添加文件夹",
+  "localMusic": "本地音乐",
+  "scanLocalMusicDescription": "扫描您的设备以查找本地音乐文件并离线播放",
+  "scanForMusic": "扫描音乐",
+  "addFolderLowercase": "添加文件夹",
+  "supportedFormats": "支持的格式：MP3、FLAC、WAV、M4A、OGG",
+  "songsFromFoldersCount": "{folders} 文件夹中的 {songs} 首歌曲",
+  "@songsFromFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "add": "添加",
+  "permissionRequired": "需要许可",
+  "storagePermissionRequiredMessage": "访问您的音乐文件需要存储权限。请在“设置”中启用它。",
+  "couldNotOpenSettingsPermission": "无法打开设置。请手动启用存储权限。",
+  "openSettings": "打开设置",
+  "folderAdded": "已添加文件夹",
+  "addedFolderScanNow": "添加了“{folder}”。您想现在扫描其中的音乐吗？",
+  "@addedFolderScanNow": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanNow": "立即扫描",
+  "foundSongsCount": "找到 {count} 首歌曲",
+  "@foundSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addFolderFirstThenScan": "先添加文件夹，然后扫描音频文件。",
+  "scanFoldersCountDescription": "这将扫描 {count} 文件夹中的音频文件。",
+  "@scanFoldersCountDescription": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "foldersToScan": "要扫描的文件夹：",
+  "andMoreFolders": "...以及 {count} 更多",
+  "@andMoreFolders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "startScan": "开始扫描",
+  "foundSongsInFoldersCount": "在 {folders} 文件夹中找到 {songs} 首歌曲",
+  "@foundSongsInFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "scanningForMusic": "正在扫描音乐...",
+  "filesProgress": "{scanned} / {total} 文件",
+  "@filesProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "signOut": "退出",
+  "signInGoogleProfilePictureJams": "使用 Google 登录以获取您的个人资料照片并启用 Jams",
+  "sync": "同步",
+  "lastSynced": "上次同步：{time}",
+  "@lastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedItems": "已同步 {count} 项目",
+  "@syncedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncing": "正在同步...",
+  "syncNow": "立即同步",
+  "cachedItems": "{count} 缓存项目",
+  "@cachedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streams": "流",
+  "colors": "颜色",
+  "searches": "搜索次数",
+  "expiredCount": "{count} 已过期",
+  "@expiredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cacheCleanupComplete": "缓存清理完成",
+  "cleanUp": "清理",
+  "clearCache": "清除缓存",
+  "clearCachedMusicDataConfirm": "这将清除所有缓存的音乐数据。继续？",
+  "clear": "清除",
+  "cacheCleared": "缓存已清除",
+  "analytics": "分析",
+  "hits": "点击次数",
+  "misses": "未命中数",
+  "network": "网络",
+  "analyticsReset": "分析重置",
+  "resetStats": "重置统计数据",
+  "cacheHitRate": "缓存命中率",
+  "liked": "喜欢",
+  "appInfo": "应用程序信息",
+  "releaseBuild": "发布版本",
+  "updater": "更新程序",
+  "available": "可用",
+  "unavailable": "不可用",
+  "loadingCompact": "正在加载...",
+  "errorCompact": "错误",
+  "none": "无",
+  "currentPatch": "当前补丁",
+  "nextPatch": "下一个补丁",
+  "disconnectYoutubeMusic": "断开 YouTube 音乐连接",
+  "disconnectYoutubeMusicQuestion": "断开 YouTube 音乐连接？",
+  "disconnectYoutubeMusicWarning": "这将从应用中删除您的 YouTube Music 帐户。您的图书馆数据将被清除。",
+  "disconnect": "断开连接",
+  "syncFailed": "同步失败：{error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "justNow": "刚才",
+  "minutesAgo": "{count}分钟前",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count} 小时前",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count} 天前",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noSongsInTitle": "{title} 中没有歌曲",
+  "@noSongsInTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "createPlaylistDescription": "创建播放列表来整理您的音乐",
+  "savedAlbumsFromYoutubeMusic": "从 YouTube Music 保存的专辑",
+  "noSavedAlbumsFromYoutubeMusic": "没有保存来自 YouTube Music 的专辑",
+  "errorLoadingAlbums": "加载相册时出错",
+  "recentlyPlayed": "最近玩过",
+  "noAlbumsYet": "还没有专辑",
+  "playSomeMusicToSeeAlbumsHere": "播放一些音乐即可在此处查看专辑",
+  "subscribedArtists": "订阅艺术家",
+  "noSubscribedArtists": "没有订阅的艺术家",
+  "errorLoadingArtists": "加载艺术家时出错",
+  "recentlyPlayedArtists": "最近演奏的艺术家",
+  "noArtistsYet": "还没有艺术家",
+  "playSomeMusicToSeeArtistsHere": "在这里播放一些音乐来欣赏艺术家的作品",
+  "downloading": "正在下载",
+  "downloadedPlaylists": "下载的播放列表",
+  "errorLoadingDownloads": "加载下载时出错",
+  "deleteDownload": "删除下载",
+  "deleteDownloadQuestion": "删除下载？",
+  "deleteDownloadWarning": "这将从您的设备中删除“{title}”。您可以稍后再次下载。",
+  "@deleteDownloadWarning": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedTrack": "删除了“{title}”",
+  "@deletedTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSongsWillAppearHere": "下载的歌曲将出现在此处",
+  "createPlaylist": "创建播放列表",
+  "autoPlaylists": "自动播放列表",
+  "likedSongsLabel": "喜欢的歌曲",
+  "downloadedFraction": "{downloaded}/{total} 下载",
+  "@downloadedFraction": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "more": "更多",
+  "video": "视频",
+  "forgottenFavorites": "被遗忘的最爱",
+  "mixedForYou": "为你混合",
+  "myMixOne": "我的组合 1",
+  "discoverMix": "探索混合",
+  "replayMix": "重播混音",
+  "newRelease": "新发布",
+  "chillMix": "冷却混合",
+  "basedOnYourListening": "根据您的听力",
+  "newMusicForYou": "为您准备的新音乐",
+  "yourFavorites": "你的最爱",
+  "freshTracks": "新鲜曲目",
+  "relaxingVibes": "轻松的氛围",
+  "musicToGetYouStarted": "让您入门的音乐",
+  "welcomeUser": "欢迎{name}",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeFallbackName": "那里",
+  "youtubeMusicLabel": "YouTube 音乐",
+  "local": "本地",
+  "recentlyAdded": "最近添加",
+  "name": "名称",
+  "duration": "持续时间",
+  "searchSongsHint": "搜索歌曲...",
+  "noLikedSongs": "没有喜欢的歌曲",
+  "likeSomeSongsToSeeThemHere": "喜欢一些歌曲可以在这里看到",
+  "noLocalSongs": "没有本地歌曲",
+  "scanFoldersToFindLocalMusic": "扫描文件夹以查找本地音乐",
+  "noResults": "没有结果",
+  "tryDifferentKeywords": "尝试不同的关键词",
+  "noSongsYet": "还没有歌曲",
+  "playSomeMusicToBuildYourLibrary": "播放一些音乐来建立您的音乐库",
+  "albumNotFound": "找不到相册",
+  "downloadAlbum": "下载专辑",
+  "downloadingTracksFromAlbum": "从 {album} 下载 {count} 曲目",
+  "@downloadingTracksFromAlbum": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "shareAlbumText": "{title} 由 {artist} 提供\n{url}",
+  "@shareAlbumText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestions": "建议",
+  "recentSearches": "最近的搜索",
+  "startTypingToSearch": "开始输入搜索...",
+  "youtubeMusicPlaylists": "YouTube 音乐播放列表",
+  "errorLoadingPlaylists": "加载播放列表时出错",
+  "yourPlaylists": "您的播放列表",
+  "noYoutubeMusicPlaylistsFound": "找不到 YouTube Music 播放列表",
+  "songCountLabel": "{count, plural, one {# 歌曲} other {# 歌曲}}",
+  "@songCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unknownAlbum": "未知专辑",
+  "jamCodeExample": "ABC123",
+  "jamCodeHint": "代码",
+  "yourProfile": "您的个人资料",
+  "googleUser": "谷歌用户",
+  "jamsAndProfile": "果酱和轮廓",
+  "yes": "是的",
+  "no": "不",
+  "foundInSettings": "在设置中找到",
+  "sharePlaylistText": "{title}\n{url}",
+  "@sharePlaylistText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "shareArtistText": "{artist}\n{url}",
+  "@shareArtistText": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "megabytesValue": "{value} MB",
+  "@megabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "gigabytesValue": "{value} GB",
+  "@gigabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxMegabytesValue": "~{value} MB",
+  "@approxMegabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxKbpsValue": "~{value} kbps",
+  "@approxKbpsValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "secondsShort": "{value}s",
+  "@secondsShort": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "speedMultiplier": "{value}x",
+  "@speedMultiplier": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

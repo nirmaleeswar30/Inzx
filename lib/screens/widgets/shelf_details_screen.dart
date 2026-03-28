@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import 'track_options_sheet.dart';
@@ -221,13 +222,13 @@ class _ShelfDetailsScreenState extends ConsumerState<ShelfDetailsScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Failed to load content',
+              context.l10n.failedToLoadContent,
               style: TextStyle(color: colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 8),
             TextButton(
               onPressed: _fetchInitialItems,
-              child: const Text('Retry'),
+              child: Text(context.l10n.retry),
             ),
           ],
         ),
@@ -272,7 +273,7 @@ class _ShelfDetailsScreenState extends ConsumerState<ShelfDetailsScreen> {
                   : _continuationToken != null
                   ? TextButton(
                       onPressed: _loadMore,
-                      child: const Text('Load more'),
+                      child: Text(context.l10n.loadMore),
                     )
                   : const SizedBox.shrink(),
             ),

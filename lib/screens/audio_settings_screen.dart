@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/design_system/design_system.dart';
+import '../core/l10n/app_localizations_x.dart';
 import '../providers/providers.dart';
 import '../services/playback/playback_data.dart';
 
@@ -11,6 +12,7 @@ class AudioSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     final albumColors = ref.watch(albumColorsProvider);
@@ -38,7 +40,7 @@ class AudioSettingsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Audio Settings'),
+        title: Text(l10n.audioSettingsTitle),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -51,7 +53,7 @@ class AudioSettingsScreen extends ConsumerWidget {
               context,
               isDark: isDark,
               accentColor: accentColor,
-              title: 'Now Playing',
+              title: l10n.nowPlayingLabel,
               subtitle: streamInfo,
               icon: Iconsax.music_circle,
             ),
@@ -60,7 +62,7 @@ class AudioSettingsScreen extends ConsumerWidget {
 
           // Quality section header
           Text(
-            'Streaming Quality',
+            l10n.streamingQuality,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -69,7 +71,7 @@ class AudioSettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Higher quality uses more data',
+            l10n.higherQualityUsesMoreData,
             style: TextStyle(
               fontSize: 14,
               color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -86,8 +88,8 @@ class AudioSettingsScreen extends ConsumerWidget {
             accentColor: accentColor,
             quality: AudioQuality.auto,
             currentQuality: currentQuality,
-            title: 'Auto',
-            subtitle: 'Adjusts based on network speed',
+            title: l10n.qualityAutoChip,
+            subtitle: l10n.adjustsBasedOnNetworkSpeed,
             icon: Iconsax.autobrightness,
             onTap: () => playerService.setAudioQuality(AudioQuality.auto),
           ),
@@ -99,8 +101,8 @@ class AudioSettingsScreen extends ConsumerWidget {
             accentColor: accentColor,
             quality: AudioQuality.low,
             currentQuality: currentQuality,
-            title: 'Low',
-            subtitle: '~64 kbps • Uses less data',
+            title: l10n.qualityLowChip,
+            subtitle: l10n.qualityLowUsesLessData,
             icon: Iconsax.volume_low,
             onTap: () => playerService.setAudioQuality(AudioQuality.low),
           ),
@@ -112,8 +114,8 @@ class AudioSettingsScreen extends ConsumerWidget {
             accentColor: accentColor,
             quality: AudioQuality.medium,
             currentQuality: currentQuality,
-            title: 'Medium',
-            subtitle: '~128 kbps • Balanced',
+            title: l10n.qualityMediumChip,
+            subtitle: l10n.qualityMediumBalanced,
             icon: Iconsax.volume_high,
             onTap: () => playerService.setAudioQuality(AudioQuality.medium),
           ),
@@ -125,8 +127,8 @@ class AudioSettingsScreen extends ConsumerWidget {
             accentColor: accentColor,
             quality: AudioQuality.high,
             currentQuality: currentQuality,
-            title: 'High',
-            subtitle: '~256 kbps • Best for most',
+            title: l10n.qualityHighChip,
+            subtitle: l10n.qualityHighBestForMost,
             icon: Iconsax.headphones,
             recommended: true,
             onTap: () => playerService.setAudioQuality(AudioQuality.high),
@@ -139,8 +141,8 @@ class AudioSettingsScreen extends ConsumerWidget {
             accentColor: accentColor,
             quality: AudioQuality.max,
             currentQuality: currentQuality,
-            title: 'Maximum',
-            subtitle: 'Highest available (~256 kbps)',
+            title: l10n.qualityMaxChip,
+            subtitle: l10n.qualityMaximumAvailable,
             icon: Iconsax.sound,
             onTap: () => playerService.setAudioQuality(AudioQuality.max),
           ),
@@ -148,7 +150,7 @@ class AudioSettingsScreen extends ConsumerWidget {
           const SizedBox(height: 32),
 
           Text(
-            'Crossfade Transition',
+            l10n.crossfadeTransition,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -157,7 +159,7 @@ class AudioSettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Blend the end of the current track into the start of the next',
+            l10n.blendTrackEndsIntoNext,
             style: TextStyle(
               fontSize: 14,
               color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -165,6 +167,7 @@ class AudioSettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           _buildCrossfadeSection(
+            context: context,
             isDark: isDark,
             accentColor: accentColor,
             currentDurationMs: crossfadeDurationMs,
@@ -177,7 +180,7 @@ class AudioSettingsScreen extends ConsumerWidget {
 
           // Streaming cache section
           Text(
-            'Streaming Cache',
+            l10n.streamingCache,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -186,7 +189,7 @@ class AudioSettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Pre-caches next tracks and plays from local cache when available',
+            l10n.preCachesNextTracks,
             style: TextStyle(
               fontSize: 14,
               color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -352,7 +355,7 @@ class AudioSettingsScreen extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            'Recommended',
+                            context.l10n.recommended,
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
@@ -425,7 +428,7 @@ class AudioSettingsScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Smart Stream Cache',
+                      context.l10n.smartStreamCache,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color: isDark ? Colors.white : InzxColors.textPrimary,
@@ -434,7 +437,10 @@ class AudioSettingsScreen extends ConsumerWidget {
                     const SizedBox(height: 4),
                     usageAsync.when(
                       data: (bytes) => Text(
-                        'Used: ${_formatCacheSize(bytes)} / $cacheLimitMb MB',
+                        context.l10n.usedCacheStorage(
+                          _formatCacheSize(context, bytes),
+                          cacheLimitMb,
+                        ),
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark
@@ -443,7 +449,7 @@ class AudioSettingsScreen extends ConsumerWidget {
                         ),
                       ),
                       loading: () => Text(
-                        'Calculating cache usage...',
+                        context.l10n.calculatingCacheUsage,
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark
@@ -452,7 +458,7 @@ class AudioSettingsScreen extends ConsumerWidget {
                         ),
                       ),
                       error: (error, stackTrace) => Text(
-                        'Unable to read cache usage',
+                        context.l10n.unableToReadCacheUsage,
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.red.shade300,
@@ -466,7 +472,7 @@ class AudioSettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Pre-cache Network',
+            context.l10n.preCacheNetwork,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -480,7 +486,7 @@ class AudioSettingsScreen extends ConsumerWidget {
             children: [
               ChoiceChip(
                 selected: wifiOnly,
-                label: const Text('Wi-Fi only'),
+                label: Text(context.l10n.wifiOnly),
                 selectedColor: accentColor,
                 labelStyle: TextStyle(
                   color: wifiOnly
@@ -495,7 +501,7 @@ class AudioSettingsScreen extends ConsumerWidget {
               ),
               ChoiceChip(
                 selected: !wifiOnly,
-                label: const Text('Wi-Fi + mobile data'),
+                label: Text(context.l10n.wifiAndMobileData),
                 selectedColor: accentColor,
                 labelStyle: TextStyle(
                   color: !wifiOnly
@@ -513,8 +519,8 @@ class AudioSettingsScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           Text(
             wifiOnly
-                ? 'Pre-cache runs only when connected to Wi-Fi'
-                : 'Pre-cache can run on both Wi-Fi and mobile data',
+                ? context.l10n.preCacheRunsWifiOnly
+                : context.l10n.preCacheRunsWifiAndMobile,
             style: TextStyle(
               fontSize: 12,
               color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -522,7 +528,7 @@ class AudioSettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Concurrent Pre-cache Downloads',
+            context.l10n.concurrentPreCacheDownloads,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -537,7 +543,7 @@ class AudioSettingsScreen extends ConsumerWidget {
               final selected = option == maxConcurrent;
               return ChoiceChip(
                 selected: selected,
-                label: Text('$option'),
+                label: Text(option.toString()),
                 selectedColor: accentColor,
                 labelStyle: TextStyle(
                   color: selected
@@ -554,7 +560,7 @@ class AudioSettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Higher values cache faster but use more network and battery',
+            context.l10n.higherValuesCacheFaster,
             style: TextStyle(
               fontSize: 12,
               color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -562,7 +568,7 @@ class AudioSettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Cache Size Limit',
+            context.l10n.cacheSizeLimit,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -577,7 +583,7 @@ class AudioSettingsScreen extends ConsumerWidget {
               final selected = optionMb == cacheLimitMb;
               return ChoiceChip(
                 selected: selected,
-                label: Text('$optionMb MB'),
+                label: Text(context.l10n.megabytesValue(optionMb.toString())),
                 selectedColor: accentColor,
                 labelStyle: TextStyle(
                   color: selected
@@ -598,6 +604,7 @@ class AudioSettingsScreen extends ConsumerWidget {
   }
 
   Widget _buildCrossfadeSection({
+    required BuildContext context,
     required bool isDark,
     required Color accentColor,
     required int currentDurationMs,
@@ -606,8 +613,10 @@ class AudioSettingsScreen extends ConsumerWidget {
     const optionsMs = [0, 1000, 2000, 3000, 5000, 8000];
 
     String labelFor(int ms) {
-      if (ms == 0) return 'Off';
-      return '${(ms / 1000).toStringAsFixed(ms % 1000 == 0 ? 0 : 1)}s';
+      if (ms == 0) return context.l10n.off;
+      return context.l10n.secondsShort(
+        (ms / 1000).toStringAsFixed(ms % 1000 == 0 ? 0 : 1),
+      );
     }
 
     return Container(
@@ -649,8 +658,8 @@ class AudioSettingsScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           Text(
             currentDurationMs == 0
-                ? 'Crossfade disabled'
-                : 'Current: ${labelFor(currentDurationMs)}',
+                ? context.l10n.crossfadeDisabled
+                : context.l10n.currentValueLabel(labelFor(currentDurationMs)),
             style: TextStyle(
               fontSize: 12,
               color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -661,10 +670,10 @@ class AudioSettingsScreen extends ConsumerWidget {
     );
   }
 
-  String _formatCacheSize(int bytes) {
+  String _formatCacheSize(BuildContext context, int bytes) {
     const mb = 1024 * 1024;
-    if (bytes <= 0) return '0 MB';
-    return '${(bytes / mb).toStringAsFixed(1)} MB';
+    if (bytes <= 0) return context.l10n.megabytesValue('0');
+    return context.l10n.megabytesValue((bytes / mb).toStringAsFixed(1));
   }
 }
 
@@ -715,7 +724,7 @@ class AudioQualityPicker extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
-              'Audio Quality',
+              context.l10n.audioQuality,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -728,7 +737,7 @@ class AudioQualityPicker extends ConsumerWidget {
 
           _buildQuickOption(
             context,
-            'Auto',
+            context.l10n.qualityAutoChip,
             AudioQuality.auto,
             currentQuality,
             isDark,
@@ -740,7 +749,7 @@ class AudioQualityPicker extends ConsumerWidget {
           ),
           _buildQuickOption(
             context,
-            'Low (64 kbps)',
+            context.l10n.qualityLowKbps,
             AudioQuality.low,
             currentQuality,
             isDark,
@@ -752,7 +761,7 @@ class AudioQualityPicker extends ConsumerWidget {
           ),
           _buildQuickOption(
             context,
-            'Medium (128 kbps)',
+            context.l10n.qualityMediumKbps,
             AudioQuality.medium,
             currentQuality,
             isDark,
@@ -764,7 +773,7 @@ class AudioQualityPicker extends ConsumerWidget {
           ),
           _buildQuickOption(
             context,
-            'High (256 kbps)',
+            context.l10n.qualityHighKbps,
             AudioQuality.high,
             currentQuality,
             isDark,
@@ -776,7 +785,7 @@ class AudioQualityPicker extends ConsumerWidget {
           ),
           _buildQuickOption(
             context,
-            'Maximum (~256 kbps)',
+            context.l10n.qualityMaximumKbps,
             AudioQuality.max,
             currentQuality,
             isDark,

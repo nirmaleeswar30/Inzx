@@ -2,6 +2,7 @@ import 'dart:async' show unawaited;
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show compute, kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:inzx/core/services/cache/hive_service.dart';
 import 'package:inzx/data/entities/home_shelf_entity.dart';
 import 'package:inzx/data/entities/album_cache_entity.dart';
@@ -9,6 +10,7 @@ import 'package:inzx/data/entities/artist_cache_entity.dart';
 import 'package:inzx/data/entities/playlist_cache_entity.dart';
 import 'package:inzx/data/repositories/music_repository.dart'
     show CacheAnalytics;
+import '../core/providers/locale_provider.dart';
 import '../services/ytmusic_api_service.dart';
 import '../services/ytmusic_auth_service.dart';
 import '../models/models.dart';
@@ -275,7 +277,7 @@ class HomePageState {
 /// Home page notifier with continuation support and caching
 class HomePageNotifier extends StateNotifier<HomePageState> {
   final InnerTubeService _innerTube;
-  static const String _cacheKey = 'home_page';
+  static const String _cacheKeyPrefix = 'home_page_v2';
   bool _didAutoLoadMore = false;
 
   HomePageNotifier(this._innerTube) : super(const HomePageState()) {
@@ -308,7 +310,8 @@ class HomePageNotifier extends StateNotifier<HomePageState> {
       );
 
       // Check if cache is stale - if so, refresh in background
-      final cached = HiveService.homePageBox.get(_cacheKey);
+      final cacheKey = await _homeCacheKey();
+      final cached = HiveService.homePageBox.get(cacheKey);
       if (cached != null && cached.isStale) {
         if (kDebugMode) {
           print(
@@ -337,7 +340,8 @@ class HomePageNotifier extends StateNotifier<HomePageState> {
   /// Load shelves from Hive cache - returns (shelves, continuationToken)
   Future<(List<HomeShelf>?, String?)?> _loadFromCache() async {
     try {
-      final cached = HiveService.homePageBox.get(_cacheKey);
+      final cacheKey = await _homeCacheKey();
+      final cached = HiveService.homePageBox.get(cacheKey);
       if (cached != null && !cached.isExpired) {
         final shelves = await compute(
           _parseHomeShelvesIsolate,
@@ -359,6 +363,7 @@ class HomePageNotifier extends StateNotifier<HomePageState> {
     String? continuationToken,
   ) async {
     try {
+      final cacheKey = await _homeCacheKey();
       final jsonList = shelves.map((s) => s.toJson()).toList();
       final shelvesJson = await compute(_encodeHomeShelvesIsolate, jsonList);
       final entity = HomePageCacheEntity(
@@ -367,7 +372,7 @@ class HomePageNotifier extends StateNotifier<HomePageState> {
         cachedAt: DateTime.now(),
         ttlMinutes: 30,
       );
-      HiveService.homePageBox.put(_cacheKey, entity);
+      HiveService.homePageBox.put(cacheKey, entity);
       if (kDebugMode) {
         print('HomePageNotifier: Saved ${shelves.length} shelves to cache');
       }
@@ -376,6 +381,29 @@ class HomePageNotifier extends StateNotifier<HomePageState> {
         print('HomePageNotifier: Cache save error: $e');
       }
     }
+  }
+
+  Future<String> _homeCacheKey() async {
+    String? storedLanguageCode;
+    String? storedCountryCode;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      storedLanguageCode = prefs.getString(AppLocaleNotifier.localePrefKey);
+      storedCountryCode = prefs.getString(
+        AppContentLocationNotifier.contentLocationPrefKey,
+      );
+    } catch (_) {
+      // Fall through to system locale/location.
+    }
+
+    final effectiveLocale = resolveEffectiveAppLocale(
+      storedCode: storedLanguageCode,
+    );
+    final languageCode = appLocaleStorageKey(effectiveLocale);
+    final countryCode = resolveAppContentCountryCode(
+      storedCountryCode: storedCountryCode,
+    );
+    return '${_cacheKeyPrefix}_${languageCode}_$countryCode';
   }
 
   /// Fetch shelves from network
@@ -517,6 +545,7 @@ final ytMusicHomePageStateProvider =
     StateNotifierProvider<HomePageNotifier, HomePageState>((ref) {
       // Watch auth state - provider will recreate when it changes
       ref.watch(ytMusicAuthStateProvider);
+      ref.watch(appLocaleProvider);
       final innerTube = ref.watch(innerTubeServiceProvider);
 
       // Create fresh notifier - old one will be disposed

@@ -39,6 +39,7 @@
 - **Material Design 3** - Modern, clean interface with dynamic theming
 - **Dynamic Colors** - Adaptive colors extracted from album artwork
 - **Dark/Light Mode** - Automatic theme switching
+- **Multi-language UI** - Built-in localization with app language and content region controls
 - **Smooth Animations** - Fluid transitions and micro-interactions
 - **Album Art Visualization** - Stunning now-playing screen with palette-based theming
 - **Lyrics Preview** - Focused lyrics display with real time with song
@@ -149,10 +150,12 @@ adb install app-release.apk
    flutter pub get
    ```
 
-3. **Run code generation** (for Riverpod providers)
+3. **Run code generation** (for Riverpod providers and localization files)
    ```bash
    dart run build_runner build --delete-conflicting-outputs
+   flutter gen-l10n
    ```
+   - `lib/l10n/generated/` is generated locally from the tracked ARB files and does not need to be committed.
 
 4. **Configure Environment Variables**
    - Create a `.env` file in the root directory:
@@ -348,6 +351,42 @@ Audio is streamed from YouTube and cached simultaneously, so tracks you've playe
 - Liked songs and playlists sync
 - Personalized recommendations
 - The entire YT Music search catalog
+
+##
+
+### 🌐 Multi-language Support
+
+Inzx supports a localized app UI and locale-aware YouTube Music content requests.
+
+**Supported app languages:**
+- English
+- Turkish
+- Russian
+- Hindi
+- Tamil
+- Kannada
+- Telugu
+- Spanish
+- Portuguese (Brazil)
+- French
+- German
+- Indonesian
+- Japanese
+- Korean
+- Arabic
+- Ukrainian
+- Thai
+- Chinese (Simplified)
+- Chinese (Traditional)
+
+**How it works:**
+- **Localized app UI** — Navigation, settings, playback, library, dialogs, and other in-app surfaces use Flutter localization.
+- **Locale-aware YT Music data** — Server-fetched labels and related content follow the selected app language when YouTube Music provides localized responses.
+- **Separate language and content location** — App language and recommendation/catalog region can be configured independently, similar to YouTube Music.
+- **Searchable pickers** — Both language and content location use searchable pickers in Settings.
+
+> [!NOTE]
+> Newly added locales are fully wired into the app, but some languages may still benefit from native-speaker wording polish for the most natural music-related terminology.
 
 ## Development
 

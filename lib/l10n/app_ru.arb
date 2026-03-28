@@ -1,0 +1,1176 @@
+{
+  "@@locale": "ru",
+  "appTitle": "Inzx",
+  "updateDownloadedBanner": "Обновление загружено. Перезапустите приложение, чтобы применить его.",
+  "restart": "Перезапустить",
+  "dismiss": "Закрыть",
+  "newVersionAvailableBanner": "Новая версия {version} доступна на GitHub.",
+  "@newVersionAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "Скачать",
+  "later": "Позже",
+  "home": "Главная",
+  "songs": "Песни",
+  "library": "Медиатека",
+  "folders": "Папки",
+  "settings": "Настройки",
+  "searchSettingsHint": "Поиск по настройкам...",
+  "noMatchingSettings": "Подходящих настроек не найдено",
+  "appearance": "Оформление",
+  "theme": "Тема",
+  "themeAuto": "Авто",
+  "themeLight": "Светлая",
+  "themeDark": "Тёмная",
+  "dynamicColorsNote": "Цвета динамически подстраиваются под обложку текущего трека.",
+  "language": "Язык",
+  "languageSubtitle": "Выберите язык приложения",
+  "chooseLanguage": "Выберите язык",
+  "useSystemLanguage": "Использовать язык системы",
+  "languageSystem": "Системный язык",
+  "languageEnglish": "Английский",
+  "languageTurkish": "Турецкий",
+  "languageRussian": "Русский",
+  "languageHindi": "Хинди",
+  "languageTamil": "Тамильский",
+  "languageKannada": "Каннада",
+  "languageTelugu": "Телугу",
+  "languageSpanish": "Испанский",
+  "languageFrench": "Французский",
+  "languageGerman": "Немецкий",
+  "languageIndonesian": "Индонезийский",
+  "languageJapanese": "Японский",
+  "languageKorean": "Корейский",
+  "languageArabic": "Арабский",
+  "languageUkrainian": "Украинский",
+  "languageThai": "Тайский",
+  "languagePortugueseBrazil": "Португальский (Бразилия)",
+  "languageChineseSimplified": "Китайский (упрощенный)",
+  "languageChineseTraditional": "Китайский (традиционный)",
+  "contentLocation": "Местоположение контента",
+  "contentLocationSubtitle": "Выберите регион для рекомендаций и доступности каталога",
+  "chooseContentLocation": "Выберите местоположение контента",
+  "locationSystem": "Системный регион",
+  "locationUnitedStates": "США",
+  "locationIndia": "Индия",
+  "locationTurkey": "Турция",
+  "locationRussia": "Россия",
+  "quickActions": "Быстрые действия",
+  "audio": "Аудио",
+  "audioQuickActionsSubtitle": "Качество потока, кроссфейд и воспроизведение",
+  "downloads": "Загрузки",
+  "downloadsQuickActionsSubtitle": "Качество загрузки, расположение и хранилище",
+  "backupRestore": "Резервное копирование и восстановление",
+  "backupRestoreQuickActionsSubtitle": "Экспортируйте или импортируйте свою медиатеку",
+  "streamingQuality": "Качество потока",
+  "streamingQualitySubtitle": "Настройте битрейт аудио для потокового воспроизведения",
+  "crossfadeTransition": "Кроссфейд",
+  "crossfadeTransitionSubtitle": "Плавно соединяйте треки друг с другом",
+  "streamingCache": "Кэш потока",
+  "streamingCacheSubtitle": "Предзагружать следующие треки, опция только Wi-Fi",
+  "downloadQuality": "Качество загрузки",
+  "downloadQualitySubtitle": "Качество для офлайн-загрузок",
+  "downloadLocation": "Место загрузки",
+  "downloadLocationSubtitle": "Где хранятся загруженные треки",
+  "dataUsageInfo": "Информация о расходе данных",
+  "dataUsageInfoSubtitle": "Оценка объёма на одну песню",
+  "createBackup": "Создать резервную копию",
+  "createBackupSubtitle": "Экспортируйте медиатеку и настройки",
+  "restoreBackup": "Восстановить резервную копию",
+  "restoreBackupSubtitle": "Импортируйте ранее созданный файл резервной копии",
+  "connectYoutubeMusic": "Подключить YouTube Music",
+  "connectYoutubeMusicSubtitle": "Синхронизируйте понравившиеся песни, плейлисты и другое",
+  "connectYtMusicButton": "Подключить YT Music",
+  "downloadsTitle": "Загрузки",
+  "clearCompleted": "Очистить завершённые",
+  "clearFailed": "Очистить неудачные",
+  "noDownloadsYet": "Пока нет загрузок",
+  "downloadSongsToListenOffline": "Скачайте песни, чтобы слушать офлайн",
+  "downloadingTitle": "Загрузка",
+  "downloadedTitle": "Загружено ({count})",
+  "@downloadedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedTitle": "Неудачно",
+  "songsDownloaded": "Загружено песен: {count}",
+  "@songsDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usingStorage": "Используется {storage}",
+  "@usingStorage": {
+    "placeholders": {
+      "storage": {
+        "type": "String"
+      }
+    }
+  },
+  "failedWithError": "Ошибка: {error}",
+  "@failedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownError": "Неизвестная ошибка",
+  "removeDownload": "Удалить загрузку",
+  "downloadSettingsTitle": "Настройки загрузки",
+  "downloadLocationSubtitleLong": "Где хранятся загруженные музыкальные файлы",
+  "offlineDownloadTip": "Загруженные треки воспроизводятся без интернета и не используют мобильный трафик.",
+  "estimatedStoragePerSong": "Примерный размер на песню",
+  "storageLocation": "Место хранения",
+  "loading": "Загрузка...",
+  "errorLoadingPath": "Не удалось загрузить путь",
+  "privateStorageDownloadsNote": "Загрузки хранятся в приватном хранилище приложения для большей надёжности и без требований к разрешениям.",
+  "qualityAutoChip": "Авто",
+  "qualityLowChip": "Низкое",
+  "qualityMediumChip": "Среднее",
+  "qualityHighChip": "Высокое",
+  "qualityMaxChip": "Макс",
+  "qualityHighest": "Максимальное",
+  "qualityDescriptionAuto": "Авто - подстраивается под сеть",
+  "qualityDescriptionLow": "Низкое - ~64 кбит/с (экономит место)",
+  "qualityDescriptionMedium": "Среднее - ~128 кбит/с (баланс)",
+  "qualityDescriptionHigh": "Высокое - ~256 кбит/с (рекомендуется)",
+  "qualityDescriptionMax": "Максимум - наивысшее доступное (~256 кбит/с)",
+  "backupRestoreTitle": "Резервное копирование и восстановление",
+  "backupIncludesDescription": "Резервная копия включает понравившиеся песни, плейлисты, историю поиска, недавно прослушанное и основные настройки приложения.",
+  "exportBackup": "Экспортировать резервную копию",
+  "exportBackupSubtitle": "Сохраните файл резервной копии для хранения или передачи",
+  "importBackup": "Импортировать резервную копию",
+  "importBackupSubtitle": "Восстановить из файла резервной копии",
+  "dangerZone": "Опасная зона",
+  "clearAppData": "Очистить данные приложения",
+  "clearAppDataSubtitle": "Сбросить данные/настройки приложения, сохранив загруженные аудиофайлы",
+  "backupCreatedSuccessfully": "Резервная копия успешно создана",
+  "backupFailed": "Не удалось создать резервную копию: {error}",
+  "@backupFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoredSuccessfully": "Резервная копия успешно восстановлена",
+  "restoreFailed": "Не удалось восстановить резервную копию: {error}",
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearAllDataQuestion": "Очистить все данные?",
+  "clearAllDataWarning": "Это сбросит локальные данные и настройки приложения, но сохранит загруженные аудиофайлы. Действие необратимо.",
+  "cancel": "Отмена",
+  "clearAll": "Очистить всё",
+  "appDataClearedPreserved": "Данные приложения очищены (загруженные аудиофайлы сохранены)",
+  "failedGeneric": "Ошибка: {error}",
+  "@failedGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupSubject": "Резервная копия Inzx Music",
+  "statisticsTitle": "Статистика",
+  "statisticsCleared": "Статистика очищена",
+  "clearStatistics": "Очистить статистику",
+  "noStatisticsYet": "Пока нет статистики",
+  "startListeningStats": "Начните слушать, чтобы увидеть статистику",
+  "overview": "Обзор",
+  "totalPlays": "Всего воспроизведений",
+  "listenTime": "Время прослушивания",
+  "mostPlayed": "Чаще всего слушали",
+  "playsCount": "{count} прослушиваний",
+  "@playsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutes": "{hours}ч {minutes}м",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutesOnly": "{minutes}м",
+  "@durationMinutesOnly": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "retry": "Повторить",
+  "share": "Поделиться",
+  "playlist": "Плейлист",
+  "album": "Альбом",
+  "channel": "Канал",
+  "playNext": "Играть следующим",
+  "addToQueue": "Добавить в очередь",
+  "addToPlaylist": "Добавить в плейлист",
+  "goToAlbum": "Перейти к альбому",
+  "goToArtist": "Перейти к исполнителю",
+  "startRadio": "Запустить радио",
+  "playAll": "Слушать все",
+  "shuffle": "Перемешать",
+  "shuffleAll": "Перемешать все",
+  "radio": "Радио",
+  "follow": "Подписаться",
+  "following": "Подписка оформлена",
+  "connectYtMusicToFollowArtists": "Подключите YouTube Music, чтобы подписываться на исполнителей.",
+  "couldNotFollowArtist": "Не удалось подписаться на {artist}.",
+  "@couldNotFollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotUnfollowArtist": "Не удалось отписаться от {artist}.",
+  "@couldNotUnfollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "followingArtist": "Вы подписались на {artist}",
+  "@followingArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "unfollowedArtist": "Подписка на {artist} отменена",
+  "@unfollowedArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingArtist": "Не удалось загрузить исполнителя",
+  "subscribersCount": "{count} подписчиков",
+  "@subscribersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSection": "Загруженные",
+  "showAllDownloaded": "Показать все загруженные ({count})",
+  "@showAllDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "seeAll": "Показать всё",
+  "removeFromLikedSongs": "Убрать из понравившихся",
+  "addToLikedSongs": "Добавить в понравившиеся",
+  "playingTrackNext": "Трек \"{title}\" будет играть следующим",
+  "@playingTrackNext": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTrackToQueue": "Трек \"{title}\" добавлен в очередь",
+  "@addedTrackToQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playNextInJam": "Играть следующим в Jam",
+  "playTrackNextInJam": "Трек \"{title}\" будет следующим в Jam",
+  "@playTrackNextInJam": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addToJamQueue": "Добавить в очередь Jam",
+  "addedTrackToJamQueue": "Трек \"{title}\" добавлен в очередь Jam",
+  "@addedTrackToJamQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloaded": "Загружено",
+  "downloadingProgress": "Загрузка {progress}%",
+  "@downloadingProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadStartingTrack": "Загрузка \"{title}\"",
+  "@downloadStartingTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadNotificationsChannelDescription": "Уведомления о ходе загрузки",
+  "downloadStartingNotification": "Загрузка начинается...",
+  "downloadCompleteNotification": "Загрузка завершена",
+  "downloadFileNotCreated": "Загрузка не удалась, потому что файл не был создан",
+  "shareTrackText": "{title} - {artist}\n{url}",
+  "@shareTrackText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "createNewPlaylist": "Создать новый плейлист",
+  "playlistName": "Название плейлиста",
+  "create": "Создать",
+  "couldNotLoadPlaylists": "Не удалось загрузить плейлисты",
+  "createLocalPlaylistInstead": "Вместо этого создайте локальный плейлист",
+  "noPlaylistsYet": "Плейлистов пока нет",
+  "createOneToGetStarted": "Создайте его, чтобы начать",
+  "songsCount": "{count} песен",
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createdPlaylistOnYtMusicAndAddedTrack": "Плейлист \"{playlist}\" создан в YT Music, трек \"{track}\" добавлен",
+  "@createdPlaylistOnYtMusicAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToCreatePlaylist": "Не удалось создать плейлист",
+  "createdPlaylistLocallyAndAddedTrack": "Плейлист \"{playlist}\" создан локально, трек \"{track}\" добавлен",
+  "@createdPlaylistLocallyAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddToPlaylist": "Не удалось добавить в плейлист",
+  "addedTrackToPlaylist": "Трек \"{track}\" добавлен в \"{playlist}\"",
+  "@addedTrackToPlaylist": {
+    "placeholders": {
+      "track": {
+        "type": "String"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorWithMessage": "Ошибка: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "searchingForLyrics": "Поиск текста песни...",
+  "failedToLoadLyrics": "Не удалось загрузить текст песни",
+  "tryAnotherProvider": "Попробовать другой источник",
+  "noLyricsFound": "Текст песни не найден",
+  "linkLabel": "Ссылка: {url}",
+  "@linkLabel": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "tracksCount": "{count} треков",
+  "@tracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFromYoutubeMusic": "Импорт из YouTube Music",
+  "importedPlaylistSuffix": "Импортировано",
+  "importedFromYoutubeMusicDescription": "Импортировано из YouTube Music",
+  "importedPlaylist": "Плейлист \"{playlist}\" импортирован",
+  "@importedPlaylist": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToImportPlaylist": "Не удалось импортировать: {error}",
+  "@failedToImportPlaylist": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadPlaylists": "Не удалось загрузить плейлисты",
+  "makeSureLoggedInYoutubeMusic": "Убедитесь, что вы вошли в YouTube Music",
+  "noPlaylistsFound": "Плейлисты не найдены",
+  "createPlaylistsInYoutubeMusicFirst": "Сначала создайте несколько плейлистов в YouTube Music",
+  "loggedInYoutubeMusicSuccess": "Вход в YouTube Music выполнен успешно!",
+  "signInToYoutubeMusic": "Войти в YouTube Music",
+  "loggingYouIn": "Выполняется вход...",
+  "signInSyncYoutubeMusicDescription": "Войдите с помощью аккаунта Google, чтобы синхронизировать медиатеку YouTube Music, включая понравившиеся песни, плейлисты и альбомы.",
+  "playbackSpeed": "Скорость воспроизведения",
+  "normal": "Обычная",
+  "defaultValue": "По умолчанию",
+  "failedToLoadContent": "Не удалось загрузить содержимое",
+  "loadMore": "Загрузить ещё",
+  "audioSettingsTitle": "Настройки аудио",
+  "nowPlayingLabel": "Сейчас играет",
+  "higherQualityUsesMoreData": "Более высокое качество использует больше трафика",
+  "adjustsBasedOnNetworkSpeed": "Подстраивается под скорость сети",
+  "qualityLowUsesLessData": "~64 кбит/с - Использует меньше данных",
+  "qualityMediumBalanced": "~128 кбит/с - Баланс",
+  "qualityHighBestForMost": "~256 кбит/с - Лучший выбор для большинства",
+  "qualityMaximumAvailable": "Максимально доступное (~256 кбит/с)",
+  "recommended": "Рекомендуется",
+  "blendTrackEndsIntoNext": "Смешивать конец текущего трека с началом следующего",
+  "preCachesNextTracks": "Предварительно кэширует следующие треки и воспроизводит из локального кэша, когда это возможно",
+  "smartStreamCache": "Умный кэш потока",
+  "usedCacheStorage": "Использовано: {used} / {limit} MB",
+  "@usedCacheStorage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "calculatingCacheUsage": "Подсчёт использования кэша...",
+  "unableToReadCacheUsage": "Не удалось прочитать использование кэша",
+  "preCacheNetwork": "Сеть предкэширования",
+  "wifiOnly": "Только Wi-Fi",
+  "wifiAndMobileData": "Wi-Fi + мобильные данные",
+  "preCacheRunsWifiOnly": "Предкэширование работает только при подключении к Wi-Fi",
+  "preCacheRunsWifiAndMobile": "Предкэширование может работать и по Wi-Fi, и по мобильным данным",
+  "concurrentPreCacheDownloads": "Одновременные предкэш-загрузки",
+  "higherValuesCacheFaster": "Большие значения кэшируют быстрее, но используют больше сети и батареи",
+  "cacheSizeLimit": "Лимит размера кэша",
+  "off": "Выкл",
+  "crossfadeDisabled": "Кроссфейд отключён",
+  "currentValueLabel": "Текущее значение: {value}",
+  "@currentValueLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "audioQuality": "Качество аудио",
+  "qualityLowKbps": "Низкое (64 кбит/с)",
+  "qualityMediumKbps": "Среднее (128 кбит/с)",
+  "qualityHighKbps": "Высокое (256 кбит/с)",
+  "qualityMaximumKbps": "Максимум (~256 кбит/с)",
+  "all": "Все",
+  "artists": "Исполнители",
+  "albums": "Альбомы",
+  "playlists": "Плейлисты",
+  "singlesAndEps": "Синглы и EP",
+  "appearsOn": "Участвует в",
+  "fansAlsoLike": "Похожие исполнители",
+  "searchMusicHint": "Искать песни, альбомы, исполнителей",
+  "searchForMusic": "Искать музыку",
+  "noResultsFound": "Ничего не найдено",
+  "showAllLocalResults": "Показать все локальные результаты ({count})",
+  "@showAllLocalResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "topResult": "Лучший результат",
+  "artistLabel": "Исполнитель",
+  "albumByArtist": "Альбом - {artist}",
+  "@albumByArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistByAuthor": "Плейлист - {author}",
+  "@playlistByAuthor": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "Сохранить",
+  "upNext": "ДАЛЕЕ",
+  "lyricsTab": "ТЕКСТ",
+  "relatedTab": "ПОХОЖЕЕ",
+  "youMightAlsoLike": "Вам также может понравиться",
+  "otherPerformances": "Другие исполнения",
+  "moreFrom": "Ещё от",
+  "aboutArtist": "Об исполнителе",
+  "jamQueue": "Очередь Jam",
+  "radioQueue": "Очередь радио",
+  "queueLabel": "Очередь",
+  "playingFrom": "Сейчас играет из",
+  "loadingMoreTracks": "Загрузка новых треков...",
+  "scrollForMore": "Прокрутите для продолжения",
+  "someone": "Кто-то",
+  "noTracksInQueue": "Очередь пуста",
+  "addSongsToJamQueue": "Добавьте песни в очередь Jam",
+  "addedByUser": "Добавил: {name}",
+  "@addedByUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTrackPlaying": "Сейчас ничего не играет",
+  "noRelatedTracksFound": "Похожие треки не найдены",
+  "queueIsEmpty": "Очередь пуста",
+  "defaultQueueName": "Моя очередь",
+  "saveQueueAsPlaylist": "Сохранить очередь как плейлист",
+  "savedTracksToPlaylist": "Сохранено {count} треков в \"{name}\"",
+  "@savedTracksToPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "jams": "Jam",
+  "nowPlayingHeader": "СЕЙЧАС ИГРАЕТ",
+  "browseMoodsGenresTitle": "Настроения и жанры",
+  "moodCategoryMoods": "Настроения",
+  "moodCategoryGenres": "Жанры",
+  "moodCategoryActivities": "Занятия",
+  "moodChill": "Расслабиться",
+  "moodParty": "Вечеринка",
+  "moodWorkout": "Тренировка",
+  "moodFocus": "Концентрация",
+  "moodSleep": "Сон",
+  "moodHappy": "Радость",
+  "moodSad": "Грусть",
+  "moodRomance": "Романтика",
+  "moodFeelGood": "Хорошее настроение",
+  "moodEnergize": "Энергия",
+  "genrePop": "Поп",
+  "genreRock": "Рок",
+  "genreHipHop": "Хип-хоп",
+  "genreRnb": "R&B",
+  "genreElectronic": "Электроника",
+  "genreDance": "Танцевальная",
+  "genreJazz": "Джаз",
+  "genreClassical": "Классика",
+  "genreCountry": "Кантри",
+  "genreMetal": "Метал",
+  "genreIndie": "Инди",
+  "genreKPop": "K-pop",
+  "genreLatin": "Латино",
+  "genreBollywood": "Болливуд",
+  "activityDriving": "В дороге",
+  "activityCooking": "Готовка",
+  "activityGaming": "Игры",
+  "activityStudying": "Учёба",
+  "activityMeditation": "Медитация",
+  "play": "Воспроизвести",
+  "findInPlaylist": "Искать в плейлисте...",
+  "playlistNotFoundMessage": "Плейлист не найден\n\nID плейлиста: {id}\n\nЭтот плейлист может быть приватным или недоступным.",
+  "@playlistNotFoundMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineSnapshotDownloaded": "Оффлайн-снимок - {downloaded}/{total} загружено",
+  "@offlineSnapshotDownloaded": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noMatchingTracks": "Совпадающие треки не найдены",
+  "noTracksFound": "Треки не найдены",
+  "downloadingTracksFromPlaylist": "Загрузка {count} треков из {playlist}",
+  "@downloadingTracksFromPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTracksToQueueCount": "Добавлено в очередь: {count} треков",
+  "@addedTracksToQueueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadPlaylist": "Скачать плейлист",
+  "signInWithGoogle": "Войти через Google",
+  "signInToUseJams": "Войдите, чтобы использовать Jams",
+  "listenTogetherRealtime": "Слушайте вместе с друзьями в реальном времени",
+  "signInGoogleToStartOrJoinJam": "Войдите через Google, чтобы начать или присоединиться к Jam-сессии с друзьями",
+  "listenTogether": "Слушайте Вместе",
+  "listenWithFriendsInSync": "Слушайте с друзьями синхронно",
+  "sameSongSameMoment": "Одна песня, один момент",
+  "startJam": "Начать Jam",
+  "createSessionAndInviteFriends": "Создайте сессию и пригласите друзей",
+  "joinJam": "Присоединиться к Jam",
+  "enterSixDigitCode": "Введите 6-значный код",
+  "join": "Войти",
+  "shareThisCode": "Поделитесь этим кодом",
+  "codeCopied": "Код скопирован!",
+  "youAreHost": "Вы ведущий",
+  "hostedBy": "Ведущий: {name}",
+  "@hostedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listeningTogetherCount": "Слушают вместе ({count})",
+  "@listeningTogetherCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "endSession": "Завершить сессию",
+  "leaveSession": "Покинуть сессию",
+  "connected": "Подключено",
+  "reconnecting": "Переподключение",
+  "retryInSeconds": "Повтор через {seconds}с",
+  "@retryInSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectingStatus": "Переподключение · {suffix}",
+  "@reconnectingStatus": {
+    "placeholders": {
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "reconnectingAttemptStatus": "Переподключение ({attempt}) · {suffix}",
+  "@reconnectingAttemptStatus": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "disconnected": "Отключено",
+  "playing": "Сейчас играет",
+  "addSongsToPlayTogether": "Добавьте песни, чтобы слушать их вместе",
+  "sessionCreatedCode": "Сессия создана! Код: {code}",
+  "@sessionCreatedCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "noJamFoundForCode": "Jam по этому коду не найден.",
+  "hostRole": "Ведущий",
+  "canControl": "Может управлять",
+  "listeningStatus": "Слушает",
+  "transferHostQuestion": "Передать роль ведущего?",
+  "transferHostMessage": "Сделать {name} новым ведущим? Вы потеряете управление ведущего.",
+  "@transferHostMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transfer": "Передать",
+  "removeControl": "Убрать управление",
+  "allowControl": "Разрешить управление",
+  "makeHost": "Сделать ведущим",
+  "live": "В эфире",
+  "playbackControlsJam": "ваше воспроизведение управляет Jam",
+  "starting": "Запуск...",
+  "or": "или",
+  "joinFriendsJam": "Присоединиться к Jam друга",
+  "startJamDescription": "Начните Jam, чтобы делиться музыкой с друзьями.\nВсе будут слышать одну и ту же песню синхронно.",
+  "folderSettings": "Настройки папок",
+  "noFoldersAddedYet": "Папки ещё не добавлены",
+  "addFolder": "Добавить папку",
+  "localMusic": "Локальная музыка",
+  "scanLocalMusicDescription": "Просканируйте устройство, чтобы найти локальные музыкальные файлы и слушать их офлайн",
+  "scanForMusic": "Сканировать музыку",
+  "addFolderLowercase": "Добавить папку",
+  "supportedFormats": "Поддерживаемые форматы: MP3, FLAC, WAV, M4A, OGG",
+  "songsFromFoldersCount": "{songs} песен из {folders} папок",
+  "@songsFromFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "add": "Добавить",
+  "permissionRequired": "Требуется разрешение",
+  "storagePermissionRequiredMessage": "Для доступа к вашим музыкальным файлам требуется разрешение на хранилище. Пожалуйста, включите его в настройках.",
+  "couldNotOpenSettingsPermission": "Не удалось открыть настройки. Пожалуйста, включите разрешение на хранилище вручную.",
+  "openSettings": "Открыть настройки",
+  "folderAdded": "Папка добавлена",
+  "addedFolderScanNow": "Папка \"{folder}\" добавлена. Просканировать её на музыку сейчас?",
+  "@addedFolderScanNow": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanNow": "Сканировать сейчас",
+  "foundSongsCount": "Найдено песен: {count}",
+  "@foundSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addFolderFirstThenScan": "Сначала добавьте папку, затем сканируйте аудиофайлы.",
+  "scanFoldersCountDescription": "Будет выполнено сканирование {count} папок на наличие аудиофайлов.",
+  "@scanFoldersCountDescription": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "foldersToScan": "Папки для сканирования:",
+  "andMoreFolders": "... и ещё {count}",
+  "@andMoreFolders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "startScan": "Начать сканирование",
+  "foundSongsInFoldersCount": "Найдено {songs} песен в {folders} папках",
+  "@foundSongsInFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "scanningForMusic": "Сканирование музыки...",
+  "filesProgress": "{scanned} / {total} файлов",
+  "@filesProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "signOut": "Выйти",
+  "signInGoogleProfilePictureJams": "Войдите через Google, чтобы получить фото профиля и включить Jams",
+  "sync": "Синхронизация",
+  "lastSynced": "Последняя синхронизация: {time}",
+  "@lastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedItems": "Синхронизировано {count} элементов",
+  "@syncedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncing": "Синхронизация...",
+  "syncNow": "Синхронизировать сейчас",
+  "cachedItems": "Кэшированных элементов: {count}",
+  "@cachedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streams": "Потоки",
+  "colors": "Цвета",
+  "searches": "Поиски",
+  "expiredCount": "Просрочено: {count}",
+  "@expiredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cacheCleanupComplete": "Очистка кэша завершена",
+  "cleanUp": "Очистить",
+  "clearCache": "Очистить кэш",
+  "clearCachedMusicDataConfirm": "Это очистит все кэшированные музыкальные данные. Продолжить?",
+  "clear": "Очистить",
+  "cacheCleared": "Кэш очищен",
+  "analytics": "Аналитика",
+  "hits": "Попадания",
+  "misses": "Промахи",
+  "network": "Сеть",
+  "analyticsReset": "Аналитика сброшена",
+  "resetStats": "Сбросить статистику",
+  "cacheHitRate": "Доля попаданий кэша",
+  "liked": "Понравившиеся",
+  "appInfo": "Информация о приложении",
+  "releaseBuild": "Релизная сборка",
+  "updater": "Обновлятор",
+  "available": "доступен",
+  "unavailable": "недоступен",
+  "loadingCompact": "загрузка...",
+  "errorCompact": "ошибка",
+  "none": "нет",
+  "currentPatch": "Текущий патч",
+  "nextPatch": "Следующий патч",
+  "disconnectYoutubeMusic": "Отключить YouTube Music",
+  "disconnectYoutubeMusicQuestion": "Отключить YouTube Music?",
+  "disconnectYoutubeMusicWarning": "Это удалит ваш аккаунт YouTube Music из приложения. Данные вашей библиотеки будут очищены.",
+  "disconnect": "Отключить",
+  "syncFailed": "Синхронизация не удалась: {error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "justNow": "Только что",
+  "minutesAgo": "{count}м назад",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count}ч назад",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count}д назад",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noSongsInTitle": "Нет песен в {title}",
+  "@noSongsInTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "createPlaylistDescription": "Создайте плейлист, чтобы упорядочить музыку",
+  "savedAlbumsFromYoutubeMusic": "Сохранённые альбомы из YouTube Music",
+  "noSavedAlbumsFromYoutubeMusic": "Нет сохранённых альбомов из YouTube Music",
+  "errorLoadingAlbums": "Ошибка загрузки альбомов",
+  "recentlyPlayed": "Недавно воспроизведённое",
+  "noAlbumsYet": "Альбомов пока нет",
+  "playSomeMusicToSeeAlbumsHere": "Воспроизведите музыку, чтобы увидеть здесь альбомы",
+  "subscribedArtists": "Подписки на исполнителей",
+  "noSubscribedArtists": "Нет подписок на исполнителей",
+  "errorLoadingArtists": "Ошибка загрузки исполнителей",
+  "recentlyPlayedArtists": "Недавно воспроизведённые исполнители",
+  "noArtistsYet": "Исполнителей пока нет",
+  "playSomeMusicToSeeArtistsHere": "Воспроизведите музыку, чтобы увидеть здесь исполнителей",
+  "downloading": "Загрузка",
+  "downloadedPlaylists": "Скачанные плейлисты",
+  "errorLoadingDownloads": "Ошибка загрузки скачанного",
+  "deleteDownload": "Удалить загрузку",
+  "deleteDownloadQuestion": "Удалить загрузку?",
+  "deleteDownloadWarning": "Это удалит \"{title}\" с вашего устройства. Позже вы сможете скачать снова.",
+  "@deleteDownloadWarning": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedTrack": "Удалено: \"{title}\"",
+  "@deletedTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSongsWillAppearHere": "Скачанные песни появятся здесь",
+  "createPlaylist": "Создать плейлист",
+  "autoPlaylists": "Автоплейлисты",
+  "likedSongsLabel": "Понравившиеся песни",
+  "downloadedFraction": "{downloaded}/{total} скачано",
+  "@downloadedFraction": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "more": "Ещё",
+  "video": "ВИДЕО",
+  "forgottenFavorites": "Забытые любимые",
+  "mixedForYou": "Смешано для вас",
+  "myMixOne": "Мой микс 1",
+  "discoverMix": "Микс открытий",
+  "replayMix": "Микс повтора",
+  "newRelease": "Новые релизы",
+  "chillMix": "Расслабляющий микс",
+  "basedOnYourListening": "На основе ваших прослушиваний",
+  "newMusicForYou": "Новая музыка для вас",
+  "yourFavorites": "Ваши любимые",
+  "freshTracks": "Свежие треки",
+  "relaxingVibes": "Расслабляющее настроение",
+  "musicToGetYouStarted": "МУЗЫКА ДЛЯ СТАРТА",
+  "welcomeUser": "Добро пожаловать, {name}",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeFallbackName": "друг",
+  "youtubeMusicLabel": "YouTube Music",
+  "local": "Локальное",
+  "recentlyAdded": "Недавно добавленные",
+  "name": "Название",
+  "duration": "Длительность",
+  "searchSongsHint": "Поиск песен...",
+  "noLikedSongs": "Нет понравившихся песен",
+  "likeSomeSongsToSeeThemHere": "Поставьте лайк песням, чтобы увидеть их здесь",
+  "noLocalSongs": "Нет локальных песен",
+  "scanFoldersToFindLocalMusic": "Просканируйте папки, чтобы найти локальную музыку",
+  "noResults": "Нет результатов",
+  "tryDifferentKeywords": "Попробуйте другие ключевые слова",
+  "noSongsYet": "Песен пока нет",
+  "playSomeMusicToBuildYourLibrary": "Воспроизведите музыку, чтобы наполнить библиотеку",
+  "albumNotFound": "Альбом не найден",
+  "downloadAlbum": "Скачать альбом",
+  "downloadingTracksFromAlbum": "Загрузка {count} треков из {album}",
+  "@downloadingTracksFromAlbum": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "shareAlbumText": "{title} - {artist}\n{url}",
+  "@shareAlbumText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestions": "Подсказки",
+  "recentSearches": "Недавние запросы",
+  "startTypingToSearch": "Начните вводить запрос...",
+  "youtubeMusicPlaylists": "Плейлисты YouTube Music",
+  "errorLoadingPlaylists": "Ошибка загрузки плейлистов",
+  "yourPlaylists": "Ваши плейлисты",
+  "noYoutubeMusicPlaylistsFound": "Плейлисты YouTube Music не найдены",
+  "songCountLabel": "{count, plural, one {# песня} few {# песни} many {# песен} other {# песни}}",
+  "@songCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unknownAlbum": "Неизвестный альбом",
+  "jamCodeExample": "ABC123",
+  "jamCodeHint": "КОД",
+  "yourProfile": "Ваш профиль",
+  "connected": "Подключено",
+  "googleUser": "Пользователь Google",
+  "jamsAndProfile": "Jam и профиль",
+  "yes": "да",
+  "no": "нет",
+  "foundInSettings": "Найдено в настройках",
+  "sharePlaylistText": "{title}\n{url}",
+  "@sharePlaylistText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "shareArtistText": "{artist}\n{url}",
+  "@shareArtistText": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "megabytesValue": "{value} МБ",
+  "@megabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "gigabytesValue": "{value} ГБ",
+  "@gigabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxMegabytesValue": "~{value} МБ",
+  "@approxMegabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxKbpsValue": "~{value} кбит/с",
+  "@approxKbpsValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "secondsShort": "{value}с",
+  "@secondsShort": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "speedMultiplier": "{value}x",
+  "@speedMultiplier": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

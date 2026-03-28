@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../core/l10n/app_localizations_x.dart';
 import '../../core/design_system/design_system.dart';
 import '../../providers/providers.dart';
 import '../../models/models.dart';
@@ -51,6 +52,7 @@ class _ImportPlaylistScreenState extends ConsumerState<ImportPlaylistScreen> {
 
   Future<void> _importPlaylist(Playlist playlist) async {
     if (_importing.contains(playlist.id)) return;
+    final l10n = context.l10n;
 
     setState(() => _importing.add(playlist.id));
 
@@ -65,8 +67,8 @@ class _ImportPlaylistScreenState extends ConsumerState<ImportPlaylistScreen> {
 
       // Create playlist
       localPlaylistsNotifier.createPlaylist(
-        '${playlist.title} (Imported)',
-        description: 'Imported from YouTube Music',
+        '${playlist.title} (${l10n.importedPlaylistSuffix})',
+        description: l10n.importedFromYoutubeMusicDescription,
       );
 
       // Get the newly created playlist
@@ -86,16 +88,16 @@ class _ImportPlaylistScreenState extends ConsumerState<ImportPlaylistScreen> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Imported "${playlist.title}"')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.importedPlaylist(playlist.title))),
+        );
       }
     } catch (e) {
       setState(() => _importing.remove(playlist.id));
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to import: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.failedToImportPlaylist('$e'))),
+        );
       }
     }
   }
@@ -110,7 +112,7 @@ class _ImportPlaylistScreenState extends ConsumerState<ImportPlaylistScreen> {
           ? InzxColors.darkBackground
           : InzxColors.background,
       appBar: AppBar(
-        title: const Text('Import from YouTube Music'),
+        title: Text(context.l10n.importFromYoutubeMusic),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -132,7 +134,7 @@ class _ImportPlaylistScreenState extends ConsumerState<ImportPlaylistScreen> {
           const Icon(Iconsax.warning_2, size: 64, color: Colors.orange),
           const SizedBox(height: 16),
           Text(
-            'Failed to load playlists',
+            context.l10n.failedToLoadPlaylists,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -141,7 +143,7 @@ class _ImportPlaylistScreenState extends ConsumerState<ImportPlaylistScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Make sure you\'re logged in to YouTube Music',
+            context.l10n.makeSureLoggedInYoutubeMusic,
             style: TextStyle(
               color: isDark ? Colors.white54 : InzxColors.textSecondary,
             ),
@@ -150,7 +152,7 @@ class _ImportPlaylistScreenState extends ConsumerState<ImportPlaylistScreen> {
           TextButton.icon(
             onPressed: _loadPlaylists,
             icon: const Icon(Iconsax.refresh),
-            label: const Text('Retry'),
+            label: Text(context.l10n.retry),
           ),
         ],
       ),
@@ -169,7 +171,7 @@ class _ImportPlaylistScreenState extends ConsumerState<ImportPlaylistScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No playlists found',
+            context.l10n.noPlaylistsFound,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -178,7 +180,7 @@ class _ImportPlaylistScreenState extends ConsumerState<ImportPlaylistScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Create some playlists in YouTube Music first',
+            context.l10n.createPlaylistsInYoutubeMusicFirst,
             style: TextStyle(
               color: isDark ? Colors.white54 : InzxColors.textSecondary,
             ),
@@ -226,7 +228,7 @@ class _ImportPlaylistScreenState extends ConsumerState<ImportPlaylistScreen> {
               ),
             ),
             subtitle: Text(
-              '${playlist.trackCount ?? 0} tracks',
+              context.l10n.tracksCount(playlist.trackCount ?? 0),
               style: TextStyle(
                 color: isDark ? Colors.white54 : InzxColors.textSecondary,
               ),

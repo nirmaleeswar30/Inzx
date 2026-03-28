@@ -21,8 +21,10 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
   StreamSubscription<player.PlaybackState>? _stateSubscription;
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<Duration>? _bufferedPositionSubscription;
+  static const Duration _positionSyncInterval = Duration(seconds: 1);
   String? _lastTrackId;
   int? _lastQueueLength;
+  DateTime? _lastPositionSyncAt;
 
   // Current position for system updates (not from stateStream)
   Duration _currentPosition = Duration.zero;
@@ -62,19 +64,30 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
     // Separate position stream for system UI updates (more frequent)
     _positionSubscription = _playerService.positionStream.listen((position) {
       _currentPosition = position;
-      // Update just the position in playback state
-      _updatePosition();
+      final now = DateTime.now();
+      final shouldSyncPosition =
+          _lastPositionSyncAt == null ||
+          now.difference(_lastPositionSyncAt!) >= _positionSyncInterval;
 
-      final state = _playerService.state;
-      unawaited(
-        WidgetSyncService.syncProgress(
-          track: state.currentTrack,
-          isPlaying: state.isPlaying,
-          hasTrack: state.currentTrack != null,
-          position: position,
-          duration: state.duration,
-        ),
-      );
+      if (shouldSyncPosition) {
+        _lastPositionSyncAt = now;
+
+        // Update just the position in playback state.
+        // Throttled to reduce platform-channel churn while the user is
+        // scrolling heavy lists in Now Playing.
+        _updatePosition();
+
+        final state = _playerService.state;
+        unawaited(
+          WidgetSyncService.syncProgress(
+            track: state.currentTrack,
+            isPlaying: state.isPlaying,
+            hasTrack: state.currentTrack != null,
+            position: position,
+            duration: state.duration,
+          ),
+        );
+      }
     });
 
     // Buffered position stream

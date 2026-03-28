@@ -1,0 +1,1179 @@
+{
+  "@@locale": "ta",
+  "appTitle": "Inzx",
+  "updateDownloadedBanner": "புதுப்பிப்பு பதிவிறக்கப்பட்டது. விண்ணப்பிக்க, பயன்பாட்டை மறுதொடக்கம் செய்யவும்.",
+  "restart": "மறுதொடக்கம்",
+  "dismiss": "நிராகரி",
+  "newVersionAvailableBanner": "புதிய பதிப்பு {version} கிட்ஹப்பில் கிடைக்கிறது.",
+  "@newVersionAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "பதிவிறக்கவும்",
+  "later": "பின்னர்",
+  "home": "வீடு",
+  "songs": "பாடல்கள்",
+  "library": "நூலகம்",
+  "folders": "கோப்புறைகள்",
+  "settings": "அமைப்புகள்",
+  "searchSettingsHint": "தேடல் அமைப்புகள்...",
+  "noMatchingSettings": "பொருந்தக்கூடிய அமைப்புகள் இல்லை",
+  "appearance": "தோற்றம்",
+  "theme": "தீம்",
+  "themeAuto": "ஆட்டோ",
+  "themeLight": "ஒளி",
+  "themeDark": "இருள்",
+  "dynamicColorsNote": "தற்போதைய டிராக்கின் ஆல்பம் கலையிலிருந்து வண்ணங்கள் மாறும் வகையில் மாற்றியமைக்கப்படுகின்றன.",
+  "language": "மொழி",
+  "languageSubtitle": "பயன்பாட்டு மொழியைத் தேர்ந்தெடுக்கவும்",
+  "chooseLanguage": "மொழியை தேர்வு செய்யவும்",
+  "searchLanguagesHint": "மொழிகளைத் தேடு...",
+  "noMatchingLanguages": "பொருந்தக்கூடிய மொழிகள் இல்லை",
+  "useSystemLanguage": "கணினி மொழியைப் பயன்படுத்தவும்",
+  "languageSystem": "கணினி இயல்புநிலை",
+  "languageEnglish": "ஆங்கிலம்",
+  "languageTurkish": "துருக்கிய",
+  "languageRussian": "ரஷ்யன்",
+  "languageHindi": "ஹிந்தி",
+  "languageTamil": "தமிழ்",
+  "languageKannada": "கன்னடம்",
+  "languageTelugu": "தெலுங்கு",
+  "languageSpanish": "ஸ்பானிஷ்",
+  "languageFrench": "பிரெஞ்சு",
+  "languageGerman": "ஜெர்மன்",
+  "languageIndonesian": "இந்தோனேஷியன்",
+  "languageJapanese": "ஜப்பானியர்",
+  "languageKorean": "கொரியன்",
+  "languageArabic": "அரபு",
+  "languageUkrainian": "உக்ரைனியன்",
+  "languageThai": "தாய்",
+  "languagePortugueseBrazil": "போர்த்துகீசியம் (பிரேசில்)",
+  "languageChineseSimplified": "சீனம் (எளிமைப்படுத்தப்பட்டது)",
+  "languageChineseTraditional": "சீன (பாரம்பரியம்)",
+  "contentLocation": "உள்ளடக்க இடம்",
+  "contentLocationSubtitle": "பரிந்துரைகள் மற்றும் பட்டியல் கிடைப்பதற்குப் பயன்படுத்தப்படும் பகுதியைத் தேர்ந்தெடுக்கவும்",
+  "chooseContentLocation": "உள்ளடக்க இருப்பிடத்தைத் தேர்ந்தெடுக்கவும்",
+  "searchLocationsHint": "இருப்பிடங்களைத் தேடு...",
+  "noMatchingLocations": "பொருந்தக்கூடிய இடங்கள் இல்லை",
+  "locationSystem": "கணினி இயல்புநிலை",
+  "locationUnitedStates": "அமெரிக்கா",
+  "locationIndia": "இந்தியா",
+  "locationTurkey": "துருக்கி",
+  "locationRussia": "ரஷ்யா",
+  "quickActions": "விரைவான செயல்கள்",
+  "audio": "ஆடியோ",
+  "audioQuickActionsSubtitle": "ஸ்ட்ரீமிங் தரம், கிராஸ்ஃபேட் & பிளேபேக்",
+  "downloads": "பதிவிறக்கங்கள்",
+  "downloadsQuickActionsSubtitle": "தரம், இருப்பிடம் மற்றும் சேமிப்பகத்தைப் பதிவிறக்கவும்",
+  "backupRestore": "காப்புப்பிரதி & மீட்டமை",
+  "backupRestoreQuickActionsSubtitle": "உங்கள் நூலகத்தை ஏற்றுமதி செய்யவும் அல்லது இறக்குமதி செய்யவும்",
+  "streamingQuality": "ஸ்ட்ரீமிங் தரம்",
+  "streamingQualitySubtitle": "ஸ்ட்ரீமிங்கிற்காக ஆடியோ பிட்ரேட்டைச் சரிசெய்யவும்",
+  "crossfadeTransition": "கிராஸ்ஃபேட் மாற்றம்",
+  "crossfadeTransitionSubtitle": "தடங்களை ஒன்றுக்கொன்று சீராக இணைக்கவும்",
+  "streamingCache": "ஸ்ட்ரீமிங் கேச்",
+  "streamingCacheSubtitle": "ப்ரீ-கேச் அடுத்த டிராக்குகள், Wi-Fi மட்டும் விருப்பம்",
+  "downloadQuality": "தரவிறக்கம்",
+  "downloadQualitySubtitle": "ஆஃப்லைன் பதிவிறக்கங்களுக்கான தரம்",
+  "downloadLocation": "இருப்பிடத்தைப் பதிவிறக்கவும்",
+  "downloadLocationSubtitle": "பதிவிறக்கம் செய்யப்பட்ட இசை எங்கே சேமிக்கப்படுகிறது",
+  "dataUsageInfo": "தரவு பயன்பாட்டுத் தகவல்",
+  "dataUsageInfoSubtitle": "ஒரு பாடலுக்கு மதிப்பிடப்பட்ட சேமிப்பு",
+  "createBackup": "காப்புப்பிரதியை உருவாக்கவும்",
+  "createBackupSubtitle": "உங்கள் நூலகம் மற்றும் அமைப்புகளை ஏற்றுமதி செய்யவும்",
+  "restoreBackup": "காப்புப்பிரதியை மீட்டமை",
+  "restoreBackupSubtitle": "முந்தைய காப்புப் பிரதி கோப்பை இறக்குமதி செய்யவும்",
+  "connectYoutubeMusic": "YouTube Musicகை இணைக்கவும்",
+  "connectYoutubeMusicSubtitle": "நீங்கள் விரும்பிய பாடல்கள், பிளேலிஸ்ட்கள் மற்றும் பலவற்றை ஒத்திசைக்கவும்",
+  "connectYtMusicButton": "YT இசையை இணைக்கவும்",
+  "downloadsTitle": "பதிவிறக்கங்கள்",
+  "clearCompleted": "தெளிவாக முடிந்தது",
+  "clearFailed": "அழிக்க முடியவில்லை",
+  "noDownloadsYet": "இன்னும் பதிவிறக்கங்கள் இல்லை",
+  "downloadSongsToListenOffline": "ஆஃப்லைனில் கேட்க பாடல்களைப் பதிவிறக்கவும்",
+  "downloadingTitle": "பதிவிறக்குகிறது",
+  "downloadedTitle": "பதிவிறக்கப்பட்டது ({count})",
+  "@downloadedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedTitle": "தோல்வியடைந்தது",
+  "songsDownloaded": "{count} பாடல்கள் பதிவிறக்கப்பட்டன",
+  "@songsDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usingStorage": "{storage} ஐப் பயன்படுத்துகிறது",
+  "@usingStorage": {
+    "placeholders": {
+      "storage": {
+        "type": "String"
+      }
+    }
+  },
+  "failedWithError": "தோல்வி: {error}",
+  "@failedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownError": "அறியப்படாத பிழை",
+  "removeDownload": "பதிவிறக்கத்தை அகற்று",
+  "downloadSettingsTitle": "பதிவிறக்க அமைப்புகள்",
+  "downloadLocationSubtitleLong": "பதிவிறக்கம் செய்யப்பட்ட இசைக் கோப்புகள் எங்கே சேமிக்கப்படுகின்றன",
+  "offlineDownloadTip": "பதிவிறக்கம் செய்யப்பட்ட டிராக்குகள் இணையம் இல்லாமல் இயங்கும் மற்றும் ஸ்ட்ரீமிங் தரவைப் பயன்படுத்த வேண்டாம்.",
+  "estimatedStoragePerSong": "ஒரு பாடலுக்கு மதிப்பிடப்பட்ட சேமிப்பு",
+  "storageLocation": "சேமிப்பு இடம்",
+  "loading": "ஏற்றுகிறது...",
+  "errorLoadingPath": "பாதையை ஏற்றுவதில் பிழை",
+  "privateStorageDownloadsNote": "சிறந்த நம்பகத்தன்மை மற்றும் அனுமதி தேவைகள் இல்லாமல் பதிவிறக்கங்கள் ஆப்-தனியார் சேமிப்பகத்தில் சேமிக்கப்படும்.",
+  "qualityAutoChip": "ஆட்டோ",
+  "qualityLowChip": "குறைந்த",
+  "qualityMediumChip": "நடுத்தர",
+  "qualityHighChip": "உயர்",
+  "qualityMaxChip": "அதிகபட்சம்",
+  "qualityHighest": "மிக உயர்ந்தது",
+  "qualityDescriptionAuto": "தானியங்கு - நெட்வொர்க்கிற்கு மாற்றியமைக்கிறது",
+  "qualityDescriptionLow": "குறைந்த - ~64 kbps (சேமிப்பை சேமிக்கிறது)",
+  "qualityDescriptionMedium": "நடுத்தரம் - ~128 kbps (சமநிலை)",
+  "qualityDescriptionHigh": "அதிக - ~256 kbps (பரிந்துரைக்கப்படுகிறது)",
+  "qualityDescriptionMax": "அதிகபட்சம் - அதிகபட்சம் (~256 kbps)",
+  "backupRestoreTitle": "காப்புப்பிரதி & மீட்டமை",
+  "backupIncludesDescription": "காப்புப் பிரதியில் விரும்பிய பாடல்கள், பிளேலிஸ்ட்கள், தேடல் வரலாறு, சமீபத்தில் இயக்கப்பட்டவை மற்றும் முக்கிய பயன்பாட்டு அமைப்புகள் ஆகியவை அடங்கும்.",
+  "exportBackup": "ஏற்றுமதி காப்பு",
+  "exportBackupSubtitle": "பகிர அல்லது சேமிக்க காப்புப் பிரதி கோப்பை சேமிக்கவும்",
+  "importBackup": "காப்புப்பிரதியை இறக்குமதி செய்யவும்",
+  "importBackupSubtitle": "காப்புப் பிரதி கோப்பிலிருந்து மீட்டமைக்கவும்",
+  "dangerZone": "ஆபத்து மண்டலம்",
+  "clearAppData": "பயன்பாட்டுத் தரவை அழிக்கவும்",
+  "clearAppDataSubtitle": "பதிவிறக்கம் செய்யப்பட்ட ஆடியோ கோப்புகளை வைத்திருக்கும் போது பயன்பாட்டுத் தரவு/அமைப்புகளை மீட்டமைக்கவும்",
+  "backupCreatedSuccessfully": "காப்புப்பிரதி வெற்றிகரமாக உருவாக்கப்பட்டது",
+  "backupFailed": "காப்புப்பிரதி தோல்வியடைந்தது: {error}",
+  "@backupFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoredSuccessfully": "காப்புப்பிரதி வெற்றிகரமாக மீட்டெடுக்கப்பட்டது",
+  "restoreFailed": "மீட்டமைக்க முடியவில்லை: {error}",
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearAllDataQuestion": "எல்லா தரவையும் அழிக்கவா?",
+  "clearAllDataWarning": "இது உள்ளூர் பயன்பாட்டுத் தரவு மற்றும் அமைப்புகளை மீட்டமைக்கிறது, ஆனால் பதிவிறக்கம் செய்யப்பட்ட பாடல் கோப்புகளை வைத்திருக்கும். இதை செயல்தவிர்க்க முடியாது.",
+  "cancel": "ரத்து செய்",
+  "clearAll": "அனைத்தையும் அழி",
+  "appDataClearedPreserved": "பயன்பாட்டுத் தரவு அழிக்கப்பட்டது (பதிவிறக்கப்பட்ட ஆடியோ கோப்புகள் பாதுகாக்கப்பட்டன)",
+  "failedGeneric": "தோல்வி: {error}",
+  "@failedGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backupSubject": "Inzx இசை காப்புப்பிரதி",
+  "statisticsTitle": "புள்ளிவிவரங்கள்",
+  "statisticsCleared": "புள்ளிவிவரங்கள் அழிக்கப்பட்டன",
+  "clearStatistics": "தெளிவான புள்ளிவிவரங்கள்",
+  "noStatisticsYet": "இன்னும் புள்ளிவிவரங்கள் இல்லை",
+  "startListeningStats": "உங்கள் புள்ளிவிவரங்களைப் பார்க்க, கேட்கத் தொடங்குங்கள்",
+  "overview": "கண்ணோட்டம்",
+  "totalPlays": "மொத்த நாடகங்கள்",
+  "listenTime": "கேட்கும் நேரம்",
+  "mostPlayed": "அதிகம் விளையாடியது",
+  "playsCount": "{count} நாடகங்கள்",
+  "@playsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutes": "{hours}h {minutes}m",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutesOnly": "{minutes}மீ",
+  "@durationMinutesOnly": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "retry": "மீண்டும் முயற்சிக்கவும்",
+  "share": "பகிரவும்",
+  "playlist": "பிளேலிஸ்ட்",
+  "album": "ஆல்பம்",
+  "channel": "சேனல்",
+  "playNext": "அடுத்து விளையாடு",
+  "addToQueue": "வரிசையில் சேர்க்கவும்",
+  "addToPlaylist": "பிளேலிஸ்ட்டில் சேர்",
+  "goToAlbum": "ஆல்பத்திற்கு செல்க",
+  "goToArtist": "கலைஞரிடம் செல்லுங்கள்",
+  "startRadio": "வானொலியைத் தொடங்கு",
+  "playAll": "அனைத்தையும் விளையாடு",
+  "shuffle": "கலக்கு",
+  "shuffleAll": "அனைத்தையும் கலக்கவும்",
+  "radio": "வானொலி",
+  "follow": "பின்பற்றவும்",
+  "following": "தொடர்ந்து",
+  "connectYtMusicToFollowArtists": "கலைஞர்களைப் பின்தொடர YouTube Musicகை இணைக்கவும்.",
+  "couldNotFollowArtist": "{artist} ஐப் பின்தொடர முடியவில்லை.",
+  "@couldNotFollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotUnfollowArtist": "{artist} ஐப் பின்தொடர்வதை நிறுத்த முடியவில்லை.",
+  "@couldNotUnfollowArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "followingArtist": "{artist} ஐப் பின்தொடர்கிறது",
+  "@followingArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "unfollowedArtist": "பின்தொடரவில்லை {artist}",
+  "@unfollowedArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingArtist": "கலைஞரை ஏற்றுவதில் பிழை",
+  "subscribersCount": "{count} சந்தாதாரர்கள்",
+  "@subscribersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSection": "பதிவிறக்கம் செய்யப்பட்டது",
+  "showAllDownloaded": "பதிவிறக்கம் செய்யப்பட்ட அனைத்தையும் {count} காட்டு",
+  "@showAllDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "seeAll": "அனைத்தையும் பார்க்கவும்",
+  "removeFromLikedSongs": "விரும்பிய பாடல்களில் இருந்து அகற்று",
+  "addToLikedSongs": "பிடித்த பாடல்களில் சேர்க்கவும்",
+  "playingTrackNext": "அடுத்து \"{title}\" ப்ளே பண்றேன்",
+  "@playingTrackNext": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTrackToQueue": "வரிசையில் \"{title}\" சேர்க்கப்பட்டது",
+  "@addedTrackToQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playNextInJam": "ஜாமில் அடுத்து விளையாடு",
+  "playTrackNextInJam": "\"{title}\" ஜாமில் அடுத்து விளையாடும்",
+  "@playTrackNextInJam": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "addToJamQueue": "ஜாம் வரிசையில் சேர்க்கவும்",
+  "addedTrackToJamQueue": "ஜாம் வரிசையில் \"{title}\" சேர்க்கப்பட்டது",
+  "@addedTrackToJamQueue": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloaded": "பதிவிறக்கம் செய்யப்பட்டது",
+  "downloadingProgress": "பதிவிறக்குகிறது {progress}%",
+  "@downloadingProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadStartingTrack": "\"{title}\" பதிவிறக்குகிறது",
+  "@downloadStartingTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadNotificationsChannelDescription": "முன்னேற்ற அறிவிப்புகளைப் பதிவிறக்கவும்",
+  "downloadStartingNotification": "பதிவிறக்கம் தொடங்குகிறது...",
+  "downloadCompleteNotification": "பதிவிறக்கம் முடிந்தது",
+  "downloadFileNotCreated": "கோப்பு உருவாக்கப்படாததால் பதிவிறக்கம் தோல்வியடைந்தது",
+  "shareTrackText": "{title} by {artist}\n{url}",
+  "@shareTrackText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "createNewPlaylist": "புதிய பிளேலிஸ்ட்டை உருவாக்கவும்",
+  "playlistName": "பிளேலிஸ்ட் பெயர்",
+  "create": "உருவாக்கு",
+  "couldNotLoadPlaylists": "பிளேலிஸ்ட்களை ஏற்ற முடியவில்லை",
+  "createLocalPlaylistInstead": "அதற்குப் பதிலாக உள்ளூர் பிளேலிஸ்ட்டை உருவாக்கவும்",
+  "noPlaylistsYet": "இதுவரை பிளேலிஸ்ட்கள் இல்லை",
+  "createOneToGetStarted": "தொடங்குவதற்கு ஒன்றை உருவாக்கவும்",
+  "songsCount": "{count} பாடல்கள்",
+  "@songsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createdPlaylistOnYtMusicAndAddedTrack": "YT மியூசிக்கில் \"{playlist}\" உருவாக்கப்பட்டது மற்றும் \"{track}\" சேர்க்கப்பட்டது",
+  "@createdPlaylistOnYtMusicAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToCreatePlaylist": "பிளேலிஸ்ட்டை உருவாக்க முடியவில்லை",
+  "createdPlaylistLocallyAndAddedTrack": "உள்நாட்டில் \"{playlist}\" உருவாக்கப்பட்டு \"{track}\" சேர்க்கப்பட்டது",
+  "@createdPlaylistLocallyAndAddedTrack": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      },
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToAddToPlaylist": "பிளேலிஸ்ட்டில் சேர்க்க முடியவில்லை",
+  "addedTrackToPlaylist": "\"{playlist}\" இல் \"{track}\" சேர்க்கப்பட்டது",
+  "@addedTrackToPlaylist": {
+    "placeholders": {
+      "track": {
+        "type": "String"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "errorWithMessage": "பிழை: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "searchingForLyrics": "பாடல் வரிகளைத் தேடுகிறது...",
+  "failedToLoadLyrics": "பாடல் வரிகளை ஏற்ற முடியவில்லை",
+  "tryAnotherProvider": "வேறொரு வழங்குநரை முயற்சிக்கவும்",
+  "noLyricsFound": "பாடல் வரிகள் எதுவும் கிடைக்கவில்லை",
+  "linkLabel": "இணைப்பு: {url}",
+  "@linkLabel": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "tracksCount": "{count} தடங்கள்",
+  "@tracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFromYoutubeMusic": "YouTube Music இலிருந்து இறக்குமதி செய்யவும்",
+  "importedPlaylistSuffix": "இறக்குமதி செய்யப்பட்டது",
+  "importedFromYoutubeMusicDescription": "YouTube Music இலிருந்து இறக்குமதி செய்யப்பட்டது",
+  "importedPlaylist": "\"{playlist}\" இறக்குமதி செய்யப்பட்டது",
+  "@importedPlaylist": {
+    "placeholders": {
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToImportPlaylist": "இறக்குமதி செய்ய முடியவில்லை: {error}",
+  "@failedToImportPlaylist": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadPlaylists": "பிளேலிஸ்ட்களை ஏற்ற முடியவில்லை",
+  "makeSureLoggedInYoutubeMusic": "நீங்கள் YouTube Musicகில் உள்நுழைந்துள்ளீர்கள் என்பதை உறுதிப்படுத்தவும்",
+  "noPlaylistsFound": "பிளேலிஸ்ட்கள் எதுவும் இல்லை",
+  "createPlaylistsInYoutubeMusicFirst": "முதலில் YouTube Musicகில் சில பிளேலிஸ்ட்களை உருவாக்கவும்",
+  "loggedInYoutubeMusicSuccess": "YouTube Musicகில் வெற்றிகரமாக உள்நுழைந்துள்ளீர்கள்!",
+  "signInToYoutubeMusic": "YouTube Musicகில் உள்நுழையவும்",
+  "loggingYouIn": "உங்களை உள்நுழைகிறேன்...",
+  "signInSyncYoutubeMusicDescription": "விரும்பிய பாடல்கள், பிளேலிஸ்ட்கள் மற்றும் ஆல்பங்கள் உட்பட உங்கள் YouTube மியூசிக் லைப்ரரியை ஒத்திசைக்க உங்கள் Google கணக்கில் உள்நுழையவும்.",
+  "playbackSpeed": "பின்னணி வேகம்",
+  "normal": "இயல்பானது",
+  "defaultValue": "இயல்புநிலை",
+  "failedToLoadContent": "உள்ளடக்கத்தை ஏற்ற முடியவில்லை",
+  "loadMore": "மேலும் ஏற்றவும்",
+  "audioSettingsTitle": "ஆடியோ அமைப்புகள்",
+  "nowPlayingLabel": "இப்போது விளையாடுகிறது",
+  "higherQualityUsesMoreData": "உயர் தரமானது அதிக தரவைப் பயன்படுத்துகிறது",
+  "adjustsBasedOnNetworkSpeed": "நெட்வொர்க் வேகத்தின் அடிப்படையில் சரிசெய்கிறது",
+  "qualityLowUsesLessData": "~64 kbps - குறைவான டேட்டாவைப் பயன்படுத்துகிறது",
+  "qualityMediumBalanced": "~128 kbps - சமப்படுத்தப்பட்டது",
+  "qualityHighBestForMost": "~256 kbps - பெரும்பாலானவர்களுக்கு சிறந்தது",
+  "qualityMaximumAvailable": "அதிகபட்சமாக கிடைக்கும் (~256 kbps)",
+  "recommended": "பரிந்துரைக்கப்படுகிறது",
+  "blendTrackEndsIntoNext": "தற்போதைய பாதையின் முடிவை அடுத்த தொடக்கத்தில் கலக்கவும்",
+  "preCachesNextTracks": "கிடைக்கும்போது, உள்ளூர் தற்காலிக சேமிப்பிலிருந்து அடுத்த டிராக்குகள் மற்றும் பிளேகளை முன்கூட்டியே சேமிக்கவும்",
+  "smartStreamCache": "ஸ்மார்ட் ஸ்ட்ரீம் கேச்",
+  "usedCacheStorage": "பயன்படுத்தப்பட்டது: {used} / {limit} MB",
+  "@usedCacheStorage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "calculatingCacheUsage": "கேச் பயன்பாட்டைக் கணக்கிடுகிறது...",
+  "unableToReadCacheUsage": "கேச் உபயோகத்தைப் படிக்க முடியவில்லை",
+  "preCacheNetwork": "முன் கேச் நெட்வொர்க்",
+  "wifiOnly": "Wi-Fi மட்டுமே",
+  "wifiAndMobileData": "வைஃபை + மொபைல் டேட்டா",
+  "preCacheRunsWifiOnly": "Wi-Fi உடன் இணைக்கப்பட்டால் மட்டுமே முன்-கேச் இயங்கும்",
+  "preCacheRunsWifiAndMobile": "ப்ரீ-கேச் Wi-Fi மற்றும் மொபைல் டேட்டா இரண்டிலும் இயங்கும்",
+  "concurrentPreCacheDownloads": "ஒரே நேரத்தில் முன்-கேச் பதிவிறக்கங்கள்",
+  "higherValuesCacheFaster": "அதிக மதிப்புகள் வேகமாக கேச் ஆனால் அதிக நெட்வொர்க் மற்றும் பேட்டரியைப் பயன்படுத்துகின்றன",
+  "cacheSizeLimit": "கேச் அளவு வரம்பு",
+  "off": "ஆஃப்",
+  "crossfadeDisabled": "கிராஸ்ஃபேட் முடக்கப்பட்டது",
+  "currentValueLabel": "நடப்பு: {value}",
+  "@currentValueLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "audioQuality": "ஆடியோ தரம்",
+  "qualityLowKbps": "குறைந்த (64 kbps)",
+  "qualityMediumKbps": "நடுத்தரம் (128 kbps)",
+  "qualityHighKbps": "அதிக (256 kbps)",
+  "qualityMaximumKbps": "அதிகபட்சம் (~256 kbps)",
+  "all": "அனைத்து",
+  "artists": "கலைஞர்கள்",
+  "albums": "ஆல்பங்கள்",
+  "playlists": "பிளேலிஸ்ட்கள்",
+  "singlesAndEps": "ஒற்றையர் & EPகள்",
+  "appearsOn": "அன்று தோன்றும்",
+  "fansAlsoLike": "ரசிகர்களும் விரும்புகின்றனர்",
+  "searchMusicHint": "பாடல்கள், ஆல்பங்கள், கலைஞர்களைத் தேடுங்கள்",
+  "searchForMusic": "இசையைத் தேடுங்கள்",
+  "noResultsFound": "முடிவுகள் எதுவும் கிடைக்கவில்லை",
+  "showAllLocalResults": "அனைத்து {count} உள்ளூர் முடிவுகளையும் காட்டு",
+  "@showAllLocalResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "topResult": "சிறந்த முடிவு",
+  "artistLabel": "கலைஞர்",
+  "albumByArtist": "ஆல்பம் - {artist}",
+  "@albumByArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistByAuthor": "பிளேலிஸ்ட் - {author}",
+  "@playlistByAuthor": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "சேமிக்கவும்",
+  "upNext": "அடுத்தது",
+  "lyricsTab": "பாடல் வரிகள்",
+  "relatedTab": "தொடர்புடையது",
+  "youMightAlsoLike": "நீங்களும் விரும்பலாம்",
+  "otherPerformances": "மற்ற நிகழ்ச்சிகள்",
+  "moreFrom": "மேலும்",
+  "aboutArtist": "கலைஞர் பற்றி",
+  "jamQueue": "ஜாம் வரிசை",
+  "radioQueue": "வானொலி வரிசை",
+  "queueLabel": "வரிசை",
+  "playingFrom": "இருந்து விளையாடுகிறது",
+  "loadingMoreTracks": "மேலும் தடங்களை ஏற்றுகிறது...",
+  "scrollForMore": "மேலும் அறிய உருட்டவும்",
+  "someone": "யாரோ ஒருவர்",
+  "noTracksInQueue": "வரிசையில் தடங்கள் இல்லை",
+  "addSongsToJamQueue": "ஜாம் வரிசையில் பாடல்களைச் சேர்க்கவும்",
+  "addedByUser": "{name} ஆல் சேர்க்கப்பட்டது",
+  "@addedByUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noTrackPlaying": "டிராக் விளையாடுவது இல்லை",
+  "noRelatedTracksFound": "தொடர்புடைய தடங்கள் எதுவும் இல்லை",
+  "queueIsEmpty": "வரிசை காலியாக உள்ளது",
+  "defaultQueueName": "என் வரிசை",
+  "saveQueueAsPlaylist": "வரிசையை பிளேலிஸ்ட்டாக சேமிக்கவும்",
+  "savedTracksToPlaylist": "{count} தடங்கள் \"{name}\" இல் சேமிக்கப்பட்டது",
+  "@savedTracksToPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "jams": "நெரிசல்கள்",
+  "nowPlayingHeader": "இப்போது விளையாடுகிறது",
+  "browseMoodsGenresTitle": "மனநிலைகள் & வகைகள்",
+  "moodCategoryMoods": "மனநிலைகள்",
+  "moodCategoryGenres": "வகைகள்",
+  "moodCategoryActivities": "செயல்பாடுகள்",
+  "moodChill": "குளிர்",
+  "moodParty": "பார்ட்டி",
+  "moodWorkout": "உடற்பயிற்சி",
+  "moodFocus": "கவனம்",
+  "moodSleep": "தூங்கு",
+  "moodHappy": "மகிழ்ச்சி",
+  "moodSad": "வருத்தம்",
+  "moodRomance": "காதல்",
+  "moodFeelGood": "நன்றாக உணருங்கள்",
+  "moodEnergize": "உற்சாகப்படுத்து",
+  "genrePop": "பாப்",
+  "genreRock": "பாறை",
+  "genreHipHop": "ஹிப்-ஹாப்",
+  "genreRnb": "ஆர்&பி",
+  "genreElectronic": "மின்னணு",
+  "genreDance": "நடனம்",
+  "genreJazz": "ஜாஸ்",
+  "genreClassical": "செம்மொழி",
+  "genreCountry": "நாடு",
+  "genreMetal": "உலோகம்",
+  "genreIndie": "இண்டி",
+  "genreKPop": "கே-பாப்",
+  "genreLatin": "லத்தீன்",
+  "genreBollywood": "பாலிவுட்",
+  "activityDriving": "ஓட்டுதல்",
+  "activityCooking": "சமையல்",
+  "activityGaming": "கேமிங்",
+  "activityStudying": "படிக்கிறது",
+  "activityMeditation": "தியானம்",
+  "play": "விளையாடு",
+  "findInPlaylist": "பிளேலிஸ்ட்டில் கண்டுபிடி...",
+  "playlistNotFoundMessage": "பிளேலிஸ்ட் கிடைக்கவில்லை\n\nபிளேலிஸ்ட் ஐடி: {id}\n\nஇந்த பிளேலிஸ்ட் தனிப்பட்டதாக இருக்கலாம் அல்லது கிடைக்காமல் போகலாம்.",
+  "@playlistNotFoundMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineSnapshotDownloaded": "ஆஃப்லைன் ஸ்னாப்ஷாட் - {downloaded}/{total} பதிவிறக்கப்பட்டது",
+  "@offlineSnapshotDownloaded": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noMatchingTracks": "பொருந்தும் தடங்கள் இல்லை",
+  "noTracksFound": "தடங்கள் எதுவும் இல்லை",
+  "downloadingTracksFromPlaylist": "{playlist} இலிருந்து {count} தடங்களைப் பதிவிறக்குகிறது",
+  "@downloadingTracksFromPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "addedTracksToQueueCount": "வரிசையில் {count} தடங்கள் சேர்க்கப்பட்டது",
+  "@addedTracksToQueueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadPlaylist": "பிளேலிஸ்ட்டைப் பதிவிறக்கவும்",
+  "signInWithGoogle": "Google மூலம் உள்நுழையவும்",
+  "signInToUseJams": "Jams ஐப் பயன்படுத்த உள்நுழையவும்",
+  "listenTogetherRealtime": "நிகழ்நேரத்தில் நண்பர்களுடன் சேர்ந்து கேளுங்கள்",
+  "signInGoogleToStartOrJoinJam": "நண்பர்களுடன் Jam அமர்வைத் தொடங்க அல்லது சேர Google இல் உள்நுழையவும்",
+  "listenTogether": "ஒன்றாகக் கேளுங்கள்",
+  "listenWithFriendsInSync": "நண்பர்களுடன் ஒத்திசைவுடன் கேளுங்கள்",
+  "sameSongSameMoment": "அதே பாடல், அதே தருணம்",
+  "startJam": "ஒரு ஜாம் தொடங்கவும்",
+  "createSessionAndInviteFriends": "ஒரு அமர்வை உருவாக்கி நண்பர்களை அழைக்கவும்",
+  "joinJam": "ஜாமில் சேரவும்",
+  "enterSixDigitCode": "6 இலக்க குறியீட்டை உள்ளிடவும்",
+  "join": "சேருங்கள்",
+  "shareThisCode": "இந்தக் குறியீட்டைப் பகிரவும்",
+  "codeCopied": "குறியீடு நகலெடுக்கப்பட்டது!",
+  "youAreHost": "நீங்கள் புரவலன்",
+  "hostedBy": "{name} ஆல் நடத்தப்பட்டது",
+  "@hostedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listeningTogetherCount": "ஒன்றாகக் கேட்பது ({count})",
+  "@listeningTogetherCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "endSession": "அமர்வு முடிவு",
+  "leaveSession": "அமர்வை விடுங்கள்",
+  "connected": "இணைக்கப்பட்டது",
+  "reconnecting": "மீண்டும் இணைக்கிறது",
+  "retryInSeconds": "{seconds}வினாடிகளில் மீண்டும் முயற்சிக்கவும்",
+  "@retryInSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectingStatus": "மீண்டும் இணைக்கிறது · {suffix}",
+  "@reconnectingStatus": {
+    "placeholders": {
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "reconnectingAttemptStatus": "மீண்டும் இணைக்கிறது ({attempt}) · {suffix}",
+  "@reconnectingAttemptStatus": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "disconnected": "துண்டிக்கப்பட்டது",
+  "playing": "விளையாடுகிறது",
+  "addSongsToPlayTogether": "ஒன்றாக இசைக்க பாடல்களைச் சேர்க்கவும்",
+  "sessionCreatedCode": "அமர்வு உருவாக்கப்பட்டது! குறியீடு: {code}",
+  "@sessionCreatedCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "noJamFoundForCode": "இந்தக் குறியீட்டிற்கு நெரிசல் எதுவும் இல்லை.",
+  "hostRole": "புரவலன்",
+  "canControl": "கட்டுப்படுத்த முடியும்",
+  "listeningStatus": "கேட்பது",
+  "transferHostQuestion": "ஹோஸ்ட்டை மாற்றவா?",
+  "transferHostMessage": "{name} ஐ புதிய ஹோஸ்டாக மாற்றவா? ஹோஸ்ட் கட்டுப்பாடுகளை இழப்பீர்கள்.",
+  "@transferHostMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transfer": "இடமாற்றம்",
+  "removeControl": "கட்டுப்பாட்டை அகற்று",
+  "allowControl": "கட்டுப்பாட்டை அனுமதிக்கவும்",
+  "makeHost": "ஹோஸ்ட் செய்யுங்கள்",
+  "live": "வாழ்க",
+  "playbackControlsJam": "உங்கள் பின்னணி ஜாமைக் கட்டுப்படுத்துகிறது",
+  "starting": "தொடங்குகிறது...",
+  "or": "அல்லது",
+  "joinFriendsJam": "நண்பரின் ஜாமில் சேரவும்",
+  "startJamDescription": "நண்பர்களுடன் இசையைப் பகிர ஜாம் ஒன்றைத் தொடங்கவும்.\nஎல்லோரும் ஒரே பாடலை ஒத்திசைவில் கேட்கிறார்கள்.",
+  "folderSettings": "கோப்புறை அமைப்புகள்",
+  "noFoldersAddedYet": "இதுவரை கோப்புறைகள் எதுவும் சேர்க்கப்படவில்லை",
+  "addFolder": "கோப்புறையைச் சேர்க்கவும்",
+  "localMusic": "உள்ளூர் இசை",
+  "scanLocalMusicDescription": "உள்ளூர் இசைக் கோப்புகளைக் கண்டறிந்து அவற்றை ஆஃப்லைனில் இயக்க உங்கள் சாதனத்தை ஸ்கேன் செய்யவும்",
+  "scanForMusic": "இசைக்காக ஸ்கேன் செய்யவும்",
+  "addFolderLowercase": "கோப்புறையைச் சேர்க்கவும்",
+  "supportedFormats": "ஆதரிக்கப்படும் வடிவங்கள்: MP3, FLAC, WAV, M4A, OGG",
+  "songsFromFoldersCount": "{folders} கோப்புறை(கள்) இலிருந்து {songs} பாடல்கள்",
+  "@songsFromFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "add": "சேர்",
+  "permissionRequired": "அனுமதி தேவை",
+  "storagePermissionRequiredMessage": "உங்கள் இசைக் கோப்புகளை அணுக சேமிப்பக அனுமதி தேவை. அமைப்புகளில் அதை இயக்கவும்.",
+  "couldNotOpenSettingsPermission": "அமைப்புகளைத் திறக்க முடியவில்லை. சேமிப்பக அனுமதியை கைமுறையாக இயக்கவும்.",
+  "openSettings": "அமைப்புகளைத் திறக்கவும்",
+  "folderAdded": "கோப்புறை சேர்க்கப்பட்டது",
+  "addedFolderScanNow": "\"{folder}\" சேர்க்கப்பட்டது. இப்போது இசைக்காக அதை ஸ்கேன் செய்ய விரும்புகிறீர்களா?",
+  "@addedFolderScanNow": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanNow": "இப்போது ஸ்கேன் செய்யவும்",
+  "foundSongsCount": "{count} பாடல்கள் உள்ளன",
+  "@foundSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addFolderFirstThenScan": "முதலில் ஒரு கோப்புறையைச் சேர்க்கவும், பின்னர் ஆடியோ கோப்புகளை ஸ்கேன் செய்யவும்.",
+  "scanFoldersCountDescription": "இது ஆடியோ கோப்புகளுக்காக {count} கோப்புறை(களை) ஸ்கேன் செய்யும்.",
+  "@scanFoldersCountDescription": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "foldersToScan": "ஸ்கேன் செய்ய கோப்புறைகள்:",
+  "andMoreFolders": "... மற்றும் {count} மேலும்",
+  "@andMoreFolders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "startScan": "ஸ்கேன் தொடங்கவும்",
+  "foundSongsInFoldersCount": "{folders} கோப்புறையில் {songs} பாடல்கள் உள்ளன",
+  "@foundSongsInFoldersCount": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "scanningForMusic": "இசைக்காக ஸ்கேன் செய்கிறது...",
+  "filesProgress": "{scanned} / {total} கோப்புகள்",
+  "@filesProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "signOut": "வெளியேறு",
+  "signInGoogleProfilePictureJams": "உங்கள் சுயவிவரப் படத்தைப் பெற, ஜாம்களை இயக்க, Google இல் உள்நுழையவும்",
+  "sync": "ஒத்திசை",
+  "lastSynced": "கடைசியாக ஒத்திசைத்தது: {time}",
+  "@lastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedItems": "{count} உருப்படிகள் ஒத்திசைக்கப்பட்டது",
+  "@syncedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncing": "ஒத்திசைக்கிறது...",
+  "syncNow": "இப்போது ஒத்திசைக்கவும்",
+  "cachedItems": "{count} தற்காலிக சேமிப்பு உருப்படிகள்",
+  "@cachedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streams": "நீரோடைகள்",
+  "colors": "நிறங்கள்",
+  "searches": "தேடுகிறது",
+  "expiredCount": "{count} காலாவதியானது",
+  "@expiredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cacheCleanupComplete": "தற்காலிக சேமிப்பை சுத்தம் செய்தல் முடிந்தது",
+  "cleanUp": "சுத்தம் செய்யவும்",
+  "clearCache": "தற்காலிக சேமிப்பை அழிக்கவும்",
+  "clearCachedMusicDataConfirm": "இது தற்காலிகச் சேமிப்பில் உள்ள அனைத்து இசைத் தரவையும் அழிக்கும். தொடரவா?",
+  "clear": "தெளிவு",
+  "cacheCleared": "தற்காலிக சேமிப்பு அழிக்கப்பட்டது",
+  "analytics": "பகுப்பாய்வு",
+  "hits": "ஹிட்ஸ்",
+  "misses": "மிஸ்கள்",
+  "network": "நெட்வொர்க்",
+  "analyticsReset": "பகுப்பாய்வு மீட்டமைப்பு",
+  "resetStats": "புள்ளிவிவரங்களை மீட்டமைக்கவும்",
+  "cacheHitRate": "கேச் ஹிட் விகிதம்",
+  "liked": "பிடித்திருந்தது",
+  "appInfo": "பயன்பாட்டுத் தகவல்",
+  "releaseBuild": "உருவாக்கம்",
+  "updater": "மேம்படுத்துபவர்",
+  "available": "கிடைக்கும்",
+  "unavailable": "கிடைக்கவில்லை",
+  "loadingCompact": "ஏற்றுகிறது...",
+  "errorCompact": "பிழை",
+  "none": "எதுவும் இல்லை",
+  "currentPatch": "தற்போதைய இணைப்பு",
+  "nextPatch": "அடுத்த இணைப்பு",
+  "disconnectYoutubeMusic": "YouTube மியூசிக்கைத் துண்டிக்கவும்",
+  "disconnectYoutubeMusicQuestion": "YouTube மியூசிக்கைத் துண்டிக்கவா?",
+  "disconnectYoutubeMusicWarning": "இது உங்கள் YouTube மியூசிக் கணக்கை பயன்பாட்டிலிருந்து அகற்றும். உங்கள் நூலகத் தரவு அழிக்கப்படும்.",
+  "disconnect": "துண்டிக்கவும்",
+  "syncFailed": "ஒத்திசைவு தோல்வி: {error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "justNow": "இப்போதுதான்",
+  "minutesAgo": "{count}நி முன்பு",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count}ம முன்பு",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count}நா முன்பு",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noSongsInTitle": "{title} இல் பாடல்கள் இல்லை",
+  "@noSongsInTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "createPlaylistDescription": "உங்கள் இசையை ஒழுங்கமைக்க பிளேலிஸ்ட்டை உருவாக்கவும்",
+  "savedAlbumsFromYoutubeMusic": "YouTube Music இலிருந்து சேமிக்கப்பட்ட ஆல்பங்கள்",
+  "noSavedAlbumsFromYoutubeMusic": "YouTube Music இலிருந்து சேமிக்கப்பட்ட ஆல்பங்கள் இல்லை",
+  "errorLoadingAlbums": "ஆல்பங்களை ஏற்றுவதில் பிழை",
+  "recentlyPlayed": "சமீபத்தில் விளையாடியது",
+  "noAlbumsYet": "இதுவரை ஆல்பங்கள் இல்லை",
+  "playSomeMusicToSeeAlbumsHere": "ஆல்பங்களை இங்கே பார்க்க சில இசையை இயக்கவும்",
+  "subscribedArtists": "குழுசேர்ந்த கலைஞர்கள்",
+  "noSubscribedArtists": "குழுசேர்ந்த கலைஞர்கள் இல்லை",
+  "errorLoadingArtists": "கலைஞர்களை ஏற்றுவதில் பிழை",
+  "recentlyPlayedArtists": "சமீபத்தில் நடித்த கலைஞர்கள்",
+  "noArtistsYet": "இதுவரை கலைஞர்கள் இல்லை",
+  "playSomeMusicToSeeArtistsHere": "இங்கே கலைஞர்களைப் பார்க்க சில இசையை இயக்கவும்",
+  "downloading": "பதிவிறக்குகிறது",
+  "downloadedPlaylists": "பதிவிறக்கம் செய்யப்பட்ட பிளேலிஸ்ட்கள்",
+  "errorLoadingDownloads": "பதிவிறக்கங்களை ஏற்றுவதில் பிழை",
+  "deleteDownload": "பதிவிறக்கத்தை நீக்கு",
+  "deleteDownloadQuestion": "பதிவிறக்கத்தை நீக்கவா?",
+  "deleteDownloadWarning": "இது உங்கள் சாதனத்திலிருந்து \"{title}\" ஐ அகற்றும். நீங்கள் அதை மீண்டும் பதிவிறக்கம் செய்யலாம்.",
+  "@deleteDownloadWarning": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedTrack": "\"{title}\" நீக்கப்பட்டது",
+  "@deletedTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedSongsWillAppearHere": "பதிவிறக்கம் செய்யப்பட்ட பாடல்கள் இங்கே தோன்றும்",
+  "createPlaylist": "பிளேலிஸ்ட்டை உருவாக்கவும்",
+  "autoPlaylists": "தானியங்கு பிளேலிஸ்ட்கள்",
+  "likedSongsLabel": "பிடித்த பாடல்கள்",
+  "downloadedFraction": "{downloaded}/{total} பதிவிறக்கப்பட்டது",
+  "@downloadedFraction": {
+    "placeholders": {
+      "downloaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "more": "மேலும்",
+  "video": "வீடியோ",
+  "forgottenFavorites": "மறந்த பிடித்தவை",
+  "mixedForYou": "உங்களுக்காக கலக்கப்பட்டது",
+  "myMixOne": "எனது கலவை 1",
+  "discoverMix": "டிஸ்கவர் மிக்ஸ்",
+  "replayMix": "ரீப்ளே மிக்ஸ்",
+  "newRelease": "புதிய வெளியீடு",
+  "chillMix": "குளிர் மிக்ஸ்",
+  "basedOnYourListening": "நீங்கள் கேட்டதன் அடிப்படையில்",
+  "newMusicForYou": "உங்களுக்கான புதிய இசை",
+  "yourFavorites": "உங்களுக்கு பிடித்தவை",
+  "freshTracks": "புதிய தடங்கள்",
+  "relaxingVibes": "நிதானமான அதிர்வுகள்",
+  "musicToGetYouStarted": "நீங்கள் தொடங்குவதற்கு இசை",
+  "welcomeUser": "வரவேற்கிறோம் {name}",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeFallbackName": "அங்கு",
+  "youtubeMusicLabel": "YouTube Music",
+  "local": "உள்ளூர்",
+  "recentlyAdded": "சமீபத்தில் சேர்க்கப்பட்டது",
+  "name": "பெயர்",
+  "duration": "கால அளவு",
+  "searchSongsHint": "பாடல்களைத் தேடு...",
+  "noLikedSongs": "பிடித்த பாடல்கள் இல்லை",
+  "likeSomeSongsToSeeThemHere": "சில பாடல்களை இங்கே பார்க்க பிடிக்கும்",
+  "noLocalSongs": "உள்ளூர் பாடல்கள் இல்லை",
+  "scanFoldersToFindLocalMusic": "உள்ளூர் இசையைக் கண்டறிய கோப்புறைகளை ஸ்கேன் செய்யவும்",
+  "noResults": "முடிவுகள் இல்லை",
+  "tryDifferentKeywords": "வெவ்வேறு முக்கிய வார்த்தைகளை முயற்சிக்கவும்",
+  "noSongsYet": "இன்னும் பாடல்கள் இல்லை",
+  "playSomeMusicToBuildYourLibrary": "உங்கள் நூலகத்தை உருவாக்க சில இசையை இயக்கவும்",
+  "albumNotFound": "ஆல்பம் கிடைக்கவில்லை",
+  "downloadAlbum": "ஆல்பத்தைப் பதிவிறக்கவும்",
+  "downloadingTracksFromAlbum": "{album} இலிருந்து {count} தடங்களைப் பதிவிறக்குகிறது",
+  "@downloadingTracksFromAlbum": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "shareAlbumText": "{title} by {artist}\n{url}",
+  "@shareAlbumText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestions": "பரிந்துரைகள்",
+  "recentSearches": "சமீபத்திய தேடல்கள்",
+  "startTypingToSearch": "தேட தட்டச்சு செய்யத் தொடங்கு...",
+  "youtubeMusicPlaylists": "YouTube மியூசிக் பிளேலிஸ்ட்கள்",
+  "errorLoadingPlaylists": "பிளேலிஸ்ட்களை ஏற்றுவதில் பிழை",
+  "yourPlaylists": "உங்கள் பிளேலிஸ்ட்கள்",
+  "noYoutubeMusicPlaylistsFound": "YouTube Music பிளேலிஸ்ட்கள் எதுவும் இல்லை",
+  "songCountLabel": "{count, plural, one {# பாடல்} other {# பாடல்கள்}}",
+  "@songCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unknownAlbum": "அறியப்படாத ஆல்பம்",
+  "jamCodeExample": "ஏபிசி123",
+  "jamCodeHint": "குறியீடு",
+  "yourProfile": "உங்கள் சுயவிவரம்",
+  "googleUser": "Google பயனர்",
+  "jamsAndProfile": "ஜாம் & சுயவிவரம்",
+  "yes": "ஆம்",
+  "no": "இல்லை",
+  "foundInSettings": "அமைப்புகளில் காணப்படுகிறது",
+  "sharePlaylistText": "{title}\n{url}",
+  "@sharePlaylistText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "shareArtistText": "{artist}\n{url}",
+  "@shareArtistText": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "megabytesValue": "{value} எம்பி",
+  "@megabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "gigabytesValue": "{value} ஜிபி",
+  "@gigabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxMegabytesValue": "~{value} எம்பி",
+  "@approxMegabytesValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "approxKbpsValue": "~{value} kbps",
+  "@approxKbpsValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "secondsShort": "{value}வி",
+  "@secondsShort": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "speedMultiplier": "{value}x",
+  "@speedMultiplier": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}
