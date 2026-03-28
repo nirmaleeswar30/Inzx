@@ -886,6 +886,8 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
         return l10n.languageRussian;
       case AppLanguageOption.hindi:
         return l10n.languageHindi;
+      case AppLanguageOption.malayalam:
+        return l10n.languageMalayalam;
       case AppLanguageOption.tamil:
         return l10n.languageTamil;
       case AppLanguageOption.kannada:
@@ -947,6 +949,8 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
         return [label, 'russian', 'russian', 'русский', 'ru'];
       case AppLanguageOption.hindi:
         return [label, 'hindi', 'हिन्दी', 'hi'];
+      case AppLanguageOption.malayalam:
+        return [label, 'malayalam', 'മലയാളം', 'ml'];
       case AppLanguageOption.tamil:
         return [label, 'tamil', 'தமிழ்', 'ta'];
       case AppLanguageOption.kannada:
@@ -1022,6 +1026,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           (AppLanguageOption.turkish, l10n.languageTurkish),
           (AppLanguageOption.russian, l10n.languageRussian),
           (AppLanguageOption.hindi, l10n.languageHindi),
+          (AppLanguageOption.malayalam, l10n.languageMalayalam),
           (AppLanguageOption.tamil, l10n.languageTamil),
           (AppLanguageOption.kannada, l10n.languageKannada),
           (AppLanguageOption.telugu, l10n.languageTelugu),

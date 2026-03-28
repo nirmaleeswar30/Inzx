@@ -8,6 +8,7 @@ const supportedAppLocales = <Locale>[
   Locale('tr'),
   Locale('ru'),
   Locale('hi'),
+  Locale('ml'),
   Locale('ta'),
   Locale('kn'),
   Locale('te'),
@@ -31,6 +32,7 @@ enum AppLanguageOption {
   turkish,
   russian,
   hindi,
+  malayalam,
   tamil,
   kannada,
   telugu,
@@ -236,6 +238,8 @@ AppLanguageOption appLanguageOptionFromLocale(Locale? locale) {
       return AppLanguageOption.russian;
     case 'hi':
       return AppLanguageOption.hindi;
+    case 'ml':
+      return AppLanguageOption.malayalam;
     case 'ta':
       return AppLanguageOption.tamil;
     case 'kn':
@@ -283,6 +287,8 @@ Locale? localeForAppLanguageOption(AppLanguageOption option) {
       return const Locale('ru');
     case AppLanguageOption.hindi:
       return const Locale('hi');
+    case AppLanguageOption.malayalam:
+      return const Locale('ml');
     case AppLanguageOption.tamil:
       return const Locale('ta');
     case AppLanguageOption.kannada:

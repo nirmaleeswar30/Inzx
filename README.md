@@ -363,6 +363,7 @@ Inzx supports a localized app UI and locale-aware YouTube Music content requests
 - Turkish
 - Russian
 - Hindi
+- Malayalam
 - Tamil
 - Kannada
 - Telugu
