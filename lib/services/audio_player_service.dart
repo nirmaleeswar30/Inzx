@@ -2223,6 +2223,8 @@ class AudioPlayerService {
 
     setParam('cpn', cpn);
     setParam('ver', params['ver']?.firstOrNull ?? '2');
+    setParam('c', 'WEB_REMIX');
+    setParam('cver', '1.20231204.01.00');
     setParam('state', state);
     setParam('cmt', _statsSeconds(end));
     setParam('st', _statsSeconds(start));
