@@ -281,13 +281,6 @@ class AudioPlayerService {
   final YTPlayerUtils _ytPlayerUtils = YTPlayerUtils.instance;
   final LyricsWarmupService _lyricsWarmupService = LyricsWarmupService.instance;
 
-  /// ConcatenatingAudioSource for gapless playback
-  /// This allows pre-buffering next tracks for instant skip
-  // ignore: unused_field - retained for optional gapless rebuild strategy
-  ConcatenatingAudioSource? _playlist;
-
-  /// Map of videoId to index in playlist (for fast lookup)
-  final Map<String, int> _playlistIndexMap = {};
 
   // Queue management
   List<Track> _queue = [];
@@ -1814,9 +1807,6 @@ class AudioPlayerService {
     }
   }
 
-  /// Track if we're currently building the playlist (to avoid duplicate work)
-  bool _isPreparingPlaylist = false;
-
   // YouTube Radio mode - auto-fetches related tracks when queue runs low
   bool _isRadioMode = false;
   String? _radioSourceTrackId;
@@ -1837,12 +1827,7 @@ class AudioPlayerService {
       );
     }
 
-    // Clear the gapless playlist when enabling Jams mode
-    // This ensures track completion events fire properly
-    if (enabled) {
-      _playlist = null;
-      _playlistIndexMap.clear();
-    }
+    // Gapless playlist logic was removed to prevent resource leaks
   }
 
   /// Check if Jams mode is enabled
@@ -2514,8 +2499,7 @@ class AudioPlayerService {
       }
       // Start prefetching ALL tracks in background
       _prefetchAllTracks();
-      // Build playlist for gapless skip
-      _buildPlaylistInBackground();
+      // Playlist build removed to fix native ExoPlayer leaks
       // If radio mode is on and queue is short, immediately fetch related tracks
       // This ensures the queue is populated right away, not just after first song ends
       if (_isRadioMode && _queue.length <= 2) {
@@ -2581,97 +2565,7 @@ class AudioPlayerService {
     }
   }
 
-  /// Build ConcatenatingAudioSource in background for gapless playback
-  /// This is called AFTER current track starts playing
-  Future<void> _buildPlaylistInBackground() async {
-    if (_isPreparingPlaylist || _queue.isEmpty) return;
 
-    // Don't build gapless playlist in Jams mode - we need to intercept track transitions
-    if (_jamsModeEnabled) {
-      if (kDebugMode) {
-        print('AudioPlayerService: Skipping playlist build in Jams mode');
-      }
-      return;
-    }
-
-    _isPreparingPlaylist = true;
-
-    try {
-      if (kDebugMode) {
-        print('AudioPlayerService: Building playlist for gapless playback...');
-      }
-
-      final sources = <AudioSource>[];
-      _playlistIndexMap.clear();
-
-      // Build sources for all tracks in queue
-      // Process in chunks of 3 with delays to avoid UI jank
-      for (int i = 0; i < _queue.length; i++) {
-        // Yield to UI thread every 3 tracks with longer delay
-        if (i % 3 == 0 && i > 0) {
-          await Future.delayed(const Duration(milliseconds: 100));
-        }
-
-        final track = _queue[i];
-
-        // Skip current track (already playing)
-        if (i == _currentIndex) {
-          // Still need placeholder for index mapping
-          final currentData = _currentPlaybackData;
-          if (currentData != null) {
-            sources.add(
-              await _streamingAudioSourceForTrack(track, currentData),
-            );
-            _playlistIndexMap[track.id] = i;
-          } else if (track.localFilePath != null) {
-            // Local file for current track - use Uri.file for proper file:// URI
-            sources.add(
-              AudioSource.uri(Uri.file(track.localFilePath!), tag: track),
-            );
-            _playlistIndexMap[track.id] = i;
-          }
-          continue;
-        }
-
-        // Check for local file first
-        if (track.localFilePath != null &&
-            await File(track.localFilePath!).exists()) {
-          // Use Uri.file for proper file:// URI on Android
-          sources.add(
-            AudioSource.uri(Uri.file(track.localFilePath!), tag: track),
-          );
-          _playlistIndexMap[track.id] = sources.length - 1;
-          continue;
-        }
-
-        // Get cached or fetch stream URL
-        final result = await _ytPlayerUtils.playerResponseForPlayback(
-          track.id,
-          quality: _audioQuality,
-        );
-
-        if (result.isSuccess) {
-          sources.add(await _streamingAudioSourceForTrack(track, result.data!));
-          _playlistIndexMap[track.id] = sources.length - 1;
-        }
-      }
-
-      if (sources.length > 1) {
-        _playlist = ConcatenatingAudioSource(children: sources);
-        if (kDebugMode) {
-          print(
-            'AudioPlayerService: Playlist ready with ${sources.length} tracks',
-          );
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('AudioPlayerService: Failed to build playlist: $e');
-      }
-    } finally {
-      _isPreparingPlaylist = false;
-    }
-  }
 
   /// Add tracks to the end of the queue
   void addToQueue(List<Track> tracks) {
@@ -2789,8 +2683,7 @@ class AudioPlayerService {
     _currentIndex = -1;
     _currentTrack = null;
     _currentPlaybackData = null;
-    _playlist = null;
-    _playlistIndexMap.clear();
+
     _activeSourceQueueIndices = const [];
     _activeSourcePlaybackDataByQueueIndex = const <int, PlaybackData>{};
     _isCrossfading = false;
