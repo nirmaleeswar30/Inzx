@@ -1176,5 +1176,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "history": "Histórico",
+  "historyDescription": "Seu histórico de reprodução recente"
 }

@@ -1176,5 +1176,13 @@
         "type": "String"
       }
     }
+  },
+  "history": "History",
+  "@history": {
+    "description": "Label for the History page"
+  },
+  "historyDescription": "Your recent listening history",
+  "@historyDescription": {
+    "description": "Description for the History page"
   }
 }

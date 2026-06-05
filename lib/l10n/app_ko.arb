@@ -1176,5 +1176,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "history": "기록",
+  "historyDescription": "최근 청취 기록"
 }

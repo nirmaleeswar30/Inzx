@@ -1176,5 +1176,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "history": "Verlauf",
+  "historyDescription": "Dein kürzlicher Hörverlauf"
 }

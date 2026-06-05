@@ -1176,5 +1176,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "history": "ಇತಿಹಾಸ",
+  "historyDescription": "ನಿಮ್ಮ ಇತ್ತೀಚಿನ ಆಲಿಸುವ ಇತಿಹಾಸ"
 }

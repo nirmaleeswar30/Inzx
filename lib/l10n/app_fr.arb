@@ -1176,5 +1176,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "history": "Historique",
+  "historyDescription": "Votre historique d'écoute récent"
 }

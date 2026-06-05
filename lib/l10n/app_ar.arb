@@ -1176,5 +1176,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "history": "السجل",
+  "historyDescription": "سجل الاستماع الأخير الخاص بك"
 }

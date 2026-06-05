@@ -180,6 +180,15 @@ final ytMusicRecentlyPlayedProvider = FutureProvider<List<Track>>((ref) async {
   return innerTube.getRecentlyPlayed();
 });
 
+/// History sections from YT Music (Today, Yesterday, etc.)
+final ytMusicHistorySectionsProvider = FutureProvider<List<HistorySection>>((ref) async {
+  final authState = ref.watch(ytMusicAuthStateProvider);
+  if (!authState.isLoggedIn) return [];
+
+  final innerTube = ref.watch(innerTubeServiceProvider);
+  return innerTube.getHistorySections();
+});
+
 /// Saved albums from YT Music
 final ytMusicSavedAlbumsProvider = FutureProvider<List<Album>>((ref) async {
   final authState = ref.watch(ytMusicAuthStateProvider);

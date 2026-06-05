@@ -1176,5 +1176,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "history": "歷史記錄",
+  "historyDescription": "您最近的收聽歷史記錄"
 }

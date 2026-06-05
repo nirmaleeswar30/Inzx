@@ -1176,5 +1176,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "history": "Riwayat",
+  "historyDescription": "Riwayat mendengarkan Anda baru-baru ini"
 }

@@ -822,8 +822,14 @@ class InnerTubeService {
     return _parseLibraryArtists(response);
   }
 
-  /// Get recently played
+  /// Get recently played (flat list)
   Future<List<Track>> getRecentlyPlayed() async {
+    final sections = await getHistorySections();
+    return sections.expand((s) => s.tracks).toList();
+  }
+
+  /// Get recently played grouped by timeline (Today, Yesterday, etc.)
+  Future<List<HistorySection>> getHistorySections() async {
     if (!isAuthenticated) return [];
 
     final response = await _request('browse', {
@@ -831,7 +837,7 @@ class InnerTubeService {
     }, authenticated: true);
 
     if (response == null) return [];
-    return _parseHistoryTracks(response);
+    return _parseHistorySections(response);
   }
 
   /// Get home page content (personalized recommendations)
@@ -3243,8 +3249,8 @@ class InnerTubeService {
     return tracks;
   }
 
-  List<Track> _parseHistoryTracks(Map<String, dynamic> response) {
-    final tracks = <Track>[];
+  List<HistorySection> _parseHistorySections(Map<String, dynamic> response) {
+    final sections = <HistorySection>[];
 
     try {
       final contents =
@@ -3263,21 +3269,32 @@ class InnerTubeService {
       if (contents == null) return [];
 
       for (final section in contents) {
-        final items = section['musicShelfRenderer']?['contents'] as List?;
+        final shelf = section['musicShelfRenderer'];
+        if (shelf == null) continue;
+        
+        // Extract section title (e.g. "Today", "Yesterday")
+        final titleRuns = shelf['title']?['runs'] as List?;
+        final title = titleRuns?.map((r) => r['text']).join() ?? 'History';
+        
+        final items = shelf['contents'] as List?;
+        final tracks = <Track>[];
         if (items != null) {
           for (final item in items) {
             final track = _parseTrackItem(item);
             if (track != null) tracks.add(track);
           }
         }
+        if (tracks.isNotEmpty) {
+          sections.add(HistorySection(title: title, tracks: tracks));
+        }
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Error parsing history tracks: $e');
+        print('Error parsing history sections: $e');
       }
     }
 
-    return tracks;
+    return sections;
   }
 
   Track? _parseTrackItem(Map<String, dynamic> item) {

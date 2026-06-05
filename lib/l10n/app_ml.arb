@@ -1176,5 +1176,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "history": "ചരിത്രം",
+  "historyDescription": "നിങ്ങളുടെ സമീപകാല ശ്രവണ ചരിത്രം"
 }

@@ -1176,5 +1176,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "history": "इतिहास",
+  "historyDescription": "आपका हालिया सुनने का इतिहास"
 }

@@ -1176,5 +1176,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "history": "履歴",
+  "historyDescription": "最近の再生履歴"
 }

@@ -9,6 +9,7 @@ import '../../models/models.dart';
 import '../../services/download_service.dart';
 import '../widgets/playlist_screen.dart';
 import '../widgets/now_playing_screen.dart';
+import '../widgets/history_screen.dart';
 import '../search_screen.dart';
 
 /// Library tab with albums, artists, and playlists
@@ -98,6 +99,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
       l10n.albums,
       l10n.artists,
       l10n.downloads,
+      l10n.history,
     ];
 
     return SingleChildScrollView(
@@ -150,6 +152,8 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
         return _buildArtistsView(isDark, colorScheme);
       case 3:
         return _buildDownloadsView(isDark, colorScheme);
+      case 4:
+        return const HistoryView();
       default:
         return const SizedBox.shrink();
     }
@@ -165,7 +169,6 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
     // Get counts for auto playlists
     final likedSongs = ref.watch(likedSongsProvider);
     final ytLikedSongs = ref.watch(ytMusicLikedSongsProvider).valueOrNull ?? [];
-    final recentlyPlayed = ref.watch(recentlyPlayedProvider);
     final mostPlayed = ref.watch(mostPlayedTracksProvider);
     final downloadedTracks =
         ref.watch(downloadedTracksProvider).valueOrNull ?? [];
@@ -188,10 +191,10 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
         'most_played',
       ),
       (
-        l10n.recentlyPlayed,
+        l10n.history,
         Icons.history_rounded,
         Colors.orange,
-        recentlyPlayed.length,
+        -1,
         'recent',
       ),
       (
@@ -440,13 +443,14 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
               color: isDark ? Colors.white : InzxColors.textPrimary,
             ),
           ),
-          Text(
-            context.l10n.songsCount(count),
-            style: TextStyle(
-              fontSize: 12,
-              color: isDark ? Colors.white54 : InzxColors.textSecondary,
+          if (count >= 0)
+            Text(
+              context.l10n.songsCount(count),
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? Colors.white54 : InzxColors.textSecondary,
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -458,6 +462,12 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
       setState(() {
         _selectedCategory = 3; // Downloads tab
       });
+      return;
+    }
+
+    // Special case: History screen
+    if (type == 'recent') {
+      setState(() => _selectedCategory = 4);
       return;
     }
 

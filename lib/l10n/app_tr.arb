@@ -1176,5 +1176,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "history": "Geçmiş",
+  "historyDescription": "Son dinleme geçmişiniz"
 }
