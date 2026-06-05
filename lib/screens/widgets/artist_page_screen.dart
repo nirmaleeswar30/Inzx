@@ -272,7 +272,7 @@ class _ArtistContent extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hasCurrentTrack = currentTrack != null;
     final authState = ref.watch(ytMusicAuthStateProvider);
-    final subscribedArtists = ref.watch(ytMusicSubscribedArtistsProvider);
+    final subscribedArtists = ref.watch(ytMusicLibrarySubscriptionsProvider);
     final subscribeBusy = ref.watch(artistSubscribeBusyProvider(artistData.id));
     final optimisticSubscribed = ref.watch(
       artistSubscribeOptimisticProvider(artistData.id),
@@ -745,7 +745,7 @@ class _ArtistContent extends ConsumerWidget {
         return;
       }
 
-      ref.invalidate(ytMusicSubscribedArtistsProvider);
+      ref.invalidate(ytMusicLibrarySubscriptionsProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(

@@ -1988,7 +1988,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
     final likedSongs = ref.watch(ytMusicLikedSongsProvider);
     final savedAlbums = ref.watch(ytMusicSavedAlbumsProvider);
     final savedPlaylists = ref.watch(ytMusicSavedPlaylistsProvider);
-    final subscribedArtists = ref.watch(ytMusicSubscribedArtistsProvider);
+    final subscribedArtists = ref.watch(ytMusicLibrarySubscriptionsProvider);
 
     return _sectionCard(
       children: [
@@ -2161,7 +2161,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       await _refreshLikedSongsWithLog(reason: 'login');
       ref.invalidate(ytMusicSavedAlbumsProvider);
       ref.invalidate(ytMusicSavedPlaylistsProvider);
-      ref.invalidate(ytMusicSubscribedArtistsProvider);
+      ref.invalidate(ytMusicLibrarySubscriptionsProvider);
     }
   }
 
@@ -2181,7 +2181,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       await _refreshLikedSongsWithLog(reason: 'sync');
       ref.invalidate(ytMusicSavedAlbumsProvider);
       ref.invalidate(ytMusicSavedPlaylistsProvider);
-      ref.invalidate(ytMusicSubscribedArtistsProvider);
+      ref.invalidate(ytMusicLibrarySubscriptionsProvider);
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

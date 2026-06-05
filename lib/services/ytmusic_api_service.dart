@@ -8,8 +8,33 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/providers/locale_provider.dart';
 import '../models/models.dart';
 
-/// InnerTube API client for YouTube Music
-/// This replicates the internal API that YouTube Music web/app uses
+/// YouTube Music API Service (InnerTube API)
+/// Note: Handles both authenticated and unauthenticated requests.
+/// Some endpoints require authentication to work properly.
+
+/// Sorting options for library artists
+enum LibraryArtistSort {
+  recentlyAdded,
+  aToZ,
+  zToA,
+  mostSongs, // Local sort only, API doesn't support this
+}
+
+extension LibraryArtistSortExtension on LibraryArtistSort {
+  String? get params {
+    switch (this) {
+      case LibraryArtistSort.recentlyAdded:
+        return 'ggMGKgQIABAB';
+      case LibraryArtistSort.aToZ:
+        return 'ggMGKgQIARAA';
+      case LibraryArtistSort.zToA:
+        return 'ggMGKgQIARAB';
+      case LibraryArtistSort.mostSongs:
+        return null; // Handled locally
+    }
+  }
+}
+
 class InnerTubeService {
   static const String _baseUrl = 'https://music.youtube.com/youtubei/v1';
   static const String _apiKey = 'AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30';
@@ -810,16 +835,46 @@ class InnerTubeService {
     return _parseLibraryPlaylists(response);
   }
 
-  /// Get user's subscribed artists
-  Future<List<Artist>> getSubscribedArtists() async {
+  /// Get user's library artists (artists from saved songs)
+  Future<List<Artist>> getLibraryArtists({LibraryArtistSort? sort}) async {
     if (!isAuthenticated) return [];
 
     final response = await _request('browse', {
       'browseId': 'FEmusic_library_corpus_track_artists',
+      if (sort?.params != null) 'params': sort!.params,
     }, authenticated: true);
 
     if (response == null) return [];
-    return _parseLibraryArtists(response);
+    
+    final artists = _parseLibraryArtists(response);
+    
+    // Handle "Most Songs" sort locally
+    if (sort == LibraryArtistSort.mostSongs) {
+      artists.sort((a, b) => (b.songsCount ?? 0).compareTo(a.songsCount ?? 0));
+    }
+    
+    return artists;
+  }
+
+  /// Get user's subscribed artists (channel subscriptions)
+  Future<List<Artist>> getLibrarySubscriptions({LibraryArtistSort? sort}) async {
+    if (!isAuthenticated) return [];
+
+    final response = await _request('browse', {
+      'browseId': 'FEmusic_library_corpus_artists',
+      if (sort?.params != null) 'params': sort!.params,
+    }, authenticated: true);
+
+    if (response == null) return [];
+    
+    final artists = _parseLibraryArtists(response);
+    
+    // Handle "Most Songs" sort locally
+    if (sort == LibraryArtistSort.mostSongs) {
+      artists.sort((a, b) => (b.songsCount ?? 0).compareTo(a.songsCount ?? 0));
+    }
+    
+    return artists;
   }
 
   /// Get recently played (flat list)
@@ -3903,8 +3958,11 @@ class InnerTubeService {
       final browseEndpoint = renderer['navigationEndpoint']?['browseEndpoint'];
       final channelId = browseEndpoint?['browseId'] as String?;
 
-      // Artists have channel IDs starting with UC (channels)
-      if (channelId == null || !channelId.startsWith('UC')) return null;
+      // Artists have channel IDs starting with UC (channels) or FE (library artists)
+      if (channelId == null ||
+          (!channelId.startsWith('UC') && !channelId.startsWith('FE'))) {
+        return null;
+      }
 
       // Get name from flex columns
       final flexColumns = renderer['flexColumns'] as List?;
@@ -3916,6 +3974,27 @@ class InnerTubeService {
                 as List?;
         if (nameRuns != null && nameRuns.isNotEmpty) {
           name = nameRuns[0]['text'] ?? 'Unknown Artist';
+        }
+      }
+
+      // Get songs count if available (from second flex column)
+      int? songsCount;
+      if (flexColumns != null && flexColumns.length > 1) {
+        final subtitleRuns =
+            flexColumns[1]['musicResponsiveListItemFlexColumnRenderer']?['text']?['runs']
+                as List?;
+        if (subtitleRuns != null && subtitleRuns.isNotEmpty) {
+          for (final run in subtitleRuns) {
+            final text = run['text'] as String?;
+            if (text != null && text.contains('song')) {
+              // Extract number from "15 songs"
+              final match = RegExp(r'(\d+)').firstMatch(text);
+              if (match != null) {
+                songsCount = int.tryParse(match.group(1)!);
+                break;
+              }
+            }
+          }
         }
       }
 
@@ -3932,6 +4011,7 @@ class InnerTubeService {
         id: channelId,
         name: name,
         thumbnailUrl: thumbnailUrl,
+        songsCount: songsCount,
         isSubscribed: true,
       );
     } catch (e) {
@@ -4836,7 +4916,8 @@ class InnerTubeService {
       final header =
           response['header']?['musicImmersiveHeaderRenderer'] ??
           response['header']?['musicVisualHeaderRenderer'] ??
-          response['header']?['musicResponsiveHeaderRenderer'];
+          response['header']?['musicResponsiveHeaderRenderer'] ??
+          response['header']?['musicHeaderRenderer']; // Fallback for library artists
 
       String? name;
       String? thumbnailUrl;
@@ -4907,7 +4988,7 @@ class InnerTubeService {
       String? songsParams;
 
       // Parse Content Sections
-      final sections =
+      var sections =
           _navigateJson(response, [
                 'contents',
                 'singleColumnBrowseResultsRenderer',
@@ -4919,6 +5000,22 @@ class InnerTubeService {
                 'contents',
               ])
               as List?;
+
+      // Fallback for Library Artists which might just have a musicShelfRenderer directly
+      if (sections == null) {
+        final shelf = _navigateJson(response, [
+          'contents',
+          'singleColumnBrowseResultsRenderer',
+          'tabs',
+          0,
+          'tabRenderer',
+          'content',
+          'musicShelfRenderer',
+        ]);
+        if (shelf != null) {
+          sections = [{'musicShelfRenderer': shelf}];
+        }
+      }
 
       if (sections != null) {
         for (final section in sections) {

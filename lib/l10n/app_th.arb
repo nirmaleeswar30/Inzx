@@ -976,6 +976,7 @@
   "recentlyPlayed": "เพิ่งเล่น",
   "noAlbumsYet": "ยังไม่มีอัลบั้ม",
   "playSomeMusicToSeeAlbumsHere": "เล่นเพลงเพื่อดูอัลบั้มที่นี่",
+  "subscriptions": "Subscriptions",
   "subscribedArtists": "ศิลปินที่ติดตาม",
   "noSubscribedArtists": "ไม่มีศิลปินที่ติดตาม",
   "errorLoadingArtists": "เกิดข้อผิดพลาดในการโหลดศิลปิน",

@@ -6,10 +6,12 @@ import '../../core/l10n/app_localizations_x.dart';
 import '../../providers/providers.dart';
 import '../../providers/bookmarks_and_stats_provider.dart';
 import '../../models/models.dart';
+import '../../services/ytmusic_api_service.dart';
 import '../../services/download_service.dart';
 import '../widgets/playlist_screen.dart';
 import '../widgets/now_playing_screen.dart';
 import '../widgets/history_screen.dart';
+import '../widgets/artist_page_screen.dart';
 import '../search_screen.dart';
 
 /// Library tab with albums, artists, and playlists
@@ -988,8 +990,10 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
   Widget _buildArtistsView(bool isDark, ColorScheme colorScheme) {
     final l10n = context.l10n;
     final ytAuthState = ref.watch(ytMusicAuthStateProvider);
+    final sort = ref.watch(ytMusicLibraryArtistSortProvider);
+
     final ytArtistsAsync = ytAuthState.isLoggedIn
-        ? ref.watch(ytMusicSubscribedArtistsProvider)
+        ? ref.watch(ytMusicLibrarySubscriptionsProvider)
         : const AsyncValue<List<Artist>>.data([]);
 
     final recentlyPlayed = ref.watch(recentlyPlayedProvider);
@@ -1006,21 +1010,43 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
     return ListView(
       padding: const EdgeInsets.only(bottom: 100),
       children: [
-        // YouTube Music subscribed artists
+        // YouTube Music artists section
         if (ytAuthState.isLoggedIn) ...[
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(Icons.music_note, size: 16, color: Colors.red),
-                const SizedBox(width: 6),
                 Text(
                   l10n.subscribedArtists,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white54 : InzxColors.textSecondary,
+                    color: isDark ? Colors.white : InzxColors.textPrimary,
                   ),
+                ),
+                PopupMenuButton<LibraryArtistSort>(
+                  icon: Icon(Icons.sort_rounded, size: 22, color: isDark ? Colors.white70 : InzxColors.textSecondary),
+                  initialValue: sort,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 4,
+                  onSelected: (LibraryArtistSort result) {
+                    ref.read(ytMusicLibraryArtistSortProvider.notifier).state = result;
+                  },
+                  itemBuilder: (BuildContext context) => <PopupMenuEntry<LibraryArtistSort>>[
+                    PopupMenuItem<LibraryArtistSort>(
+                      value: LibraryArtistSort.recentlyAdded,
+                      child: Text(l10n.recentlyAdded, style: const TextStyle(fontWeight: FontWeight.w500)),
+                    ),
+                    const PopupMenuItem<LibraryArtistSort>(
+                      value: LibraryArtistSort.aToZ,
+                      child: Text('A to Z', style: TextStyle(fontWeight: FontWeight.w500)),
+                    ),
+                    const PopupMenuItem<LibraryArtistSort>(
+                      value: LibraryArtistSort.zToA,
+                      child: Text('Z to A', style: TextStyle(fontWeight: FontWeight.w500)),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1046,9 +1072,10 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
                       final artist = artists[index];
                       return _buildArtistTile(
                         artist.name,
-                        0, // We don't have song count
+                        artist.songsCount ?? 0,
                         isDark,
                         colorScheme,
+                        artistId: artist.id,
                         imageUrl: artist.thumbnailUrl,
                         isYTMusic: true,
                       );
@@ -1103,42 +1130,29 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
     int songCount,
     bool isDark,
     ColorScheme colorScheme, {
+    String? artistId,
     String? imageUrl,
     bool isYTMusic = false,
   }) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: CircleAvatar(
-        radius: 28,
+        radius: 30,
         backgroundColor: colorScheme.primaryContainer,
         backgroundImage: imageUrl != null
             ? CachedNetworkImageProvider(imageUrl)
             : null,
         child: imageUrl == null
-            ? Icon(Icons.person_rounded, color: colorScheme.primary)
+            ? Icon(Icons.person_rounded, color: colorScheme.primary, size: 30)
             : null,
       ),
-      title: Row(
-        children: [
-          Expanded(
-            child: Text(
-              name,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: isDark ? Colors.white : InzxColors.textPrimary,
-              ),
-            ),
-          ),
-          if (isYTMusic)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: const Icon(Icons.music_note, size: 12, color: Colors.red),
-            ),
-        ],
+      title: Text(
+        name,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: isDark ? Colors.white : InzxColors.textPrimary,
+        ),
       ),
       subtitle: songCount > 0
           ? Text(
@@ -1150,7 +1164,16 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
             )
           : null,
       onTap: () {
-        // TODO: Open artist page
+        if (artistId != null && artistId.isNotEmpty) {
+          ArtistPageScreen.open(
+            context,
+            artistId: artistId,
+            name: name,
+            thumbnailUrl: imageUrl,
+          );
+        } else {
+          // If no ID (like local recently played), we could do a search or just ignore
+        }
       },
     );
   }

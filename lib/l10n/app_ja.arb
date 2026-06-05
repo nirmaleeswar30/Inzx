@@ -976,6 +976,7 @@
   "recentlyPlayed": "最近プレイした",
   "noAlbumsYet": "まだアルバムがありません",
   "playSomeMusicToSeeAlbumsHere": "音楽を再生すると、ここでアルバムが表示されます",
+  "subscriptions": "Subscriptions",
   "subscribedArtists": "登録アーティスト",
   "noSubscribedArtists": "登録しているアーティストはいません",
   "errorLoadingArtists": "アーティストの読み込みエラー",

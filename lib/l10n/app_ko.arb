@@ -976,6 +976,7 @@
   "recentlyPlayed": "최근에 플레이한",
   "noAlbumsYet": "아직 앨범이 없습니다.",
   "playSomeMusicToSeeAlbumsHere": "여기서 앨범을 보려면 음악을 재생하세요.",
+  "subscriptions": "Subscriptions",
   "subscribedArtists": "구독 아티스트",
   "noSubscribedArtists": "구독한 아티스트 없음",
   "errorLoadingArtists": "아티스트를 로드하는 중에 오류가 발생했습니다.",

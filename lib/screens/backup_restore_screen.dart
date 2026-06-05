@@ -367,7 +367,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
       ref.invalidate(ytMusicLikedSongsProvider);
       ref.invalidate(ytMusicSavedAlbumsProvider);
       ref.invalidate(ytMusicSavedPlaylistsProvider);
-      ref.invalidate(ytMusicSubscribedArtistsProvider);
+      ref.invalidate(ytMusicLibrarySubscriptionsProvider);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -61,7 +61,7 @@ class YTMusicSyncService {
       }
 
       // Sync subscribed artists
-      final subscribedArtists = await _innerTube.getSubscribedArtists();
+      final subscribedArtists = await _innerTube.getLibrarySubscriptions();
       if (subscribedArtists.isNotEmpty) {
         _subscribedArtists = subscribedArtists;
         await _saveArtists(subscribedArtists);

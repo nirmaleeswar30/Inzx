@@ -209,15 +209,30 @@ final ytMusicSavedPlaylistsProvider = FutureProvider<List<Playlist>>((
   return innerTube.getSavedPlaylists();
 });
 
-/// Subscribed artists from YT Music
-final ytMusicSubscribedArtistsProvider = FutureProvider<List<Artist>>((
-  ref,
-) async {
+/// Current sort order for library artists
+final ytMusicLibraryArtistSortProvider = StateProvider<LibraryArtistSort>((ref) => LibraryArtistSort.recentlyAdded);
+
+/// Current filter for library artists (0 = Artists, 1 = Subscriptions)
+final ytMusicLibraryArtistFilterProvider = StateProvider<int>((ref) => 0);
+
+/// Library artists from YT Music (based on saved songs)
+final ytMusicLibraryArtistsProvider = FutureProvider<List<Artist>>((ref) async {
   final authState = ref.watch(ytMusicAuthStateProvider);
   if (!authState.isLoggedIn) return [];
 
+  final sort = ref.watch(ytMusicLibraryArtistSortProvider);
   final innerTube = ref.watch(innerTubeServiceProvider);
-  return innerTube.getSubscribedArtists();
+  return innerTube.getLibraryArtists(sort: sort);
+});
+
+/// Subscribed artists from YT Music
+final ytMusicLibrarySubscriptionsProvider = FutureProvider<List<Artist>>((ref) async {
+  final authState = ref.watch(ytMusicAuthStateProvider);
+  if (!authState.isLoggedIn) return [];
+
+  final sort = ref.watch(ytMusicLibraryArtistSortProvider);
+  final innerTube = ref.watch(innerTubeServiceProvider);
+  return innerTube.getLibrarySubscriptions(sort: sort);
 });
 
 // ============ HOME PAGE ============

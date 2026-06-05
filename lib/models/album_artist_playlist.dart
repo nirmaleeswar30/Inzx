@@ -125,6 +125,7 @@ class Artist extends Equatable {
   final List<Artist>? similarArtists; // Fans also like
   final String? songsBrowseId; // For "See all songs" navigation
   final String? songsParams; // Required params for artist songs browse
+  final int? songsCount; // Number of songs in library
   final bool isSubscribed;
 
   const Artist({
@@ -141,6 +142,7 @@ class Artist extends Equatable {
     this.similarArtists,
     this.songsBrowseId,
     this.songsParams,
+    this.songsCount,
     this.isSubscribed = false,
   });
 
@@ -170,6 +172,7 @@ class Artist extends Equatable {
     List<Artist>? similarArtists,
     String? songsBrowseId,
     String? songsParams,
+    int? songsCount,
     bool? isSubscribed,
   }) {
     return Artist(
@@ -186,6 +189,7 @@ class Artist extends Equatable {
       similarArtists: similarArtists ?? this.similarArtists,
       songsBrowseId: songsBrowseId ?? this.songsBrowseId,
       songsParams: songsParams ?? this.songsParams,
+      songsCount: songsCount ?? this.songsCount,
       isSubscribed: isSubscribed ?? this.isSubscribed,
     );
   }
@@ -201,6 +205,7 @@ class Artist extends Equatable {
       'thumbnailUrl': thumbnailUrl,
       'description': description,
       'subscriberCount': subscriberCount,
+      'songsCount': songsCount,
       'isSubscribed': isSubscribed,
     };
   }
@@ -213,6 +218,7 @@ class Artist extends Equatable {
       thumbnailUrl: json['thumbnailUrl'] as String?,
       description: json['description'] as String?,
       subscriberCount: json['subscriberCount'] as int?,
+      songsCount: json['songsCount'] as int?,
       isSubscribed: json['isSubscribed'] as bool? ?? false,
     );
   }
