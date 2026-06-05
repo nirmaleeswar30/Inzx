@@ -101,6 +101,10 @@ class YTPlayerUtils {
             contentLength: cached.contentLength,
             codecs: cached.codec,
           ),
+          playbackTracking: PlaybackTracking(
+            videostatsPlaybackUrl: cached.videostatsPlaybackUrl,
+            videostatsWatchtimeUrl: cached.videostatsWatchtimeUrl,
+          ),
           streamUrl: cached.streamUrl,
           streamExpiresInSeconds: cached.expiresInSeconds,
           fetchedAt: cached.fetchedAt,
@@ -126,6 +130,8 @@ class YTPlayerUtils {
         bitrate: data.format.bitrate,
         contentLength: data.format.contentLength,
         codec: data.format.codecs,
+        videostatsPlaybackUrl: data.playbackTracking?.videostatsPlaybackUrl,
+        videostatsWatchtimeUrl: data.playbackTracking?.videostatsWatchtimeUrl,
       );
       HiveService.streamCacheBox.put(videoId, entity);
       if (kDebugMode) {
@@ -136,6 +142,14 @@ class YTPlayerUtils {
         print('YTPlayerUtils: Persistent cache save error: $e');
       }
     }
+  }
+
+  bool _hasPlaybackTracking(PlaybackData data) =>
+      data.playbackTracking?.hasStatsUrls == true;
+
+  void _discardUntrackedCache(String videoId) {
+    _cache.remove(videoId);
+    unawaited(HiveService.streamCacheBox.delete(videoId));
   }
 
   /// Get playback data for a video
@@ -161,30 +175,48 @@ class YTPlayerUtils {
     final cached = _cache[videoId];
     if (cached != null && cached.isValid) {
       final normalized = _normalizePlaybackData(cached);
-      if (!identical(normalized, cached)) {
-        _cache[videoId] = normalized;
-        _saveToPersistentCache(videoId, normalized);
+      if (!_hasPlaybackTracking(normalized)) {
+        if (kDebugMode) {
+          print(
+            'YTPlayerUtils: Ignoring cached playback without tracking URLs',
+          );
+        }
+        _discardUntrackedCache(videoId);
+      } else {
+        if (!identical(normalized, cached)) {
+          _cache[videoId] = normalized;
+          _saveToPersistentCache(videoId, normalized);
+        }
+        CacheAnalytics.instance.recordCacheHit();
+        if (kDebugMode) {
+          print('YTPlayerUtils: Using cached playback data (memory)');
+        }
+        return PlaybackResult.success(normalized);
       }
-      CacheAnalytics.instance.recordCacheHit();
-      if (kDebugMode) {
-        print('YTPlayerUtils: Using cached playback data (memory)');
-      }
-      return PlaybackResult.success(normalized);
     }
 
     // Check persistent cache (Hive)
     final persistedData = _loadFromPersistentCache(videoId);
     if (persistedData != null) {
       final normalized = _normalizePlaybackData(persistedData);
-      CacheAnalytics.instance.recordCacheHit();
-      _cache[videoId] = normalized; // Also add to memory cache
-      if (!identical(normalized, persistedData)) {
-        _saveToPersistentCache(videoId, normalized);
+      if (!_hasPlaybackTracking(normalized)) {
+        if (kDebugMode) {
+          print(
+            'YTPlayerUtils: Ignoring disk playback cache without tracking URLs',
+          );
+        }
+        _discardUntrackedCache(videoId);
+      } else {
+        CacheAnalytics.instance.recordCacheHit();
+        _cache[videoId] = normalized; // Also add to memory cache
+        if (!identical(normalized, persistedData)) {
+          _saveToPersistentCache(videoId, normalized);
+        }
+        if (kDebugMode) {
+          print('YTPlayerUtils: Using cached playback data (disk)');
+        }
+        return PlaybackResult.success(normalized);
       }
-      if (kDebugMode) {
-        print('YTPlayerUtils: Using cached playback data (disk)');
-      }
-      return PlaybackResult.success(normalized);
     }
 
     CacheAnalytics.instance.recordCacheMiss();

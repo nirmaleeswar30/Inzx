@@ -330,6 +330,18 @@ class AudioPlayerService {
   Map<int, PlaybackData> _activeSourcePlaybackDataByQueueIndex =
       const <int, PlaybackData>{};
   static const _cacheMaintenanceInterval = Duration(minutes: 3);
+  Timer? _youtubeWatchtimeTimer;
+  String? _youtubeTrackingVideoId;
+  String? _youtubeTrackingCpn;
+  DateTime? _youtubeTrackingStartedAt;
+  Duration _youtubeTrackingLastPosition = Duration.zero;
+  bool _youtubePlaybackStartSent = false;
+  final Set<String> _youtubeTrackingResolveInProgress = <String>{};
+  static const _youtubeWatchtimeInterval = Duration(seconds: 10);
+  /// Tracking URLs obtained from an authenticated WEB_REMIX player request.
+  /// These are session-bound and required for play history to update.
+  /// Unauthenticated tracking URLs (from ANDROID_VR/IOS) do NOT update history.
+  PlaybackTracking? _authenticatedPlaybackTracking;
 
   /// Load streaming quality from SharedPreferences on init
   Future<void> _loadStreamingQuality() async {
@@ -1912,6 +1924,8 @@ class AudioPlayerService {
         isLoading: playerState.processingState == ProcessingState.loading,
       );
 
+      _handleYoutubeTrackingPlaybackState(playerState);
+
       // Auto-play next track when current one completes.
       if (playerState.processingState == ProcessingState.completed) {
         _onTrackComplete();
@@ -1942,6 +1956,10 @@ class AudioPlayerService {
         currentPlaybackData: playbackData ?? _currentPlaybackData,
         isLoading: false,
       );
+      _resetYoutubePlaybackTrackingForCurrentTrack();
+      if (_player.playing) {
+        _startYoutubePlaybackTracking();
+      }
       _saveQueueDebounced();
       _prefetchNextTrack();
       _scheduleLyricsPrefetchAroundCurrent();
@@ -2020,6 +2038,217 @@ class AudioPlayerService {
     _cacheMaintenanceTimer = Timer.periodic(_cacheMaintenanceInterval, (_) {
       unawaited(_enforceAudioCacheLimit());
     });
+  }
+
+  void _handleYoutubeTrackingPlaybackState(PlayerState playerState) {
+    if (playerState.playing &&
+        playerState.processingState != ProcessingState.completed) {
+      _startYoutubePlaybackTracking();
+      return;
+    }
+
+    if (_youtubeWatchtimeTimer != null) {
+      final state = playerState.processingState == ProcessingState.completed
+          ? 'ended'
+          : 'paused';
+      unawaited(_sendYoutubeWatchtime(state: state, force: true));
+      _stopYoutubeWatchtimeTimer();
+    }
+  }
+
+  void _resetYoutubePlaybackTrackingForCurrentTrack() {
+    final videoId = _currentTrack?.id;
+    if (_youtubeTrackingVideoId == videoId) return;
+
+    _stopYoutubeWatchtimeTimer();
+    _youtubeTrackingVideoId = videoId;
+    _youtubeTrackingCpn = _generateYoutubeCpn();
+    _youtubeTrackingStartedAt = DateTime.now();
+    _youtubeTrackingLastPosition = Duration.zero;
+    _youtubePlaybackStartSent = false;
+    _authenticatedPlaybackTracking = null;
+  }
+
+  void _startYoutubePlaybackTracking() {
+    if (_innerTubeService?.isAuthenticated != true) return;
+    final track = _currentTrack;
+    if (track == null) return;
+
+    // Ensure tracking state is initialized for the current track.
+    // This is idempotent — only resets if the track has changed.
+    // Must be called BEFORE the resolve check so that:
+    //   1st call: sets _youtubeTrackingVideoId (and nulls tracking — fine, it's null)
+    //   2nd call (after resolve): early-returns because videoId matches,
+    //   preserving the just-resolved _authenticatedPlaybackTracking.
+    _resetYoutubePlaybackTrackingForCurrentTrack();
+
+    // Resolve authenticated tracking URLs if we don't have them yet.
+    // Tracking URLs from unauthenticated player clients (ANDROID_VR, IOS)
+    // do NOT update the user's play history. We need URLs from an
+    // authenticated WEB_REMIX player request for history to update.
+    if (_authenticatedPlaybackTracking == null ||
+        !_authenticatedPlaybackTracking!.hasStatsUrls) {
+      unawaited(_resolveYoutubeTrackingForCurrentTrack(track.id));
+      return;
+    }
+    final tracking = _authenticatedPlaybackTracking!;
+
+    if (!_youtubePlaybackStartSent) {
+      _youtubePlaybackStartSent = true;
+      final playbackUrl = tracking.videostatsPlaybackUrl;
+      if (playbackUrl != null && playbackUrl.isNotEmpty) {
+        final url = _appendYoutubeStatsParams(
+          playbackUrl,
+          state: 'playing',
+          start: Duration.zero,
+          end: _player.position,
+        );
+        unawaited(_innerTubeService!.sendPlaybackStatsUrl(url));
+      }
+    }
+
+    _youtubeWatchtimeTimer ??= Timer.periodic(_youtubeWatchtimeInterval, (_) {
+      unawaited(_sendYoutubeWatchtime(state: 'playing'));
+    });
+  }
+
+  Future<void> _resolveYoutubeTrackingForCurrentTrack(String trackId) async {
+    if (_innerTubeService?.isAuthenticated != true) return;
+    if (_youtubeTrackingResolveInProgress.contains(trackId)) return;
+    _youtubeTrackingResolveInProgress.add(trackId);
+
+    try {
+      if (kDebugMode) {
+        print(
+          'AudioPlayerService: Resolving authenticated playback tracking for $trackId',
+        );
+      }
+
+      // Use authenticated InnerTubeService to get tracking URLs.
+      // This makes a WEB_REMIX player request with the user's YT Music
+      // cookies, producing tracking URLs bound to the user's session.
+      // Only these session-bound URLs will update play history.
+      final trackingJson =
+          await _innerTubeService!.getAuthenticatedPlaybackTracking(trackId);
+
+      final tracking = PlaybackTracking.fromJson(trackingJson);
+      if (!tracking.hasStatsUrls) {
+        if (kDebugMode) {
+          print(
+            'AudioPlayerService: No authenticated tracking URLs for $trackId',
+          );
+        }
+        return;
+      }
+
+      if (_currentTrack?.id != trackId) return;
+      _authenticatedPlaybackTracking = tracking;
+      if (kDebugMode) {
+        print(
+          'AudioPlayerService: Got authenticated tracking URLs for $trackId',
+        );
+      }
+      if (_player.playing) {
+        _startYoutubePlaybackTracking();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('AudioPlayerService: Tracking resolve failed for $trackId: $e');
+      }
+    } finally {
+      _youtubeTrackingResolveInProgress.remove(trackId);
+    }
+  }
+
+  Future<void> _sendYoutubeWatchtime({
+    required String state,
+    bool force = false,
+  }) async {
+    final innerTube = _innerTubeService;
+    final track = _currentTrack;
+    final watchtimeUrl = _authenticatedPlaybackTracking?.videostatsWatchtimeUrl;
+    if (innerTube == null ||
+        !innerTube.isAuthenticated ||
+        track == null ||
+        watchtimeUrl == null ||
+        watchtimeUrl.isEmpty) {
+      return;
+    }
+
+    final position = _player.position;
+    if (!force && position <= _youtubeTrackingLastPosition) return;
+
+    final url = _appendYoutubeStatsParams(
+      watchtimeUrl,
+      state: state,
+      start: _youtubeTrackingLastPosition,
+      end: position,
+    );
+    
+    if (kDebugMode) {
+      print(
+        'AudioPlayerService: Sending YT watchtime stats (pos: ${position.inSeconds}s, state: $state)',
+      );
+    }
+    
+    _youtubeTrackingLastPosition = position;
+    await innerTube.sendPlaybackStatsUrl(url);
+  }
+
+  void _stopYoutubeWatchtimeTimer() {
+    _youtubeWatchtimeTimer?.cancel();
+    _youtubeWatchtimeTimer = null;
+  }
+
+  String _appendYoutubeStatsParams(
+    String baseUrl, {
+    required String state,
+    required Duration start,
+    required Duration end,
+  }) {
+    final uri = Uri.parse(baseUrl);
+    final params = <String, List<String>>{
+      for (final entry in uri.queryParametersAll.entries)
+        entry.key: List<String>.from(entry.value),
+    };
+
+    void setParam(String key, String value) {
+      params[key] = <String>[value];
+    }
+
+    final cpn = _youtubeTrackingCpn ??= _generateYoutubeCpn();
+    final elapsed = _youtubeTrackingStartedAt == null
+        ? Duration.zero
+        : DateTime.now().difference(_youtubeTrackingStartedAt!);
+
+    setParam('cpn', cpn);
+    setParam('ver', params['ver']?.firstOrNull ?? '2');
+    setParam('state', state);
+    setParam('cmt', _statsSeconds(end));
+    setParam('st', _statsSeconds(start));
+    setParam('et', _statsSeconds(end));
+    setParam('rt', _statsSeconds(elapsed));
+    setParam('volume', '100');
+
+    return uri
+        .replace(
+          queryParameters: {
+            for (final entry in params.entries) entry.key: entry.value.last,
+          },
+        )
+        .toString();
+  }
+
+  String _statsSeconds(Duration duration) {
+    final seconds = max(0, duration.inMilliseconds) / 1000;
+    return seconds.toStringAsFixed(3);
+  }
+
+  String _generateYoutubeCpn() {
+    const chars =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+    final random = Random.secure();
+    return List.generate(16, (_) => chars[random.nextInt(chars.length)]).join();
   }
 
   /// Pre-fetch the next track's stream URL for seamless playback
@@ -2551,6 +2780,8 @@ class AudioPlayerService {
 
   /// Clear the queue
   void clearQueue() {
+    unawaited(_sendYoutubeWatchtime(state: 'paused', force: true));
+    _stopYoutubeWatchtimeTimer();
     _queue.clear();
     _originalQueue.clear();
     _currentIndex = -1;
@@ -3092,6 +3323,8 @@ class AudioPlayerService {
   /// Stop playback
   Future<void> stop() async {
     final position = _player.position;
+    unawaited(_sendYoutubeWatchtime(state: 'paused', force: true));
+    _stopYoutubeWatchtimeTimer();
     _persistQueueNow(position: position);
     await _player.stop();
     await _inactivePlayer.stop();
@@ -3380,6 +3613,8 @@ class AudioPlayerService {
   void dispose() {
     _persistenceDebounceTimer?.cancel();
     _cacheMaintenanceTimer?.cancel();
+    unawaited(_sendYoutubeWatchtime(state: 'paused', force: true));
+    _stopYoutubeWatchtimeTimer();
     _stopAllLiveCacheProgressLoggers();
     while (_precacheSlotWaiters.isNotEmpty) {
       final waiter = _precacheSlotWaiters.removeFirst();

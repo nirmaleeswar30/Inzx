@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:crypto/crypto.dart';
-import 'package:flutter/foundation.dart' show compute, kDebugMode;
+import 'package:flutter/foundation.dart' show compute, debugPrint, kDebugMode;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/providers/locale_provider.dart';
@@ -52,11 +52,11 @@ class InnerTubeService {
   }
 
   /// Generate SAPISIDHASH for authenticated requests
-  String? _generateSapisidHash() {
+  String? _generateSapisidHash({String origin = 'https://music.youtube.com'}) {
     if (_sapisid == null) return null;
 
     final timestamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
-    final data = '$timestamp $_sapisid https://music.youtube.com';
+    final data = '$timestamp $_sapisid $origin';
     final hash = sha1.convert(utf8.encode(data)).toString();
     return 'SAPISIDHASH ${timestamp}_$hash';
   }
@@ -65,6 +65,8 @@ class InnerTubeService {
   Map<String, String> _buildHeaders({
     bool authenticated = false,
     String acceptLanguage = 'en-US,en;q=0.9',
+    String origin = 'https://music.youtube.com',
+    String? referer,
   }) {
     final headers = <String, String>{
       'Content-Type': 'application/json',
@@ -72,13 +74,13 @@ class InnerTubeService {
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       'Accept': '*/*',
       'Accept-Language': acceptLanguage,
-      'Origin': 'https://music.youtube.com',
-      'Referer': 'https://music.youtube.com/',
+      'Origin': origin,
+      'Referer': referer ?? '$origin/',
       'X-Goog-Visitor-Id': _generateVisitorId(),
     };
 
     if (authenticated && isAuthenticated) {
-      final sapisidHash = _generateSapisidHash();
+      final sapisidHash = _generateSapisidHash(origin: origin);
       if (sapisidHash != null) {
         headers['Authorization'] = sapisidHash;
       }
@@ -89,6 +91,66 @@ class InnerTubeService {
     }
 
     return headers;
+  }
+
+  /// Fetch playback tracking URLs via an authenticated WEB_REMIX player request.
+  ///
+  /// The tracking URLs (videostatsPlaybackUrl, videostatsWatchtimeUrl) returned
+  /// by an authenticated request are bound to the user's session. Hitting them
+  /// during playback updates the user's YT Music play history and
+  /// recommendations. Tracking URLs from unauthenticated player clients
+  /// (ANDROID_VR, IOS, etc.) do NOT update play history, even when sent with
+  /// auth cookies, because YouTube ties history to the session that made the
+  /// original player request.
+  Future<Map<String, dynamic>?> getAuthenticatedPlaybackTracking(
+    String videoId,
+  ) async {
+    if (!isAuthenticated) return null;
+
+    final response = await _request('player', {
+      'videoId': videoId,
+      'playlistId': null,
+    }, authenticated: true);
+
+    if (response == null) return null;
+    return response['playbackTracking'] as Map<String, dynamic>?;
+  }
+
+  /// Send a YouTube playback stats URL with the active YT Music auth cookies.
+  ///
+  /// Player responses include fully formed videostats URLs. Hitting those URLs
+  /// while playback progresses lets YouTube update watch history and
+  /// recommendations for signed-in users.
+  Future<bool> sendPlaybackStatsUrl(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      // Always use music.youtube.com origin because our auth cookies (SAPISID)
+      // are bound to the YT Music origin. Even if the stats URL is on
+      // s.youtube.com, the request needs YT Music context.
+      const origin = 'https://music.youtube.com';
+      final headers = _buildHeaders(
+        authenticated: true,
+        origin: origin,
+        referer: '$origin/',
+      )..remove('Content-Type');
+
+      final response = await http
+          .get(uri, headers: headers)
+          .timeout(const Duration(seconds: 8));
+
+      final ok = response.statusCode >= 200 && response.statusCode < 400;
+      if (kDebugMode) {
+        debugPrint(
+          'InnerTube playback stats (status: ${response.statusCode}, ok: $ok): $url',
+        );
+      }
+      return ok;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('InnerTube playback stats error: $e');
+      }
+      return false;
+    }
   }
 
   String _generateVisitorId() {

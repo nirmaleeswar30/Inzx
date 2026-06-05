@@ -25,13 +25,15 @@ class StreamCacheEntityAdapter extends TypeAdapter<StreamCacheEntity> {
       bitrate: fields[5] as int,
       contentLength: fields[6] as int?,
       codec: fields[7] as String?,
+      videostatsPlaybackUrl: fields[8] as String?,
+      videostatsWatchtimeUrl: fields[9] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, StreamCacheEntity obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.videoId)
       ..writeByte(1)
@@ -47,7 +49,11 @@ class StreamCacheEntityAdapter extends TypeAdapter<StreamCacheEntity> {
       ..writeByte(6)
       ..write(obj.contentLength)
       ..writeByte(7)
-      ..write(obj.codec);
+      ..write(obj.codec)
+      ..writeByte(8)
+      ..write(obj.videostatsPlaybackUrl)
+      ..writeByte(9)
+      ..write(obj.videostatsWatchtimeUrl);
   }
 
   @override

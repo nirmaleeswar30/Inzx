@@ -30,6 +30,12 @@ class StreamCacheEntity extends HiveObject {
   @HiveField(7)
   final String? codec;
 
+  @HiveField(8)
+  final String? videostatsPlaybackUrl;
+
+  @HiveField(9)
+  final String? videostatsWatchtimeUrl;
+
   StreamCacheEntity({
     required this.videoId,
     required this.streamUrl,
@@ -39,6 +45,8 @@ class StreamCacheEntity extends HiveObject {
     required this.bitrate,
     this.contentLength,
     this.codec,
+    this.videostatsPlaybackUrl,
+    this.videostatsWatchtimeUrl,
   });
 
   /// Check if stream URL is still valid (with 30s buffer)

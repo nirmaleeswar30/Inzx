@@ -159,6 +159,10 @@ class PlaybackTracking {
     this.videostatsWatchtimeUrl,
   });
 
+  bool get hasStatsUrls =>
+      (videostatsPlaybackUrl?.isNotEmpty ?? false) ||
+      (videostatsWatchtimeUrl?.isNotEmpty ?? false);
+
   factory PlaybackTracking.fromJson(Map<String, dynamic>? json) {
     if (json == null) return const PlaybackTracking();
     return PlaybackTracking(
