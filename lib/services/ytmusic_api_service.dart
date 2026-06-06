@@ -4030,6 +4030,22 @@ class InnerTubeService {
     SearchResultItem? topResult;
 
     try {
+      // Add debug prints to figure out the JSON structure
+      if (kDebugMode) {
+        final tabs = _navigateJson(response, ['contents', 'tabbedSearchResultsRenderer', 'tabs']);
+        print('tabs is null? ${tabs == null}');
+        if (tabs != null && tabs is List && tabs.isNotEmpty) {
+           final tabRenderer = tabs[0]['tabRenderer'];
+           print('tabRenderer keys: ${tabRenderer?.keys}');
+           final content = tabRenderer?['content'];
+           print('content keys: ${content?.keys}');
+           final sectionList = content?['sectionListRenderer'];
+           print('sectionListRenderer keys: ${sectionList?.keys}');
+           final contents = sectionList?['contents'];
+           print('sectionList contents is null? ${contents == null}');
+        }
+      }
+
       final contents =
           _navigateJson(response, [
                 'contents',
@@ -4054,10 +4070,12 @@ class InnerTubeService {
           continue;
         }
 
+        final itemSection = section['itemSectionRenderer'];
         final shelf = section['musicShelfRenderer'];
-        if (shelf == null) continue;
+        
+        if (shelf == null && itemSection == null) continue;
 
-        final items = shelf['contents'] as List?;
+        final items = shelf?['contents'] as List? ?? itemSection?['contents'] as List?;
         if (items == null) continue;
 
         // Track the first item of the first shelf as a fallback top result
