@@ -120,10 +120,10 @@
 <table>
 <tr>
 <td align="center" width="50%">
-<img src="./.github/screenshots/preview-android_auto.png" alt="Android Auto" width="380" height="180" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+<img src="./.github/screenshots/preview-android_auto.png" alt="Android Auto" width="380" height="220" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
 <br/><b>Android Auto</b>
 <td align="center" width="50%">
-<img src="./.github/screenshots/preview-android_auto-nowplaying.png" alt="Android Auto - Now Playing" width="360" height="180" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+<img src="./.github/screenshots/preview-android_auto-nowplaying.png" alt="Android Auto - Now Playing" width="360" height="220" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
 <br/><b>Android Auto - Now Playing</b>
 </tr>
 </table>
