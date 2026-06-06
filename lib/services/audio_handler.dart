@@ -114,6 +114,7 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
           MediaControl.skipToPrevious,
           state.isPlaying ? MediaControl.pause : MediaControl.play,
           MediaControl.skipToNext,
+          MediaControl.stop,
         ],
         systemActions: const {
           MediaAction.seek,
