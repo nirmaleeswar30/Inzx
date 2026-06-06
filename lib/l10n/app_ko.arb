@@ -1179,5 +1179,10 @@
     }
   },
   "history": "기록",
-  "historyDescription": "최근 청취 기록"
+  "historyDescription": "최근 청취 기록",
+  "removeFromPlaylist": "재생목록에서 삭제",
+  "removedFromPlaylist": "재생목록에서 삭제됨",
+  "deletePlaylist": "재생목록 삭제",
+  "deletePlaylistConfirm": "이 재생목록을 삭제하시겠습니까?",
+  "delete": "삭제"
 }

@@ -1179,5 +1179,10 @@
     }
   },
   "history": "చరిత్ర",
-  "historyDescription": "మీ ఇటీవలి వినడం చరిత్ర"
+  "historyDescription": "మీ ఇటీవలి వినడం చరిత్ర",
+  "removeFromPlaylist": "ప్లేజాబితా నుండి తీసివేయి",
+  "removedFromPlaylist": "ప్లేజాబితా నుండి తీసివేయబడింది",
+  "deletePlaylist": "ప్లేజాబితాను తొలగించు",
+  "deletePlaylistConfirm": "మీరు ఖచ్చితంగా ఈ ప్లేజాబితాను తొలగించాలనుకుంటున్నారా?",
+  "delete": "తొలగించు"
 }

@@ -1179,5 +1179,10 @@
     }
   },
   "history": "Історія",
-  "historyDescription": "Ваша недавня історія прослуховувань"
+  "historyDescription": "Ваша недавня історія прослуховувань",
+  "removeFromPlaylist": "Видалити з плейлиста",
+  "removedFromPlaylist": "Видалено з плейлиста",
+  "deletePlaylist": "Видалити плейлист",
+  "deletePlaylistConfirm": "Ви впевнені, що хочете видалити цей плейлист?",
+  "delete": "Видалити"
 }

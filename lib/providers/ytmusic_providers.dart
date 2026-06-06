@@ -1,5 +1,5 @@
-import 'dart:async' show unawaited;
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/foundation.dart' show compute, kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -198,16 +198,52 @@ final ytMusicSavedAlbumsProvider = FutureProvider<List<Album>>((ref) async {
   return innerTube.getSavedAlbums();
 });
 
-/// Saved playlists from YT Music
-final ytMusicSavedPlaylistsProvider = FutureProvider<List<Playlist>>((
-  ref,
-) async {
-  final authState = ref.watch(ytMusicAuthStateProvider);
-  if (!authState.isLoggedIn) return [];
+class YtMusicSavedPlaylistsNotifier extends AsyncNotifier<List<Playlist>> {
+  @override
+  FutureOr<List<Playlist>> build() async {
+    final authState = ref.watch(ytMusicAuthStateProvider);
+    if (!authState.isLoggedIn) return [];
 
-  final innerTube = ref.watch(innerTubeServiceProvider);
-  return innerTube.getSavedPlaylists();
-});
+    final innerTube = ref.watch(innerTubeServiceProvider);
+    final playlists = await innerTube.getSavedPlaylists();
+    
+    // Filter out locally deleted playlists that might still be cached on YouTube's servers
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final deletedIds = prefs.getStringList('ytm_deleted_playlists') ?? [];
+      if (deletedIds.isNotEmpty) {
+        return playlists.where((p) => !deletedIds.contains(p.id)).toList();
+      }
+    } catch (_) {}
+    
+    return playlists;
+  }
+
+  Future<void> removePlaylistOptimistically(String playlistId) async {
+    // Save to SharedPreferences so it survives restarts
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final deletedIds = prefs.getStringList('ytm_deleted_playlists') ?? [];
+      if (!deletedIds.contains(playlistId)) {
+        deletedIds.add(playlistId);
+        // Keep list small, e.g., last 50 deletions
+        if (deletedIds.length > 50) deletedIds.removeAt(0);
+        await prefs.setStringList('ytm_deleted_playlists', deletedIds);
+      }
+      // Also clear any cached tracks for this playlist
+      HiveService.playlistsBox.delete(playlistId);
+    } catch (_) {}
+
+    if (state.hasValue) {
+      final updated = state.value!.where((p) => p.id != playlistId).toList();
+      state = AsyncData(updated);
+    }
+  }
+}
+
+final ytMusicSavedPlaylistsProvider = AsyncNotifierProvider<YtMusicSavedPlaylistsNotifier, List<Playlist>>(
+  YtMusicSavedPlaylistsNotifier.new,
+);
 
 /// Current sort order for library artists
 final ytMusicLibraryArtistSortProvider = StateProvider<LibraryArtistSort>((ref) => LibraryArtistSort.recentlyAdded);
@@ -601,71 +637,122 @@ final ytMusicSearchSuggestionsProvider =
 
 // ============ CONTENT DETAILS ============
 
-final ytMusicPlaylistProvider = FutureProvider.family<Playlist?, String>((
-  ref,
-  playlistId,
-) async {
-  // Check cache first
-  try {
-    final cached = HiveService.playlistsBox.get(playlistId);
-    if (cached != null && !cached.isExpired) {
-      CacheAnalytics.instance.recordCacheHit();
-      if (kDebugMode) {
-        print('ytMusicPlaylistProvider: Loaded $playlistId from cache');
-      }
-      final cachedPlaylist = await compute(
-        _parsePlaylistIsolate,
-        cached.playlistJson,
-      );
-
-      // Older builds could cache only the first page (~100 tracks).
-      // Force one network refresh for this suspicious payload shape.
-      if ((cachedPlaylist.tracks?.length ?? 0) == 100) {
-        if (kDebugMode) {
-          print(
-            'ytMusicPlaylistProvider: Cached playlist $playlistId has exactly 100 tracks, refetching to avoid stale truncation',
-          );
-        }
-      } else {
-        return cachedPlaylist;
-      }
-    }
-  } catch (e) {
-    if (kDebugMode) {
-      print('ytMusicPlaylistProvider: Cache load error: $e');
-    }
-  }
-
-  // Fetch from network
-  CacheAnalytics.instance.recordCacheMiss();
-  CacheAnalytics.instance.recordNetworkCall();
-  final innerTube = ref.watch(innerTubeServiceProvider);
-  final playlist = await innerTube.getPlaylist(playlistId);
-
-  // Save to cache
-  if (playlist != null) {
+class YtMusicPlaylistNotifier extends FamilyAsyncNotifier<Playlist?, String> {
+  @override
+  FutureOr<Playlist?> build(String arg) async {
+    // Check cache first
     try {
-      HiveService.playlistsBox.put(
-        playlistId,
-        PlaylistCacheEntity(
-          playlistId: playlistId,
-          playlistJson: jsonEncode(playlist.toJson()),
-          cachedAt: DateTime.now(),
-          ttlMinutes: 30,
-        ),
-      );
-      if (kDebugMode) {
-        print('ytMusicPlaylistProvider: Cached $playlistId');
+      final cached = HiveService.playlistsBox.get(arg);
+      if (cached != null && !cached.isExpired) {
+        CacheAnalytics.instance.recordCacheHit();
+        if (kDebugMode) {
+          print('ytMusicPlaylistProvider: Loaded $arg from cache');
+        }
+        Playlist cachedPlaylist = await compute(
+          _parsePlaylistIsolate,
+          cached.playlistJson,
+        );
+
+        // Filter out locally deleted tracks that might still be cached
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          final removedIds = prefs.getStringList('ytm_removed_tracks_$arg') ?? [];
+          if (removedIds.isNotEmpty && cachedPlaylist.tracks != null) {
+            final filteredTracks = cachedPlaylist.tracks!.where((t) => !removedIds.contains(t.id)).toList();
+            cachedPlaylist = cachedPlaylist.copyWith(tracks: filteredTracks);
+          }
+        } catch (_) {}
+
+        // Older builds could cache only the first page (~100 tracks).
+        // Force one network refresh for this suspicious payload shape.
+        if ((cachedPlaylist.tracks?.length ?? 0) == 100) {
+          if (kDebugMode) {
+            print(
+              'ytMusicPlaylistProvider: Cached playlist $arg has exactly 100 tracks, refetching to avoid stale truncation',
+            );
+          }
+        } else {
+          return cachedPlaylist;
+        }
       }
     } catch (e) {
       if (kDebugMode) {
-        print('ytMusicPlaylistProvider: Cache save error: $e');
+        print('ytMusicPlaylistProvider: Cache load error: $e');
       }
     }
+
+    // Fetch from network
+    CacheAnalytics.instance.recordCacheMiss();
+    CacheAnalytics.instance.recordNetworkCall();
+    final innerTube = ref.watch(innerTubeServiceProvider);
+    final playlist = await innerTube.getPlaylist(arg);
+
+    // Save to cache
+    if (playlist != null) {
+      try {
+        HiveService.playlistsBox.put(
+          arg,
+          PlaylistCacheEntity(
+            playlistId: arg,
+            playlistJson: jsonEncode(playlist.toJson()),
+            cachedAt: DateTime.now(),
+            ttlMinutes: 30,
+          ),
+        );
+        if (kDebugMode) {
+          print('ytMusicPlaylistProvider: Cached $arg');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('ytMusicPlaylistProvider: Cache save error: $e');
+        }
+      }
+    }
+    
+    // Filter out locally deleted tracks that might still be cached on YouTube's servers
+    if (playlist != null) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final removedIds = prefs.getStringList('ytm_removed_tracks_$arg') ?? [];
+        if (removedIds.isNotEmpty && playlist.tracks != null) {
+          final filteredTracks = playlist.tracks!.where((t) => !removedIds.contains(t.id)).toList();
+          return playlist.copyWith(tracks: filteredTracks);
+        }
+      } catch (_) {}
+    }
+
+    return playlist;
   }
 
-  return playlist;
-});
+  Future<void> removeTrackOptimistically(String trackId) async {
+    // Save to SharedPreferences so it survives restarts
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'ytm_removed_tracks_$arg';
+      final removedIds = prefs.getStringList(key) ?? [];
+      if (!removedIds.contains(trackId)) {
+        removedIds.add(trackId);
+        // Keep list small
+        if (removedIds.length > 50) removedIds.removeAt(0);
+        await prefs.setStringList(key, removedIds);
+      }
+    } catch (_) {}
+
+    if (state.hasValue && state.value != null) {
+      final updatedTracks = state.value!.tracks?.where((t) => t.id != trackId).toList();
+      final updatedPlaylist = state.value!.copyWith(tracks: updatedTracks);
+      // update cache
+      try {
+        HiveService.playlistsBox.delete(arg);
+      } catch (_) {}
+      state = AsyncData(updatedPlaylist);
+    }
+  }
+}
+
+final ytMusicPlaylistProvider = AsyncNotifierProviderFamily<YtMusicPlaylistNotifier, Playlist?, String>(
+  YtMusicPlaylistNotifier.new,
+);
 
 final ytMusicAlbumProvider = FutureProvider.family<Album?, String>((
   ref,

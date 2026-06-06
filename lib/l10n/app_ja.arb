@@ -1179,5 +1179,10 @@
     }
   },
   "history": "履歴",
-  "historyDescription": "最近の再生履歴"
+  "historyDescription": "最近の再生履歴",
+  "removeFromPlaylist": "プレイリストから削除",
+  "removedFromPlaylist": "プレイリストから削除されました",
+  "deletePlaylist": "プレイリストを削除",
+  "deletePlaylistConfirm": "このプレイリストを削除してもよろしいですか？",
+  "delete": "削除"
 }

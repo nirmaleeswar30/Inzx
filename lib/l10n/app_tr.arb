@@ -1179,5 +1179,10 @@
     }
   },
   "history": "Geçmiş",
-  "historyDescription": "Son dinleme geçmişiniz"
+  "historyDescription": "Son dinleme geçmişiniz",
+  "removeFromPlaylist": "Çalma Listesinden Kaldır",
+  "removedFromPlaylist": "Çalma Listesinden Kaldırıldı",
+  "deletePlaylist": "Çalma Listesini Sil",
+  "deletePlaylistConfirm": "Bu çalma listesini silmek istediğinizden emin misiniz?",
+  "delete": "Sil"
 }

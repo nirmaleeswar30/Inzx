@@ -1179,5 +1179,10 @@
     }
   },
   "history": "வரலாறு",
-  "historyDescription": "உங்கள் சமீபத்திய கேட்போரின் வரலாறு"
+  "historyDescription": "உங்கள் சமீபத்திய கேட்போரின் வரலாறு",
+  "removeFromPlaylist": "பிளேலிஸ்ட்டில் இருந்து அகற்று",
+  "removedFromPlaylist": "பிளேலிஸ்ட்டில் இருந்து அகற்றப்பட்டது",
+  "deletePlaylist": "பிளேலிஸ்ட்டை நீக்கு",
+  "deletePlaylistConfirm": "இந்த பிளேலிஸ்ட்டை நிச்சயமாக நீக்க வேண்டுமா?",
+  "delete": "நீக்கு"
 }

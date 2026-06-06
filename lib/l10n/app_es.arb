@@ -1179,5 +1179,10 @@
     }
   },
   "history": "Historial",
-  "historyDescription": "Tu historial de escucha reciente"
+  "historyDescription": "Tu historial de escucha reciente",
+  "removeFromPlaylist": "Eliminar de la lista de reproducción",
+  "removedFromPlaylist": "Eliminado de la lista de reproducción",
+  "deletePlaylist": "Eliminar lista de reproducción",
+  "deletePlaylistConfirm": "¿Estás seguro de que quieres eliminar esta lista de reproducción?",
+  "delete": "Eliminar"
 }

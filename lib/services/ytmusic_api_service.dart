@@ -953,12 +953,17 @@ class InnerTubeService {
     return response != null;
   }
 
-  /// Add song to playlist
+  /// Add track to playlist (requires auth)
   Future<bool> addToPlaylist(String playlistId, String videoId) async {
     if (!isAuthenticated) return false;
 
+    String cleanPlaylistId = playlistId;
+    if (cleanPlaylistId.startsWith('VL')) {
+      cleanPlaylistId = cleanPlaylistId.substring(2);
+    }
+
     final response = await _request('browse/edit_playlist', {
-      'playlistId': playlistId,
+      'playlistId': cleanPlaylistId,
       'actions': [
         {'action': 'ACTION_ADD_VIDEO', 'addedVideoId': videoId},
       ],
@@ -975,8 +980,13 @@ class InnerTubeService {
   ) async {
     if (!isAuthenticated) return false;
 
+    String cleanPlaylistId = playlistId;
+    if (cleanPlaylistId.startsWith('VL')) {
+      cleanPlaylistId = cleanPlaylistId.substring(2);
+    }
+
     final response = await _request('browse/edit_playlist', {
-      'playlistId': playlistId,
+      'playlistId': cleanPlaylistId,
       'actions': [
         {
           'action': 'ACTION_REMOVE_VIDEO',
@@ -1011,8 +1021,13 @@ class InnerTubeService {
   Future<bool> deletePlaylist(String playlistId) async {
     if (!isAuthenticated) return false;
 
+    String cleanPlaylistId = playlistId;
+    if (cleanPlaylistId.startsWith('VL')) {
+      cleanPlaylistId = cleanPlaylistId.substring(2);
+    }
+
     final response = await _request('playlist/delete', {
-      'playlistId': playlistId,
+      'playlistId': cleanPlaylistId,
     }, authenticated: true);
 
     return response != null;
@@ -3410,6 +3425,47 @@ class InnerTubeService {
         }
       }
 
+      // Get setVideoId for playlist operations
+      final playlistItemData = renderer['playlistItemData'];
+      String? setVideoId = playlistItemData?['setVideoId'] as String?;
+      
+      if (setVideoId == null) {
+        try {
+          final overlay = renderer['overlay']?['musicItemThumbnailOverlayRenderer'];
+          final playEndpoint = overlay?['content']?['musicPlayButtonRenderer']?['playNavigationEndpoint']?['watchEndpoint'];
+          setVideoId = playEndpoint?['playlistSetVideoId'] as String?;
+        } catch (_) {}
+      }
+      
+      if (setVideoId == null) {
+        try {
+          final playEndpoint = renderer['playNavigationEndpoint']?['watchEndpoint'];
+          setVideoId = playEndpoint?['playlistSetVideoId'] as String?;
+        } catch (_) {}
+      }
+
+      // Also try finding it in the menu items (Remove from playlist action)
+      if (setVideoId == null) {
+        try {
+          final menuItems = renderer['menu']?['menuRenderer']?['items'] as List?;
+          if (menuItems != null) {
+            for (final item in menuItems) {
+              final serviceEndpoint = item['menuServiceItemRenderer']?['serviceEndpoint']?['playlistEditEndpoint'];
+              if (serviceEndpoint != null) {
+                final actions = serviceEndpoint['actions'] as List?;
+                if (actions != null && actions.isNotEmpty) {
+                  final action = actions.first;
+                  if (action['action'] == 'ACTION_REMOVE_VIDEO_BY_SET_VIDEO_ID' || action['action'] == 'ACTION_REMOVE_VIDEO') {
+                    setVideoId = action['setVideoId'] as String?;
+                    if (setVideoId != null) break;
+                  }
+                }
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
       return Track(
         id: videoId,
         title: title,
@@ -3418,6 +3474,7 @@ class InnerTubeService {
         thumbnailUrl: thumbnailUrl,
         duration: duration ?? Duration.zero,
         isLiked: true,
+        setVideoId: setVideoId,
       );
     } catch (e) {
       return null;

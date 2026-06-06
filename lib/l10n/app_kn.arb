@@ -1179,5 +1179,10 @@
     }
   },
   "history": "ಇತಿಹಾಸ",
-  "historyDescription": "ನಿಮ್ಮ ಇತ್ತೀಚಿನ ಆಲಿಸುವ ಇತಿಹಾಸ"
+  "historyDescription": "ನಿಮ್ಮ ಇತ್ತೀಚಿನ ಆಲಿಸುವ ಇತಿಹಾಸ",
+  "removeFromPlaylist": "ಪ್ಲೇಲಿಸ್ಟ್‌ನಿಂದ ತೆಗೆದುಹಾಕಿ",
+  "removedFromPlaylist": "ಪ್ಲೇಲಿಸ್ಟ್‌ನಿಂದ ತೆಗೆದುಹಾಕಲಾಗಿದೆ",
+  "deletePlaylist": "ಪ್ಲೇಲಿಸ್ಟ್ ಅಳಿಸಿ",
+  "deletePlaylistConfirm": "ಈ ಪ്ലೇಲಿಸ್ಟ್ ಅನ್ನು ಅಳಿಸಲು ನೀವು ಖಚಿತವೇ?",
+  "delete": "ಅಳಿಸಿ"
 }

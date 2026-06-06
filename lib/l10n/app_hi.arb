@@ -1179,5 +1179,10 @@
     }
   },
   "history": "इतिहास",
-  "historyDescription": "आपका हालिया सुनने का इतिहास"
+  "historyDescription": "आपका हालिया सुनने का इतिहास",
+  "removeFromPlaylist": "प्लेलिस्ट से हटाएं",
+  "removedFromPlaylist": "प्लेलिस्ट से हटा दिया गया",
+  "deletePlaylist": "प्लेलिस्ट हटाएं",
+  "deletePlaylistConfirm": "क्या आप वाकई इस प्लेलिस्ट को हटाना चाहते हैं?",
+  "delete": "हटाएं"
 }

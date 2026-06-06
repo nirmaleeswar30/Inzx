@@ -171,7 +171,6 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
     // Get counts for auto playlists
     final likedSongs = ref.watch(likedSongsProvider);
     final ytLikedSongs = ref.watch(ytMusicLikedSongsProvider).valueOrNull ?? [];
-    final mostPlayed = ref.watch(mostPlayedTracksProvider);
     final downloadedTracks =
         ref.watch(downloadedTracksProvider).valueOrNull ?? [];
     final totalLiked = likedSongs.length + ytLikedSongs.length;
@@ -186,11 +185,11 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
         'liked',
       ),
       (
-        l10n.mostPlayed,
-        Icons.bar_chart_rounded,
-        Colors.blue,
-        mostPlayed.length,
-        'most_played',
+        l10n.artists,
+        Icons.person_rounded,
+        Colors.purple,
+        -1,
+        'artists',
       ),
       (
         l10n.history,
@@ -425,7 +424,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
       onTap: () => _openAutoPlaylist(type, title),
       borderRadius: BorderRadius.circular(12),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
             height: 130,
@@ -439,6 +438,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
           Text(
             title,
             maxLines: 1,
+            textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontWeight: FontWeight.w600,
@@ -448,6 +448,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
           if (count >= 0)
             Text(
               context.l10n.songsCount(count),
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12,
                 color: isDark ? Colors.white54 : InzxColors.textSecondary,
@@ -470,6 +471,12 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
     // Special case: History screen
     if (type == 'recent') {
       setState(() => _selectedCategory = 4);
+      return;
+    }
+
+    // Special case: Artists tab
+    if (type == 'artists') {
+      setState(() => _selectedCategory = 2);
       return;
     }
 

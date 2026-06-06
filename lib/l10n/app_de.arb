@@ -1179,5 +1179,10 @@
     }
   },
   "history": "Verlauf",
-  "historyDescription": "Dein kürzlicher Hörverlauf"
+  "historyDescription": "Dein kürzlicher Hörverlauf",
+  "removeFromPlaylist": "Aus Playlist entfernen",
+  "removedFromPlaylist": "Aus Playlist entfernt",
+  "deletePlaylist": "Playlist löschen",
+  "deletePlaylistConfirm": "Möchten Sie diese Playlist wirklich löschen?",
+  "delete": "Löschen"
 }

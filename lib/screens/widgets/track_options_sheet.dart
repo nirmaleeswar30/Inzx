@@ -15,15 +15,26 @@ import 'playlist_picker_sheet.dart';
 /// Shows options like: Like, Add to queue, Play next, Add to playlist, Go to artist/album
 class TrackOptionsSheet extends ConsumerWidget {
   final Track track;
+  final String? sourcePlaylistId;
+  final bool isLocalPlaylist;
 
-  const TrackOptionsSheet({super.key, required this.track});
+  const TrackOptionsSheet({
+    super.key, 
+    required this.track,
+    this.sourcePlaylistId,
+    this.isLocalPlaylist = false,
+  });
 
-  static void show(BuildContext context, Track track) {
+  static void show(BuildContext context, Track track, {String? sourcePlaylistId, bool isLocalPlaylist = false}) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => TrackOptionsSheet(track: track),
+      builder: (context) => TrackOptionsSheet(
+        track: track, 
+        sourcePlaylistId: sourcePlaylistId,
+        isLocalPlaylist: isLocalPlaylist,
+      ),
     );
   }
 
@@ -289,6 +300,46 @@ class TrackOptionsSheet extends ConsumerWidget {
                   PlaylistPickerSheet.show(context, track);
                 },
               ),
+
+              if (sourcePlaylistId != null && (isLocalPlaylist || track.setVideoId != null))
+                _buildOption(
+                  context,
+                  icon: Iconsax.trash,
+                  iconColor: Colors.red,
+                  title: l10n.removeFromPlaylist,
+                  textColor: textColor,
+                  onTap: () async {
+                    if (isLocalPlaylist) {
+                      ref.read(localPlaylistsProvider.notifier).removeTrackFromPlaylist(sourcePlaylistId!, track.id);
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.removedFromPlaylist)),
+                      );
+                    } else if (track.setVideoId != null) {
+                      final container = ProviderScope.containerOf(context, listen: false);
+                      final scaffoldMessenger = ScaffoldMessenger.of(context);
+                      final localL10n = l10n;
+                      final ytAction = container.read(ytMusicPlaylistActionProvider);
+                      final notifier = container.read(ytMusicPlaylistProvider(sourcePlaylistId!).notifier);
+                      
+                      Navigator.pop(context);
+                      // Optimistic or loading, we'll just show the result
+                      final success = await ytAction.removeSong(sourcePlaylistId!, track.id, track.setVideoId!);
+                      
+                      if (success) {
+                        await notifier.removeTrackOptimistically(track.id);
+                        container.invalidate(ytMusicPlaylistProvider(sourcePlaylistId!));
+                        scaffoldMessenger.showSnackBar(
+                          SnackBar(content: Text(localL10n.removedFromPlaylist)),
+                        );
+                      } else {
+                        scaffoldMessenger.showSnackBar(
+                          SnackBar(content: Text(localL10n.unknownError)),
+                        );
+                      }
+                    }
+                  },
+                ),
 
               // Download option
               Builder(

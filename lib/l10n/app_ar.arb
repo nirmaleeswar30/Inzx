@@ -1179,5 +1179,10 @@
     }
   },
   "history": "السجل",
-  "historyDescription": "سجل الاستماع الأخير الخاص بك"
+  "historyDescription": "سجل الاستماع الأخير الخاص بك",
+  "removeFromPlaylist": "إزالة من قائمة التشغيل",
+  "removedFromPlaylist": "تمت الإزالة من قائمة التشغيل",
+  "deletePlaylist": "حذف قائمة التشغيل",
+  "deletePlaylistConfirm": "هل أنت متأكد أنك تريد حذف قائمة التشغيل هذه؟",
+  "delete": "حذف"
 }

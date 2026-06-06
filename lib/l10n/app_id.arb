@@ -1179,5 +1179,10 @@
     }
   },
   "history": "Riwayat",
-  "historyDescription": "Riwayat mendengarkan Anda baru-baru ini"
+  "historyDescription": "Riwayat mendengarkan Anda baru-baru ini",
+  "removeFromPlaylist": "Hapus dari Playlist",
+  "removedFromPlaylist": "Dihapus dari Playlist",
+  "deletePlaylist": "Hapus Playlist",
+  "deletePlaylistConfirm": "Apakah Anda yakin ingin menghapus playlist ini?",
+  "delete": "Hapus"
 }

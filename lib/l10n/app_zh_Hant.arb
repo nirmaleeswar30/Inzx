@@ -1179,5 +1179,10 @@
     }
   },
   "history": "歷史記錄",
-  "historyDescription": "您最近的收聽歷史記錄"
+  "historyDescription": "您最近的收聽歷史記錄",
+  "removeFromPlaylist": "從播放清單中移除",
+  "removedFromPlaylist": "已從播放清單中移除",
+  "deletePlaylist": "刪除播放清單",
+  "deletePlaylistConfirm": "您確定要刪除此播放清單嗎？",
+  "delete": "刪除"
 }

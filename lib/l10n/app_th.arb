@@ -1179,5 +1179,10 @@
     }
   },
   "history": "ประวัติ",
-  "historyDescription": "ประวัติการฟังล่าสุดของคุณ"
+  "historyDescription": "ประวัติการฟังล่าสุดของคุณ",
+  "removeFromPlaylist": "ลบออกจากเพลย์ลิสต์",
+  "removedFromPlaylist": "ลบออกจากเพลย์ลิสต์แล้ว",
+  "deletePlaylist": "ลบเพลย์ลิสต์",
+  "deletePlaylistConfirm": "คุณแน่ใจหรือไม่ว่าต้องการลบเพลย์ลิสต์นี้?",
+  "delete": "ลบ"
 }

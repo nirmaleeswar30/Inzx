@@ -692,7 +692,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                                     ),
                             ),
                             onPressed: () =>
-                                TrackOptionsSheet.show(context, track),
+                                TrackOptionsSheet.show(context, track, sourcePlaylistId: playlist.id, isLocalPlaylist: !playlist.isYTMusic),
                           ),
                           onTap: () {
                             // If searching, we might want to play the selected track contextually?
@@ -923,6 +923,71 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                   _sharePlaylist(context, playlist);
                 },
               ),
+              if (playlist.id != 'LM' && playlist.id != 'VLLM')
+                ListTile(
+                  leading: Icon(
+                    Icons.delete_outline,
+                    color: Colors.red,
+                  ),
+                  title: Text(
+                    context.l10n.deletePlaylist,
+                    style: TextStyle(
+                      color: Colors.red,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    final container = ProviderScope.containerOf(context, listen: false);
+                    final scaffoldMessenger = ScaffoldMessenger.of(context);
+                    final localL10n = context.l10n;
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text(localL10n.deletePlaylist),
+                        content: Text(localL10n.deletePlaylistConfirm),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text(localL10n.cancel),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              // Pop the confirmation dialog immediately
+                              Navigator.pop(context);
+                              
+                              bool success = true;
+                              if (playlist.isYTMusic) {
+                                final ytAction = container.read(ytMusicPlaylistActionProvider);
+                                success = await ytAction.delete(playlist.id);
+                                if (success) {
+                                  await container.read(ytMusicSavedPlaylistsProvider.notifier).removePlaylistOptimistically(playlist.id);
+                                  container.invalidate(ytMusicSavedPlaylistsProvider);
+                                }
+                              } else {
+                                if (ref != null) {
+                                  ref.read(localPlaylistsProvider.notifier).deletePlaylist(playlist.id);
+                                }
+                              }
+
+                              if (success) {
+                                // Pop the playlist screen to go back to library
+                                Navigator.pop(this.context);
+                              } else {
+                                scaffoldMessenger.showSnackBar(
+                                  SnackBar(content: Text(localL10n.unknownError)),
+                                );
+                              }
+                            },
+                            child: Text(
+                              localL10n.delete,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               const SizedBox(height: 16),
             ],
           ),
