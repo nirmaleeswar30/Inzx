@@ -32,6 +32,7 @@
 - **YouTube Music Integration** - Stream millions of songs from YouTube Music
 - **Offline-First Architecture** - Smart caching for seamless offline playback
 - **Background Playback** - Full media controls with notification support
+- **Android Auto Support** - Full car integration for safe driving playback
 - **Audio Session Management** - Proper audio focus handling
 - **Gapless Playback** - Smooth transitions between tracks
 
@@ -115,6 +116,18 @@
 <br/><b>Widget 4x2</b>
 </tr>
 </table>
+
+<table>
+<tr>
+<td align="center" width="50%">
+<img src="./.github/screenshots/preview-android_auto.png" alt="Android Auto" width="380" height="180" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+<br/><b>Android Auto</b>
+<td align="center" width="50%">
+<img src="./.github/screenshots/preview-android_auto-nowplaying.png" alt="Android Auto - Now Playing" width="360" height="180" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+<br/><b>Android Auto - Now Playing</b>
+</tr>
+</table>
+
 </table>
 </div>
 
@@ -400,7 +413,7 @@ Inzx supports a localized app UI and locale-aware YouTube Music content requests
 ### 📝 Roadmap
 
 - [x] ~~**Crossfade** - Smooth transitions between tracks~~
-- [ ] **Android Auto** - Car integration
+- [x] ~~**Android Auto** - Car integration~~
 - [ ] **Chromecast support** - Cast to speakers
 - [ ] **Desktop support** - Windows, macOS, Linux builds
 - [ ] **AI DJ Integration** - Suggest albums, music, and playlists based on user's preferences and prompts
