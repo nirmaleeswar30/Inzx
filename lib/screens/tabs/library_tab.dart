@@ -1772,43 +1772,90 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final controller = TextEditingController();
+    final isLoggedIn = ref.read(ytMusicAuthStateProvider).isLoggedIn;
+    bool createInYtMusic = isLoggedIn;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        title: Text(
-          l10n.createPlaylist,
-          style: TextStyle(
-            color: isDark ? Colors.white : InzxColors.textPrimary,
-          ),
-        ),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          style: TextStyle(
-            color: isDark ? Colors.white : InzxColors.textPrimary,
-          ),
-          decoration: InputDecoration(
-            hintText: l10n.playlistName,
-            hintStyle: TextStyle(
-              color: isDark ? Colors.white38 : InzxColors.textSecondary,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            title: Text(
+              l10n.createPlaylist,
+              style: TextStyle(
+                color: isDark ? Colors.white : InzxColors.textPrimary,
+              ),
             ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              // TODO: Create playlist
-              Navigator.pop(context);
-            },
-            child: Text(l10n.create),
-          ),
-        ],
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : InzxColors.textPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: l10n.playlistName,
+                    hintStyle: TextStyle(
+                      color: isDark ? Colors.white38 : InzxColors.textSecondary,
+                    ),
+                  ),
+                ),
+                if (isLoggedIn) ...[
+                  const SizedBox(height: 16),
+                  SwitchListTile(
+                    title: Text(
+                      'YouTube Music',
+                      style: TextStyle(
+                        color: isDark ? Colors.white : InzxColors.textPrimary,
+                        fontSize: 14,
+                      ),
+                    ),
+                    value: createInYtMusic,
+                    onChanged: (val) => setState(() => createInYtMusic = val),
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.cancel),
+              ),
+              FilledButton(
+                onPressed: () async {
+                  final name = controller.text.trim();
+                  if (name.isNotEmpty) {
+                    Navigator.pop(context); // Close dialog immediately
+                    
+                    if (createInYtMusic) {
+                      final scaffoldMessenger = ScaffoldMessenger.of(context);
+                      final ytAction = ref.read(ytMusicPlaylistActionProvider);
+                      final notifier = ref.read(ytMusicSavedPlaylistsProvider.notifier);
+                      final id = await ytAction.create(name);
+                      
+                      if (id != null) {
+                        await notifier.addPlaylistOptimistically(id, name);
+                        ref.invalidate(ytMusicSavedPlaylistsProvider);
+                      } else {
+                        scaffoldMessenger.showSnackBar(
+                          SnackBar(content: Text(l10n.unknownError)),
+                        );
+                      }
+                    } else {
+                      ref.read(localPlaylistsProvider.notifier).createPlaylist(name);
+                    }
+                  }
+                },
+                child: Text(l10n.create),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

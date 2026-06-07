@@ -205,18 +205,110 @@ class YtMusicSavedPlaylistsNotifier extends AsyncNotifier<List<Playlist>> {
     if (!authState.isLoggedIn) return [];
 
     final innerTube = ref.watch(innerTubeServiceProvider);
-    final playlists = await innerTube.getSavedPlaylists();
-    
-    // Filter out locally deleted playlists that might still be cached on YouTube's servers
+    final playlists = (await innerTube.getSavedPlaylists()).toList();
+
+    // Handle CDN caching delays for created/deleted playlists
     try {
       final prefs = await SharedPreferences.getInstance();
+      
+      // Filter out deleted ones
       final deletedIds = prefs.getStringList('ytm_deleted_playlists') ?? [];
       if (deletedIds.isNotEmpty) {
-        return playlists.where((p) => !deletedIds.contains(p.id)).toList();
+        playlists.removeWhere((p) => deletedIds.contains(p.id));
+      }
+      
+      // Inject optimistically created ones
+      final addedData = prefs.getStringList('ytm_added_playlists') ?? [];
+      if (addedData.isNotEmpty) {
+        final remainingAdded = <String>[];
+        bool changed = false;
+        
+        for (final data in addedData) {
+          try {
+            final p = Playlist.fromJson(jsonDecode(data));
+            if (!playlists.any((existing) => existing.id == p.id)) {
+              playlists.insert(0, p);
+              remainingAdded.add(data);
+            } else {
+              // The CDN caught up, we no longer need to manually inject it
+              changed = true;
+            }
+          } catch (_) {}
+        }
+        
+        if (changed) {
+          await prefs.setStringList('ytm_added_playlists', remainingAdded);
+        }
       }
     } catch (_) {}
-    
+
     return playlists;
+  }
+
+  Future<void> addPlaylistOptimistically(String id, String title) async {
+    final currentPlaylists = state.valueOrNull ?? [];
+    
+    final newPlaylist = Playlist(
+      id: id,
+      title: title,
+      isLocal: false,
+      isYTMusic: true,
+      trackCount: 0,
+      tracks: const [],
+    );
+
+    // Update state immediately
+    state = AsyncData([newPlaylist, ...currentPlaylists]);
+
+    // Save to SharedPreferences to survive restarts before CDN catches up
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final addedData = prefs.getStringList('ytm_added_playlists') ?? [];
+      final encoded = jsonEncode(newPlaylist.toJson());
+      if (!addedData.contains(encoded)) {
+        addedData.add(encoded);
+        await prefs.setStringList('ytm_added_playlists', addedData);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> incrementPlaylistTrackCount(String playlistId) async {
+    if (state.hasValue) {
+      final currentPlaylists = state.value!;
+      final index = currentPlaylists.indexWhere((p) => p.id == playlistId);
+      if (index != -1) {
+        final p = currentPlaylists[index];
+        final updated = List<Playlist>.from(currentPlaylists);
+        updated[index] = p.copyWith(trackCount: (p.trackCount ?? 0) + 1);
+        state = AsyncData(updated);
+      }
+    }
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final addedData = prefs.getStringList('ytm_added_playlists') ?? [];
+      final newAddedData = <String>[];
+      bool changed = false;
+      
+      for (final data in addedData) {
+        try {
+          final p = Playlist.fromJson(jsonDecode(data));
+          if (p.id == playlistId) {
+            final updatedP = p.copyWith(trackCount: (p.trackCount ?? 0) + 1);
+            newAddedData.add(jsonEncode(updatedP.toJson()));
+            changed = true;
+          } else {
+            newAddedData.add(data);
+          }
+        } catch (_) {
+          newAddedData.add(data);
+        }
+      }
+      
+      if (changed) {
+        await prefs.setStringList('ytm_added_playlists', newAddedData);
+      }
+    } catch (_) {}
   }
 
   Future<void> removePlaylistOptimistically(String playlistId) async {

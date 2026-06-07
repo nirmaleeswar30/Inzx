@@ -298,6 +298,8 @@ class _PlaylistPickerSheetState extends ConsumerState<PlaylistPickerSheet> {
           // Add track to the newly created playlist
           await playlistAction.addSong(playlistId, widget.track.id);
           if (!mounted) return;
+          // Optimistically update the track count
+          await ref.read(ytMusicSavedPlaylistsProvider.notifier).incrementPlaylistTrackCount(playlistId);
           // Refresh playlists list
           ref.invalidate(ytMusicSavedPlaylistsProvider);
           Navigator.pop(context);
@@ -356,6 +358,10 @@ class _PlaylistPickerSheetState extends ConsumerState<PlaylistPickerSheet> {
           widget.track.id,
         );
         if (mounted) {
+          if (success) {
+            await ref.read(ytMusicSavedPlaylistsProvider.notifier).incrementPlaylistTrackCount(playlist.id);
+            ref.invalidate(ytMusicSavedPlaylistsProvider);
+          }
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
