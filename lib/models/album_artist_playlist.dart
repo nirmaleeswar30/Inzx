@@ -231,6 +231,8 @@ class Playlist extends Equatable {
   final String? description;
   final String? thumbnailUrl;
   final String? author;
+  final String? authorAvatarUrl;
+  final String? extraSubtitle;
   final int? trackCount;
   final List<Track>? tracks;
   final bool isLocal; // true if created by user locally
@@ -244,6 +246,8 @@ class Playlist extends Equatable {
     this.description,
     this.thumbnailUrl,
     this.author,
+    this.authorAvatarUrl,
+    this.extraSubtitle,
     this.trackCount,
     this.tracks,
     this.isLocal = false,
@@ -259,6 +263,8 @@ class Playlist extends Equatable {
     String? description,
     String? thumbnailUrl,
     String? author,
+    String? authorAvatarUrl,
+    String? extraSubtitle,
     int? trackCount,
     List<Track>? tracks,
     bool? isLocal,
@@ -272,6 +278,8 @@ class Playlist extends Equatable {
       description: description ?? this.description,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       author: author ?? this.author,
+      authorAvatarUrl: authorAvatarUrl ?? this.authorAvatarUrl,
+      extraSubtitle: extraSubtitle ?? this.extraSubtitle,
       trackCount: trackCount ?? this.trackCount,
       tracks: tracks ?? this.tracks,
       isLocal: isLocal ?? this.isLocal,
@@ -292,6 +300,8 @@ class Playlist extends Equatable {
       'description': description,
       'thumbnailUrl': thumbnailUrl,
       'author': author,
+      'authorAvatarUrl': authorAvatarUrl,
+      'extraSubtitle': extraSubtitle,
       'trackCount': trackCount,
       'tracks': tracks?.map((t) => t.toJson()).toList(),
       'isLocal': isLocal,
@@ -309,6 +319,8 @@ class Playlist extends Equatable {
       description: json['description'] as String?,
       thumbnailUrl: json['thumbnailUrl'] as String?,
       author: json['author'] as String?,
+      authorAvatarUrl: json['authorAvatarUrl'] as String?,
+      extraSubtitle: json['extraSubtitle'] as String?,
       trackCount: json['trackCount'] as int?,
       tracks: (json['tracks'] as List<dynamic>?)
           ?.map((t) => Track.fromJson(t as Map<String, dynamic>))

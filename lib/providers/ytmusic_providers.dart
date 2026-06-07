@@ -757,10 +757,17 @@ class YtMusicPlaylistNotifier extends FamilyAsyncNotifier<Playlist?, String> {
 
         // Older builds could cache only the first page (~100 tracks).
         // Force one network refresh for this suspicious payload shape.
-        if ((cachedPlaylist.tracks?.length ?? 0) == 100) {
+        // Also force a network refresh if it's missing the new rich header metadata.
+        final needsMetadataRefresh = cachedPlaylist.isYTMusic && (
+            cachedPlaylist.extraSubtitle == null ||
+            cachedPlaylist.author == 'Playlist' ||
+            cachedPlaylist.author == 'Album' ||
+            cachedPlaylist.author == 'Single'
+        );
+        if (((cachedPlaylist.tracks?.length ?? 0) == 100) || needsMetadataRefresh) {
           if (kDebugMode) {
             print(
-              'ytMusicPlaylistProvider: Cached playlist $arg has exactly 100 tracks, refetching to avoid stale truncation',
+              'ytMusicPlaylistProvider: Cached playlist $arg has stale metadata or exactly 100 tracks, refetching',
             );
           }
         } else {

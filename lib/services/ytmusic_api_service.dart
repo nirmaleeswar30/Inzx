@@ -1685,6 +1685,8 @@ class InnerTubeService {
       description: playlist.description,
       thumbnailUrl: playlist.thumbnailUrl,
       author: playlist.author,
+      authorAvatarUrl: playlist.authorAvatarUrl,
+      extraSubtitle: playlist.extraSubtitle,
       trackCount: allTracks.length,
       tracks: allTracks,
       isYTMusic: playlist.isYTMusic,
@@ -4351,6 +4353,8 @@ class InnerTubeService {
       String? description;
       String? thumbnailUrl;
       String? author;
+      String? authorAvatarUrl;
+      String? extraSubtitle;
 
       if (activeHeader != null) {
         // Standard header parsing
@@ -4367,6 +4371,16 @@ class InnerTubeService {
                 ?.map((r) => r['text'])
                 .join();
 
+        // For musicResponsiveHeaderRenderer, description is in descriptionPreview
+        description ??=
+            (activeHeader['description']?['musicDescriptionShelfRenderer']?['description']?['runs'] as List?)
+                ?.map((r) => r['text'])
+                .join();
+        description ??=
+            (activeHeader['descriptionPreview']?['runs'] as List?)
+                ?.map((r) => r['text'])
+                .join();
+
         // Get thumbnail
         final thumbnails =
             activeHeader['thumbnail']?['croppedSquareThumbnailRenderer']?['thumbnail']?['thumbnails']
@@ -4377,12 +4391,119 @@ class InnerTubeService {
           thumbnailUrl = thumbnails.last['url'] as String?;
         }
 
-        // Get author from subtitle
-        final subtitleRuns =
-            activeHeader['subtitle']?['runs'] as List? ??
-            activeHeader['straplineTextOne']?['runs'] as List?;
-        if (subtitleRuns != null && subtitleRuns.isNotEmpty) {
-          author = subtitleRuns[0]['text'] as String?;
+        // For musicResponsiveHeaderRenderer:
+        //   subtitle = type label (e.g. "Playlist")
+        //   straplineTextOne = author name (e.g. "NotCyCo")
+        // For musicDetailHeaderRenderer:
+        //   subtitle = author name
+        //   straplineTextOne = N/A
+        final straplineRuns = activeHeader['straplineTextOne']?['runs'] as List?;
+        final subtitleRuns = activeHeader['subtitle']?['runs'] as List?;
+        
+        if (straplineRuns != null && straplineRuns.isNotEmpty) {
+          for (final run in straplineRuns) {
+            if (run['navigationEndpoint'] != null) {
+              author = run['text'] as String?;
+              break;
+            }
+          }
+          author ??= straplineRuns[0]['text'] as String?;
+        } else if (subtitleRuns != null && subtitleRuns.isNotEmpty) {
+          final typeLabels = {'Playlist', 'Album', 'Single', 'EP', 'Video'};
+          for (final run in subtitleRuns) {
+            final text = run['text'] as String? ?? '';
+            if (run['navigationEndpoint'] != null && !typeLabels.contains(text)) {
+              author = text;
+              break;
+            }
+          }
+          if (author == null) {
+            for (final run in subtitleRuns) {
+              final text = run['text'] as String? ?? '';
+              if (!typeLabels.contains(text) && text.trim() != '•' && text.trim().isNotEmpty) {
+                if (!RegExp(r'^\d{4}$').hasMatch(text.trim())) {
+                  author = text;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        // Try to get author + avatar from facepile (ViewModel format)
+        final facepile = activeHeader['facepile'];
+        if (facepile is Map) {
+          final avatarStack = facepile['avatarStackViewModel'];
+          if (avatarStack is Map) {
+            if (author == null) {
+              final textContent = avatarStack['text']?['content'] as String?;
+              if (textContent != null && textContent.trim().isNotEmpty) {
+                author = textContent.trim();
+              } else {
+                final fpTextRuns = avatarStack['text']?['runs'] as List?;
+                if (fpTextRuns != null && fpTextRuns.isNotEmpty) {
+                  author = fpTextRuns[0]['text'] as String?;
+                }
+              }
+            }
+            if (authorAvatarUrl == null) {
+              final fpAvatars = avatarStack['avatars'] as List?;
+              if (fpAvatars != null && fpAvatars.isNotEmpty) {
+                final firstAvatar = fpAvatars[0];
+                if (firstAvatar is Map) {
+                  final avatarVM = firstAvatar['avatarViewModel'];
+                  if (avatarVM is Map) {
+                    final sources = avatarVM['image']?['sources'] as List?;
+                    if (sources != null && sources.isNotEmpty) {
+                      authorAvatarUrl = sources.last['url'] as String?;
+                    }
+                    if (authorAvatarUrl == null) {
+                      final altSources = avatarVM['avatar']?['image']?['sources'] as List?;
+                      if (altSources != null && altSources.isNotEmpty) {
+                        authorAvatarUrl = altSources.last['url'] as String?;
+                      }
+                    }
+                    if (authorAvatarUrl == null) {
+                      final thumbs = avatarVM['image']?['thumbnails'] as List?;
+                      if (thumbs != null && thumbs.isNotEmpty) {
+                        authorAvatarUrl = thumbs.last['url'] as String?;
+                      }
+                    }
+                  }
+                  if (authorAvatarUrl == null) {
+                    final thumbs = firstAvatar['thumbnails'] as List? ??
+                        firstAvatar['thumbnail']?['thumbnails'] as List?;
+                    if (thumbs != null && thumbs.isNotEmpty) {
+                      authorAvatarUrl = thumbs.last['url'] as String?;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // secondSubtitle
+        final secondSubtitleRuns = activeHeader['secondSubtitle']?['runs'] as List?;
+        if (secondSubtitleRuns != null && secondSubtitleRuns.isNotEmpty) {
+           extraSubtitle = secondSubtitleRuns.map((r) => r['text']).join();
+        } else if (subtitleRuns != null && subtitleRuns.length > 1) {
+           final fullSub = subtitleRuns.map((r) => r['text']).join();
+           if (author != null && fullSub.startsWith(author)) {
+              extraSubtitle = fullSub.substring(author.length).trim();
+              if (extraSubtitle!.startsWith('•')) {
+                 extraSubtitle = extraSubtitle.substring(1).trim();
+              }
+           }
+        }
+
+        // Try to get author avatar from straplineThumbnail (fallback)
+        if (authorAvatarUrl == null) {
+          final avatarThumbs =
+              activeHeader['straplineThumbnail']?['musicThumbnailRenderer']?['thumbnail']?['thumbnails'] as List?;
+          if (avatarThumbs != null && avatarThumbs.isNotEmpty) {
+            authorAvatarUrl = avatarThumbs.last['url'] as String?;
+          }
         }
       }
 
@@ -4477,6 +4598,8 @@ class InnerTubeService {
           description: description,
           thumbnailUrl: thumbnailUrl,
           author: author,
+          authorAvatarUrl: authorAvatarUrl,
+          extraSubtitle: extraSubtitle,
           trackCount: tracks.length,
           tracks: tracks,
           isYTMusic: true,
@@ -4547,8 +4670,45 @@ class InnerTubeService {
       String? description;
       String? thumbnailUrl;
       String? author;
+      String? authorAvatarUrl;
+      String? extraSubtitle;
 
       if (activeHeader != null) {
+        if (kDebugMode) {
+          print('=== PLAYLIST HEADER DEBUG ===');
+          print('Header keys: ${(activeHeader as Map).keys.toList()}');
+          final subRuns = activeHeader['subtitle']?['runs'] as List?;
+          print('subtitle runs: ${subRuns?.map((r) => r['text']).toList()}');
+          final strapRuns = activeHeader['straplineTextOne']?['runs'] as List?;
+          print('straplineTextOne runs: ${strapRuns?.map((r) => "${r['text']}(nav:${r['navigationEndpoint'] != null})").toList()}');
+          final secSubRuns = activeHeader['secondSubtitle']?['runs'] as List?;
+          print('secondSubtitle runs: ${secSubRuns?.map((r) => r['text']).toList()}');
+          print('description keys: ${activeHeader['description']?.runtimeType}');
+          print('descriptionPreview: ${activeHeader['descriptionPreview']?.runtimeType}');
+          print('straplineThumbnail: ${activeHeader['straplineThumbnail'] != null}');
+          // Dump facepile structure for debugging
+          final facepile = activeHeader['facepile'];
+          if (facepile != null) {
+            final avatarStack = (facepile as Map)['avatarStackViewModel'];
+            if (avatarStack is Map) {
+              print('facepile.avatarStack.text: ${avatarStack['text']}');
+              final fpAvatars = avatarStack['avatars'] as List?;
+              if (fpAvatars != null && fpAvatars.isNotEmpty) {
+                final av0 = fpAvatars[0];
+                if (av0 is Map) {
+                  final avm = av0['avatarViewModel'];
+                  if (avm is Map) {
+                    print('avatarViewModel keys: ${avm.keys.toList()}');
+                    print('avatarViewModel.image: ${avm['image']}');
+                  }
+                }
+              }
+            }
+          } else {
+            print('facepile: null');
+          }
+          print('=== END HEADER DEBUG ===');
+        }
         title =
             activeHeader['title']?['runs']?[0]?['text'] as String? ??
             (activeHeader['title']?['runs'] as List?)
@@ -4562,6 +4722,16 @@ class InnerTubeService {
                 ?.map((r) => r['text'])
                 .join();
 
+        // For musicResponsiveHeaderRenderer, description is in descriptionPreview
+        description ??=
+            (activeHeader['description']?['musicDescriptionShelfRenderer']?['description']?['runs'] as List?)
+                ?.map((r) => r['text'])
+                .join();
+        description ??=
+            (activeHeader['descriptionPreview']?['runs'] as List?)
+                ?.map((r) => r['text'])
+                .join();
+
         final thumbnails =
             activeHeader['thumbnail']?['croppedSquareThumbnailRenderer']?['thumbnail']?['thumbnails']
                 as List? ??
@@ -4571,11 +4741,133 @@ class InnerTubeService {
           thumbnailUrl = thumbnails.last['url'] as String?;
         }
 
-        final subtitleRuns =
-            activeHeader['subtitle']?['runs'] as List? ??
-            activeHeader['straplineTextOne']?['runs'] as List?;
-        if (subtitleRuns != null && subtitleRuns.isNotEmpty) {
-          author = subtitleRuns[0]['text'] as String?;
+        // For musicResponsiveHeaderRenderer:
+        //   subtitle = type label (e.g. "Playlist")
+        //   straplineTextOne = author name (e.g. "NotCyCo")
+        // For musicDetailHeaderRenderer:
+        //   subtitle = ["Playlist", " • ", "2026"] (type + year, NO author)
+        //   facepile = author name + avatar
+        final straplineRuns = activeHeader['straplineTextOne']?['runs'] as List?;
+        final subtitleRuns = activeHeader['subtitle']?['runs'] as List?;
+
+        if (straplineRuns != null && straplineRuns.isNotEmpty) {
+          // musicResponsiveHeaderRenderer: author is in straplineTextOne
+          for (final run in straplineRuns) {
+            if (run['navigationEndpoint'] != null) {
+              author = run['text'] as String?;
+              break;
+            }
+          }
+          author ??= straplineRuns[0]['text'] as String?;
+        } else if (subtitleRuns != null && subtitleRuns.isNotEmpty) {
+          // Try to find a non-type-label author in subtitle runs
+          final typeLabels = {'Playlist', 'Album', 'Single', 'EP', 'Video'};
+          for (final run in subtitleRuns) {
+            final text = run['text'] as String? ?? '';
+            if (run['navigationEndpoint'] != null && !typeLabels.contains(text)) {
+              author = text;
+              break;
+            }
+          }
+          // If no navigable author found, check for non-type, non-separator runs
+          if (author == null) {
+            for (final run in subtitleRuns) {
+              final text = run['text'] as String? ?? '';
+              if (!typeLabels.contains(text) && text.trim() != '•' && text.trim().isNotEmpty) {
+                // Skip year-only values like "2026"
+                if (!RegExp(r'^\d{4}$').hasMatch(text.trim())) {
+                  author = text;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        // Try to get author + avatar from facepile (used in musicDetailHeaderRenderer)
+        // YouTube uses ViewModel format here:
+        //   facepile.avatarStackViewModel.text.content = "AuthorName" (NOT .runs!)
+        //   facepile.avatarStackViewModel.avatars[0].avatarViewModel.image.sources[0].url
+        final facepile = activeHeader['facepile'];
+        if (facepile is Map) {
+          final avatarStack = facepile['avatarStackViewModel'];
+          if (avatarStack is Map) {
+            // Extract author name: try text.content (ViewModel) then text.runs (legacy)
+            if (author == null) {
+              final textContent = avatarStack['text']?['content'] as String?;
+              if (textContent != null && textContent.trim().isNotEmpty) {
+                author = textContent.trim();
+              } else {
+                final fpTextRuns = avatarStack['text']?['runs'] as List?;
+                if (fpTextRuns != null && fpTextRuns.isNotEmpty) {
+                  author = fpTextRuns[0]['text'] as String?;
+                }
+              }
+            }
+
+            // Extract avatar from avatarViewModel
+            if (authorAvatarUrl == null) {
+              final fpAvatars = avatarStack['avatars'] as List?;
+              if (fpAvatars != null && fpAvatars.isNotEmpty) {
+                final firstAvatar = fpAvatars[0];
+                if (firstAvatar is Map) {
+                  final avatarVM = firstAvatar['avatarViewModel'];
+                  if (avatarVM is Map) {
+                    // Try image.sources (ViewModel format)
+                    final sources = avatarVM['image']?['sources'] as List?;
+                    if (sources != null && sources.isNotEmpty) {
+                      authorAvatarUrl = sources.last['url'] as String?;
+                    }
+                    // Fallback: avatar.image.sources
+                    if (authorAvatarUrl == null) {
+                      final altSources = avatarVM['avatar']?['image']?['sources'] as List?;
+                      if (altSources != null && altSources.isNotEmpty) {
+                        authorAvatarUrl = altSources.last['url'] as String?;
+                      }
+                    }
+                    // Fallback: thumbnails directly
+                    if (authorAvatarUrl == null) {
+                      final thumbs = avatarVM['image']?['thumbnails'] as List?;
+                      if (thumbs != null && thumbs.isNotEmpty) {
+                        authorAvatarUrl = thumbs.last['url'] as String?;
+                      }
+                    }
+                  }
+                  // Legacy fallback for non-ViewModel avatars
+                  if (authorAvatarUrl == null) {
+                    final thumbs = firstAvatar['thumbnails'] as List? ??
+                        firstAvatar['thumbnail']?['thumbnails'] as List?;
+                    if (thumbs != null && thumbs.isNotEmpty) {
+                      authorAvatarUrl = thumbs.last['url'] as String?;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // secondSubtitle contains "59 views • 2 hrs 17 mins • 3 wk ago • Public"
+        final secondSubtitleRuns = activeHeader['secondSubtitle']?['runs'] as List?;
+        if (secondSubtitleRuns != null && secondSubtitleRuns.isNotEmpty) {
+          extraSubtitle = secondSubtitleRuns.map((r) => r['text']).join();
+        } else if (subtitleRuns != null && subtitleRuns.length > 1) {
+          final fullSub = subtitleRuns.map((r) => r['text']).join();
+          if (author != null && fullSub.startsWith(author)) {
+            extraSubtitle = fullSub.substring(author.length).trim();
+            if (extraSubtitle!.startsWith('•')) {
+              extraSubtitle = extraSubtitle.substring(1).trim();
+            }
+          }
+        }
+
+        // Try to get author avatar from straplineThumbnail (fallback)
+        if (authorAvatarUrl == null) {
+          final avatarThumbs =
+              activeHeader['straplineThumbnail']?['musicThumbnailRenderer']?['thumbnail']?['thumbnails'] as List?;
+          if (avatarThumbs != null && avatarThumbs.isNotEmpty) {
+            authorAvatarUrl = avatarThumbs.last['url'] as String?;
+          }
         }
       }
 
@@ -4693,6 +4985,8 @@ class InnerTubeService {
             description: description,
             thumbnailUrl: thumbnailUrl,
             author: author,
+            authorAvatarUrl: authorAvatarUrl,
+            extraSubtitle: extraSubtitle,
             trackCount: tracks.length,
             tracks: tracks,
             isYTMusic: true,

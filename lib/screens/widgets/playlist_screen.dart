@@ -456,26 +456,55 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                             const SizedBox(height: 8),
 
                             // Subtitle / Author
-                            Text(
-                              playlist.author ?? l10n.youtubeMusicLabel,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: isDark
-                                    ? Colors.white70
-                                    : colorScheme.onSurface.withValues(
-                                        alpha: 0.7,
+                            if (playlist.author != null || playlist.authorAvatarUrl != null)
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  if (playlist.authorAvatarUrl != null) ...[
+                                    ClipOval(
+                                      child: CachedNetworkImage(
+                                        imageUrl: playlist.authorAvatarUrl!,
+                                        width: 24,
+                                        height: 24,
+                                        fit: BoxFit.cover,
+                                        placeholder: (_, _) => Container(color: Colors.grey[800]),
+                                        errorWidget: (_, _, _) => Container(color: Colors.grey[800]),
                                       ),
-                                fontSize: 16,
+                                    ),
+                                    const SizedBox(width: 8),
+                                  ],
+                                  Text(
+                                    playlist.author ?? l10n.youtubeMusicLabel,
+                                    style: TextStyle(
+                                      color: isDark ? Colors.white : colorScheme.onSurface,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            const SizedBox(height: 8),
+                              
+                            if (playlist.extraSubtitle != null && playlist.extraSubtitle!.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                playlist.extraSubtitle!,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: isDark
+                                      ? Colors.white54
+                                      : colorScheme.onSurface.withValues(alpha: 0.6),
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 12),
 
                             // Description
                             if (playlist.description != null &&
                                 playlist.description!.isNotEmpty)
                               Padding(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
+                                  horizontal: 24,
                                 ),
                                 child: Text(
                                   playlist.description!,
