@@ -4297,36 +4297,45 @@ class InnerTubeService {
       final header =
           response['header']?['musicDetailHeaderRenderer'] ??
           response['header']?['musicEditablePlaylistDetailHeaderRenderer']?['header']?['musicDetailHeaderRenderer'] ??
+          response['header']?['musicEditablePlaylistDetailHeaderRenderer']?['header']?['musicResponsiveHeaderRenderer'] ??
           response['header']?['musicResponsiveHeaderRenderer'];
 
       // Also try to get header from content tabs for some playlist types
       dynamic fallbackHeader;
       if (header == null) {
-        fallbackHeader =
-            _navigateJson(response, [
-              'contents',
-              'singleColumnBrowseResultsRenderer',
-              'tabs',
-              0,
-              'tabRenderer',
-              'content',
-              'sectionListRenderer',
-              'contents',
-              0,
-              'musicResponsiveHeaderRenderer',
-            ]) ??
-            _navigateJson(response, [
-              'contents',
-              'twoColumnBrowseResultsRenderer',
-              'tabs',
-              0,
-              'tabRenderer',
-              'content',
-              'sectionListRenderer',
-              'contents',
-              0,
-              'musicResponsiveHeaderRenderer',
-            ]);
+        final singleColContents = _navigateJson(response, [
+          'contents',
+          'singleColumnBrowseResultsRenderer',
+          'tabs',
+          0,
+          'tabRenderer',
+          'content',
+          'sectionListRenderer',
+          'contents',
+          0,
+        ]) as Map?;
+        
+        final twoColContents = _navigateJson(response, [
+          'contents',
+          'twoColumnBrowseResultsRenderer',
+          'tabs',
+          0,
+          'tabRenderer',
+          'content',
+          'sectionListRenderer',
+          'contents',
+          0,
+        ]) as Map?;
+
+        final headerContainer = singleColContents ?? twoColContents;
+        if (headerContainer != null) {
+          fallbackHeader = 
+            headerContainer['musicResponsiveHeaderRenderer'] ??
+            headerContainer['musicDetailHeaderRenderer'] ??
+            headerContainer['musicEditablePlaylistDetailHeaderRenderer']?['header']?['musicResponsiveHeaderRenderer'] ??
+            headerContainer['musicEditablePlaylistDetailHeaderRenderer']?['header']?['musicDetailHeaderRenderer'] ??
+            headerContainer['musicEditablePlaylistDetailHeaderRenderer'];
+        }
       }
 
       final activeHeader = header ?? fallbackHeader;
@@ -4497,6 +4506,27 @@ class InnerTubeService {
            }
         }
 
+        // Append privacy label (Public/Private) and Year if present in subtitleRuns and not already in extraSubtitle
+        if (subtitleRuns != null && subtitleRuns.isNotEmpty) {
+           final partsToAdd = <String>[];
+           for (final run in subtitleRuns) {
+              final text = (run['text'] as String?)?.trim() ?? '';
+              if (text == 'Public' || text == 'Private' || RegExp(r'^\d{4}$').hasMatch(text)) {
+                 if (extraSubtitle == null || !extraSubtitle!.contains(text)) {
+                    partsToAdd.add(text);
+                 }
+              }
+           }
+           if (partsToAdd.isNotEmpty) {
+              final suffix = partsToAdd.join(' • ');
+              if (extraSubtitle == null || extraSubtitle!.isEmpty) {
+                 extraSubtitle = suffix;
+              } else {
+                 extraSubtitle = '$extraSubtitle • $suffix';
+              }
+           }
+        }
+
         // Try to get author avatar from straplineThumbnail (fallback)
         if (authorAvatarUrl == null) {
           final avatarThumbs =
@@ -4631,39 +4661,85 @@ class InnerTubeService {
       final header =
           response['header']?['musicDetailHeaderRenderer'] ??
           response['header']?['musicEditablePlaylistDetailHeaderRenderer']?['header']?['musicDetailHeaderRenderer'] ??
+          response['header']?['musicEditablePlaylistDetailHeaderRenderer']?['header']?['musicResponsiveHeaderRenderer'] ??
           response['header']?['musicResponsiveHeaderRenderer'];
 
       // Also try to get header from content tabs for some playlist types
       dynamic fallbackHeader;
       if (header == null) {
-        fallbackHeader =
-            _navigateJson(response, [
-              'contents',
-              'singleColumnBrowseResultsRenderer',
-              'tabs',
-              0,
-              'tabRenderer',
-              'content',
-              'sectionListRenderer',
-              'contents',
-              0,
-              'musicResponsiveHeaderRenderer',
-            ]) ??
-            _navigateJson(response, [
-              'contents',
-              'twoColumnBrowseResultsRenderer',
-              'tabs',
-              0,
-              'tabRenderer',
-              'content',
-              'sectionListRenderer',
-              'contents',
-              0,
-              'musicResponsiveHeaderRenderer',
-            ]);
+        final singleColContents = _navigateJson(response, [
+          'contents',
+          'singleColumnBrowseResultsRenderer',
+          'tabs',
+          0,
+          'tabRenderer',
+          'content',
+          'sectionListRenderer',
+          'contents',
+          0,
+        ]) as Map?;
+        
+        final twoColContents = _navigateJson(response, [
+          'contents',
+          'twoColumnBrowseResultsRenderer',
+          'tabs',
+          0,
+          'tabRenderer',
+          'content',
+          'sectionListRenderer',
+          'contents',
+          0,
+        ]) as Map?;
+
+        final headerContainer = singleColContents ?? twoColContents;
+        if (headerContainer != null) {
+          fallbackHeader = 
+            headerContainer['musicResponsiveHeaderRenderer'] ??
+            headerContainer['musicDetailHeaderRenderer'] ??
+            headerContainer['musicEditablePlaylistDetailHeaderRenderer']?['header']?['musicResponsiveHeaderRenderer'] ??
+            headerContainer['musicEditablePlaylistDetailHeaderRenderer']?['header']?['musicDetailHeaderRenderer'] ??
+            headerContainer['musicEditablePlaylistDetailHeaderRenderer'];
+        }
       }
 
       final activeHeader = header ?? fallbackHeader;
+
+      if (activeHeader == null && kDebugMode) {
+        print('=== ACTIVE HEADER IS NULL ===');
+        print('response keys: ${response.keys.toList()}');
+        
+        // Let's find out what's inside contents
+        try {
+          final singleCol = _navigateJson(response, ['contents', 'singleColumnBrowseResultsRenderer']);
+          if (singleCol != null) {
+             print('singleCol keys: ${(singleCol as Map).keys.toList()}');
+             final tabs = singleCol['tabs'] as List?;
+             if (tabs != null && tabs.isNotEmpty) {
+               final tabContent = tabs[0]['tabRenderer']?['content']?['sectionListRenderer']?['contents'] as List?;
+               if (tabContent != null && tabContent.isNotEmpty) {
+                 print('tabContent[0] keys: ${(tabContent[0] as Map).keys.toList()}');
+               }
+             }
+          }
+          final twoCol = _navigateJson(response, ['contents', 'twoColumnBrowseResultsRenderer']);
+          if (twoCol != null) {
+             print('twoCol keys: ${(twoCol as Map).keys.toList()}');
+             final secondary = twoCol['secondaryContents']?['sectionListRenderer']?['contents'] as List?;
+             if (secondary != null && secondary.isNotEmpty) {
+               print('secondary[0] keys: ${(secondary[0] as Map).keys.toList()}');
+             }
+             final tabs = twoCol['tabs'] as List?;
+             if (tabs != null && tabs.isNotEmpty) {
+               final tabContent = tabs[0]['tabRenderer']?['content']?['sectionListRenderer']?['contents'] as List?;
+               if (tabContent != null && tabContent.isNotEmpty) {
+                 print('twoCol tabContent[0] keys: ${(tabContent[0] as Map).keys.toList()}');
+               }
+             }
+          }
+        } catch (e) {
+          print('Error dumping contents: $e');
+        }
+      }
 
       // Parse title from various locations
       String title = 'Unknown Playlist';
@@ -4761,7 +4837,7 @@ class InnerTubeService {
           author ??= straplineRuns[0]['text'] as String?;
         } else if (subtitleRuns != null && subtitleRuns.isNotEmpty) {
           // Try to find a non-type-label author in subtitle runs
-          final typeLabels = {'Playlist', 'Album', 'Single', 'EP', 'Video'};
+          final typeLabels = {'Playlist', 'Album', 'Single', 'EP', 'Video', 'Public', 'Private'};
           for (final run in subtitleRuns) {
             final text = run['text'] as String? ?? '';
             if (run['navigationEndpoint'] != null && !typeLabels.contains(text)) {
@@ -4859,6 +4935,27 @@ class InnerTubeService {
               extraSubtitle = extraSubtitle.substring(1).trim();
             }
           }
+        }
+
+        // Append privacy label (Public/Private) and Year if present in subtitleRuns and not already in extraSubtitle
+        if (subtitleRuns != null && subtitleRuns.isNotEmpty) {
+           final partsToAdd = <String>[];
+           for (final run in subtitleRuns) {
+              final text = (run['text'] as String?)?.trim() ?? '';
+              if (text == 'Public' || text == 'Private' || RegExp(r'^\d{4}$').hasMatch(text)) {
+                 if (extraSubtitle == null || !extraSubtitle!.contains(text)) {
+                    partsToAdd.add(text);
+                 }
+              }
+           }
+           if (partsToAdd.isNotEmpty) {
+              final suffix = partsToAdd.join(' • ');
+              if (extraSubtitle == null || extraSubtitle!.isEmpty) {
+                 extraSubtitle = suffix;
+              } else {
+                 extraSubtitle = '$extraSubtitle • $suffix';
+              }
+           }
         }
 
         // Try to get author avatar from straplineThumbnail (fallback)

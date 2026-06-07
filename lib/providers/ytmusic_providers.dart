@@ -760,9 +760,13 @@ class YtMusicPlaylistNotifier extends FamilyAsyncNotifier<Playlist?, String> {
         // Also force a network refresh if it's missing the new rich header metadata.
         final needsMetadataRefresh = cachedPlaylist.isYTMusic && (
             cachedPlaylist.extraSubtitle == null ||
+            cachedPlaylist.author == null ||
+            cachedPlaylist.authorAvatarUrl == null ||
             cachedPlaylist.author == 'Playlist' ||
             cachedPlaylist.author == 'Album' ||
-            cachedPlaylist.author == 'Single'
+            cachedPlaylist.author == 'Single' ||
+            cachedPlaylist.author == 'Public' ||
+            cachedPlaylist.author == 'Private'
         );
         if (((cachedPlaylist.tracks?.length ?? 0) == 100) || needsMetadataRefresh) {
           if (kDebugMode) {
