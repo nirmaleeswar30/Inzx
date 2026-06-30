@@ -26,6 +26,13 @@
 
 </div>
 
+## ❤️ Sponsors
+
+If you enjoy using Inzx, consider supporting the development!
+Your support helps keep the project alive and actively maintained.
+
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-%23ea4aaa?style=for-the-badge&logo=github)](https://github.com/sponsors/nirmaleeswar30)
+
 ## Features
 
 ### 🎧 Music Playback
@@ -452,9 +459,3 @@ This project is licensed under the [MIT License](LICENSE)
 
 </div>
 
-## ❤️ Sponsors
-
-If you enjoy using Inzx, consider supporting the development!
-Your support helps keep the project alive and actively maintained.
-
-[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-%23ea4aaa?style=for-the-badge&logo=github)](https://github.com/sponsors/nirmaleeswar30)
