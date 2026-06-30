@@ -17,6 +17,7 @@ import 'ytmusic_login_screen.dart';
 import 'audio_settings_screen.dart';
 import 'download_settings_screen.dart';
 import 'backup_restore_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Provider for sync service
 final ytMusicSyncServiceProvider = Provider<YTMusicSyncService>((ref) {
@@ -512,6 +513,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       'network',
       'stats',
     ], _buildAnalyticsSection()),
+
     _TaggedSection([
       context.l10n.appInfo,
       context.l10n.settings,
@@ -2069,6 +2071,37 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       children: [
         _sectionHeader(l10n.appInfo, Iconsax.info_circle),
         const SizedBox(height: 12),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(Iconsax.heart5, color: _accentColor),
+          title: Text(
+            'Sponsor Inzx',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: _textPrimary,
+            ),
+          ),
+          subtitle: Text(
+            'Support the development on GitHub',
+            style: TextStyle(
+              fontSize: 13,
+              color: _textSecondary,
+            ),
+          ),
+          trailing: Icon(
+            Icons.arrow_forward_ios_rounded,
+            size: 16,
+            color: _textSecondary,
+          ),
+          onTap: () {
+            launchUrl(
+              Uri.parse('https://github.com/sponsors/nirmaleeswar30'),
+              mode: LaunchMode.externalApplication,
+            );
+          },
+        ),
+        Divider(color: _isDark ? Colors.white10 : Colors.black12, height: 24),
         _debugRow(l10n.releaseBuild, kReleaseMode ? l10n.yes : l10n.no),
         _debugRow(
           l10n.updater,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../services/deep_link_handler.dart';
 import '../../core/l10n/app_localizations_x.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
@@ -685,7 +686,7 @@ class AlbumScreen extends ConsumerWidget {
 
   /// Share album link
   void _shareAlbum(BuildContext context, Album album) {
-    final url = 'https://music.youtube.com/playlist?list=${album.id}';
+    final url = DeepLinkHandler.createShareUrl('album', album.id);
     SharePlus.instance.share(
       ShareParams(
         text: context.l10n.shareAlbumText(album.title, album.artist, url),

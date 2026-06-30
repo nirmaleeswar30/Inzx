@@ -1627,8 +1627,56 @@ class InnerTubeService {
 
   // ============ CONTENT ============
 
+  Future<Playlist?> _getRadioAsPlaylist(String radioId) async {
+    // A radio mix doesn't have a normal playlist header, 
+    // it just returns tracks from the `next` endpoint.
+    final body = <String, dynamic>{
+      'playlistId': radioId,
+      'isAudioOnly': true,
+      'params': 'wAEB',
+    };
+    final response = await _request('next', body, authenticated: isAuthenticated);
+    if (response == null) return null;
+
+    final tracks = _parseWatchPlaylist(response, '', 100);
+    if (tracks.isEmpty) return null;
+    
+    // Try to extract title from the header
+    String title = 'Mix';
+    final tabs = _navigateJson(response, [
+      'contents',
+      'singleColumnMusicWatchNextResultsRenderer',
+      'tabbedRenderer',
+      'watchNextTabbedResultsRenderer',
+      'tabs',
+    ]) as List?;
+
+    if (tabs != null && tabs.isNotEmpty) {
+      final headerTitle = tabs[0]['tabRenderer']?['content']?['musicQueueRenderer']?['content']?['playlistPanelRenderer']?['title'];
+      if (headerTitle is String) {
+        title = headerTitle;
+      }
+    }
+    
+    // Get thumbnail from the first track as fallback
+    final thumbnailUrl = tracks.first.thumbnailUrl;
+
+    return Playlist(
+      id: radioId,
+      title: title,
+      author: 'YouTube Music',
+      thumbnailUrl: thumbnailUrl,
+      tracks: tracks,
+    );
+  }
+
   /// Get playlist details
   Future<Playlist?> getPlaylist(String playlistId) async {
+    // If it's a radio playlist (e.g., RDMM / My Supermix), use the radio fetch logic
+    if (playlistId.startsWith('RD')) {
+      return _getRadioAsPlaylist(playlistId);
+    }
+
     String browseId = playlistId;
     if (!browseId.startsWith('VL')) {
       browseId = 'VL$playlistId';

@@ -7,6 +7,7 @@ import '../../core/l10n/app_localizations_x.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../services/artist_service.dart';
+import '../../services/deep_link_handler.dart';
 import '../../services/download_service.dart';
 import '../../services/local_music_scanner.dart';
 import 'track_options_sheet.dart';
@@ -1413,8 +1414,7 @@ class _ArtistContent extends ConsumerWidget {
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  final url =
-                      'https://music.youtube.com/channel/${artistData.id}';
+                  final url = DeepLinkHandler.createShareUrl('artist', artistData.id);
                   SharePlus.instance.share(
                     ShareParams(
                       text: context.l10n.shareArtistText(artistData.name, url),

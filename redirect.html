@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Opening Inzx...</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000000;
+            color: #ffffff;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Animated Background Gradients for Inzx */
+        .bg-shape {
+            position: absolute;
+            filter: blur(100px);
+            opacity: 0.4;
+            animation: pulse 10s ease-in-out infinite alternate;
+            z-index: -1;
+        }
+        .shape1 {
+            background: #FF2E93; /* Pink accent */
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            top: -100px;
+            left: -100px;
+        }
+        .shape2 {
+            background: #FF8000; /* Orange accent */
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            bottom: -150px;
+            right: -100px;
+            animation-delay: -5s;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1) translate(0, 0); }
+            50% { transform: scale(1.1) translate(20px, 20px); }
+            100% { transform: scale(0.9) translate(-20px, -20px); }
+        }
+
+        /* Glassmorphism Card */
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            padding: 48px 32px;
+            border-radius: 28px;
+            text-align: center;
+            width: 90%;
+            max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transform: translateY(20px);
+            opacity: 0;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUp {
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .logo-img {
+            height: 120px;
+            width: 120px;
+            margin-bottom: 32px;
+            border-radius: 24px;
+            animation: fadeIn 0.8s ease-out;
+            box-shadow: 0 10px 30px rgba(255, 46, 147, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 0 12px 0;
+            color: #ffffff;
+        }
+        
+        p {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+            margin: 0 0 32px 0;
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: #FF2E93;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto 24px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Button */
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #FF2E93 0%, #FF8000 100%);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 100px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.2s;
+            width: 100%;
+            box-shadow: 0 8px 24px rgba(255, 46, 147, 0.4);
+            border: none;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(255, 46, 147, 0.6);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-shape shape1"></div>
+    <div class="bg-shape shape2"></div>
+
+    <div class="card">
+        <!-- Make sure to replace this with the actual raw github url to your app icon if hosted elsewhere, or keep it relative if in the same repo -->
+        <img src="assets/icon/logo.png" alt="Inzx" class="logo-img" onerror="this.src='https://raw.githubusercontent.com/nirmaleeswar30/Inzx/main/assets/icon/icon.png'">
+        <div class="spinner" id="spinner"></div>
+        <h1 id="statusTitle">Opening in Inzx...</h1>
+        <p id="statusDesc">We're redirecting you to your music. If nothing happens, tap the button below.</p>
+        <a id="openBtn" href="#" class="btn" style="display: none;">Open Inzx Now</a>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const base64Url = urlParams.get('url');
+
+        const statusTitle = document.getElementById('statusTitle');
+        const statusDesc = document.getElementById('statusDesc');
+        const openBtn = document.getElementById('openBtn');
+        const spinner = document.getElementById('spinner');
+
+        // Delay showing the button slightly to give automatic redirect time to work
+        setTimeout(() => {
+            if (base64Url) {
+                openBtn.style.display = 'inline-block';
+                spinner.style.display = 'none';
+            }
+        }, 1500);
+
+        if (base64Url) {
+            try {
+                const decodedUrl = atob(base64Url);
+                openBtn.href = decodedUrl;
+                
+                // Attempt automatic redirect
+                window.location.href = decodedUrl;
+            } catch (e) {
+                spinner.style.display = 'none';
+                statusTitle.innerText = "Oops!";
+                statusDesc.innerText = "This link appears to be invalid or broken.";
+                openBtn.style.display = 'none';
+            }
+        } else {
+            spinner.style.display = 'none';
+            statusTitle.innerText = "No Link Provided";
+            statusDesc.innerText = "Please open this page from a valid Inzx share link.";
+        }
+    </script>
+</body>
+</html>

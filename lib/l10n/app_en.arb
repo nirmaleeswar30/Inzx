@@ -358,7 +358,7 @@
   "downloadStartingNotification": "Starting download...",
   "downloadCompleteNotification": "Download complete",
   "downloadFileNotCreated": "Download failed because the file was not created",
-  "shareTrackText": "{title} by {artist}\n{url}",
+  "shareTrackText": "Listen to {title} by {artist} on Inzx! 🎵\n\n{url}",
   "@shareTrackText": {
     "placeholders": {
       "title": {
@@ -1075,7 +1075,7 @@
       }
     }
   },
-  "shareAlbumText": "{title} by {artist}\n{url}",
+  "shareAlbumText": "Check out the album {title} by {artist} on Inzx! 💿\n\n{url}",
   "@shareAlbumText": {
     "placeholders": {
       "title": {
@@ -1113,7 +1113,7 @@
   "yes": "yes",
   "no": "no",
   "foundInSettings": "Found in Settings",
-  "sharePlaylistText": "{title}\n{url}",
+  "sharePlaylistText": "Check out this playlist: {title} on Inzx! 🎧\n\n{url}",
   "@sharePlaylistText": {
     "placeholders": {
       "title": {
@@ -1124,7 +1124,7 @@
       }
     }
   },
-  "shareArtistText": "{artist}\n{url}",
+  "shareArtistText": "Listen to {artist} on Inzx! 🎤\n\n{url}",
   "@shareArtistText": {
     "placeholders": {
       "artist": {

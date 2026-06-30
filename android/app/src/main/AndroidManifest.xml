@@ -49,6 +49,15 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            
+            <!-- Deep linking intent filter -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Accepts URIs like: inzx://open/playlist?id=123 -->
+                <data android:scheme="inzx" android:host="open" />
+            </intent-filter>
         </activity>
         
         <!-- Audio Service for background music playback -->

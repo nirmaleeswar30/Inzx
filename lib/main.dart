@@ -19,6 +19,7 @@ import 'services/supabase_config.dart';
 import 'providers/providers.dart';
 import 'providers/repository_providers.dart';
 import 'screens/music_app.dart';
+import 'services/deep_link_handler.dart';
 
 InzxAudioHandler? audioHandler;
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
@@ -150,6 +151,7 @@ class _InzxAppState extends ConsumerState<InzxApp> {
       final cacheWarmer = ref.read(cacheWarmingServiceProvider);
       cacheWarmer.warmCache(preTrendingMusic: true, prelikedSongs: true);
       _runUpdateChecks();
+      DeepLinkHandler.instance.initialize(context, ref);
     });
   }
 

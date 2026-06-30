@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../services/deep_link_handler.dart';
 import '../../core/l10n/app_localizations_x.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
@@ -135,10 +136,19 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
               isDark,
             );
           }
+          
+          Playlist displayPlaylist = playlist;
+          if (widget.playlistId.startsWith('RD')) {
+             displayPlaylist = playlist.copyWith(
+                title: widget.playlistTitle ?? playlist.title,
+                thumbnailUrl: widget.thumbnailUrl ?? playlist.thumbnailUrl,
+             );
+          }
+          
           return _buildContent(
             context,
             ref,
-            playlist,
+            displayPlaylist,
             isDark,
             colorScheme,
             playerService,
@@ -775,7 +785,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
   }
 
   void _sharePlaylist(BuildContext context, Playlist playlist) {
-    final url = 'https://music.youtube.com/playlist?list=${playlist.id}';
+    final url = DeepLinkHandler.createShareUrl('playlist', playlist.id);
     SharePlus.instance.share(
       ShareParams(text: context.l10n.sharePlaylistText(playlist.title, url)),
     );

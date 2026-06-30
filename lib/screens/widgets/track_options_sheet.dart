@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../services/deep_link_handler.dart';
 import '../../core/l10n/app_localizations_x.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
@@ -433,7 +434,7 @@ class TrackOptionsSheet extends ConsumerWidget {
                 textColor: textColor,
                 onTap: () {
                   Navigator.pop(context);
-                  final url = 'https://music.youtube.com/watch?v=${track.id}';
+                  final url = DeepLinkHandler.createShareUrl('song', track.id);
                   SharePlus.instance.share(
                     ShareParams(
                       text: l10n.shareTrackText(track.title, track.artist, url),
