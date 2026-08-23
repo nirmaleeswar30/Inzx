@@ -75,70 +75,35 @@ Your support helps keep the project alive and actively maintained.
 ## Screenshots
 
 <div align="center">
-<table>
+
+| **Home** | **Now Playing** | **Library** | **Jams** |
+|:---:|:---:|:---:|:---:|
+| ![Home](./.github/screenshots/home.png) | ![Now Playing](./.github/screenshots/nowplaying.png) | ![Library](./.github/screenshots/library.png) | ![Jams](./.github/screenshots/jam.png) |
+| **Search** | **Playlist** | **Folders** | **Lyrics** |
+| ![Search](./.github/screenshots/search.png) | ![Playlist](./.github/screenshots/playlist.png) | ![Folders](./.github/screenshots/folders.png) | ![Lyrics](./.github/screenshots/lyrics.png) |
+
+</div>
+
+<table width="100%">
 <tr>
-<td align="center" width="25%">
-<img src="./.github/screenshots/preview-home.png" alt="Home" width="180" height="360" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
-<br/><b>Home</b>
-</td>
-<td align="center" width="25%">
-<img src="./.github/screenshots/preview-nowplaying.png" alt="Now Playing" width="180" height="360" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
-<br/><b>Now Playing</b>
-</td>
-<td align="center" width="25%">
-<img src="./.github/screenshots/preview-library.png" alt="Library" width="180" height="360" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
-<br/><b>Library</b>
-</td>
-<td align="center" width="25%">
-<img src="./.github/screenshots/preview-jam.png" alt="Jams" width="180" height="360" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
-<br/><b>Jams</b>
-</td>
+<th align="center">Better Lyrics</th>
 </tr>
 <tr>
-<td align="center" width="25%">
-<img src="./.github/screenshots/preview-search.png" alt="Search" width="180" height="360" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
-<br/><b>Search</b>
-</td>
-<td align="center" width="25%">
-<img src="./.github/screenshots/preview-playlist.png" alt="Playlist" width="180" height="360" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
-<br/><b>Playlist</b>
-</td>
-<td align="center" width="25%">
-<img src="./.github/screenshots/preview-folders.png" alt="Folders" width="180" height="360" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
-<br/><b>Folders</b>
-</td>
-<td align="center" width="25%">
-<img src="./.github/screenshots/preview-lyrics.png" alt="Lyrics" width="180" height="360" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
-<br/><b>Lyrics</b>
-</td>
+<td align="center"><img src="./.github/screenshots/output.gif" width="100%"></td>
 </tr>
 </table>
 
-<table>
-<tr>
-<td align="center" width="50%">
-<img src="./.github/screenshots/widget-4x1-preview.png" alt="Widget 4x1" width="380" height="180" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
-<br/><b>Widget 4x1</b>
-</td>
-<td align="center" width="50%">
-<img src="./.github/screenshots/widget-4x2-preview.png" alt="Widget 4x2" width="360" height="180" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
-<br/><b>Widget 4x2</b>
-</td>
-</tr>
-</table>
 
-<table>
-<tr>
-<td align="center" width="50%">
-<img src="./.github/screenshots/preview-android_auto.png" alt="Android Auto" width="380" height="220" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
-<br/><b>Android Auto</b>
-</td>
-<td align="center" width="50%">
-<img src="./.github/screenshots/preview-android_auto-nowplaying.png" alt="Android Auto - Now Playing" width="360" height="220" style="object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
-<br/><b>Android Auto - Now Playing</b>
-</td>
-</tr>
-</table>
+<div align="center">
+
+| **Widget 4x1** | **Widget 4x2** |
+|:---:|:---:|
+| ![Widget 4x1](./.github/screenshots/widget-4x1.png) | ![Widget 4x2](./.github/screenshots/widget-4x2.png) |
+
+| **Android Auto** | **Android Auto - Now Playing** |
+|:---:|:---:|
+| ![Android Auto](./.github/screenshots/android_auto.png) | ![Android Auto - Now Playing](./.github/screenshots/android_auto-nowplaying.png) |
+
 </div>
 
 ---
