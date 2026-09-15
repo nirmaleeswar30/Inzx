@@ -136,20 +136,11 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
               SizedBox(
                 width: availableWidth,
                 height: artHeight,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onVerticalDragEnd: (details) {
-                    // Swipe down on artwork to dismiss
-                    if (details.primaryVelocity != null &&
-                        details.primaryVelocity! > 250) {
-                      widget.onDismiss();
-                    }
-                  },
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      // Full-bleed artwork with smooth alpha roll-off only at the bottom rim
-                      ShaderMask(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // Full-bleed artwork with smooth alpha roll-off only at the bottom rim
+                    ShaderMask(
                         shaderCallback: (rect) {
                           return const LinearGradient(
                             begin: Alignment.topCenter,
@@ -233,7 +224,6 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
                     ],
                   ),
                 ),
-              ),
 
               // 2. BOTTOM HALF: Content positioned strictly UNDER the album cover
               Expanded(

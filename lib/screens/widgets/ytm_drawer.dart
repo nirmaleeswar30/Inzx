@@ -37,6 +37,12 @@ class YTMDrawer extends StatefulWidget {
   /// Callback when user swipes down while collapsed (for dismiss gesture)
   final VoidCallback? onDismiss;
 
+  /// Callback to provide interactive translation offset during dismiss gesture
+  final ValueChanged<double>? onDismissDragUpdate;
+
+  /// Callback when dismiss drag ends (true if dismissed, false to snap back)
+  final ValueChanged<bool>? onDismissDragEnd;
+
   /// Whether vertical drag gestures are enabled
   final bool enableDrag;
 
@@ -53,6 +59,8 @@ class YTMDrawer extends StatefulWidget {
     this.onTabFromPosition,
     this.initiallyExpanded = false,
     this.onDismiss,
+    this.onDismissDragUpdate,
+    this.onDismissDragEnd,
     this.enableDrag = true,
   });
 
@@ -147,8 +155,15 @@ class YTMDrawerState extends State<YTMDrawer>
     // Check if user is swiping DOWN while drawer is collapsed - this is dismiss gesture
     if (!_isExpanded && _dragProgress == 0.0 && delta > 0) {
       _dismissDragOffset += delta;
+      widget.onDismissDragUpdate?.call(_dismissDragOffset);
       setState(() {});
       return; // Don't process as drawer expansion
+    } else if (_dismissDragOffset > 0 && delta < 0) {
+      // Swiping back up while in dismiss state
+      _dismissDragOffset = (_dismissDragOffset + delta).clamp(0.0, double.infinity);
+      widget.onDismissDragUpdate?.call(_dismissDragOffset);
+      setState(() {});
+      return;
     }
 
     // Normalize delta to progress (inverted: drag up = increase progress)
@@ -168,13 +183,16 @@ class YTMDrawerState extends State<YTMDrawer>
     final velocity = details.primaryVelocity ?? 0;
 
     // Check for dismiss gesture (swiped down while collapsed)
-    // Only dismiss if drawer is at 0 progress AND user has been dragging down
     if (_dragProgress == 0.0 && _dismissDragOffset > 0) {
-      if (_dismissDragOffset > 100 || velocity > 500) {
+      final shouldDismiss = _dismissDragOffset > 150 || velocity > 400;
+      if (shouldDismiss) {
+        widget.onDismissDragEnd?.call(true);
         widget.onDismiss?.call();
-        _dismissDragOffset = 0;
-        return;
+      } else {
+        widget.onDismissDragEnd?.call(false);
       }
+      _dismissDragOffset = 0;
+      return;
     }
     _dismissDragOffset = 0;
 

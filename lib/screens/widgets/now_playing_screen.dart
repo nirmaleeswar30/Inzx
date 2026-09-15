@@ -1464,6 +1464,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   bool _isAlbumSwipeNavigationInProgress = false;
   bool _isUserDraggingAlbumArt = false;
   bool _hasAnimatedCanvas = false; // Track if current song actually has canvas
+  double _dismissTranslateOffset = 0.0;
+  bool _isDismissSnapping = false;
   int? _lastAlbumArtSyncedIndex;
   Orientation? _lastOrientation;
   late AnimationController _heartAnimController;
@@ -1867,42 +1869,67 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
           );
         }
 
-        return Scaffold(
-          backgroundColor: backgroundColor,
-          body: Container(
-            // Solid gradient background - NO ALPHA/TRANSLUCENCY
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [colors.backgroundPrimary, colors.backgroundSecondary],
-                stops: const [0.0, 1.0],
-              ),
-            ),
-            child: YTMDrawer(
-              key: _drawerKey,
-              backgroundColor: Colors.transparent,
-              surfaceColor: colors.surface,
-              surfaceDecoration: BoxDecoration(
+        return AnimatedContainer(
+          duration: _isDismissSnapping ? const Duration(milliseconds: 300) : Duration.zero,
+          curve: Curves.easeOutCubic,
+          transform: Matrix4.translationValues(0, _dismissTranslateOffset, 0),
+          onEnd: () {
+            if (mounted && _isDismissSnapping && _dismissTranslateOffset == 0) {
+              setState(() => _isDismissSnapping = false);
+            }
+          },
+          child: Scaffold(
+            backgroundColor: backgroundColor,
+            body: Container(
+              // Solid gradient background - NO ALPHA/TRANSLUCENCY
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    colors.backgroundPrimary,
-                    colors.backgroundSecondary,
-                  ],
+                  colors: [colors.backgroundPrimary, colors.backgroundSecondary],
                   stops: const [0.0, 1.0],
                 ),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
               ),
-              initiallyExpanded: _isDrawerExpanded,
-              enableDrag: !_isScrubberSeeking,
-              onDismiss: () {
-                Navigator.of(context).pop();
-                widget.onClose?.call();
-              },
+              child: YTMDrawer(
+                key: _drawerKey,
+                backgroundColor: Colors.transparent,
+                surfaceColor: colors.surface,
+                surfaceDecoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      colors.backgroundPrimary,
+                      colors.backgroundSecondary,
+                    ],
+                    stops: const [0.0, 1.0],
+                  ),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
+                ),
+                initiallyExpanded: _isDrawerExpanded,
+                enableDrag: !_isScrubberSeeking,
+                onDismissDragUpdate: (offset) {
+                  if (mounted) {
+                    setState(() {
+                      _dismissTranslateOffset = offset;
+                      _isDismissSnapping = false;
+                    });
+                  }
+                },
+                onDismissDragEnd: (dismissed) {
+                  if (mounted && !dismissed) {
+                    setState(() {
+                      _dismissTranslateOffset = 0.0;
+                      _isDismissSnapping = true;
+                    });
+                  }
+                },
+                onDismiss: () {
+                  Navigator.of(context).pop();
+                  widget.onClose?.call();
+                },
               onStateChanged: (expanded) {
                 setState(() {
                   _isDrawerExpanded = expanded;
@@ -2076,6 +2103,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
               ),
             ),
           ),
+        ),
         );
       },
       loading: () => Scaffold(

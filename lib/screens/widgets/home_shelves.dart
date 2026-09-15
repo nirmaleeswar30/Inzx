@@ -1472,7 +1472,7 @@ class DailyDiscoverShelf extends ConsumerWidget {
         const SizedBox(height: 16),
         // Large horizontal cards
         SizedBox(
-          height: 300, // Large cards
+          height: 325, // Large cards (increased to accommodate explicit badge + multi-line titles)
           child: PageView.builder(
             controller: PageController(viewportFraction: 0.85),
             itemCount: shelf.items.length,
