@@ -11,7 +11,9 @@ import 'widgets/podcast_screen.dart';
 import 'widgets/album_screen.dart';
 import 'widgets/artist_screen.dart';
 import 'widgets/now_playing_screen.dart';
+import 'package:marquee/marquee.dart';
 import 'widgets/track_options_sheet.dart';
+import 'widgets/explicit_badge.dart';
 
 /// Provider for full search results (tracks, albums, artists, playlists)
 final fullSearchResultsProvider = FutureProvider.autoDispose<SearchResults>((
@@ -625,17 +627,28 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
               : _defaultArtwork(colorScheme, Icons.music_note_rounded),
         ),
       ),
-      title: Text(
-        track.title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: isLarge ? 16 : 14,
-          fontWeight: isCurrentTrack ? FontWeight.w600 : FontWeight.w500,
-          color: isCurrentTrack
-              ? colorScheme.primary
-              : (isDark ? Colors.white : InzxColors.textPrimary),
-        ),
+      title: Row(
+        children: [
+          if (track.isExplicit)
+            ExplicitBadge(
+              color: isCurrentTrack
+                  ? colorScheme.primary
+                  : (isDark ? Colors.white : InzxColors.textPrimary),
+            ),
+          Expanded(
+            child: _buildScrollableTitle(
+              track.title,
+              TextStyle(
+                fontSize: isLarge ? 16 : 14,
+                fontWeight: isCurrentTrack ? FontWeight.w600 : FontWeight.w500,
+                color: isCurrentTrack
+                    ? colorScheme.primary
+                    : (isDark ? Colors.white : InzxColors.textPrimary),
+              ),
+              isCurrentTrack,
+            ),
+          ),
+        ],
       ),
       subtitle: Text(
         context.trackSubtitle(track.artist, track.formattedDuration),
@@ -1054,6 +1067,44 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     return Container(
       color: colorScheme.primaryContainer,
       child: Icon(icon, color: colorScheme.primary, size: 24),
+    );
+  }
+
+  Widget _buildScrollableTitle(String title, TextStyle style, bool isPlaying) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final textPainter = TextPainter(
+          text: TextSpan(text: title, style: style),
+          maxLines: 1,
+          textDirection: TextDirection.ltr,
+        )..layout(maxWidth: constraints.maxWidth);
+
+        if (isPlaying && (textPainter.didExceedMaxLines || textPainter.width >= constraints.maxWidth - 2)) {
+          return SizedBox(
+            height: style.fontSize != null ? style.fontSize! * 1.5 : 20,
+            child: Marquee(
+              text: title,
+              style: style,
+              scrollAxis: Axis.horizontal,
+              blankSpace: 40.0,
+              velocity: 30.0,
+              pauseAfterRound: const Duration(seconds: 2),
+              startPadding: 0,
+              accelerationDuration: const Duration(milliseconds: 500),
+              accelerationCurve: Curves.linear,
+              decelerationDuration: const Duration(milliseconds: 500),
+              decelerationCurve: Curves.easeOut,
+            ),
+          );
+        }
+
+        return Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: style,
+        );
+      },
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:marquee/marquee.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
@@ -17,6 +18,7 @@ import 'now_playing_screen.dart';
 import 'podcast_screen.dart' show PodcastScreen;
 import 'package:skeletonizer/skeletonizer.dart';
 import '../../services/album_color_extractor.dart';
+import 'explicit_badge.dart';
 
 // Provider for extracting album colors
 enum AlbumTrackSort {
@@ -1154,21 +1156,34 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
                                 ),
                               ),
                             ),
-                            title: Text(
-                              track.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: isTrackPlaying
-                                    ? primaryColor
-                                    : (isDark
-                                          ? Colors.white
-                                          : colorScheme.onSurface),
-                                fontSize: 15,
-                                fontWeight: isTrackPlaying
-                                    ? FontWeight.bold
-                                    : FontWeight.w500,
-                              ),
+                            title: Row(
+                              children: [
+                                if (track.isExplicit)
+                                  ExplicitBadge(
+                                    color: isTrackPlaying
+                                        ? primaryColor
+                                        : (isDark
+                                              ? Colors.white
+                                              : colorScheme.onSurface),
+                                  ),
+                                Expanded(
+                                  child: _buildScrollableTitle(
+                                    track.title,
+                                    TextStyle(
+                                      color: isTrackPlaying
+                                          ? primaryColor
+                                          : (isDark
+                                                ? Colors.white
+                                                : colorScheme.onSurface),
+                                      fontSize: 15,
+                                      fontWeight: isTrackPlaying
+                                          ? FontWeight.w600
+                                          : FontWeight.w500,
+                                    ),
+                                    isTrackPlaying,
+                                  ),
+                                ),
+                              ],
                             ),
                             subtitle: Text(
                               track.artist,
@@ -1303,21 +1318,34 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
                               ],
                             ),
                           ),
-                          title: Text(
-                            track.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: isTrackPlaying
-                                  ? primaryColor
-                                  : (isDark
-                                        ? Colors.white
-                                        : colorScheme.onSurface),
-                              fontSize: 16,
-                              fontWeight: isTrackPlaying
-                                  ? FontWeight.bold
-                                  : FontWeight.w500,
-                            ),
+                          title: Row(
+                            children: [
+                              if (track.isExplicit)
+                                ExplicitBadge(
+                                  color: isTrackPlaying
+                                      ? primaryColor
+                                      : (isDark
+                                            ? Colors.white
+                                            : colorScheme.onSurface),
+                                ),
+                              Expanded(
+                                child: _buildScrollableTitle(
+                                  track.title,
+                                  TextStyle(
+                                    color: isTrackPlaying
+                                        ? primaryColor
+                                        : (isDark
+                                              ? Colors.white
+                                              : colorScheme.onSurface),
+                                    fontSize: 16,
+                                    fontWeight: isTrackPlaying
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
+                                  ),
+                                  isTrackPlaying,
+                                ),
+                              ),
+                            ],
                           ),
                           subtitle: Text(
                             track.formattedDuration.isNotEmpty
@@ -1761,6 +1789,44 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
               ),
             );
           },
+        );
+      },
+    );
+  }
+
+  Widget _buildScrollableTitle(String title, TextStyle style, bool isPlaying) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final textPainter = TextPainter(
+          text: TextSpan(text: title, style: style),
+          maxLines: 1,
+          textDirection: TextDirection.ltr,
+        )..layout(maxWidth: constraints.maxWidth);
+
+        if (isPlaying && (textPainter.didExceedMaxLines || textPainter.width >= constraints.maxWidth - 2)) {
+          return SizedBox(
+            height: style.fontSize != null ? style.fontSize! * 1.5 : 20,
+            child: Marquee(
+              text: title,
+              style: style,
+              scrollAxis: Axis.horizontal,
+              blankSpace: 40.0,
+              velocity: 30.0,
+              pauseAfterRound: const Duration(seconds: 2),
+              startPadding: 0,
+              accelerationDuration: const Duration(milliseconds: 500),
+              accelerationCurve: Curves.linear,
+              decelerationDuration: const Duration(milliseconds: 500),
+              decelerationCurve: Curves.easeOut,
+            ),
+          );
+        }
+
+        return Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: style,
         );
       },
     );

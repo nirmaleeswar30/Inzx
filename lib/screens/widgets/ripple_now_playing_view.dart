@@ -17,6 +17,7 @@ import 'podcast_screen.dart' show PodcastScreen;
 import 'ripple_circular_progress_scrubber.dart';
 import 'ripple_flower_clipper.dart';
 import 'jam_indicator_badge.dart';
+import 'explicit_badge.dart';
 
 /// The 'Ripple' minimalist Now Playing screen layout.
 /// Features an 8-petal wavy album art mask, concentric waveform seek ring,
@@ -513,51 +514,60 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
             // Song title
             SizedBox(
               height: 28,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final painter = TextPainter(
-                    text: TextSpan(
-                      text: widget.track.title,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.3,
-                        color: widget.textColor,
-                      ),
-                    ),
-                    maxLines: 1,
-                    textDirection: TextDirection.ltr,
-                  )..layout();
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (widget.track.isExplicit)
+                    ExplicitBadge(color: widget.textColor),
+                  Flexible(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final painter = TextPainter(
+                          text: TextSpan(
+                            text: widget.track.title,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.3,
+                              color: widget.textColor,
+                            ),
+                          ),
+                          maxLines: 1,
+                          textDirection: TextDirection.ltr,
+                        )..layout();
 
-                  if (painter.width > constraints.maxWidth) {
-                    return Marquee(
-                      text: widget.track.title,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.3,
-                        color: widget.textColor,
-                      ),
-                      scrollAxis: Axis.horizontal,
-                      blankSpace: 48.0,
-                      velocity: 30.0,
-                      pauseAfterRound: const Duration(seconds: 2),
-                    );
-                  }
+                        if (painter.width > constraints.maxWidth) {
+                          return Marquee(
+                            text: widget.track.title,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.3,
+                              color: widget.textColor,
+                            ),
+                            scrollAxis: Axis.horizontal,
+                            blankSpace: 48.0,
+                            velocity: 30.0,
+                            pauseAfterRound: const Duration(seconds: 2),
+                          );
+                        }
 
-                  return Text(
-                    widget.track.title,
-                    maxLines: 1,
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.3,
-                      color: widget.textColor,
+                        return Text(
+                          widget.track.title,
+                          maxLines: 1,
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.3,
+                            color: widget.textColor,
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 4),

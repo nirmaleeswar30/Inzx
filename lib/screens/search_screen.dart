@@ -19,6 +19,7 @@ import 'widgets/album_screen.dart' hide albumColorsProvider;
 import 'widgets/artist_screen.dart';
 import 'widgets/now_playing_screen.dart';
 import 'widgets/track_options_sheet.dart';
+import 'widgets/explicit_badge.dart';
 
 // ============ PROVIDERS ============
 
@@ -1272,15 +1273,24 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      track.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: isCurrentTrack ? FontWeight.bold : FontWeight.w600,
-                        color: isCurrentTrack ? accentColor : textColor,
-                      ),
+                    Row(
+                      children: [
+                        if (track.isExplicit)
+                          ExplicitBadge(
+                            color: isCurrentTrack ? accentColor : textColor,
+                          ),
+                        Expanded(
+                          child: _buildScrollableTitle(
+                            track.title,
+                            TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: isCurrentTrack ? FontWeight.bold : FontWeight.w600,
+                              color: isCurrentTrack ? accentColor : textColor,
+                            ),
+                            isCurrentTrack,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -1831,6 +1841,44 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
         color: Colors.grey[800],
         child: Icon(fallbackIcon, color: Colors.white54, size: size * 0.4),
       ),
+    );
+  }
+
+  Widget _buildScrollableTitle(String title, TextStyle style, bool isPlaying) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final textPainter = TextPainter(
+          text: TextSpan(text: title, style: style),
+          maxLines: 1,
+          textDirection: TextDirection.ltr,
+        )..layout(maxWidth: constraints.maxWidth);
+
+        if (isPlaying && (textPainter.didExceedMaxLines || textPainter.width >= constraints.maxWidth - 2)) {
+          return SizedBox(
+            height: style.fontSize != null ? style.fontSize! * 1.5 : 20,
+            child: Marquee(
+              text: title,
+              style: style,
+              scrollAxis: Axis.horizontal,
+              blankSpace: 40.0,
+              velocity: 30.0,
+              pauseAfterRound: const Duration(seconds: 2),
+              startPadding: 0,
+              accelerationDuration: const Duration(milliseconds: 500),
+              accelerationCurve: Curves.linear,
+              decelerationDuration: const Duration(milliseconds: 500),
+              decelerationCurve: Curves.easeOut,
+            ),
+          );
+        }
+
+        return Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: style,
+        );
+      },
     );
   }
 }

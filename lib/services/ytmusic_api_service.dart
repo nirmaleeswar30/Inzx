@@ -1432,6 +1432,7 @@ class InnerTubeService {
                 album: t.album,
                 albumId: t.albumId,
                 duration: t.duration,
+                isExplicit: t.isExplicit,
               ),
             )
             .toList();
@@ -2094,33 +2095,22 @@ class InnerTubeService {
       final titleRuns = renderer['title']?['runs'] as List?;
       final title = titleRuns?.map((r) => r['text']).join() ?? 'Unknown';
 
-      // Get artist and artistId from shortBylineText or longBylineText
-      final artistRuns =
-          renderer['shortBylineText']?['runs'] as List? ??
-          renderer['longBylineText']?['runs'] as List?;
+      // Get artist, artistId, album, albumId
       String artist = 'Unknown Artist';
       String? artistId;
-      if (artistRuns != null && artistRuns.isNotEmpty) {
-        // Filter out non-artist parts (like " • " separators, views, etc.)
-        final artistParts = artistRuns
-            .where(
-              (r) =>
-                  r['navigationEndpoint']?['browseEndpoint'] != null ||
-                  artistRuns.length == 1,
-            )
-            .toList();
-        artist = artistParts.map((r) => r['text']).join(', ');
-        if (artist.isEmpty) {
-          artist = artistRuns[0]['text'] ?? 'Unknown Artist';
-        }
-        // Extract artistId from first artist with browse endpoint
-        for (final run in artistRuns) {
-          final browseEndpoint = run['navigationEndpoint']?['browseEndpoint'];
-          if (browseEndpoint != null) {
-            artistId = browseEndpoint['browseId'] as String?;
-            break;
-          }
-        }
+      String? album;
+      String? albumId;
+      Duration? parsedDuration;
+
+      final bylineRuns = renderer['longBylineText']?['runs'] as List? ?? 
+                         renderer['shortBylineText']?['runs'] as List?;
+      if (bylineRuns != null && bylineRuns.isNotEmpty) {
+        final parsed = _extractArtistInfoFromSubtitleRuns(bylineRuns);
+        artist = parsed.$1 == 'Unknown Artist' ? artist : parsed.$1;
+        artistId = parsed.$2;
+        parsedDuration = parsed.$3;
+        album = parsed.$4;
+        albumId = parsed.$5;
       }
 
       // Get duration (checking lengthText, lengthSeconds, fixedColumns, and byline runs)
@@ -2174,8 +2164,8 @@ class InnerTubeService {
 
       if (duration == Duration.zero &&
           (durationStr == null || durationStr.isEmpty)) {
-        if (artistRuns != null) {
-          for (final run in artistRuns) {
+        if (bylineRuns != null) {
+          for (final run in bylineRuns) {
             final txt = (run['text'] as String?)?.trim();
             if (txt != null && RegExp(r'^\d+:\d+(:\d+)?$').hasMatch(txt)) {
               durationStr = txt;
@@ -2190,6 +2180,10 @@ class InnerTubeService {
           durationStr.isNotEmpty) {
         duration = _parseDuration(durationStr);
       }
+      
+      if (duration == Duration.zero && parsedDuration != null) {
+        duration = parsedDuration;
+      }
 
       // Get thumbnail
       final thumbnails = renderer['thumbnail']?['thumbnails'] as List?;
@@ -2197,14 +2191,19 @@ class InnerTubeService {
       if (thumbnails != null && thumbnails.isNotEmpty) {
         thumbnailUrl = thumbnails.last['url'] as String?;
       }
+      
+      final isExplicit = renderer.toString().contains('MUSIC_EXPLICIT_BADGE');
 
       return Track(
         id: videoId,
         title: title,
         artist: artist,
         artistId: artistId ?? '',
+        album: album,
+        albumId: albumId,
         duration: duration,
         thumbnailUrl: thumbnailUrl,
+        isExplicit: isExplicit,
       );
     } catch (e) {
       return null;
@@ -4731,6 +4730,8 @@ class InnerTubeService {
           }
         } catch (_) {}
       }
+      
+      final isExplicit = renderer.toString().contains('MUSIC_EXPLICIT_BADGE');
 
       return Track(
         id: videoId,
@@ -4743,6 +4744,7 @@ class InnerTubeService {
         duration: duration ?? Duration.zero,
         isLiked: true,
         setVideoId: setVideoId,
+        isExplicit: isExplicit,
       );
     } catch (e) {
       return null;
@@ -7986,6 +7988,8 @@ class InnerTubeService {
         }
       }
 
+      final isExplicit = renderer.toString().contains('MUSIC_EXPLICIT_BADGE');
+
       return HomeShelfItem(
         id: navigationId ?? title.hashCode.toString(),
         title: title,
@@ -7999,6 +8003,7 @@ class InnerTubeService {
         album: itemAlbum,
         albumId: itemAlbumId,
         duration: parsedDuration,
+        isExplicit: isExplicit,
       );
     } catch (e) {
       return null;
@@ -8066,6 +8071,8 @@ class InnerTubeService {
 
       if (videoId == null) return null;
 
+      final isExplicit = renderer.toString().contains('MUSIC_EXPLICIT_BADGE');
+
       return HomeShelfItem(
         id: videoId,
         title: title,
@@ -8077,6 +8084,7 @@ class InnerTubeService {
         album: itemAlbum,
         albumId: itemAlbumId,
         duration: parsedDuration,
+        isExplicit: isExplicit,
       );
     } catch (e) {
       return null;
@@ -8484,6 +8492,7 @@ class InnerTubeService {
             album: track.album,
             albumId: track.albumId,
             duration: track.duration,
+            isExplicit: track.isExplicit,
           );
         }
       }

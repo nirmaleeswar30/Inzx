@@ -39,6 +39,7 @@ import 'jams_panel.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../services/deep_link_handler.dart';
 import '../../services/download_service.dart';
+import 'explicit_badge.dart';
 
 /// Progress bar widget that only rebuilds on position changes (isolated)
 class _NowPlayingProgressBar extends ConsumerStatefulWidget {
@@ -1969,6 +1970,12 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                           track,
                           accentColor,
                         ),
+                        ambientArt: AnimatedAlbumArtView(
+                          key: ValueKey('ambient_art_${track.id}'),
+                          track: track,
+                          staticArt: _buildStaticAlbumArtContent(track, accentColor),
+                          borderRadius: BorderRadius.zero,
+                        ),
                         lyricPreview: _buildSyncedLyricPreview(
                           textColor,
                           accentColor,
@@ -3157,17 +3164,27 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          track.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: isCurrent ? accentColor : textColor,
-                            fontWeight: isCurrent
-                                ? FontWeight.bold
-                                : FontWeight.w600,
-                            fontSize: 14,
-                          ),
+                        Row(
+                          children: [
+                            if (track.isExplicit)
+                              ExplicitBadge(
+                                color: isCurrent ? accentColor : textColor,
+                              ),
+                            Expanded(
+                              child: Text(
+                                track.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: isCurrent ? accentColor : textColor,
+                                  fontWeight: isCurrent
+                                      ? FontWeight.bold
+                                      : FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 3),
                         subtitleWidget ??
@@ -5021,58 +5038,68 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                 // Marquee for long titles
                 SizedBox(
                   height: titleHeight,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final textPainter = TextPainter(
-                        text: TextSpan(
-                          text: track.title,
-                          style: TextStyle(
-                            fontSize: titleFontSize,
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
-                          ),
-                        ),
-                        maxLines: 1,
-                        textDirection: TextDirection.ltr,
-                      )..layout();
+                  child: Row(
+                    mainAxisAlignment: isOg ? MainAxisAlignment.start : MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      if (track.isExplicit)
+                        ExplicitBadge(color: textColor),
+                      Flexible(
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final textPainter = TextPainter(
+                              text: TextSpan(
+                                text: track.title,
+                                style: TextStyle(
+                                  fontSize: titleFontSize,
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
+                                ),
+                              ),
+                              maxLines: 1,
+                              textDirection: TextDirection.ltr,
+                            )..layout();
 
-                      // Only use marquee if text overflows
-                      if (textPainter.width > (constraints.maxWidth - 2)) {
-                        return Marquee(
-                          text: track.title,
-                          style: TextStyle(
-                            fontSize: titleFontSize,
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
-                          ),
-                          scrollAxis: Axis.horizontal,
-                          crossAxisAlignment: isOg
-                              ? CrossAxisAlignment.start
-                              : CrossAxisAlignment.center,
-                          blankSpace: 60.0,
-                          velocity: 30.0,
-                          pauseAfterRound: const Duration(seconds: 2),
-                          startPadding: 0.0,
-                          accelerationDuration: const Duration(seconds: 1),
-                          accelerationCurve: Curves.linear,
-                          decelerationDuration: const Duration(
-                            milliseconds: 500,
-                          ),
-                          decelerationCurve: Curves.easeOut,
-                        );
-                      }
-                      return Text(
-                        track.title,
-                        maxLines: 1,
-                        textAlign: isOg ? TextAlign.start : TextAlign.center,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: titleFontSize,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
+                            // Only use marquee if text overflows
+                            if (textPainter.width > (constraints.maxWidth - 2)) {
+                              return Marquee(
+                                text: track.title,
+                                style: TextStyle(
+                                  fontSize: titleFontSize,
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
+                                ),
+                                scrollAxis: Axis.horizontal,
+                                crossAxisAlignment: isOg
+                                    ? CrossAxisAlignment.start
+                                    : CrossAxisAlignment.center,
+                                blankSpace: 60.0,
+                                velocity: 30.0,
+                                pauseAfterRound: const Duration(seconds: 2),
+                                startPadding: 0.0,
+                                accelerationDuration: const Duration(seconds: 1),
+                                accelerationCurve: Curves.linear,
+                                decelerationDuration: const Duration(
+                                  milliseconds: 500,
+                                ),
+                                decelerationCurve: Curves.easeOut,
+                              );
+                            }
+                            return Text(
+                              track.title,
+                              maxLines: 1,
+                              textAlign: isOg ? TextAlign.start : TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: titleFontSize,
+                                fontWeight: FontWeight.bold,
+                                color: textColor,
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 2),

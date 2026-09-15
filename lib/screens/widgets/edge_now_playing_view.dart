@@ -13,6 +13,7 @@ import '../../core/design_system/design_system.dart';
 import 'artist_screen.dart';
 import 'podcast_screen.dart' show PodcastScreen;
 import 'jam_indicator_badge.dart';
+import 'explicit_badge.dart';
 
 /// The 'Cinematic' Now Playing screen layout.
 /// Features a full-width uncropped album artwork spanning the top half of the screen
@@ -27,6 +28,7 @@ class EdgeNowPlayingView extends ConsumerStatefulWidget {
   final Color accentColor;
   final Color backgroundColor;
   final Widget albumArt;
+  final Widget? ambientArt;
   final VoidCallback onDismiss;
   final VoidCallback? onOpenOptions;
   final Widget tabsWidget;
@@ -48,6 +50,7 @@ class EdgeNowPlayingView extends ConsumerStatefulWidget {
     required this.accentColor,
     required this.backgroundColor,
     required this.albumArt,
+    this.ambientArt,
     required this.onDismiss,
     this.onOpenOptions,
     required this.tabsWidget,
@@ -106,9 +109,27 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
           width: availableWidth,
           height: availableHeight,
           color: widget.backgroundColor,
-          child: Column(
+          child: Stack(
             children: [
-              // 1. TOP HALF: Edge-to-Edge Artwork starting from absolute top (NO GAP)
+              // --- AMBIENT REFLECTION BACKGROUND ---
+              if (widget.ambientArt != null)
+                Positioned.fill(
+                  child: Opacity(
+                    opacity: 0.85, // Stronger opacity for more vivid reflection
+                    child: Transform.scale(
+                      scale: 1.5, // Scale it up normally to fill and bleed
+                      child: ImageFiltered(
+                        imageFilter: ImageFilter.blur(sigmaX: 80, sigmaY: 80), // Massive blur
+                        child: widget.ambientArt!,
+                      ),
+                    ),
+                  ),
+                ),
+
+              // --- FOREGROUND CONTENT ---
+              Column(
+                children: [
+                  // 1. TOP HALF: Edge-to-Edge Artwork starting from absolute top (NO GAP)
               // with seamless ShaderMask bottom fade into background
               SizedBox(
                 width: availableWidth,
@@ -139,7 +160,7 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
                               Color(0x26FFFFFF), // 15%
                               Colors.transparent,
                             ],
-                            stops: [0.0, 0.90, 0.93, 0.96, 0.985, 1.0],
+                            stops: [0.0, 0.70, 0.85, 0.92, 0.97, 1.0], // Smoother transition
                           ).createShader(rect);
                         },
                         blendMode: BlendMode.dstIn,
@@ -151,7 +172,9 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
                       ),
 
                       // Ambient color bleed softly dissolving only at the very bottom rim
-                      Positioned(
+                      // (Only apply if we don't have ambientArt filling the background)
+                      if (widget.ambientArt == null)
+                        Positioned(
                         left: 0,
                         right: 0,
                         bottom: 0,
@@ -257,7 +280,9 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
                 ),
               ),
             ],
-          ),
+          ), // Close Column
+            ],
+          ), // Close Stack
         );
       },
     );
@@ -285,9 +310,15 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
               // Title with Marquee on overflow
               SizedBox(
                 height: 28,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final painter = TextPainter(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (widget.track.isExplicit)
+                      ExplicitBadge(color: widget.textColor),
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final painter = TextPainter(
                       text: TextSpan(
                         text: widget.track.title,
                         style: TextStyle(
@@ -328,7 +359,10 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
                         color: widget.textColor,
                       ),
                     );
-                  },
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 3),

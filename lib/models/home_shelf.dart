@@ -39,6 +39,7 @@ class HomeShelfItem extends Equatable {
   final Duration? duration;
   final String? album;
   final String? albumId;
+  final bool isExplicit;
 
   const HomeShelfItem({
     required this.id,
@@ -54,10 +55,26 @@ class HomeShelfItem extends Equatable {
     this.duration,
     this.album,
     this.albumId,
+    this.isExplicit = false,
   });
 
   @override
-  List<Object?> get props => [id, album, albumId];
+  List<Object?> get props => [
+        id,
+        title,
+        subtitle,
+        thumbnailUrl,
+        navigationId,
+        itemType,
+        description,
+        playlistId,
+        videoId,
+        artistId,
+        duration,
+        album,
+        albumId,
+        isExplicit,
+      ];
 
   /// Convert to Track if it's a song
   Track? toTrack() {
@@ -76,6 +93,7 @@ class HomeShelfItem extends Equatable {
       albumId: albumId,
       thumbnailUrl: thumbnailUrl,
       duration: resolvedDuration ?? Duration.zero,
+      isExplicit: isExplicit,
     );
   }
 

@@ -49,6 +49,7 @@ class Track extends Equatable {
     String? albumId,
     required Duration duration,
     String? thumbnailUrl,
+    bool isExplicit = false,
   }) {
     // Get highest quality thumbnail
     String? highRes;
@@ -68,6 +69,7 @@ class Track extends Equatable {
       thumbnailUrl:
           thumbnailUrl ?? 'https://img.youtube.com/vi/$videoId/mqdefault.jpg',
       highResThumbnailUrl: highRes,
+      isExplicit: isExplicit,
     );
   }
 
