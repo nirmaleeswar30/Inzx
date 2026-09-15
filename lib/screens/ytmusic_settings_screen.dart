@@ -1055,6 +1055,24 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           height: 1,
           color: _isDark ? InzxColors.darkDivider : InzxColors.divider,
         ),
+        if (ref.watch(animatedAlbumArtProvider) && ref.watch(nowPlayingStyleProvider) == NowPlayingStyle.edge)
+          Column(
+            children: [
+              _switchTile(
+                icon: Icons.blur_on_rounded,
+                iconBg: _accentColor,
+                title: 'Ambient Reflection Only for Canvas',
+                subtitle: 'Only show the glowing reflection background when an animated album cover is available.',
+                value: ref.watch(cinematicAmbientOnlyForAnimatedArtProvider),
+                onChanged: (val) =>
+                    ref.read(cinematicAmbientOnlyForAnimatedArtProvider.notifier).toggle(),
+              ),
+              Divider(
+                height: 1,
+                color: _isDark ? InzxColors.darkDivider : InzxColors.divider,
+              ),
+            ],
+          ),
         _switchTile(
           icon: Iconsax.text,
           iconBg: _accentColor,

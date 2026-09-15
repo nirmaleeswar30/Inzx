@@ -39,6 +39,7 @@ class EdgeNowPlayingView extends ConsumerStatefulWidget {
   final Widget? lyricPreview;
   final Widget? progressBar;
   final Widget? controlsWidget;
+  final bool forceFallbackGradient;
 
   const EdgeNowPlayingView({
     super.key,
@@ -61,6 +62,7 @@ class EdgeNowPlayingView extends ConsumerStatefulWidget {
     this.lyricPreview,
     this.progressBar,
     this.controlsWidget,
+    this.forceFallbackGradient = false,
   });
 
   @override
@@ -112,7 +114,7 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
           child: Stack(
             children: [
               // --- AMBIENT REFLECTION BACKGROUND ---
-              if (widget.ambientArt != null)
+              if (widget.ambientArt != null && !widget.forceFallbackGradient)
                 Positioned.fill(
                   child: Opacity(
                     opacity: 0.85, // Stronger opacity for more vivid reflection
@@ -173,7 +175,7 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
 
                       // Ambient color bleed softly dissolving only at the very bottom rim
                       // (Only apply if we don't have ambientArt filling the background)
-                      if (widget.ambientArt == null)
+                      if (widget.ambientArt == null || widget.forceFallbackGradient)
                         Positioned(
                         left: 0,
                         right: 0,

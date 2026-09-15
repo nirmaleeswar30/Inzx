@@ -25,6 +25,7 @@ class AnimatedAlbumArtView extends ConsumerStatefulWidget {
   final Widget staticArt;
   final BorderRadius borderRadius;
   final BoxFit fit;
+  final void Function(bool hasCanvas)? onCanvasLoaded;
 
   const AnimatedAlbumArtView({
     super.key,
@@ -32,6 +33,7 @@ class AnimatedAlbumArtView extends ConsumerStatefulWidget {
     required this.staticArt,
     this.borderRadius = const BorderRadius.all(Radius.circular(16)),
     this.fit = BoxFit.cover,
+    this.onCanvasLoaded,
   });
 
   @override
@@ -84,6 +86,7 @@ class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView> {
   Future<void> _loadCanvas() async {
     final isEnabled = ref.read(animatedAlbumArtProvider);
     if (!isEnabled) {
+      widget.onCanvasLoaded?.call(false);
       return;
     }
 
@@ -91,6 +94,7 @@ class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView> {
     final trackTitle = widget.track.title;
     final trackArtist = widget.track.artist;
 
+    widget.onCanvasLoaded?.call(false);
     debugPrint('AnimatedAlbumArt: Checking canvas for "$trackTitle" by "$trackArtist"...');
 
     try {
@@ -99,13 +103,18 @@ class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView> {
 
       if (canvas == null) {
         debugPrint('AnimatedAlbumArt: No animated canvas available for "$trackTitle". Showing static artwork.');
+        widget.onCanvasLoaded?.call(false);
         return;
       }
 
       debugPrint('AnimatedAlbumArt: Found canvas from ${canvas.source.name} for "$trackTitle". Loading video...');
+      widget.onCanvasLoaded?.call(true);
       await _setupVideo(canvas, currentRequestId);
     } catch (e) {
       debugPrint('AnimatedAlbumArt: Error resolving canvas for "$trackTitle": $e');
+      if (mounted && currentRequestId == _loadRequestId) {
+        widget.onCanvasLoaded?.call(false);
+      }
     }
   }
 

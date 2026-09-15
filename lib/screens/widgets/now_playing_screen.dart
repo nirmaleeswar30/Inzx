@@ -1463,6 +1463,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   bool _initialColorLoad = true;
   bool _isAlbumSwipeNavigationInProgress = false;
   bool _isUserDraggingAlbumArt = false;
+  bool _hasAnimatedCanvas = false; // Track if current song actually has canvas
   int? _lastAlbumArtSyncedIndex;
   Orientation? _lastOrientation;
   late AnimationController _heartAnimController;
@@ -1975,7 +1976,13 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                           track: track,
                           staticArt: _buildStaticAlbumArtContent(track, accentColor),
                           borderRadius: BorderRadius.zero,
+                          onCanvasLoaded: (hasCanvas) {
+                            if (mounted && _hasAnimatedCanvas != hasCanvas) {
+                              setState(() => _hasAnimatedCanvas = hasCanvas);
+                            }
+                          },
                         ),
+                        forceFallbackGradient: ref.watch(cinematicAmbientOnlyForAnimatedArtProvider) && !_hasAnimatedCanvas,
                         lyricPreview: _buildSyncedLyricPreview(
                           textColor,
                           accentColor,

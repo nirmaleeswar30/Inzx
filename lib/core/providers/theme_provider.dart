@@ -447,6 +447,35 @@ class ShowLyricsBelowAlbumArtNotifier extends StateNotifier<bool> {
   Future<void> toggle() => setEnabled(!state);
 }
 
+/// Provider for whether the cinematic ambient reflection is only shown for animated artwork
+final cinematicAmbientOnlyForAnimatedArtProvider =
+    StateNotifierProvider<CinematicAmbientOnlyForAnimatedArtNotifier, bool>((ref) {
+  return CinematicAmbientOnlyForAnimatedArtNotifier();
+});
+
+class CinematicAmbientOnlyForAnimatedArtNotifier extends StateNotifier<bool> {
+  static const String cinematicAmbientOnlyPrefKey = 'inzx_cinematic_ambient_only_animated';
+
+  CinematicAmbientOnlyForAnimatedArtNotifier() : super(true) {
+    _loadPreference();
+  }
+
+  Future<void> _loadPreference() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      state = prefs.getBool(cinematicAmbientOnlyPrefKey) ?? true; // Default to true
+    } catch (_) {}
+  }
+
+  Future<void> toggle() async {
+    state = !state;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(cinematicAmbientOnlyPrefKey, state);
+    } catch (_) {}
+  }
+}
+
 /// Provider for whether shares use native YouTube Music links instead of Inzx
 /// deep links. Default: false (share Inzx links).
 final shareNativeLinksProvider =
