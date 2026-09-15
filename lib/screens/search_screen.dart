@@ -530,7 +530,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
         loading: () => Skeletonizer(
           enabled: true,
           enableSwitchAnimation: true,
-          child: Column(
+          child: ListView(
+            padding: EdgeInsets.zero,
             children: List.generate(6, (index) => ListTile(
               leading: const Icon(Icons.search),
               title: Text(BoneMock.words(3)),
@@ -739,7 +740,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
       loading: () => Skeletonizer(
         enabled: true,
         enableSwitchAnimation: true,
-        child: Column(
+        child: ListView(
+          padding: EdgeInsets.zero,
           children: [
             // Fake top result card
             Padding(
@@ -783,7 +785,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
           return Skeletonizer(
             enabled: true,
             enableSwitchAnimation: true,
-            child: Column(
+            child: ListView(
+              padding: EdgeInsets.zero,
               children: [
                 // Fake top result card
                 Padding(
@@ -1348,7 +1351,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
           )
         else
           SizedBox(
-            height: 160,
+            height: 190,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -1506,7 +1509,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
           )
         else
           SizedBox(
-            height: 195,
+            height: 220,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 4),

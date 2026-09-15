@@ -19,6 +19,7 @@ import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'local_artwork_service.dart';
 import 'package:hive/hive.dart';
 import '../data/entities/download_entity.dart';
+import '../data/entities/track_entity.dart';
 
 /// Key for persisting streaming quality preference
 const String kStreamingQualityKey = 'streaming_quality';
@@ -2651,12 +2652,14 @@ class AudioPlayerService {
       // Pre-fetch next track
       if (_currentIndex < _queue.length - 1) {
         final nextTrack = _queue[_currentIndex + 1];
-        if (kDebugMode) {
-          print('AudioPlayerService: Pre-fetching next track: ${nextTrack.id}');
-        }
+        if (!_isLocalTrack(nextTrack)) {
+          if (kDebugMode) {
+            print('AudioPlayerService: Pre-fetching next track: ${nextTrack.id}');
+          }
 
-        // Fire and forget - just warm up the cache
-        _ytPlayerUtils.prefetchNext(nextTrack.id, quality: _audioQuality);
+          // Fire and forget - just warm up the cache
+          _ytPlayerUtils.prefetchNext(nextTrack.id, quality: _audioQuality);
+        }
         _schedulePrecacheAhead();
       }
     }
@@ -3013,15 +3016,36 @@ class AudioPlayerService {
     await _ytPlayerUtils.prefetch(videoIds, quality: _audioQuality);
   }
 
+  bool _isLocalTrack(Track track) {
+    if (track.localFilePath != null) return true;
+    try {
+      if (Hive.isBoxOpen('music_downloads')) {
+        final box = Hive.box<DownloadEntity>('music_downloads');
+        if (box.values.any((e) => e.trackId == track.id)) return true;
+      }
+      if (Hive.isBoxOpen('local_music_tracks')) {
+        final box = Hive.box<TrackEntity>('local_music_tracks');
+        if (box.containsKey(track.id)) return true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
   /// Prefetch all tracks in queue (OuterTune approach)
   /// This resolves stream URLs in background
   void _prefetchAllTracks() {
     if (_queue.isEmpty) return;
 
-    // Prefetch all tracks, but prioritize current and next
-    final allIds = _queue.map((t) => t.id).toList();
+    // Prefetch all tracks, but prioritize current and next, filtering out local tracks
+    final allIds = _queue
+        .where((t) => !_isLocalTrack(t))
+        .map((t) => t.id)
+        .toList();
+        
+    if (allIds.isEmpty) return;
+    
     if (kDebugMode) {
-      print('AudioPlayerService: Prefetching ${allIds.length} tracks');
+      print('AudioPlayerService: Prefetching ${allIds.length} remote tracks');
     }
 
     // Fire and forget - prefetch happens in background
@@ -3194,6 +3218,7 @@ class AudioPlayerService {
     _activeSourcePlaybackDataByQueueIndex = const <int, PlaybackData>{};
     _isCrossfading = false;
     _crossfadeTriggeredForTrack = false;
+    _isRadioMode = false;
     stop();
     _queueRevision++;
     _updateState(
@@ -3207,6 +3232,8 @@ class AudioPlayerService {
       isPlaying: false,
       isBuffering: false,
       isLoading: false,
+      isRadioMode: false,
+      isFetchingRadio: false,
     );
     // Clear persisted queue when explicitly cleared
     QueuePersistenceService.clearQueue();
@@ -3236,6 +3263,8 @@ class AudioPlayerService {
     _updateState(
       currentTrack: _currentTrack,
       currentIndex: _currentIndex,
+      duration: _currentTrack?.duration,
+      resetDuration: _currentTrack?.duration == null || _currentTrack!.duration == Duration.zero,
       isLoading: true,
       error: null,
       currentPlaybackData: null,
@@ -3708,12 +3737,14 @@ class AudioPlayerService {
   void _prefetchNextTrack() {
     if (_currentIndex < _queue.length - 1) {
       final nextTrack = _queue[_currentIndex + 1];
-      if (kDebugMode) {
-        print('AudioPlayerService: Prefetching next track: ${nextTrack.title}');
-      }
+      if (!_isLocalTrack(nextTrack)) {
+        if (kDebugMode) {
+          print('AudioPlayerService: Prefetching next track: ${nextTrack.title}');
+        }
 
-      // Fire and forget - don't await
-      _ytPlayerUtils.prefetchNext(nextTrack.id, quality: _audioQuality);
+        // Fire and forget - don't await
+        _ytPlayerUtils.prefetchNext(nextTrack.id, quality: _audioQuality);
+      }
       _schedulePrecacheAhead();
       unawaited(
         _lyricsWarmupService.prefetchForTrack(
@@ -4003,6 +4034,10 @@ class AudioPlayerService {
         sourceId,
         limit: 25, // Request more for better selection
       );
+
+      if (!_isRadioMode) {
+        return;
+      }
 
       if (radioTracks.isNotEmpty) {
         // Filter out tracks already in queue AND previously fetched

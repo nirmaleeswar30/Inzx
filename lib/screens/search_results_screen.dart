@@ -691,7 +691,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
           )
         else
           SizedBox(
-            height: 160,
+            height: 190,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -832,7 +832,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
           )
         else
           SizedBox(
-            height: 200,
+            height: 230,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),

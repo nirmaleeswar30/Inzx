@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:audio_service/audio_service.dart';
+import 'package:audio_session/audio_session.dart';
 import 'package:just_audio/just_audio.dart';
 import '../models/models.dart';
 import 'audio_player_service.dart' as player;
@@ -913,6 +914,13 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
 
 /// Initialize audio service with Android Auto grid layout & search support
 Future<InzxAudioHandler> initAudioService() async {
+  try {
+    final session = await AudioSession.instance;
+    await session.configure(const AudioSessionConfiguration.music());
+  } catch (e) {
+    debugPrint('AudioSession configuration failed: $e');
+  }
+
   return await AudioService.init(
     builder: () => InzxAudioHandler(),
     config: AudioServiceConfig(

@@ -747,7 +747,7 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
           const SizedBox(height: 12),
           // Fake horizontal track cards
           SizedBox(
-            height: 200,
+            height: 240,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -771,8 +771,8 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(BoneMock.name),
-                      Text(BoneMock.words(2), style: const TextStyle(fontSize: 12)),
+                      Text(BoneMock.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      Text(BoneMock.words(2), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12)),
                     ],
                   ),
                 );
@@ -804,8 +804,8 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
                   ),
                 ),
               ),
-              title: Text(BoneMock.name),
-              subtitle: Text(BoneMock.words(2)),
+              title: Text(BoneMock.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+              subtitle: Text(BoneMock.words(2), maxLines: 1, overflow: TextOverflow.ellipsis),
               trailing: const Icon(Icons.more_vert),
             ),
           )),
@@ -820,7 +820,7 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 200,
+            height: 240,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -844,8 +844,8 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(BoneMock.name),
-                      Text(BoneMock.words(2), style: const TextStyle(fontSize: 12)),
+                      Text(BoneMock.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      Text(BoneMock.words(2), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12)),
                     ],
                   ),
                 );
@@ -997,7 +997,7 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 160,
+          height: 180,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1113,7 +1113,7 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 170,
+          height: 190,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
