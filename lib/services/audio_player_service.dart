@@ -778,10 +778,10 @@ class AudioPlayerService {
       // 2. Check if this file is a known download entity
       bool isDownloaded = false;
       try {
-        if (!Hive.isBoxOpen('downloads')) {
-          await Hive.openBox<DownloadEntity>('downloads');
+        if (!Hive.isBoxOpen('music_downloads')) {
+          await Hive.openBox<DownloadEntity>('music_downloads');
         }
-        final box = Hive.box<DownloadEntity>('downloads');
+        final box = Hive.box<DownloadEntity>('music_downloads');
         final normPath = file.path.replaceAll('\\', '/').toLowerCase();
         for (final entity in box.values) {
           final entityNorm =
@@ -836,8 +836,22 @@ class AudioPlayerService {
 
   Future<({AudioSource source, PlaybackData? playbackData})>
   _buildSourceForTrack(Track track) async {
-    if (track.localFilePath != null) {
-      final localFile = File(track.localFilePath!);
+    String? resolvedLocalPath = track.localFilePath;
+    if (resolvedLocalPath == null) {
+      try {
+        if (!Hive.isBoxOpen('music_downloads')) {
+          await Hive.openBox<DownloadEntity>('music_downloads');
+        }
+        final box = Hive.box<DownloadEntity>('music_downloads');
+        final entity = box.values.where((e) => e.trackId == track.id).firstOrNull;
+        if (entity != null) {
+          resolvedLocalPath = entity.localPath;
+        }
+      } catch (_) {}
+    }
+
+    if (resolvedLocalPath != null) {
+      final localFile = File(resolvedLocalPath);
       if (await localFile.exists()) {
         final fileSize = await localFile.length();
         if (fileSize >= 10000) {
@@ -850,7 +864,7 @@ class AudioPlayerService {
             fileSize,
           );
           return (
-            source: AudioSource.uri(Uri.file(track.localFilePath!), tag: track),
+            source: AudioSource.uri(Uri.file(resolvedLocalPath), tag: track),
             playbackData: playbackData,
           );
         }
@@ -1736,8 +1750,20 @@ class AudioPlayerService {
         final track = _queue[i];
         if (_precacheInProgress.contains(track.id)) continue;
 
-        if (track.localFilePath != null &&
-            await File(track.localFilePath!).exists()) {
+        String? resolvedLocalPath = track.localFilePath;
+        if (resolvedLocalPath == null) {
+          try {
+            if (!Hive.isBoxOpen('music_downloads')) {
+              await Hive.openBox<DownloadEntity>('music_downloads');
+            }
+            final box = Hive.box<DownloadEntity>('music_downloads');
+            final entity = box.values.where((e) => e.trackId == track.id).firstOrNull;
+            if (entity != null) resolvedLocalPath = entity.localPath;
+          } catch (_) {}
+        }
+
+        if (resolvedLocalPath != null &&
+            await File(resolvedLocalPath).exists()) {
           if (kDebugMode) {
             print(
               'AudioPlayerService: Skipping pre-cache for ${track.id} (local file)',
@@ -3239,13 +3265,27 @@ class AudioPlayerService {
       }
 
       // Check if track has a local file - play directly without streaming
-      if (_currentTrack!.localFilePath != null) {
-        final localFile = File(_currentTrack!.localFilePath!);
+      String? resolvedLocalPath = _currentTrack!.localFilePath;
+      if (resolvedLocalPath == null) {
+        try {
+          if (!Hive.isBoxOpen('music_downloads')) {
+            await Hive.openBox<DownloadEntity>('music_downloads');
+          }
+          final box = Hive.box<DownloadEntity>('music_downloads');
+          final entity = box.values.where((e) => e.trackId == _currentTrack!.id).firstOrNull;
+          if (entity != null) {
+            resolvedLocalPath = entity.localPath;
+          }
+        } catch (_) {}
+      }
+
+      if (resolvedLocalPath != null) {
+        final localFile = File(resolvedLocalPath);
         if (await localFile.exists()) {
           final fileSize = await localFile.length();
           if (kDebugMode) {
             print(
-              'AudioPlayerService: Playing local file: ${_currentTrack!.localFilePath} (${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB)',
+              'AudioPlayerService: Playing local file: $resolvedLocalPath (${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB)',
             );
           }
 
@@ -3263,7 +3303,7 @@ class AudioPlayerService {
             }
             try {
               // Use Uri.file for proper file:// URI on Android
-              final fileUri = Uri.file(_currentTrack!.localFilePath!);
+              final fileUri = Uri.file(resolvedLocalPath);
               if (kDebugMode) {
                 print('AudioPlayerService: Using file URI: $fileUri');
               }
@@ -3315,7 +3355,7 @@ class AudioPlayerService {
         } else {
           if (kDebugMode) {
             print(
-              'AudioPlayerService: Local file not found at: ${_currentTrack!.localFilePath}',
+              'AudioPlayerService: Local file not found at: $resolvedLocalPath',
             );
           }
         }

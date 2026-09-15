@@ -394,8 +394,8 @@ class LocalTracksNotifier extends StateNotifier<List<Track>> {
 
     // If it's also a downloaded track in Hive, delete from DownloadService/Hive
     try {
-      if (Hive.isBoxOpen('downloads')) {
-        final box = Hive.box<DownloadEntity>('downloads');
+      if (Hive.isBoxOpen('music_downloads')) {
+        final box = Hive.box<DownloadEntity>('music_downloads');
         final matchingKeys = <dynamic>[];
         for (final entry in box.toMap().entries) {
           if (entry.value.trackId == track.id ||
@@ -622,10 +622,10 @@ class LocalMusicScanner {
   /// Build a lookup map of downloaded tracks by file path
   static Future<Map<String, _DownloadLookupItem>> _buildDownloadLookup() async {
     try {
-      if (!Hive.isBoxOpen('downloads')) {
-        await Hive.openBox<DownloadEntity>('downloads');
+      if (!Hive.isBoxOpen('music_downloads')) {
+        await Hive.openBox<DownloadEntity>('music_downloads');
       }
-      final box = Hive.box<DownloadEntity>('downloads');
+      final box = Hive.box<DownloadEntity>('music_downloads');
       final map = <String, _DownloadLookupItem>{};
       for (final e in box.values) {
         final item = _DownloadLookupItem(
