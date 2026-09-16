@@ -14,6 +14,7 @@ import 'artist_screen.dart';
 import 'podcast_screen.dart' show PodcastScreen;
 import 'jam_indicator_badge.dart';
 import 'explicit_badge.dart';
+import 'audio_routing_pill.dart';
 
 /// The 'Cinematic' Now Playing screen layout.
 /// Features a full-width uncropped album artwork spanning the top half of the screen
@@ -259,6 +260,14 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
                     if (widget.controlsWidget != null)
                       widget.controlsWidget!,
 
+                    if (ref.watch(showSmartAudioRoutingProvider)) ...[
+                      const SizedBox(height: 32),
+                      AudioRoutingPill(
+                        textColor: widget.textColor,
+                        accentColor: widget.accentColor,
+                      ),
+                    ],
+
                     const Spacer(flex: 2),
 
                     // Drawer tabs (UP NEXT | LYRICS | RELATED)
@@ -305,8 +314,6 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    if (widget.track.isExplicit)
-                      ExplicitBadge(color: widget.textColor),
                     Expanded(
                       child: LayoutBuilder(
                         builder: (context, constraints) {
@@ -361,7 +368,13 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
               // Artist with Marquee on overflow
               SizedBox(
                 height: 22,
-                child: LayoutBuilder(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (widget.track.isExplicit)
+                      ExplicitBadge(color: widget.secondaryTextColor),
+                    Expanded(
+                      child: LayoutBuilder(
                   builder: (context, constraints) {
                     final artistStyle = TextStyle(
                       fontSize: 15,
@@ -421,8 +434,11 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
                     );
                   },
                 ),
-              ),
-            ],
+               ),
+              ],
+             ),
+            ),
+          ],
           ),
         ),
 

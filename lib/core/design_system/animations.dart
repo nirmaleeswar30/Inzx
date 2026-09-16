@@ -215,10 +215,10 @@ class AnimatedPlayPauseButton extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final bool isLightColor = backgroundColor.computeLuminance() > 0.60;
-    final effectiveIconColor = isLiquidGlass
-        ? (iconColor == Colors.white && isLightColor
-            ? Colors.black87
-            : iconColor)
+    
+    // Always contrast white icons on light backgrounds, regardless of liquid glass
+    final effectiveIconColor = (iconColor == Colors.white && isLightColor)
+        ? Colors.black87
         : iconColor;
 
     final iconSwitcher = AnimatedSwitcher(

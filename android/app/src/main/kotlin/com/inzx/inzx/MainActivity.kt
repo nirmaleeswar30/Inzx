@@ -7,6 +7,10 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.webkit.CookieManager
 import androidx.core.content.ContextCompat
+import android.media.AudioManager
+import android.media.AudioDeviceInfo
+import android.bluetooth.BluetoothAdapter
+import android.content.Context
 import com.nirmal.inzx.jams.JamsForegroundService
 import com.nirmal.inzx.widget.MusicWidgetProvider
 import com.ryanheise.audioservice.AudioServiceFragmentActivity
@@ -30,6 +34,166 @@ class MainActivity : AudioServiceFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        val ROUTING_CHANNEL = "inzx/audio_routing"
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ROUTING_CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "getActiveDeviceName" -> {
+                    try {
+                        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                        val devices = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+                        
+                        var activeDeviceName = "Internal Speaker"
+                        var activeIsSpeaker = true
+                        
+                        val allDevices = mutableListOf<Map<String, Any>>()
+                        
+                        var phoneName = "Internal Speaker"
+                        val adapter = BluetoothAdapter.getDefaultAdapter()
+                        if (adapter != null) {
+                            try {
+                                val bName = adapter.name
+                                if (!bName.isNullOrEmpty()) {
+                                    phoneName = bName
+                                }
+                            } catch (e: SecurityException) {}
+                        }
+
+                        // First determine the active route
+                        if (audioManager.isSpeakerphoneOn) {
+                            activeIsSpeaker = true
+                        } else {
+                            for (device in devices) {
+                                val isBt = device.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP || 
+                                         device.type == AudioDeviceInfo.TYPE_BLE_HEADSET ||
+                                         device.type == AudioDeviceInfo.TYPE_USB_HEADSET ||
+                                         device.type == AudioDeviceInfo.TYPE_WIRED_HEADPHONES
+                                if (isBt) {
+                                    var dName = device.productName.toString()
+                                    try {
+                                        val address = device.address
+                                        if (!address.isNullOrEmpty() && adapter != null) {
+                                            val btName = adapter.getRemoteDevice(address)?.name
+                                            if (!btName.isNullOrEmpty()) dName = btName
+                                        }
+                                    } catch (e: Exception) {}
+                                    
+                                    activeDeviceName = dName
+                                    activeIsSpeaker = false
+                                    break
+                                }
+                            }
+                        }
+                        
+                        if (activeIsSpeaker) activeDeviceName = phoneName
+
+                        // Now build the list of all valid outputs
+                        // We always add the phone speaker
+                        allDevices.add(mapOf("name" to phoneName, "isSpeaker" to true, "isActive" to activeIsSpeaker))
+                        
+                        // Add external devices
+                        for (device in devices) {
+                            val isBt = device.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP || 
+                                     device.type == AudioDeviceInfo.TYPE_BLE_HEADSET ||
+                                     device.type == AudioDeviceInfo.TYPE_USB_HEADSET ||
+                                     device.type == AudioDeviceInfo.TYPE_WIRED_HEADPHONES
+                            if (isBt) {
+                                var dName = device.productName.toString()
+                                try {
+                                    val address = device.address
+                                    if (!address.isNullOrEmpty() && adapter != null) {
+                                        val btName = adapter.getRemoteDevice(address)?.name
+                                        if (!btName.isNullOrEmpty()) dName = btName
+                                    }
+                                } catch (e: Exception) {}
+                                
+                                allDevices.add(mapOf("name" to dName, "isSpeaker" to false, "isActive" to (dName == activeDeviceName && !activeIsSpeaker)))
+                            }
+                        }
+                        
+                        result.success(mapOf(
+                            "active" to mapOf("name" to activeDeviceName, "isSpeaker" to activeIsSpeaker),
+                            "all" to allDevices
+                        ))
+                    } catch (e: Exception) {
+                        result.error("DEVICE_NAME_ERROR", e.message, null)
+                    }
+                }
+                "openOutputPanel" -> {
+                    try {
+                        var intentLaunched = false
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            try {
+                                val intent = Intent("com.android.settings.panel.action.MEDIA_OUTPUT").apply {
+                                    putExtra("com.android.settings.panel.extra.PACKAGE_NAME", packageName)
+                                }
+                                startActivity(intent)
+                                intentLaunched = true
+                            } catch (e: android.content.ActivityNotFoundException) {
+                                // Fall through to legacy/fallback
+                            }
+                        }
+                        
+                        if (!intentLaunched) {
+                            // Fallback to Bluetooth settings so they can connect/disconnect devices
+                            val fallbackIntent = Intent(Settings.ACTION_BLUETOOTH_SETTINGS)
+                            startActivity(fallbackIntent)
+                        }
+                        
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.error("INTENT_ERROR", e.message, null)
+                    }
+                }
+                "getVolume" -> {
+                    try {
+                        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                        val current = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toDouble()
+                        val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toDouble()
+                        val volume = if (max > 0) current / max else 0.0
+                        result.success(volume)
+                    } catch (e: Exception) {
+                        result.success(0.5)
+                    }
+                }
+                "setVolume" -> {
+                    try {
+                        val vol = call.argument<Double>("volume") ?: 0.5
+                        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                        val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                        val target = (vol * max).toInt()
+                        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, target, 0)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.error("VOLUME_ERROR", e.message, null)
+                    }
+                }
+                "setAudioRoute" -> {
+                    try {
+                        val isSpeaker = call.argument<Boolean>("isSpeaker") ?: true
+                        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                        
+                        // Extremely aggressive hack to force route on Android programmatically
+                        if (isSpeaker) {
+                            audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
+                            audioManager.stopBluetoothSco()
+                            audioManager.isBluetoothScoOn = false
+                            audioManager.isSpeakerphoneOn = true
+                        } else {
+                            audioManager.isSpeakerphoneOn = false
+                            audioManager.stopBluetoothSco()
+                            audioManager.isBluetoothScoOn = false
+                            audioManager.mode = AudioManager.MODE_NORMAL
+                        }
+                        
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.error("ROUTE_ERROR", e.message, null)
+                    }
+                }
+                else -> result.notImplemented()
+            }
+        }
         
         // Cookie channel for YouTube Music authentication
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, COOKIE_CHANNEL).setMethodCallHandler { call, result ->

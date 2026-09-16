@@ -18,6 +18,7 @@ import 'ripple_circular_progress_scrubber.dart';
 import 'ripple_flower_clipper.dart';
 import 'jam_indicator_badge.dart';
 import 'explicit_badge.dart';
+import 'audio_routing_pill.dart';
 
 /// The 'Ripple' minimalist Now Playing screen layout.
 /// Features an 8-petal wavy album art mask, concentric waveform seek ring,
@@ -281,6 +282,16 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
                 // 5. Playback Controls Row
                 _buildControlsRow(isLiquidGlass),
 
+                if (ref.watch(showSmartAudioRoutingProvider)) ...[
+                  const SizedBox(height: 32),
+                  Center(
+                    child: AudioRoutingPill(
+                      textColor: widget.textColor,
+                      accentColor: widget.accentColor,
+                    ),
+                  ),
+                ],
+
                 const Spacer(flex: 2),
 
                 // 6. Drawer Tabs Bar (UP NEXT | LYRICS | RELATED)
@@ -517,8 +528,6 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (widget.track.isExplicit)
-                    ExplicitBadge(color: widget.textColor),
                   Flexible(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
@@ -593,17 +602,27 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
                       }
                     }
                   : null,
-              child: Text(
-                widget.track.artist,
-                maxLines: 1,
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w500,
-                  color: widget.secondaryTextColor,
-                  letterSpacing: 0.2,
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.track.isExplicit)
+                    ExplicitBadge(color: widget.secondaryTextColor),
+                  Flexible(
+                    child: Text(
+                      widget.track.artist,
+                      maxLines: 1,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w500,
+                        color: widget.secondaryTextColor,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

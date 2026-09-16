@@ -14,7 +14,7 @@ import '../data/entities/color_cache_entity.dart';
 /// Uses image scaling approach like OuterTune for accurate colors
 class AlbumColorExtractor {
   /// Cache version prefix to ensure updated accurate palettes are loaded
-  static const String _cachePrefix = 'v2_';
+  static const String _cachePrefix = 'v3_';
 
   /// Cache of extracted colors by URL
   static final Map<String, AlbumColors> _cache = {};
@@ -232,16 +232,46 @@ class AlbumColorExtractor {
       (bgLightness - 0.03).clamp(0.03, 0.09),
     ).toColor();
 
-    // Accent: Boost saturation and ensure vivid visibility for UI controls
-    final accentLightness = accentHsl.lightness.clamp(0.45, 0.68);
-    final accentSaturation = (accentHsl.saturation * 1.1).clamp(0.50, 0.95);
+    // Detect if the album art is essentially black/dark or grayscale
+    // This prevents extracting false colors (like brown or purple) from noise in dark pixels
+    final bool isGrayscale = dominantHsl.saturation < 0.12 && accentHsl.saturation < 0.15;
+    final bool isVeryDark = dominantHsl.lightness < 0.15 && accentHsl.lightness < 0.22;
+    final bool useWhiteAccent = isGrayscale || isVeryDark;
 
-    final finalAccent = HSLColor.fromAHSL(
-      1,
-      accentHsl.hue,
-      accentSaturation,
-      accentLightness,
-    ).toColor();
+    Color finalAccent;
+    Color finalAccentLight;
+    Color finalAccentDark;
+
+    if (useWhiteAccent) {
+      finalAccent = Colors.white;
+      finalAccentLight = Colors.white;
+      finalAccentDark = Colors.grey.shade400;
+    } else {
+      // Accent: Boost saturation and ensure vivid visibility for UI controls
+      final accentLightness = accentHsl.lightness.clamp(0.45, 0.68);
+      final accentSaturation = (accentHsl.saturation * 1.1).clamp(0.50, 0.95);
+
+      finalAccent = HSLColor.fromAHSL(
+        1,
+        accentHsl.hue,
+        accentSaturation,
+        accentLightness,
+      ).toColor();
+
+      finalAccentLight = HSLColor.fromAHSL(
+        1,
+        accentHsl.hue,
+        (accentSaturation * 0.85).clamp(0.4, 0.9),
+        (accentLightness + 0.14).clamp(0.55, 0.85),
+      ).toColor();
+
+      finalAccentDark = HSLColor.fromAHSL(
+        1,
+        accentHsl.hue,
+        accentSaturation,
+        (accentLightness - 0.14).clamp(0.25, 0.55),
+      ).toColor();
+    }
 
     // Surface: Slightly lighter than background with hint of color
     final surface = HSLColor.fromAHSL(
@@ -253,18 +283,8 @@ class AlbumColorExtractor {
 
     return AlbumColors(
       accent: finalAccent,
-      accentLight: HSLColor.fromAHSL(
-        1,
-        accentHsl.hue,
-        (accentSaturation * 0.85).clamp(0.4, 0.9),
-        (accentLightness + 0.14).clamp(0.55, 0.85),
-      ).toColor(),
-      accentDark: HSLColor.fromAHSL(
-        1,
-        accentHsl.hue,
-        accentSaturation,
-        (accentLightness - 0.14).clamp(0.25, 0.55),
-      ).toColor(),
+      accentLight: finalAccentLight,
+      accentDark: finalAccentDark,
       backgroundPrimary: backgroundPrimary,
       backgroundSecondary: backgroundSecondary,
       surface: surface,

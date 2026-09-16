@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../design_system/colors.dart';
 import '../../services/deep_link_handler.dart';
+import '../../services/audio_player_service.dart';
 
 /// Theme mode options for the app
 enum InzxThemeMode { system, light, dark }
@@ -436,12 +437,74 @@ class ShowLyricsBelowAlbumArtNotifier extends StateNotifier<bool> {
     } catch (_) {}
   }
 
-  Future<void> setEnabled(bool enabled) async {
-    state = enabled;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(showLyricsBelowArtPrefKey, enabled);
-    } catch (_) {}
+  Future<void> setEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(showLyricsBelowArtPrefKey, value);
+    state = value;
+  }
+
+  Future<void> toggle() => setEnabled(!state);
+}
+
+/// Provider for whether the smart audio routing pill is shown
+final showSmartAudioRoutingProvider =
+    StateNotifierProvider<ShowSmartAudioRoutingNotifier, bool>((ref) {
+  return ShowSmartAudioRoutingNotifier();
+});
+
+/// Notifier to manage the smart audio routing visibility preference.
+/// Default: true (enabled by default).
+class ShowSmartAudioRoutingNotifier extends StateNotifier<bool> {
+  static const String _prefKey = 'inzx_show_smart_audio_routing';
+
+  ShowSmartAudioRoutingNotifier() : super(true) {
+    _loadPreference();
+  }
+
+  Future<void> _loadPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.containsKey(_prefKey)) {
+      state = prefs.getBool(_prefKey) ?? true;
+    }
+  }
+
+  Future<void> setEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_prefKey, value);
+    state = value;
+  }
+
+  Future<void> toggle() => setEnabled(!state);
+}
+
+/// Provider for whether the app should prefer audio versions of tracks
+final preferAudioVersionsProvider =
+    StateNotifierProvider<PreferAudioVersionsNotifier, bool>((ref) {
+  return PreferAudioVersionsNotifier();
+});
+
+/// Notifier to manage the prefer audio versions preference.
+/// Default: true (enabled by default).
+class PreferAudioVersionsNotifier extends StateNotifier<bool> {
+  static const String _prefKey = 'inzx_prefer_audio_versions';
+
+  PreferAudioVersionsNotifier() : super(true) {
+    _loadPreference();
+  }
+
+  Future<void> _loadPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.containsKey(_prefKey)) {
+      state = prefs.getBool(_prefKey) ?? true;
+      AudioPlayerService.instance.setPreferAudioVersions(state);
+    }
+  }
+
+  Future<void> setEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_prefKey, value);
+    state = value;
+    AudioPlayerService.instance.setPreferAudioVersions(value);
   }
 
   Future<void> toggle() => setEnabled(!state);

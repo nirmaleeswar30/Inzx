@@ -188,8 +188,8 @@ class _LyricsViewState extends ConsumerState<LyricsView>
       } else {
         _scrollController.animateTo(
           approxOffset,
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeOutCubic,
+          duration: const Duration(milliseconds: 1200),
+          curve: Curves.easeOutExpo,
         );
       }
 
@@ -224,8 +224,8 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     _scrollController.position.ensureVisible(
       renderObject,
       alignment: _lyricsAnchorRatio,
-      duration: Duration(milliseconds: immediate ? 0 : 450),
-      curve: Curves.easeOutCubic,
+      duration: Duration(milliseconds: immediate ? 0 : 1200),
+      curve: Curves.easeOutExpo,
     );
   }
 
@@ -278,8 +278,8 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     });
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 350),
-      switchInCurve: Curves.easeOutCubic,
+      duration: const Duration(milliseconds: 650),
+      switchInCurve: Curves.easeOutQuart,
       switchOutCurve: Curves.easeInCubic,
       transitionBuilder: (child, animation) {
         return FadeTransition(opacity: animation, child: child);
@@ -628,7 +628,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
           child: AnimatedSlide(
             offset: !_isAutoScrollEnabled ? Offset.zero : const Offset(0, 2),
             duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic,
+            curve: Curves.easeOutQuart,
             child: AnimatedOpacity(
               opacity: !_isAutoScrollEnabled ? 1.0 : 0.0,
               duration: const Duration(milliseconds: 250),
@@ -654,19 +654,19 @@ class _LyricsViewState extends ConsumerState<LyricsView>
                           ),
                         ],
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             Iconsax.refresh,
                             size: 18,
-                            color: Colors.white,
+                            color: (accentColor.computeLuminance() > 0.60) ? Colors.black87 : Colors.white,
                           ),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text(
                             'Auto-scroll',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: (accentColor.computeLuminance() > 0.60) ? Colors.black87 : Colors.white,
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                               letterSpacing: 0.2,
@@ -720,8 +720,8 @@ class _LyricsViewState extends ConsumerState<LyricsView>
 
     Widget content = AnimatedContainer(
       key: _lineKeys[index],
-      duration: const Duration(milliseconds: 350),
-      curve: Curves.easeOutCubic,
+      duration: const Duration(milliseconds: 650),
+      curve: Curves.easeOutQuart,
       alignment: Alignment.centerLeft,
       padding: EdgeInsets.symmetric(
         horizontal: 16,
@@ -729,7 +729,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
       ),
       child: AnimatedScale(
         scale: isCurrentLine ? 1.08 : 1.0,
-        duration: const Duration(milliseconds: 350),
+        duration: const Duration(milliseconds: 650),
         curve: Curves.easeOutBack,
         alignment: Alignment.centerLeft,
         child: Row(
@@ -799,8 +799,8 @@ class _LyricsViewState extends ConsumerState<LyricsView>
       onTap: () => _seekToLyric(line.timeInMs),
       child: AnimatedOpacity(
         opacity: isCurrentLine ? 1.0 : opacity,
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeOutCubic,
+        duration: const Duration(milliseconds: 650),
+        curve: Curves.easeOutQuart,
         child: content,
       ),
     );
@@ -843,16 +843,16 @@ class _LyricsViewState extends ConsumerState<LyricsView>
 
     Widget content = AnimatedContainer(
       key: _lineKeys[index],
-      duration: const Duration(milliseconds: 350),
-      curve: Curves.easeOutCubic,
+      duration: const Duration(milliseconds: 650),
+      curve: Curves.easeOutQuart,
       alignment: isBg ? Alignment.center : Alignment.centerLeft,
       padding: EdgeInsets.symmetric(
         horizontal: 16,
         vertical: isBg ? 4 : (isCurrentLine ? 10 : 8),
       ),
       child: AnimatedDefaultTextStyle(
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeOutCubic,
+        duration: const Duration(milliseconds: 650),
+        curve: Curves.easeOutQuart,
         style: TextStyle(
           fontSize: fontSize,
           fontWeight: fontWeight,
@@ -916,13 +916,13 @@ class _LyricsViewState extends ConsumerState<LyricsView>
       onTap: () => _seekToLyric(line.timeInMs),
       child: AnimatedScale(
         scale: isCurrentLine ? 1.04 : 1.0,
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeOutCubic,
+        duration: const Duration(milliseconds: 650),
+        curve: Curves.easeOutQuart,
         alignment: isBg ? Alignment.center : Alignment.centerLeft,
         child: AnimatedOpacity(
           opacity: isCurrentLine ? 1.0 : targetOpacity,
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeOutCubic,
+          duration: const Duration(milliseconds: 650),
+          curve: Curves.easeOutQuart,
           child: content,
         ),
       ),
@@ -961,8 +961,8 @@ class _LyricsViewState extends ConsumerState<LyricsView>
 
     Widget content = AnimatedContainer(
       key: _lineKeys[index],
-      duration: const Duration(milliseconds: 350),
-      curve: Curves.easeOutCubic,
+      duration: const Duration(milliseconds: 650),
+      curve: Curves.easeOutQuart,
       alignment: isBg ? Alignment.center : Alignment.centerLeft,
       padding: EdgeInsets.symmetric(
         horizontal: 16,
@@ -1031,13 +1031,13 @@ class _LyricsViewState extends ConsumerState<LyricsView>
       onTap: () => _seekToLyric(line.timeInMs),
       child: AnimatedScale(
         scale: isCurrentLine ? 1.04 : 1.0,
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeOutCubic,
+        duration: const Duration(milliseconds: 650),
+        curve: Curves.easeOutQuart,
         alignment: isBg ? Alignment.center : Alignment.centerLeft,
         child: AnimatedOpacity(
           opacity: isCurrentLine ? 1.0 : targetOpacity,
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeOutCubic,
+          duration: const Duration(milliseconds: 650),
+          curve: Curves.easeOutQuart,
           child: content,
         ),
       ),

@@ -1480,49 +1480,49 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                                       ),
                               ),
                             ),
-                            title: Row(
+                            title: _buildScrollableTitle(
+                              track.title,
+                              TextStyle(
+                                color: isTrackPlaying
+                                    ? activeTrackColor
+                                    : (isDark
+                                        ? Colors.white
+                                        : colorScheme.onSurface),
+                                fontSize: 15,
+                                fontWeight: isTrackPlaying
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                              ),
+                              isTrackPlaying,
+                            ),
+                            subtitle: Row(
                               children: [
                                 if (track.isExplicit)
                                   ExplicitBadge(
                                     color: isTrackPlaying
-                                        ? activeTrackColor
+                                        ? activeTrackColor.withValues(alpha: 0.7)
                                         : (isDark
-                                            ? Colors.white
-                                            : colorScheme.onSurface),
+                                            ? Colors.white60
+                                            : colorScheme.onSurface
+                                                .withValues(alpha: 0.6)),
                                   ),
                                 Expanded(
-                                  child: _buildScrollableTitle(
-                                    track.title,
-                                    TextStyle(
+                                  child: Text(
+                                    track.artist,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
                                       color: isTrackPlaying
-                                          ? activeTrackColor
+                                          ? activeTrackColor.withValues(alpha: 0.7)
                                           : (isDark
-                                              ? Colors.white
-                                              : colorScheme.onSurface),
-                                      fontSize: 15,
-                                      fontWeight: isTrackPlaying
-                                          ? FontWeight.w600
-                                          : FontWeight.w500,
+                                              ? Colors.white60
+                                              : colorScheme.onSurface
+                                                  .withValues(alpha: 0.6)),
+                                      fontSize: 13,
                                     ),
-                                    isTrackPlaying,
                                   ),
                                 ),
                               ],
-                            ),
-                            subtitle: Text(
-                              track.artist,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: isTrackPlaying
-                                    ? activeTrackColor.withValues(alpha: 0.7)
-                                    : (isDark
-                                        ? Colors.white60
-                                        : colorScheme.onSurface.withValues(
-                                            alpha: 0.6,
-                                          )),
-                                fontSize: 12.5,
-                              ),
                             ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -1607,49 +1607,51 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                                     ),
                             ),
                           ),
-                          title: Row(
+                          title: _buildScrollableTitle(
+                            track.title,
+                            TextStyle(
+                              color: isTrackPlaying
+                                  ? activeTrackColor
+                                  : (isDark
+                                      ? Colors.white
+                                      : colorScheme.onSurface),
+                              fontSize: 16,
+                              fontWeight: isTrackPlaying
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                            ),
+                            isTrackPlaying,
+                          ),
+                          subtitle: Row(
                             children: [
                               if (track.isExplicit)
                                 ExplicitBadge(
                                   color: isTrackPlaying
-                                      ? activeTrackColor
+                                      ? activeTrackColor.withValues(alpha: 0.7)
                                       : (isDark
-                                          ? Colors.white
-                                          : colorScheme.onSurface),
+                                          ? Colors.white60
+                                          : colorScheme.onSurface.withValues(
+                                              alpha: 0.6,
+                                            )),
                                 ),
                               Expanded(
-                                child: _buildScrollableTitle(
-                                  track.title,
-                                  TextStyle(
+                                child: Text(
+                                  subtitleText,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
                                     color: isTrackPlaying
-                                        ? activeTrackColor
+                                        ? activeTrackColor.withValues(alpha: 0.7)
                                         : (isDark
-                                            ? Colors.white
-                                            : colorScheme.onSurface),
-                                    fontSize: 16,
-                                    fontWeight: isTrackPlaying
-                                        ? FontWeight.w600
-                                        : FontWeight.w500,
+                                            ? Colors.white60
+                                            : colorScheme.onSurface.withValues(
+                                                alpha: 0.6,
+                                              )),
+                                    fontSize: 14,
                                   ),
-                                  isTrackPlaying,
                                 ),
                               ),
                             ],
-                          ),
-                          subtitle: Text(
-                            subtitleText,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: isTrackPlaying
-                                  ? activeTrackColor.withValues(alpha: 0.7)
-                                  : (isDark
-                                      ? Colors.white60
-                                      : colorScheme.onSurface.withValues(
-                                          alpha: 0.6,
-                                        )),
-                              fontSize: 14,
-                            ),
                           ),
                           trailing: IconButton(
                             icon: Icon(

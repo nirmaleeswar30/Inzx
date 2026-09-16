@@ -1074,6 +1074,32 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
             ],
           ),
         _switchTile(
+          icon: Iconsax.volume_high,
+          iconBg: _accentColor,
+          title: 'Smart Audio Routing',
+          subtitle: 'Show active audio output under playback controls',
+          value: ref.watch(showSmartAudioRoutingProvider),
+          onChanged: (val) =>
+              ref.read(showSmartAudioRoutingProvider.notifier).setEnabled(val),
+        ),
+        Divider(
+          height: 1,
+          color: _isDark ? InzxColors.darkDivider : InzxColors.divider,
+        ),
+        _switchTile(
+          icon: Iconsax.music,
+          iconBg: _accentColor,
+          title: 'Prefer Audio Versions',
+          subtitle: 'Automatically skip music videos and play the official audio version',
+          value: ref.watch(preferAudioVersionsProvider),
+          onChanged: (val) =>
+              ref.read(preferAudioVersionsProvider.notifier).setEnabled(val),
+        ),
+        Divider(
+          height: 1,
+          color: _isDark ? InzxColors.darkDivider : InzxColors.divider,
+        ),
+        _switchTile(
           icon: Iconsax.text,
           iconBg: _accentColor,
           title: l10n.lyricsBelowAlbumArt,

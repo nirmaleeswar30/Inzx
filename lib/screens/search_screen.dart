@@ -1273,36 +1273,38 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    _buildScrollableTitle(
+                      track.title,
+                      TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: isCurrentTrack ? FontWeight.bold : FontWeight.w600,
+                        color: isCurrentTrack ? accentColor : textColor,
+                      ),
+                      isCurrentTrack,
+                    ),
+                    const SizedBox(height: 2),
                     Row(
                       children: [
                         if (track.isExplicit)
                           ExplicitBadge(
-                            color: isCurrentTrack ? accentColor : textColor,
+                            color: isCurrentTrack
+                                ? accentColor.withValues(alpha: 0.8)
+                                : secondaryTextColor,
                           ),
                         Expanded(
-                          child: _buildScrollableTitle(
-                            track.title,
-                            TextStyle(
-                              fontSize: 14.5,
-                              fontWeight: isCurrentTrack ? FontWeight.bold : FontWeight.w600,
-                              color: isCurrentTrack ? accentColor : textColor,
+                          child: Text(
+                            context.trackSubtitle(track.artist, track.formattedDuration),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isCurrentTrack
+                                  ? accentColor.withValues(alpha: 0.8)
+                                  : secondaryTextColor,
                             ),
-                            isCurrentTrack,
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      context.trackSubtitle(track.artist, track.formattedDuration),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isCurrentTrack
-                            ? accentColor.withValues(alpha: 0.8)
-                            : secondaryTextColor,
-                      ),
                     ),
                   ],
                 ),

@@ -20,6 +20,7 @@ import 'local_artwork_service.dart';
 import 'package:hive/hive.dart';
 import '../data/entities/download_entity.dart';
 import '../data/entities/track_entity.dart';
+import 'audio_routing_service.dart';
 
 /// Key for persisting streaming quality preference
 const String kStreamingQualityKey = 'streaming_quality';
@@ -284,9 +285,27 @@ class AudioPlayerService {
     _loadStreamingQuality();
     _loadStreamCacheSettings();
     _loadNerdStatsSetting();
+    _loadPreferAudioVersionsSetting();
     _loadJioSaavnSetting();
     // Load persisted queue from previous session
     _loadPersistedQueue();
+  }
+
+  /// Load prefer audio versions preference
+  Future<void> _loadPreferAudioVersionsSetting() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _preferAudioVersions = prefs.getBool('inzx_prefer_audio_versions') ?? true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('AudioPlayerService: Failed to load prefer audio versions setting: $e');
+      }
+    }
+  }
+
+  /// Set prefer audio versions
+  void setPreferAudioVersions(bool enabled) {
+    _preferAudioVersions = enabled;
   }
 
   /// Set the InnerTubeService instance (for personalized radio)
@@ -342,6 +361,7 @@ class AudioPlayerService {
   int _crossfadeDurationMs = kDefaultCrossfadeDurationMs;
   bool _showNerdStats = false;
   bool get showNerdStats => _showNerdStats;
+  bool _preferAudioVersions = true;
   bool _jioSaavnEnabled = true;
   bool get jioSaavnEnabled => _jioSaavnEnabled;
   int _upgradeSessionId = 0;
@@ -689,6 +709,8 @@ class AudioPlayerService {
   }
 
   Future<void> _stabilizeIncomingAfterCrossfade(AudioPlayer incoming) async {
+    // Re-apply audio route natively in case just_audio or OS dropped it during player switch
+    AudioRoutingService.reapplyAudioRoute();
     // Some devices/platform stacks can briefly re-emit stale low volume state
     // right after source/track handoff. Re-assert full gain a few times.
     const retryDelaysMs = <int>[0, 120, 320, 700, 1400];
@@ -980,19 +1002,31 @@ class AudioPlayerService {
           : <int, PlaybackData>{targetIndex: built.playbackData!};
       _crossfadeTriggeredForTrack = false;
 
+      final newDuration = incomingPlayer.duration;
+      if (newDuration != null) {
+        _applyDurationToCurrentTrack(newDuration);
+      }
+
       _updateState(
         currentTrack: _currentTrack,
         currentIndex: _currentIndex,
         currentPlaybackData: _currentPlaybackData,
         queue: _queue,
         queueRevision: _queueRevision,
+        duration: newDuration,
+        resetDuration: newDuration == null,
         isLoading: false,
       );
       _saveQueueDebounced();
       _prefetchNextTrack();
       _scheduleLyricsPrefetchAroundCurrent();
 
+      AudioRoutingService.reapplyAudioRoute();
       unawaited(incomingPlayer.play());
+      for (int i = 1; i <= 6; i++) {
+        Future.delayed(Duration(milliseconds: i * 25), AudioRoutingService.reapplyAudioRoute);
+      }
+
       await Future.delayed(const Duration(milliseconds: 90));
       if (kDebugMode) {
         print(
@@ -3251,6 +3285,42 @@ class AudioPlayerService {
 
     _crossfadeTriggeredForTrack = false;
     _currentTrack = _queue[_currentIndex];
+    
+    // --- SMART AUTO-SWAP (Prefer Audio Versions) ---
+    if (_preferAudioVersions && _currentTrack != null && !_isLocalTrack(_currentTrack!)) {
+      final t = _currentTrack!;
+      final title = t.title.toLowerCase();
+      // Heuristic for YouTube Music: Music videos rarely have an album field, and often have "video" in the title
+      if (t.album == null || t.album!.isEmpty || title.contains('video') || title.contains('visualizer')) {
+        if (_innerTubeService != null) {
+          try {
+            final query = "${t.title} ${t.artist} song";
+            if (kDebugMode) print('AudioPlayerService: Auto-swapping to audio version for $query...');
+            final results = await _innerTubeService!.search(query, filter: 'songs');
+            if (results.tracks.isNotEmpty) {
+              final best = results.tracks.first;
+              if (best.id != t.id) {
+                final diff = (t.duration.inSeconds - best.duration.inSeconds).abs();
+                // Ensure it's roughly the same song length (prevent swapping with extended remixes)
+                if (diff <= 30) {
+                  if (kDebugMode) print('AudioPlayerService: Swapped ${t.id} for ${best.id}');
+                  _currentTrack = best.copyWith(setVideoId: t.setVideoId);
+                  _queue[_currentIndex] = _currentTrack!;
+                  
+                  // Update the original queue too if it's there
+                  final origIdx = _originalQueue.indexWhere((x) => x.id == t.id);
+                  if (origIdx != -1) _originalQueue[origIdx] = _currentTrack!;
+                }
+              }
+            }
+          } catch (e) {
+            if (kDebugMode) print('AudioPlayerService: Auto-swap failed: $e');
+          }
+        }
+      }
+    }
+    // ---------------------------------------------
+
     final trackForLyrics = _currentTrack!;
     _currentPlaybackData = null;
     if (_pendingSeekTrackId != null &&
@@ -4142,7 +4212,11 @@ class AudioPlayerService {
       await _loadAndPlayCurrent();
       return;
     }
-    await _player.play();
+    AudioRoutingService.reapplyAudioRoute();
+    unawaited(_player.play());
+    for (int i = 1; i <= 6; i++) {
+      Future.delayed(Duration(milliseconds: i * 25), AudioRoutingService.reapplyAudioRoute);
+    }
   }
 
   /// Pause

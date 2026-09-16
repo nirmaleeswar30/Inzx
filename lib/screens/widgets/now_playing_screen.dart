@@ -37,6 +37,7 @@ import 'edge_now_playing_view.dart';
 import 'jam_indicator_badge.dart';
 import 'jams_panel.dart';
 import 'package:share_plus/share_plus.dart';
+import 'audio_routing_pill.dart';
 import '../../services/deep_link_handler.dart';
 import '../../services/download_service.dart';
 import 'explicit_badge.dart';
@@ -1464,7 +1465,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   bool _isAlbumSwipeNavigationInProgress = false;
   bool _isUserDraggingAlbumArt = false;
   bool _hasAnimatedCanvas = false; // Track if current song actually has canvas
-  double _dismissTranslateOffset = 0.0;
+  final ValueNotifier<double> _dismissTranslateNotifier = ValueNotifier(0.0);
   bool _isDismissSnapping = false;
   int? _lastAlbumArtSyncedIndex;
   Orientation? _lastOrientation;
@@ -1589,6 +1590,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     _stageViewPageController.dispose();
     _heartAnimController.dispose();
     _queueScrollController.dispose();
+    _dismissTranslateNotifier.dispose();
     _nerdStatsAlternateTimer?.cancel();
     super.dispose();
   }
@@ -1869,14 +1871,20 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
           );
         }
 
-        return AnimatedContainer(
-          duration: _isDismissSnapping ? const Duration(milliseconds: 300) : Duration.zero,
-          curve: Curves.easeOutCubic,
-          transform: Matrix4.translationValues(0, _dismissTranslateOffset, 0),
-          onEnd: () {
-            if (mounted && _isDismissSnapping && _dismissTranslateOffset == 0) {
-              setState(() => _isDismissSnapping = false);
-            }
+        return ValueListenableBuilder<double>(
+          valueListenable: _dismissTranslateNotifier,
+          builder: (context, offset, child) {
+            return AnimatedContainer(
+              duration: _isDismissSnapping ? const Duration(milliseconds: 300) : Duration.zero,
+              curve: Curves.easeOutCubic,
+              transform: Matrix4.translationValues(0, offset, 0),
+              onEnd: () {
+                if (mounted && _isDismissSnapping && offset == 0) {
+                  _isDismissSnapping = false;
+                }
+              },
+              child: child,
+            );
           },
           child: Scaffold(
             backgroundColor: backgroundColor,
@@ -1912,18 +1920,14 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                 enableDrag: !_isScrubberSeeking,
                 onDismissDragUpdate: (offset) {
                   if (mounted) {
-                    setState(() {
-                      _dismissTranslateOffset = offset;
-                      _isDismissSnapping = false;
-                    });
+                    _isDismissSnapping = false;
+                    _dismissTranslateNotifier.value = offset;
                   }
                 },
                 onDismissDragEnd: (dismissed) {
                   if (mounted && !dismissed) {
-                    setState(() {
-                      _dismissTranslateOffset = 0.0;
-                      _isDismissSnapping = true;
-                    });
+                    _isDismissSnapping = true;
+                    _dismissTranslateNotifier.value = 0.0;
                   }
                 },
                 onDismiss: () {
@@ -2211,6 +2215,14 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
                         // Controls
                         _buildControls(state, playerService, textColor, accentColor),
+                        
+                        if (ref.watch(showSmartAudioRoutingProvider)) ...[
+                          const SizedBox(height: 12),
+                          AudioRoutingPill(
+                            textColor: textColor,
+                            accentColor: accentColor,
+                          ),
+                        ],
 
                         const Spacer(),
 
@@ -3201,10 +3213,6 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                       children: [
                         Row(
                           children: [
-                            if (track.isExplicit)
-                              ExplicitBadge(
-                                color: isCurrent ? accentColor : textColor,
-                              ),
                             Expanded(
                               child: Text(
                                 track.title,
@@ -3236,19 +3244,31 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                                         ? _formatDuration(playerDuration)
                                         : null);
 
-                                return Text(
-                                  context.trackSubtitle(
-                                    track.artist,
-                                    formattedDur,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: isCurrent
-                                        ? accentColor.withValues(alpha: 0.85)
-                                        : secondaryColor,
-                                    fontSize: 12,
-                                  ),
+                                return Row(
+                                  children: [
+                                    if (track.isExplicit)
+                                      ExplicitBadge(
+                                        color: isCurrent
+                                            ? accentColor.withValues(alpha: 0.85)
+                                            : secondaryColor,
+                                      ),
+                                    Expanded(
+                                      child: Text(
+                                        context.trackSubtitle(
+                                          track.artist,
+                                          formattedDur,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: isCurrent
+                                              ? accentColor.withValues(alpha: 0.85)
+                                              : secondaryColor,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 );
                               },
                             ),
@@ -5077,8 +5097,6 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                     mainAxisAlignment: isOg ? MainAxisAlignment.start : MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      if (track.isExplicit)
-                        ExplicitBadge(color: textColor),
                       Flexible(
                         child: LayoutBuilder(
                           builder: (context, constraints) {
@@ -5141,15 +5159,25 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                 // Marquee for long artist names
                 SizedBox(
                   height: artistHeight,
-                  child: _buildArtistLink(
-                    track,
-                    style: TextStyle(
-                      fontSize: artistFontSize,
-                      color: secondaryColor,
-                    ),
-                    maxLines: 1,
-                    enableMarquee: true,
-                    textAlign: isOg ? TextAlign.start : TextAlign.center,
+                  child: Row(
+                    mainAxisAlignment: isOg ? MainAxisAlignment.start : MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      if (track.isExplicit)
+                        ExplicitBadge(color: secondaryColor),
+                      Flexible(
+                        child: _buildArtistLink(
+                          track,
+                          style: TextStyle(
+                            fontSize: artistFontSize,
+                            color: secondaryColor,
+                          ),
+                          maxLines: 1,
+                          enableMarquee: true,
+                          textAlign: isOg ? TextAlign.start : TextAlign.center,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -5546,6 +5574,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
       indicatorColor: showActiveState ? accentColor : Colors.transparent,
       indicatorWeight: 2,
       indicatorSize: TabBarIndicatorSize.label,
+      dividerColor: Colors.transparent,
+      splashFactory: NoSplash.splashFactory,
+      overlayColor: WidgetStateProperty.all(Colors.transparent),
       labelStyle: TextStyle(
         fontSize: 13,
         fontWeight: showActiveState ? FontWeight.bold : FontWeight.w500,
@@ -5568,11 +5599,17 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
           // index 2 = Related
         });
         if (_pageController.hasClients) {
-          _pageController.animateToPage(
-            index,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic,
-          );
+          final currentPage = _pageController.page?.round() ?? 0;
+          if ((currentPage - index).abs() > 1) {
+            // Jump directly without animating to avoid rendering the heavy Lyrics tab in the middle
+            _pageController.jumpToPage(index);
+          } else {
+            _pageController.animateToPage(
+              index,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
+            );
+          }
         }
         // Also expand the drawer when tapping a tab
         _drawerKey.currentState?.expand();

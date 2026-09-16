@@ -355,46 +355,50 @@ class OptimizedTrackItem extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Text(
+                    track.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight:
+                          isCurrentTrack ? FontWeight.w600 : FontWeight.w500,
+                      color: isCurrentTrack
+                          ? highlightColor
+                          : (isDark ? Colors.white : InzxColors.textPrimary),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
                   Row(
                     children: [
                       if (track.isExplicit)
                         ExplicitBadge(
                           color: isCurrentTrack
-                              ? highlightColor
-                              : (isDark ? Colors.white : InzxColors.textPrimary),
+                              ? highlightColor.withValues(
+                                  alpha: isDark ? 0.8 : 0.9,
+                                )
+                              : (isDark
+                                  ? Colors.white54
+                                  : InzxColors.textSecondary),
                         ),
                       Expanded(
                         child: Text(
-                          track.title,
-                          maxLines: 2,
+                          track.artist,
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 13,
-                            fontWeight:
-                                isCurrentTrack ? FontWeight.w600 : FontWeight.w500,
+                            fontSize: 11,
                             color: isCurrentTrack
-                                ? highlightColor
-                                : (isDark ? Colors.white : InzxColors.textPrimary),
+                                ? highlightColor.withValues(
+                                    alpha: isDark ? 0.8 : 0.9,
+                                  )
+                                : (isDark
+                                    ? Colors.white54
+                                    : InzxColors.textSecondary),
                           ),
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    track.artist,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: isCurrentTrack
-                          ? highlightColor.withValues(
-                              alpha: isDark ? 0.8 : 0.9,
-                            )
-                          : (isDark
-                              ? Colors.white54
-                              : InzxColors.textSecondary),
-                    ),
                   ),
                 ],
               ),
@@ -526,35 +530,35 @@ class MixesShelf extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             // Title
-            Row(
-              children: [
-                if (item.isExplicit)
-                  ExplicitBadge(
-                    color: isDark ? Colors.white : InzxColors.textPrimary,
-                  ),
-                Expanded(
-                  child: Text(
-                    item.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: isDark ? Colors.white : InzxColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
+            Text(
+              item.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: isDark ? Colors.white : InzxColors.textPrimary,
+              ),
             ),
             if (item.subtitle != null)
-              Text(
-                item.subtitle!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isDark ? Colors.white54 : InzxColors.textSecondary,
-                ),
+              Row(
+                children: [
+                  if (item.isExplicit)
+                    ExplicitBadge(
+                      color: isDark ? Colors.white54 : InzxColors.textSecondary,
+                    ),
+                  Expanded(
+                    child: Text(
+                      item.subtitle!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.white54 : InzxColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
           ],
         ),
@@ -726,36 +730,36 @@ class ContentCarouselShelf extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             // Title
-            Row(
-              children: [
-                if (item.isExplicit && !isArtist)
-                  ExplicitBadge(
-                    color: isDark ? Colors.white : InzxColors.textPrimary,
-                  ),
-                Expanded(
-                  child: Text(
-                    item.title,
-                    maxLines: isArtist ? 2 : 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: isArtist ? TextAlign.center : TextAlign.start,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: isDark ? Colors.white : InzxColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
+            Text(
+              item.title,
+              maxLines: isArtist ? 2 : 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: isArtist ? TextAlign.center : TextAlign.start,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: isDark ? Colors.white : InzxColors.textPrimary,
+              ),
             ),
             if (item.subtitle != null && !isArtist)
-              Text(
-                item.subtitle!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isDark ? Colors.white54 : InzxColors.textSecondary,
-                ),
+              Row(
+                children: [
+                  if (item.isExplicit && !isArtist)
+                    ExplicitBadge(
+                      color: isDark ? Colors.white54 : InzxColors.textSecondary,
+                    ),
+                  Expanded(
+                    child: Text(
+                      item.subtitle!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.white54 : InzxColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
           ],
         ),
@@ -955,35 +959,35 @@ class ChartsShelf extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             // Title
-            Row(
-              children: [
-                if (item.isExplicit)
-                  ExplicitBadge(
-                    color: isDark ? Colors.white : InzxColors.textPrimary,
-                  ),
-                Expanded(
-                  child: Text(
-                    item.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: isDark ? Colors.white : InzxColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
+            Text(
+              item.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: isDark ? Colors.white : InzxColors.textPrimary,
+              ),
             ),
             if (item.subtitle != null)
-              Text(
-                item.subtitle!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isDark ? Colors.white54 : InzxColors.textSecondary,
-                ),
+              Row(
+                children: [
+                  if (item.isExplicit)
+                    ExplicitBadge(
+                      color: isDark ? Colors.white54 : InzxColors.textSecondary,
+                    ),
+                  Expanded(
+                    child: Text(
+                      item.subtitle!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.white54 : InzxColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
           ],
         ),
@@ -1335,35 +1339,35 @@ class CommunityShelf extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             // Title
-            Row(
-              children: [
-                if (item.isExplicit)
-                  ExplicitBadge(
-                    color: isDark ? Colors.white : InzxColors.textPrimary,
-                  ),
-                Expanded(
-                  child: Text(
-                    item.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: isDark ? Colors.white : InzxColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
+            Text(
+              item.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: isDark ? Colors.white : InzxColors.textPrimary,
+              ),
             ),
             if (item.subtitle != null)
-              Text(
-                item.subtitle!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isDark ? Colors.white54 : InzxColors.textSecondary,
-                ),
+              Row(
+                children: [
+                  if (item.isExplicit)
+                    ExplicitBadge(
+                      color: isDark ? Colors.white54 : InzxColors.textSecondary,
+                    ),
+                  Expanded(
+                    child: Text(
+                      item.subtitle!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.white54 : InzxColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
           ],
         ),
@@ -1517,35 +1521,35 @@ class DailyDiscoverShelf extends ConsumerWidget {
             ),
             const SizedBox(height: 10),
             // Title
-            Row(
-              children: [
-                if (item.isExplicit)
-                  ExplicitBadge(
-                    color: isDark ? Colors.white : InzxColors.textPrimary,
-                  ),
-                Expanded(
-                  child: Text(
-                    item.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : InzxColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
+            Text(
+              item.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : InzxColors.textPrimary,
+              ),
             ),
             if (item.subtitle != null)
-              Text(
-                item.subtitle!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isDark ? Colors.white54 : InzxColors.textSecondary,
-                ),
+              Row(
+                children: [
+                  if (item.isExplicit)
+                    ExplicitBadge(
+                      color: isDark ? Colors.white54 : InzxColors.textSecondary,
+                    ),
+                  Expanded(
+                    child: Text(
+                      item.subtitle!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark ? Colors.white54 : InzxColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
           ],
         ),

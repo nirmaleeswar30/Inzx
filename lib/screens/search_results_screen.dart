@@ -627,37 +627,35 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
               : _defaultArtwork(colorScheme, Icons.music_note_rounded),
         ),
       ),
-      title: Row(
+      title: _buildScrollableTitle(
+        track.title,
+        TextStyle(
+          fontSize: isLarge ? 16 : 14,
+          fontWeight: isCurrentTrack ? FontWeight.w600 : FontWeight.w500,
+          color: isCurrentTrack
+              ? colorScheme.primary
+              : (isDark ? Colors.white : InzxColors.textPrimary),
+        ),
+        isCurrentTrack,
+      ),
+      subtitle: Row(
         children: [
           if (track.isExplicit)
             ExplicitBadge(
-              color: isCurrentTrack
-                  ? colorScheme.primary
-                  : (isDark ? Colors.white : InzxColors.textPrimary),
+              color: isDark ? Colors.white54 : InzxColors.textSecondary,
             ),
           Expanded(
-            child: _buildScrollableTitle(
-              track.title,
-              TextStyle(
-                fontSize: isLarge ? 16 : 14,
-                fontWeight: isCurrentTrack ? FontWeight.w600 : FontWeight.w500,
-                color: isCurrentTrack
-                    ? colorScheme.primary
-                    : (isDark ? Colors.white : InzxColors.textPrimary),
+            child: Text(
+              context.trackSubtitle(track.artist, track.formattedDuration),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? Colors.white54 : InzxColors.textSecondary,
               ),
-              isCurrentTrack,
             ),
           ),
         ],
-      ),
-      subtitle: Text(
-        context.trackSubtitle(track.artist, track.formattedDuration),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: 12,
-          color: isDark ? Colors.white54 : InzxColors.textSecondary,
-        ),
       ),
       trailing: IconButton(
         onPressed: () => TrackOptionsSheet.show(context, track),

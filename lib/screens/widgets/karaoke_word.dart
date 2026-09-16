@@ -1,4 +1,4 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../services/lyrics/lyrics_models.dart';
 
@@ -80,8 +80,8 @@ class KaraokeWord extends StatelessWidget {
                       accentColor,
                       accentColor,
                       accentColor.withValues(alpha: 0.90),
-                      textColor.withValues(alpha: 0.85),
-                      textColor.withValues(alpha: 0.85),
+                      textColor.withValues(alpha: 0.35),
+                      textColor.withValues(alpha: 0.35),
                     ],
                     stops: [
                       0.0,
@@ -135,14 +135,14 @@ class KaraokeWord extends StatelessWidget {
             );
           }
 
-          // Upcoming words in active line: rendered in bright white for high visibility
+          // Upcoming words in active line: rendered dimmer so sung words pop out
           return Text(
             wordText,
             style: TextStyle(
               fontSize: fontSize,
               fontWeight: FontWeight.w600,
               fontStyle: isBg ? FontStyle.italic : FontStyle.normal,
-              color: textColor.withValues(alpha: 0.90),
+              color: textColor.withValues(alpha: 0.35),
               height: 1.3,
               letterSpacing: -0.2,
             ),
