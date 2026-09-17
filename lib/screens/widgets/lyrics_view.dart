@@ -11,6 +11,7 @@ import '../../services/lyrics/lyrics_service.dart';
 import '../../services/lyrics/lyrics_models.dart';
 import '../../services/lyrics/instrumental_gaps.dart';
 import 'karaoke_word.dart';
+import 'lyrics_menu_sheet.dart';
 
 /// Preview duration before auto-scroll resumes after manual scrolling (matching Metrolist)
 const _lyricsPreviewTimeMs = 8000;
@@ -51,7 +52,8 @@ class _LyricsViewState extends ConsumerState<LyricsView>
   @override
   void initState() {
     super.initState();
-    _lastAudioMs = widget.currentPosition.inMilliseconds;
+    final offset = ref.read(lyricsSyncOffsetProvider);
+    _lastAudioMs = widget.currentPosition.inMilliseconds + offset;
     _lastSyncEpochMs = DateTime.now().millisecondsSinceEpoch;
     _smoothPositionNotifier.value = _lastAudioMs;
 
@@ -113,7 +115,8 @@ class _LyricsViewState extends ConsumerState<LyricsView>
       });
     }
 
-    final newMs = widget.currentPosition.inMilliseconds;
+    final offset = ref.read(lyricsSyncOffsetProvider);
+    final newMs = widget.currentPosition.inMilliseconds + offset;
     final now = DateTime.now().millisecondsSinceEpoch;
 
     // Estimate where the clock would be now
@@ -263,17 +266,21 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     });
 
     ref.listen(lyricsProvider, (previous, next) {
-      if (previous?.currentLyrics != next.currentLyrics && mounted) {
-        setState(() {
-          _currentLineIndex = -1;
-          _lineKeys = [];
-          _isAutoScrollEnabled = true;
-        });
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _scrollController.hasClients) {
-            _scrollController.jumpTo(0);
-          }
-        });
+      final prevData = previous?.currentLyrics;
+      final nextData = next.currentLyrics;
+      if (prevData != nextData && mounted) {
+        if (prevData?.title != nextData?.title || prevData?.source != nextData?.source) {
+          setState(() {
+            _currentLineIndex = -1;
+            _lineKeys = [];
+            _isAutoScrollEnabled = true;
+          });
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _scrollController.hasClients) {
+              _scrollController.jumpTo(0);
+            }
+          });
+        }
       }
     });
 
@@ -385,17 +392,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
               l10n.failedToLoadLyrics,
               style: TextStyle(color: secondaryColor),
             ),
-            if (showNerdStats) ...[
-              const SizedBox(height: 10),
-              _buildNerdProviderChip(
-                context,
-                lyricsState,
-                isDark,
-                textColor,
-                secondaryColor,
-                accentColor,
-              ),
-            ],
+
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => ref.read(lyricsProvider.notifier).nextProvider(),
@@ -415,17 +412,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
             Icon(Iconsax.music, size: 48, color: secondaryColor),
             const SizedBox(height: 16),
             Text(l10n.noLyricsFound, style: TextStyle(color: secondaryColor)),
-            if (showNerdStats) ...[
-              const SizedBox(height: 10),
-              _buildNerdProviderChip(
-                context,
-                lyricsState,
-                isDark,
-                textColor,
-                secondaryColor,
-                accentColor,
-              ),
-            ],
+
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => ref.read(lyricsProvider.notifier).nextProvider(),
@@ -461,31 +448,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
       );
     }
 
-    if (!showNerdStats) {
-      return lyricsBody;
-    }
-
-    return Stack(
-      children: [
-        lyricsBody,
-        Positioned(
-          top: 10,
-          left: 16,
-          right: 16,
-          child: Center(
-            child: _buildNerdStatsBadge(
-              context,
-              result,
-              lyricsState,
-              isDark,
-              textColor,
-              secondaryColor,
-              accentColor,
-            ),
-          ),
-        ),
-      ],
-    );
+    return lyricsBody;
   }
 
   Widget _buildSyncedLyrics(
@@ -681,6 +644,24 @@ class _LyricsViewState extends ConsumerState<LyricsView>
             ),
           ),
         ),
+        // Options Menu
+        if (showNerdStats || ref.watch(aiLyricsTranslationEnabledProvider))
+          Positioned(
+            top: 8,
+            right: 16,
+            child: IconButton(
+              icon: const Icon(Iconsax.more),
+              color: textColor,
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => const LyricsMenuSheet(),
+                );
+              },
+            ),
+          ),
       ],
     );
   }
@@ -869,9 +850,33 @@ class _LyricsViewState extends ConsumerState<LyricsView>
                 ]
               : null,
         ),
-        child: Text(
-          line.text.isEmpty ? '♪' : line.text,
-          softWrap: true,
+        child: Column(
+          crossAxisAlignment: isBg ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              line.text.isEmpty ? '♪' : line.text,
+              softWrap: true,
+            ),
+            if (line.translatedText != null && line.translatedText!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 650),
+                  curve: Curves.easeOutQuart,
+                  style: TextStyle(
+                    fontSize: fontSize * 0.75, // Smaller font for translation
+                    fontWeight: FontWeight.w400,
+                    color: textColor.withValues(alpha: targetOpacity * 0.9), // Muted color
+                    height: 1.2,
+                  ),
+                  child: Text(
+                    line.translatedText!,
+                    softWrap: true,
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -968,26 +973,47 @@ class _LyricsViewState extends ConsumerState<LyricsView>
         horizontal: 16,
         vertical: isBg ? 4 : (isCurrentLine ? 10 : 8),
       ),
-      child: Wrap(
-        alignment: isBg ? WrapAlignment.center : WrapAlignment.start,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: line.words!.asMap().entries.map((entry) {
-          final wordIdx = entry.key;
-          final word = entry.value;
-          final isLastWord = wordIdx == line.words!.length - 1;
+      child: Column(
+        crossAxisAlignment: isBg ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Wrap(
+            alignment: isBg ? WrapAlignment.center : WrapAlignment.start,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: line.words!.asMap().entries.map((entry) {
+              final wordIdx = entry.key;
+              final word = entry.value;
+              final isLastWord = wordIdx == line.words!.length - 1;
 
-          return KaraokeWord(
-            word: word,
-            isLastWord: isLastWord,
-            isCurrentLine: isCurrentLine,
-            positionNotifier: _smoothPositionNotifier,
-            fontSize: fontSize,
-            isBg: isBg,
-            textColor: textColor,
-            accentColor: accentColor,
-            dimColor: dimColor,
-          );
-        }).toList(),
+              return KaraokeWord(
+                word: word,
+                isLastWord: isLastWord,
+                isCurrentLine: isCurrentLine,
+                positionNotifier: _smoothPositionNotifier,
+                fontSize: fontSize,
+                isBg: isBg,
+                textColor: textColor,
+                accentColor: accentColor,
+                dimColor: dimColor,
+              );
+            }).toList(),
+          ),
+          if (line.translatedText != null && line.translatedText!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 6.0),
+              child: Text(
+                line.translatedText!,
+                style: TextStyle(
+                  fontSize: fontSize * 0.72,
+                  fontWeight: FontWeight.w400,
+                  color: isCurrentLine
+                      ? accentColor.withValues(alpha: 0.75)
+                      : textColor.withValues(alpha: targetOpacity * 0.7),
+                  height: 1.2,
+                ),
+              ),
+            ),
+        ],
       ),
     );
 
@@ -1126,412 +1152,12 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     );
   }
 
-  /// Floating badge showing active provider when "Stats for nerds" is enabled
-  Widget _buildNerdStatsBadge(
-    BuildContext context,
-    LyricResult result,
-    LyricsState lyricsState,
-    bool isDark,
-    Color textColor,
-    Color secondaryColor,
-    Color accentColor,
-  ) {
-    final providerName = result.source.isNotEmpty
-        ? result.source
-        : lyricsState.currentProvider.displayName;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _showProviderSelectionSheet(context, lyricsState),
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color:
-                (isDark ? Colors.black : Colors.white).withValues(alpha: 0.65),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: accentColor.withValues(alpha: 0.35),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Text(
-            providerName,
-            style: TextStyle(
-              color: textColor.withValues(alpha: 0.9),
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.2,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
-  /// Compact chip for error and empty states showing provider and allowing switch
-  Widget _buildNerdProviderChip(
-    BuildContext context,
-    LyricsState lyricsState,
-    bool isDark,
-    Color textColor,
-    Color secondaryColor,
-    Color accentColor,
-  ) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _showProviderSelectionSheet(context, lyricsState),
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color:
-                (isDark ? Colors.white : Colors.black).withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: secondaryColor.withValues(alpha: 0.2),
-              width: 1,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.tune_rounded, size: 12, color: secondaryColor),
-              const SizedBox(width: 4),
-              Text(
-                lyricsState.currentProvider.displayName,
-                style: TextStyle(
-                  color: secondaryColor,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
-  /// Bottom sheet showing all lyrics providers with their sync status and allowing on-the-fly switching
-  void _showProviderSelectionSheet(
-    BuildContext context,
-    LyricsState lyricsState,
-  ) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final albumColors = ref.read(albumColorsProvider);
-    final accentColor = isDark ? albumColors.accentLight : albumColors.accent;
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        return Consumer(
-          builder: (context, sheetRef, _) {
-            final currentLyricsState = sheetRef.watch(lyricsProvider);
-            final sheetBgColor =
-                isDark ? const Color(0xFF1E1E1E) : Colors.white;
-            final textColor =
-                isDark ? Colors.white : const Color(0xFF1A1A1A);
-            final secondaryColor =
-                isDark ? Colors.white60 : Colors.black54;
 
-            return SafeArea(
-              child: Material(
-                color: sheetBgColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(24),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Container(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.75,
-                  ),
-                  child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Handle
-                    Container(
-                      width: 40,
-                      height: 4,
-                      margin: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.white24 : Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-
-                    // Header
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 4, 16, 12),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.analytics_outlined,
-                            size: 20,
-                            color: accentColor,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Lyrics Providers',
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                    color: textColor,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Stats for nerds • Switch active source',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: secondaryColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.close,
-                              color: secondaryColor,
-                              size: 20,
-                            ),
-                            onPressed: () => Navigator.pop(sheetContext),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const Divider(height: 1),
-
-                    // Provider List
-                    Flexible(
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        itemCount: providerNames.length,
-                        separatorBuilder: (_, _) => Divider(
-                          height: 1,
-                          indent: 56,
-                          endIndent: 16,
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.06)
-                              : Colors.black.withValues(alpha: 0.05),
-                        ),
-                        itemBuilder: (context, index) {
-                          final provider = providerNames[index];
-                          final isCurrent =
-                              currentLyricsState.currentProvider == provider;
-                          final status = currentLyricsState.providers[provider];
-                          final data = status?.data;
-
-                          // Compute status info
-                          Widget leadingIcon;
-                          String subtitleText;
-                          Color subtitleColor;
-                          Widget? trailingBadge;
-
-                          if (status == null ||
-                              status.state == LyricsProviderState.idle) {
-                            leadingIcon = Icon(
-                              Icons.cloud_outlined,
-                              size: 20,
-                              color: secondaryColor.withValues(alpha: 0.5),
-                            );
-                            subtitleText = 'Tap to fetch';
-                            subtitleColor =
-                                secondaryColor.withValues(alpha: 0.6);
-                          } else if (status.state ==
-                              LyricsProviderState.fetching) {
-                            leadingIcon = SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: accentColor,
-                              ),
-                            );
-                            subtitleText = 'Fetching lyrics...';
-                            subtitleColor = accentColor;
-                          } else if (status.state ==
-                              LyricsProviderState.error) {
-                            leadingIcon = Icon(
-                              Icons.error_outline_rounded,
-                              size: 20,
-                              color: Colors.redAccent.withValues(alpha: 0.8),
-                            );
-                            subtitleText = status.error != null &&
-                                    status.error!.isNotEmpty
-                                ? 'Error'
-                                : 'Failed to load';
-                            subtitleColor =
-                                Colors.redAccent.withValues(alpha: 0.8);
-                          } else if (data != null && data.hasLyrics) {
-                            if (data.hasWordSync) {
-                              leadingIcon = const Icon(
-                                Icons.bolt_rounded,
-                                size: 22,
-                                color: Color(0xFF10B981),
-                              );
-                              subtitleText =
-                                  'Word-synced • ${data.lines!.length} lines';
-                              subtitleColor = const Color(0xFF10B981);
-                              trailingBadge = Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 7,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF10B981)
-                                      .withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: const Text(
-                                  'WORD-SYNC',
-                                  style: TextStyle(
-                                    color: Color(0xFF10B981),
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              );
-                            } else if (data.hasSyncedLyrics) {
-                              leadingIcon = Icon(
-                                Icons.sync_rounded,
-                                size: 20,
-                                color: accentColor,
-                              );
-                              subtitleText =
-                                  'Line-synced • ${data.lines!.length} lines';
-                              subtitleColor = secondaryColor;
-                              trailingBadge = Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 7,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: accentColor.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  'SYNCED',
-                                  style: TextStyle(
-                                    color: accentColor,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              );
-                            } else {
-                              leadingIcon = Icon(
-                                Icons.notes_rounded,
-                                size: 20,
-                                color: secondaryColor,
-                              );
-                              final lineCount =
-                                  data.lyrics?.split('\n').length ?? 0;
-                              subtitleText = 'Plain text • $lineCount lines';
-                              subtitleColor = secondaryColor;
-                            }
-                          } else {
-                            leadingIcon = Icon(
-                              Icons.remove_circle_outline,
-                              size: 20,
-                              color: secondaryColor.withValues(alpha: 0.4),
-                            );
-                            subtitleText = 'No lyrics found';
-                            subtitleColor =
-                                secondaryColor.withValues(alpha: 0.5);
-                          }
-
-                          return ListTile(
-                            leading: Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: isCurrent
-                                    ? accentColor.withValues(alpha: 0.15)
-                                    : (isDark
-                                        ? Colors.white10
-                                        : Colors.black.withValues(alpha: 0.04)),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Center(child: leadingIcon),
-                            ),
-                            title: Text(
-                              provider.displayName,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: isCurrent
-                                    ? FontWeight.bold
-                                    : FontWeight.w500,
-                                color: isCurrent ? accentColor : textColor,
-                              ),
-                            ),
-                            subtitle: Text(
-                              subtitleText,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: subtitleColor,
-                              ),
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (trailingBadge != null && !isCurrent)
-                                  trailingBadge,
-                                if (isCurrent) ...[
-                                  if (trailingBadge != null) ...[
-                                    trailingBadge,
-                                    const SizedBox(width: 8),
-                                  ],
-                                  Icon(
-                                    Icons.check_circle_rounded,
-                                    size: 20,
-                                    color: accentColor,
-                                  ),
-                                ],
-                              ],
-                            ),
-                            onTap: () {
-                              ref
-                                  .read(lyricsProvider.notifier)
-                                  .selectProvider(provider);
-                              Navigator.pop(sheetContext);
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-          },
-        );
-      },
-    );
-  }
 }
-
 
 /// Compact lyrics display for mini player or controls area
 class LyricsLine extends ConsumerWidget {
@@ -1556,7 +1182,8 @@ class LyricsLine extends ConsumerWidget {
     }
 
     // Find current line
-    final positionMs = currentPosition.inMilliseconds;
+    final offset = ref.read(lyricsSyncOffsetProvider);
+    final positionMs = currentPosition.inMilliseconds + offset;
     String currentText = '';
 
     for (final line in result.lines!) {

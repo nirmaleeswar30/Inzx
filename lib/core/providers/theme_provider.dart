@@ -484,18 +484,18 @@ final preferAudioVersionsProvider =
 });
 
 /// Notifier to manage the prefer audio versions preference.
-/// Default: true (enabled by default).
+/// Default: false.
 class PreferAudioVersionsNotifier extends StateNotifier<bool> {
   static const String _prefKey = 'inzx_prefer_audio_versions';
 
-  PreferAudioVersionsNotifier() : super(true) {
+  PreferAudioVersionsNotifier() : super(false) {
     _loadPreference();
   }
 
   Future<void> _loadPreference() async {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.containsKey(_prefKey)) {
-      state = prefs.getBool(_prefKey) ?? true;
+      state = prefs.getBool(_prefKey) ?? false;
       AudioPlayerService.instance.setPreferAudioVersions(state);
     }
   }
@@ -641,3 +641,32 @@ class ProgressBarStyleNotifier extends StateNotifier<ProgressBarStyle> {
   }
 }
 
+
+/// Provider for whether dynamic ambient background is enabled for non-cinematic styles when animated art is present
+final dynamicAmbientBackgroundForAnimatedArtProvider =
+    StateNotifierProvider<DynamicAmbientBackgroundForAnimatedArtNotifier, bool>((ref) {
+  return DynamicAmbientBackgroundForAnimatedArtNotifier();
+});
+
+class DynamicAmbientBackgroundForAnimatedArtNotifier extends StateNotifier<bool> {
+  static const String _prefKey = 'inzx_dynamic_ambient_background_animated';
+
+  DynamicAmbientBackgroundForAnimatedArtNotifier() : super(true) {
+    _loadPreference();
+  }
+
+  Future<void> _loadPreference() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      state = prefs.getBool(_prefKey) ?? true; // Default to true
+    } catch (_) {}
+  }
+
+  Future<void> toggle() async {
+    state = !state;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_prefKey, state);
+    } catch (_) {}
+  }
+}

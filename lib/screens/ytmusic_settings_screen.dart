@@ -26,6 +26,7 @@ import '../services/github_release_update_service.dart';
 import '../services/shorebird_update_service.dart';
 import 'widgets/whats_new_dialog.dart';
 import 'widgets/color_picker_dialog.dart';
+import 'widgets/ai_lyrics_settings_sheet.dart';
 
 /// Provider for sync service
 final ytMusicSyncServiceProvider = Provider<YTMusicSyncService>((ref) {
@@ -1073,6 +1074,24 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
               ),
             ],
           ),
+        if (ref.watch(animatedAlbumArtProvider) && ref.watch(nowPlayingStyleProvider) != NowPlayingStyle.edge)
+          Column(
+            children: [
+              _switchTile(
+                icon: Icons.blur_circular_rounded,
+                iconBg: _accentColor,
+                title: 'Dynamic Ambient Theming for Canvas',
+                subtitle: 'Show a soft glowing reflection background when an animated album cover is playing.',
+                value: ref.watch(dynamicAmbientBackgroundForAnimatedArtProvider),
+                onChanged: (val) =>
+                    ref.read(dynamicAmbientBackgroundForAnimatedArtProvider.notifier).toggle(),
+              ),
+              Divider(
+                height: 1,
+                color: _isDark ? InzxColors.darkDivider : InzxColors.divider,
+              ),
+            ],
+          ),
         _switchTile(
           icon: Iconsax.volume_high,
           iconBg: _accentColor,
@@ -1107,6 +1126,24 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           value: ref.watch(showLyricsBelowAlbumArtProvider),
           onChanged: (val) =>
               ref.read(showLyricsBelowAlbumArtProvider.notifier).setEnabled(val),
+        ),
+        Divider(
+          height: 1,
+          color: _isDark ? InzxColors.darkDivider : InzxColors.divider,
+        ),
+        _settingsTile(
+          icon: Iconsax.translate,
+          iconBg: _accentColor,
+          title: 'AI Lyrics Translation',
+          subtitle: 'Configure AI providers and languages for real-time translation',
+          onTap: () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => const AiLyricsSettingsSheet(),
+            );
+          },
         ),
         Divider(
           height: 1,

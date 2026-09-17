@@ -115,10 +115,11 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
           child: Stack(
             children: [
               // --- AMBIENT REFLECTION BACKGROUND ---
-              if (widget.ambientArt != null && !widget.forceFallbackGradient)
+              if (widget.ambientArt != null)
                 Positioned.fill(
-                  child: Opacity(
-                    opacity: 0.85, // Stronger opacity for more vivid reflection
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 400),
+                    opacity: widget.forceFallbackGradient ? 0.0 : 0.85,
                     child: Transform.scale(
                       scale: 1.5, // Scale it up normally to fill and bleed
                       child: ImageFiltered(
@@ -167,25 +168,29 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
 
                       // Ambient color bleed softly dissolving only at the very bottom rim
                       // (Only apply if we don't have ambientArt filling the background)
-                      if (widget.ambientArt == null || widget.forceFallbackGradient)
+                      if (widget.ambientArt == null || widget.forceFallbackGradient || true) // Keep in tree for animation
                         Positioned(
                         left: 0,
                         right: 0,
                         bottom: 0,
                         height: artHeight * 0.10,
                         child: IgnorePointer(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  widget.backgroundColor.withValues(alpha: 0.0),
-                                  widget.backgroundColor.withValues(alpha: 0.35),
-                                  widget.backgroundColor.withValues(alpha: 0.75),
-                                  widget.backgroundColor,
-                                ],
-                                stops: const [0.0, 0.40, 0.75, 1.0],
+                          child: AnimatedOpacity(
+                            duration: const Duration(milliseconds: 400),
+                            opacity: (widget.ambientArt == null || widget.forceFallbackGradient) ? 1.0 : 0.0,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    widget.backgroundColor.withValues(alpha: 0.0),
+                                    widget.backgroundColor.withValues(alpha: 0.35),
+                                    widget.backgroundColor.withValues(alpha: 0.75),
+                                    widget.backgroundColor,
+                                  ],
+                                  stops: const [0.0, 0.40, 0.75, 1.0],
+                                ),
                               ),
                             ),
                           ),

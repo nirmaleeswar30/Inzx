@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
 import 'dart:typed_data';
 import 'dart:math' as math;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1888,17 +1889,38 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
           },
           child: Scaffold(
             backgroundColor: backgroundColor,
-            body: Container(
-              // Solid gradient background - NO ALPHA/TRANSLUCENCY
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [colors.backgroundPrimary, colors.backgroundSecondary],
-                  stops: const [0.0, 1.0],
+            body: Stack(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [colors.backgroundPrimary, colors.backgroundSecondary],
+                      stops: const [0.0, 1.0],
+                    ),
+                  ),
                 ),
-              ),
-              child: YTMDrawer(
+                if (nowPlayingStyle != NowPlayingStyle.edge && _hasAnimatedCanvas && ref.watch(dynamicAmbientBackgroundForAnimatedArtProvider))
+                  Positioned.fill(
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 400),
+                      opacity: 0.85,
+                      child: Transform.scale(
+                        scale: 1.5,
+                        child: ImageFiltered(
+                          imageFilter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+                          child: AnimatedAlbumArtView(
+                            key: ValueKey('ambient_bg_${track.id}'),
+                            track: track,
+                            staticArt: const SizedBox.shrink(),
+                            borderRadius: BorderRadius.zero,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                YTMDrawer(
                 key: _drawerKey,
                 backgroundColor: Colors.transparent,
                 surfaceColor: colors.surface,
@@ -2106,6 +2128,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                 ),
               ),
             ),
+            ],
           ),
         ),
         );
@@ -4510,6 +4533,11 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
       track: displayTrack,
       staticArt: staticArt,
       borderRadius: borderRadius,
+      onCanvasLoaded: (hasCanvas) {
+        if (mounted && _hasAnimatedCanvas != hasCanvas) {
+          setState(() => _hasAnimatedCanvas = hasCanvas);
+        }
+      },
     );
   }
 

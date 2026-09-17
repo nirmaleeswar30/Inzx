@@ -32,6 +32,7 @@ class LyricLine {
   final int? durationMs;
   final int? sungUntilMs;
   final String text;
+  final String? translatedText; // AI Translated text (Metrolist style)
   final List<LyricWord>? words; // Word-level timing for karaoke sync
   final bool isBackground; // Background vocal line
   final List<LyricLine> backgroundLines; // Background vocals for this line
@@ -42,6 +43,7 @@ class LyricLine {
     this.durationMs,
     this.sungUntilMs,
     required this.text,
+    this.translatedText,
     this.words,
     this.isBackground = false,
     this.backgroundLines = const [],
@@ -121,6 +123,7 @@ class LyricLine {
     int? durationMs,
     int? sungUntilMs,
     String? text,
+    String? translatedText,
     List<LyricWord>? words,
     bool? isBackground,
     List<LyricLine>? backgroundLines,
@@ -130,6 +133,7 @@ class LyricLine {
     durationMs: durationMs ?? this.durationMs,
     sungUntilMs: sungUntilMs ?? this.sungUntilMs,
     text: text ?? this.text,
+    translatedText: translatedText ?? this.translatedText,
     words: words ?? this.words,
     isBackground: isBackground ?? this.isBackground,
     backgroundLines: backgroundLines ?? this.backgroundLines,
@@ -165,6 +169,7 @@ class LyricLine {
     'durationMs': durationMs,
     if (sungUntilMs != null) 'sungUntilMs': sungUntilMs,
     'text': text,
+    if (translatedText != null) 'translatedText': translatedText,
     if (words != null) 'words': words!.map((w) => w.toJson()).toList(),
     'isBackground': isBackground,
     if (backgroundLines.isNotEmpty)
@@ -177,12 +182,13 @@ class LyricLine {
     durationMs: json['durationMs'] as int?,
     sungUntilMs: json['sungUntilMs'] as int?,
     text: json['text'] as String,
-    words: (json['words'] as List?)
-        ?.map((w) => LyricWord.fromJson(w as Map<String, dynamic>))
+    translatedText: json['translatedText'] as String?,
+    words: (json['words'] as List<dynamic>?)
+        ?.map((e) => LyricWord.fromJson(e as Map<String, dynamic>))
         .toList(),
     isBackground: json['isBackground'] as bool? ?? false,
-    backgroundLines: (json['backgroundLines'] as List?)
-        ?.map((l) => LyricLine.fromJson(l as Map<String, dynamic>))
+    backgroundLines: (json['backgroundLines'] as List<dynamic>?)
+        ?.map((e) => LyricLine.fromJson(e as Map<String, dynamic>))
         .toList() ?? const [],
     isGap: json['isGap'] as bool?,
   );

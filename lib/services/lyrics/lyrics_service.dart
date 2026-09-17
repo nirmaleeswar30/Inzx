@@ -7,8 +7,12 @@ import 'package:inzx/data/entities/lyrics_entity.dart';
 import 'package:inzx/data/repositories/music_repository.dart'
     show CacheAnalytics;
 import 'lyrics_models.dart';
+import 'betterlyrics_portato_provider.dart';
 import 'betterlyrics_provider.dart';
 import 'paxsenix_provider.dart';
+import 'binilyrics_provider.dart';
+import 'unison_provider.dart';
+import 'megalobiz_provider.dart';
 import 'lyricsplus_provider.dart';
 import 'simpmusic_provider.dart';
 import 'musixmatch_provider.dart';
@@ -22,12 +26,16 @@ import 'instrumental_gaps.dart';
 /// Provider names enum for type safety
 enum ProviderName {
   betterLyrics,
+  betterLyricsPortato,
   paxSenix,
-  lyricsPlus,
   simpMusic,
+  lyricsPlus,
+  lrclib,
+  unison,
+  biniLyrics,
   musixmatch,
   kugou,
-  lrclib,
+  megalobiz,
   youtubeMusic,
   genius,
   embedded,
@@ -36,12 +44,16 @@ enum ProviderName {
 /// All available provider names in priority order
 const providerNames = [
   ProviderName.betterLyrics,
+  ProviderName.betterLyricsPortato,
   ProviderName.paxSenix,
-  ProviderName.lyricsPlus,
   ProviderName.simpMusic,
+  ProviderName.lyricsPlus,
+  ProviderName.lrclib,
+  ProviderName.unison,
+  ProviderName.biniLyrics,
   ProviderName.musixmatch,
   ProviderName.kugou,
-  ProviderName.lrclib,
+  ProviderName.megalobiz,
   ProviderName.youtubeMusic,
   ProviderName.genius,
   ProviderName.embedded,
@@ -51,8 +63,16 @@ const providerNames = [
 extension ProviderNameExt on ProviderName {
   String get displayName {
     switch (this) {
+      case ProviderName.biniLyrics:
+        return 'BiniLyrics';
+      case ProviderName.unison:
+        return 'Unison';
+      case ProviderName.megalobiz:
+        return 'Megalobiz';
       case ProviderName.betterLyrics:
         return 'BetterLyrics';
+      case ProviderName.betterLyricsPortato:
+        return 'BetterLyrics Portato';
       case ProviderName.paxSenix:
         return 'PaxSenix';
       case ProviderName.lyricsPlus:
@@ -70,7 +90,7 @@ extension ProviderNameExt on ProviderName {
       case ProviderName.genius:
         return 'Genius';
       case ProviderName.embedded:
-        return 'Embedded / Local';
+        return 'Embedded';
     }
   }
 }
@@ -82,6 +102,7 @@ class LyricsWarmupService {
   LyricsWarmupService._();
 
   final BetterLyricsProvider _betterLyrics = BetterLyricsProvider();
+  final BetterLyricsPortatoProvider _betterLyricsPortato = BetterLyricsPortatoProvider();
   final PaxSenixProvider _paxSenix = PaxSenixProvider();
   final LyricsPlusProvider _lyricsPlus = LyricsPlusProvider();
   final SimpMusicProvider _simpMusic = SimpMusicProvider();
@@ -117,6 +138,7 @@ class LyricsWarmupService {
       // 1. Race word-synced providers with timeout
       final wordSyncFutures = [
         _betterLyrics.search(info),
+        _betterLyricsPortato.search(info),
         _paxSenix.search(info),
         _simpMusic.search(info),
         _lyricsPlus.search(info),
@@ -265,7 +287,11 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
 
   LyricsNotifier()
     : _providers = {
+        ProviderName.biniLyrics: BiniLyricsProvider(),
+        ProviderName.unison: UnisonProvider(),
+        ProviderName.megalobiz: MegalobizProvider(),
         ProviderName.betterLyrics: BetterLyricsProvider(),
+        ProviderName.betterLyricsPortato: BetterLyricsPortatoProvider(),
         ProviderName.paxSenix: PaxSenixProvider(),
         ProviderName.lyricsPlus: LyricsPlusProvider(),
         ProviderName.simpMusic: SimpMusicProvider(),
@@ -352,22 +378,13 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
       }
     }
 
-    // 2. Parallel race all online synced providers (BitChord architecture)
-    final onlineSyncedProviders = [
-      ProviderName.betterLyrics,
-      ProviderName.paxSenix,
-      ProviderName.lyricsPlus,
-      ProviderName.simpMusic,
-      ProviderName.lrclib,
-      ProviderName.musixmatch,
-      ProviderName.kugou,
-      ProviderName.youtubeMusic,
-    ];
+    // 2. Parallel race all online providers (BitChord architecture)
+    final onlineProviders = providerNames.where((p) => p != ProviderName.embedded).toList();
 
     bool foundWordSync = false;
 
     await Future.wait(
-      onlineSyncedProviders.map((providerName) async {
+      onlineProviders.map((providerName) async {
         await _fetchFromProvider(providerName, info);
         if (!mounted) return;
 
@@ -393,14 +410,6 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
         }
       }),
     );
-
-    // 3. Lazy fallback to Genius if none of the synced providers returned any lyrics
-    final hasAnyLyrics = state.providers.values.any(
-      (s) => s.data?.hasLyrics ?? false,
-    );
-    if (!hasAnyLyrics) {
-      await _fetchFromProvider(ProviderName.genius, info);
-    }
 
     // Auto-select best provider if not manually switched
     if (!state.hasManuallySwitched) {
@@ -449,6 +458,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
     if (normalized.contains('embedded') || normalized.contains('local')) {
       return ProviderName.embedded;
     }
+    if (normalized.contains('betterlyrics portato')) return ProviderName.betterLyricsPortato;
     if (normalized.contains('betterlyrics')) return ProviderName.betterLyrics;
     if (normalized.contains('paxsenix')) return ProviderName.paxSenix;
     if (normalized.contains('lyricsplus')) return ProviderName.lyricsPlus;
@@ -646,6 +656,9 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
       case ProviderName.betterLyrics:
         bias += 8;
         break;
+      case ProviderName.betterLyricsPortato:
+        bias += 7;
+        break;
       case ProviderName.paxSenix:
         bias += 7;
         break;
@@ -655,12 +668,17 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
       case ProviderName.simpMusic:
         bias += 5;
         break;
+      case ProviderName.biniLyrics:
+      case ProviderName.unison:
+        bias += 5;
+        break;
       case ProviderName.lrclib:
         bias += 4;
         break;
       case ProviderName.musixmatch:
         bias += 3;
         break;
+      case ProviderName.megalobiz:
       case ProviderName.kugou:
         bias += 2;
         break;
@@ -772,7 +790,56 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
   void clear() {
     state = const LyricsState();
   }
+
+  /// Update a specific lyric line (e.g. for translation)
+  void updateLine(int index, LyricLine updatedLine) {
+    if (!mounted) return;
+    final currentStatus = state.currentStatus;
+    if (currentStatus.state != LyricsProviderState.done || currentStatus.data == null) return;
+    
+    final currentLines = currentStatus.data!.lines;
+    if (currentLines == null || index < 0 || index >= currentLines.length) return;
+
+    final newLines = List<LyricLine>.from(currentLines);
+    newLines[index] = updatedLine;
+
+    final newResult = LyricResult(
+      title: currentStatus.data!.title,
+      artists: currentStatus.data!.artists,
+      source: currentStatus.data!.source,
+      lines: newLines,
+      lyrics: currentStatus.data!.lyrics,
+    );
+
+    final newProviders = Map<ProviderName, ProviderStatus>.from(state.providers);
+    newProviders[state.currentProvider] = ProviderStatus(
+      state: LyricsProviderState.done,
+      data: newResult,
+    );
+
+    state = state.copyWith(providers: newProviders);
+  }
+
+  /// Manually force a refetch for the current track
+  Future<void> refetchLyrics() async {
+    if (_lastSearchInfo != null) {
+      // Clear caching and force fetch
+      final info = _lastSearchInfo!;
+      state = LyricsState(
+        videoId: info.videoId,
+        providers: {
+          for (final p in providerNames)
+            p: const ProviderStatus(state: LyricsProviderState.idle),
+        },
+        currentProvider: state.currentProvider,
+      );
+      await fetchLyrics(info);
+    }
+  }
 }
+
+/// Global offset in milliseconds applied to the lyrics sync timeline
+final lyricsSyncOffsetProvider = StateProvider<int>((ref) => 0);
 
 /// Provider for lyrics service
 final lyricsProvider = StateNotifierProvider<LyricsNotifier, LyricsState>((

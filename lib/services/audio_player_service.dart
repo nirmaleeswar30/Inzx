@@ -295,7 +295,7 @@ class AudioPlayerService {
   Future<void> _loadPreferAudioVersionsSetting() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _preferAudioVersions = prefs.getBool('inzx_prefer_audio_versions') ?? true;
+      _preferAudioVersions = prefs.getBool('inzx_prefer_audio_versions') ?? false;
     } catch (e) {
       if (kDebugMode) {
         print('AudioPlayerService: Failed to load prefer audio versions setting: $e');
@@ -361,7 +361,7 @@ class AudioPlayerService {
   int _crossfadeDurationMs = kDefaultCrossfadeDurationMs;
   bool _showNerdStats = false;
   bool get showNerdStats => _showNerdStats;
-  bool _preferAudioVersions = true;
+  bool _preferAudioVersions = false;
   bool _jioSaavnEnabled = true;
   bool get jioSaavnEnabled => _jioSaavnEnabled;
   int _upgradeSessionId = 0;
