@@ -4,20 +4,20 @@
 
 *A modern YouTube Music client with dynamic theming, word-level synced lyrics, and real-time Jam sessions*
 
-[![Flutter](https://img.shields.io/badge/Flutter-3.10.3-02569B?logo=flutter)](https://flutter.dev)
-[![Dart](https://img.shields.io/badge/Dart-3.10.3-0175C2?logo=dart)](https://dart.dev)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Flutter](https://img.shields.io/badge/Flutter-3.10.3-AF94F5?style=for-the-badge&logo=flutter&logoColor=white&labelColor=0d1117)](https://flutter.dev)
+[![Dart](https://img.shields.io/badge/Dart-3.10.3-AF94F5?style=for-the-badge&logo=dart&logoColor=white&labelColor=0d1117)](https://dart.dev)
+[![License](https://img.shields.io/badge/License-MIT-AF94F5?style=for-the-badge&labelColor=0d1117)](LICENSE)
 
 
-[Features](#features) • [Screenshots](#screenshots) • [Installation](#installation) • [Development](#development) • [Contributing](#contributing)
+[Features](#features) • [Screenshots](#screenshots) • [Development](./DEVELOPMENT.md) • [Contributing](./CONTRIBUTING.md)
 
 
 </div>
 
 > [!WARNING]
-> Inzx is only available on the platforms listed here. It is not on the Play Store or any other websites claiming to provide official releases.  
+> Inzx is only available on the platforms listed here and not available on the Play Store or any other site. Any future platforms will be announced here. 
 > 
-> If we ever publish Inzx on any additional platforms, it will be announced and updated here. Please avoid downloading unofficial or modified versions for your safety.
+> Please avoid installing unofficial or modified versions of the app for your own safety.
 
 <div align="center">
 
@@ -35,42 +35,33 @@ Your support helps keep the project alive and actively maintained.
 
 ## Features
 
-### 🎧 Music Playback
-- **YouTube Music Integration** — Native InnerTube API engine for streaming millions of songs, playlists, albums, and artists
-- **Offline-First Architecture** — Intelligent caching for instant playback and offline listening
-- **Background Playback** — Full media notification controls and Android media session support
-- **Android Auto Support** — Native dashboard integration for safe in-car playback
-- **Audio Session Management** — Seamless audio focus, phone call handling, and crossfade support
-- **Gapless Playback & Stream Prefetching** — OuterTune-style prefetching for 0ms play latency
+#### 🎧 Playback
+- Stream millions of songs, playlists, albums, and artists via YouTube Music
+- Background playback with full media notifications and Android Auto support
+- Download & cache tracks for offline use
+- Gapless playback with stream prefetching for 0ms latency
+- Seamless audio focus, phone call handling, and crossfade support
 
-### 🎨 Beautiful UI & Skeleton Loaders
-- **Material Design 3** — Clean, modern design system built for performance
-- **Skeletonizer Loading** — Smooth shimmer skeleton loaders across all main tabs and detail pages
-- **Instant Dynamic Colors** — 0ms album artwork color extraction with Hive & memory RAM caching
-- **Synced & Word-Level Lyrics** — High-precision word-level karaoke sync powered by BetterLyrics, LRCLib, YouTube Captions, and Genius
-- **Multi-language UI** — App UI localization and independent YouTube Music catalog region controls
-- **Full-Screen Now Playing & Stage View** — Interactive player with responsive layouts and fluid transitions
+#### 🎨 UI & Design
+- App-wide dynamic theming that adapts to the currently playing album's cover art
+- Multiple Now Playing screen styles (full-screen album art, cover view, ripple view) with choice of wavy, normal, or spectrum seekbars
+- Live word-level synced karaoke lyrics from BetterLyrics, LRCLib, YouTube Captions, and Genius
+- Localized app UI with locale-aware YouTube Music content, supporting 19+ languages
+  
+#### 📚 Library & Account
+- Local file scanning and playback
+- Sync saved playlists, liked songs, albums, and subscribed artists
+- Custom local playlist creation, management, and drag-to-reorder queue editing
 
-### 👥 Collaborative Listening (Jams)
-- **Real-time Sync** — Listen together with friends in real-time powered by Supabase WebSockets
-- **Host & Participant Roles** — Granular permission control and participant management
-- **Shared Queue** — Collaborative queue editing and drag-to-reorder
-- **Live Playback Sync** — Position and state synchronization with drift correction
-- **"Last Controller Wins"** — Smart conflict resolution for multi-user control
+#### 👥 Collaborative Listening (Jams)
+- Listen together with friends in real-time
+- Host & participant roles with granular permission control
+- Shared, collaboratively editable queue with drift-corrected playback sync
 
-### 📚 Music Library & Downloads
-- **YouTube Music Sync** — Access your saved playlists, liked songs, albums, and subscribed artists
-- **Local Device Files** — Scan and play local music files from device storage
-- **Custom Playlists** — Create and manage custom local playlists
-- **Download Manager** — Download tracks for offline playback with background progress tracking
-- **Dynamic Search** — Instant search with suggestions, history, and category filters
-
-### 🔒 Privacy & Security
-- **Offline-First** — Fully functional without continuous network connectivity
-- **Secure Credentials** — Encrypted local storage for auth tokens
-- **No Tracking** — Private listening without analytics telemetry
-
----
+#### 🔒 Privacy & Security
+- Fully functional without continuous network connectivity
+- Encrypted local credential storage
+- No analytics tracking
 
 ## Screenshots
 
@@ -78,7 +69,7 @@ Your support helps keep the project alive and actively maintained.
 
 | **Home** | **Now Playing** | **Library** | **Jams** |
 |:---:|:---:|:---:|:---:|
-| ![Home](./.github/screenshots/home.png) | ![Now Playing](./.github/screenshots/nowplaying.png) | ![Library](./.github/screenshots/library.png) | ![Jams](./.github/screenshots/jam.png) |
+| ![Home](./.github/screenshots/home.png) | ![Now Playing](./.github/screenshots/nowplaying.gif) | ![Library](./.github/screenshots/library.png) | ![Jams](./.github/screenshots/jam.png) |
 | **Search** | **Playlist** | **Folders** | **Lyrics** |
 | ![Search](./.github/screenshots/search.png) | ![Playlist](./.github/screenshots/playlist.png) | ![Folders](./.github/screenshots/folders.png) | ![Lyrics](./.github/screenshots/lyrics.png) |
 
@@ -93,6 +84,43 @@ Your support helps keep the project alive and actively maintained.
 </tr>
 </table>
 
+</div>
+
+<details open>
+<summary>Alternative Styles</summary>
+
+#### Now Playing Screen
+<table>
+<tr>
+<th align="center" width="33%">Default</th>
+<th align="center" width="33%">Cinematic</th>
+<th align="center" width="33%">Ripple</th>
+</tr>
+<tr>
+<td width="33%"><img src="./.github/screenshots/player-default.png" width="100%"></td>
+<td width="33%"><img src="./.github/screenshots/player-cinematic.png" width="100%"></td>
+<td width="33%"><img src="./.github/screenshots/player-ripple.png" width="100%"></td>
+</tr>
+</table>
+
+#### Seekbar Styles
+<table>
+<tr>
+<th align="center" width="33%">Default</th>
+<th align="center" width="33%">Waveform</th>
+<th align="center" width="33%">Spectrum</th>
+</tr>
+<tr>
+<td width="33%"><img src="./.github/screenshots/seekbar-default.png" width="100%"></td>
+<td width="33%"><img src="./.github/screenshots/seekbar-waveform.png" width="100%"></td>
+<td width="33%"><img src="./.github/screenshots/waveform-spectrum.png" width="100%"></td>
+</tr>
+</table>
+
+</details>
+
+<details open>
+<summary>More Screenshots</summary>
 
 <div align="center">
 
@@ -105,106 +133,7 @@ Your support helps keep the project alive and actively maintained.
 | ![Android Auto](./.github/screenshots/android_auto.png) | ![Android Auto - Now Playing](./.github/screenshots/android_auto-nowplaying.png) |
 
 </div>
-
----
-
-## Installation
-
-#### Download from GitHub Releases
-Download the latest release APK from the [Releases](../../releases) page.
-
-#### Installation via ADB
-```bash
-adb install app-release.apk
-```
-
----
-
-## Building from Source
-
-### Prerequisites
-- **Flutter SDK** (3.10.3 or higher)
-- **Dart SDK** (3.10.3 or higher)
-- **Android Studio** or **VS Code** with Flutter extensions
-- **Android SDK** (for Android builds)
-- **Git**
-
-### Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/nirmaleeswar30/Inzx.git
-   cd Inzx
-   ```
-
-2. **Install dependencies**
-   ```bash
-   flutter pub get
-   ```
-
-3. **Run code generation**
-   ```bash
-   dart run build_runner build --delete-conflicting-outputs
-   flutter gen-l10n
-   ```
-
-4. **Configure Environment Variables**
-   - Create a `.env` file in the root directory:
-     ```bash
-     cp .env.example .env
-     ```
-
-5. **Configure Supabase** (for Jams feature)
-   - Create a Supabase project at [supabase.com](https://supabase.com)
-   - Enable Realtime in your Supabase project settings
-   - Update `SUPABASE_URL` and `SUPABASE_ANON_KEY` in your `.env` file
-
-6. **Configure Google Sign-In** (for Jams user profiles)
-   - Create an OAuth 2.0 Web Client ID on Google Cloud Console
-   - Update `GOOGLE_WEB_CLIENT_ID` in your `.env` file
-
-### Build Commands
-
-```bash
-# Run in debug mode
-flutter run
-
-# Build release APK
-flutter build apk --release
-
-# Build split APKs per ABI
-flutter build apk --split-per-abi --release
-```
-
----
-
-## Architecture & Tech Stack
-
-### 🏗️ Tech Stack
-
-#### Core Framework
-- **Flutter** — UI framework
-- **Dart** — Language
-- **Riverpod** — State management with code generation
-
-#### Data & Storage
-- **Hive** — Fast NoSQL database for local caching of tracks, playlists, and colors
-- **Flutter Secure Storage** — Encrypted storage for credentials
-- **Supabase** — Real-time WebSockets backend for Jams
-- **Shared Preferences** — App configuration & settings
-
-#### Audio & InnerTube API
-- **InnerTube API Engine** — Direct API integration for YouTube Music catalog, playback streams, shelves, and metadata
-- **just_audio** — Audio player engine with buffering and stream caching
-- **audio_service** — Background media controls & notification integration
-- **audio_session** — Audio focus management
-
-#### UI & Design System
-- **Skeletonizer** — Automatic shimmer skeleton loaders across all screens
-- **AlbumColorExtractor** — Fast 0ms isolate-based palette color extraction
-- **Iconsax** — Icon set
-- **Cached Network Image** — Image caching & management
-- **Marquee** — Scrolling text for long titles
+</details>
 
 ---
 
@@ -226,7 +155,9 @@ English, Turkish, Russian, Hindi, Malayalam, Tamil, Kannada, Telugu, Spanish, Po
 - [ ] **Chromecast support** — Cast playback to external speakers
 - [ ] **Desktop support** — Windows, macOS, Linux desktop targets
 
----
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) to see how you can help out!
 
 ## Acknowledgments
 
@@ -236,7 +167,16 @@ English, Turkish, Russian, Hindi, Malayalam, Tamil, Kannada, Telugu, Spanish, Po
 - [Supabase](https://supabase.com) — Real-time infrastructure
 - [BetterLyrics](https://github.com/nirmaleeswar30/Inzx) — Word-level synced lyrics API
 
----
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=nirmaleeswar30%2Finzx&type=timeline&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=nirmaleeswar30/inzx&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=nirmaleeswar30/inzx&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=nirmaleeswar30/inzx&type=date&legend=top-left" />
+ </picture>
+</a>
 
 ## License
 
