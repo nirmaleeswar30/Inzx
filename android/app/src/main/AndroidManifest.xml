@@ -73,6 +73,14 @@
                 <!-- Accepts GitHub redirect pages -->
                 <data android:scheme="https" android:host="nirmaleeswar30.github.io" android:pathPrefix="/Inzx/redirect.html" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Discord OAuth2 redirect: inzxdiscord://oauth2/callback -->
+                <data android:scheme="inzxdiscord" android:host="oauth2" />
+            </intent-filter>
         </activity>
         
         <!-- Audio Service for background music playback -->

@@ -9,7 +9,6 @@ import 'instrumental_gaps.dart';
 
 /// BetterLyrics provider - High quality synced lyrics with word-level timing
 /// API: https://lyrics-api.boidu.dev
-/// Ported from Metrolist's BetterLyrics.kt
 class BetterLyricsProvider implements LyricsProvider {
   @override
   String get name => 'BetterLyrics';

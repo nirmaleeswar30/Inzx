@@ -32,7 +32,7 @@ class LyricLine {
   final int? durationMs;
   final int? sungUntilMs;
   final String text;
-  final String? translatedText; // AI Translated text (Metrolist style)
+  final String? translatedText; // AI Translated text
   final List<LyricWord>? words; // Word-level timing for karaoke sync
   final bool isBackground; // Background vocal line
   final List<LyricLine> backgroundLines; // Background vocals for this line

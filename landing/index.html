@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Inzx — A beautiful open-source YouTube Music client for Android</title>
+<meta name="description" content="Inzx is a free, open-source YouTube Music client for Android with word-level karaoke lyrics, AI lyric translation, 320 kbps audio, instant dynamic theming and real-time listening sessions." />
+<meta name="theme-color" content="#ff2233" />
+<link rel="icon" type="image/png" href="assets/logo.png" />
+<link rel="apple-touch-icon" href="assets/logo.png" />
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Inzx — This is what open source sounds like" />
+<meta property="og:description" content="Word-level karaoke lyrics, AI translation, 320 kbps streaming and real-time Jams. Free and open source." />
+<meta property="og:image" content="assets/backdrop.jpg" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/bento.css" />
+</head>
+
+<body>
+
+<!-- ===================== ambient background ===================== -->
+<div class="bg-field" aria-hidden="true">
+  <div class="bg-grid"></div>
+  <div class="blob blob-1" data-par="0.03"></div>
+  <div class="blob blob-2" data-par="-0.02"></div>
+  <div class="blob blob-3" data-par="0.015"></div>
+</div>
+
+<!-- ===================== svg sprite ===================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-github" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .5C5.73.5.9 5.35.9 11.65c0 4.93 3.18 9.1 7.6 10.58.56.1.76-.24.76-.54v-1.9c-3.1.68-3.75-1.5-3.75-1.5-.5-1.3-1.24-1.64-1.24-1.64-1.02-.7.08-.68.08-.68 1.12.08 1.71 1.16 1.71 1.16 1 1.72 2.62 1.22 3.26.94.1-.73.39-1.22.7-1.5-2.47-.28-5.07-1.24-5.07-5.54 0-1.22.43-2.22 1.15-3-.12-.28-.5-1.42.1-2.96 0 0 .94-.3 3.07 1.15a10.6 10.6 0 0 1 5.6 0c2.12-1.45 3.05-1.15 3.05-1.15.62 1.54.23 2.68.11 2.96.72.78 1.15 1.78 1.15 3 0 4.31-2.6 5.25-5.09 5.53.4.35.76 1.03.76 2.08v3.09c0 .3.2.65.77.54 4.41-1.49 7.58-5.65 7.58-10.58C23.1 5.35 18.27.5 12 .5Z"/></symbol>
+    <symbol id="i-dl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.14v13.72a1 1 0 0 0 1.53.85l10.9-6.86a1 1 0 0 0 0-1.7L9.53 4.29A1 1 0 0 0 8 5.14Z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path fill="currentColor" d="M7 4h3.5v16H7zm6.5 0H17v16h-3.5z"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path fill="currentColor" d="M5.5 5.2v13.6a1 1 0 0 0 1.54.84l9.46-6.8V18a1 1 0 0 0 2 0V6a1 1 0 0 0-2 0v5.16L7.04 4.36A1 1 0 0 0 5.5 5.2Z"/></symbol>
+    <symbol id="i-prev" viewBox="0 0 24 24"><path fill="currentColor" d="M18.5 5.2v13.6a1 1 0 0 1-1.54.84L7.5 12.84V18a1 1 0 0 1-2 0V6a1 1 0 0 1 2 0v5.16l9.46-6.8a1 1 0 0 1 1.54.84Z"/></symbol>
+    <symbol id="i-shuffle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></symbol>
+    <symbol id="i-repeat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+    <symbol id="i-wave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12h2m4-7v14m4-10v6m4-9v12m4-6h2"/></symbol>
+    <symbol id="i-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.7-.7 1.7-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.1 0-.9.8-1.7 1.7-1.7H16c3.3 0 6-2.7 6-6 0-4.9-4.5-8.3-10-8.3z"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M3 17v-4.2a2 2 0 0 1 .2-.9l1.9-3.8A2 2 0 0 1 6.9 7h10.2a2 2 0 0 1 1.8 1.1l1.9 3.8a2 2 0 0 1 .2.9V17"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+    <symbol id="i-lib" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8z"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></symbol>
+    <symbol id="i-speaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></symbol>
+  </defs>
+</svg>
+
+<div class="shell">
+
+<!-- ===================== NAV ===================== -->
+<header class="nav" id="nav">
+  <div class="wrap">
+    <div class="nav-inner">
+      <a class="brand" href="#top" aria-label="Inzx home">
+        <img src="assets/logo.png" alt="" width="34" height="34" />
+        <span>in<i>z</i>x</span>
+      </a>
+
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#features">Features</a>
+        <a href="#screens">Screens</a>
+        <a href="#everything">Everything</a>
+        <a href="#roadmap">Roadmap</a>
+        <a href="#download">Install</a>
+      </nav>
+
+      <div class="nav-right">
+        <a class="ghost-btn gh" href="https://github.com/nirmaleeswar30/Inzx" target="_blank" rel="noopener">
+          <svg><use href="#i-github"/></svg> Star <span class="count" id="star-count">—</span>
+        </a>
+        <a class="cta" href="#download">
+          <svg><use href="#i-dl"/></svg> Download
+        </a>
+        <button class="burger" id="burger" aria-label="Menu" aria-expanded="false"><span></span></button>
+      </div>
+    </div>
+
+    <div class="mobile-menu" id="mobile-menu">
+      <a href="#features">Features</a>
+      <a href="#screens">Screens</a>
+      <a href="#everything">Everything</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#download">Install</a>
+      <a href="https://github.com/nirmaleeswar30/Inzx" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ===================== HERO ===================== -->
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-grid">
+
+      <div class="hero-main">
+        <div class="hero-bgimg">
+          <img src="assets/backdrop.jpg" alt="" width="1600" height="900" fetchpriority="high" />
+        </div>
+
+        <div class="hero-copy">
+          <span class="tag">Android · No account needed</span>
+          <h1 class="hero-title">
+            This is what
+            <em>open source<br />sounds&nbsp;like.</em>
+          </h1>
+          <p class="hero-sub">
+            A beautiful YouTube Music client with <b>word-level karaoke lyrics</b>,
+            <b>AI translation</b>, <b>320&nbsp;kbps audio</b> and real-time listening
+            sessions with friends. Free, private, and yours to keep.
+          </p>
+
+          <div class="hero-actions">
+            <a class="badge-link" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/nirmaleeswar30/Inzx/" target="_blank" rel="noopener" aria-label="Get it on Obtainium">
+              <img src="assets/badge-obtainium.png" alt="Get it on Obtainium" width="564" height="168" />
+            </a>
+            <a class="badge-link" href="https://github.com/nirmaleeswar30/Inzx/releases/latest" target="_blank" rel="noopener" aria-label="Get it on GitHub">
+              <img src="assets/badge-github.png" alt="Get it on GitHub" width="568" height="171" />
+            </a>
+          </div>
+
+          <div class="hero-meta">
+            <span class="chip">MIT licensed</span>
+            <span class="chip">No ads · No tracking</span>
+            <span class="chip">OTA updates</span>
+            <span class="chip" id="ver-chip">Latest release</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-side">
+        <div class="tile stat-tile">
+          <div class="stat-num" data-count="15" data-suffix="+">0</div>
+          <div class="stat-lbl">Lyrics providers with smart fallback</div>
+        </div>
+      </div>
+      <div class="hero-side">
+        <div class="tile stat-tile">
+          <div class="stat-num" data-count="320" data-suffix=" kbps">0</div>
+          <div class="stat-lbl">Studio-quality audio via JioSaavn source</div>
+        </div>
+      </div>
+      <div class="hero-side">
+        <div class="tile stat-tile">
+          <div class="stat-num" data-count="20" data-suffix="+">0</div>
+          <div class="stat-lbl">Fully localized interface languages</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- marquee -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track" id="marquee-track"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FEATURES BENTO ===================== -->
+<section class="section" id="features">
+  <div class="wrap">
+    <div class="section-head rv">
+      <span class="tag">The good stuff</span>
+      <h2 class="title">Built for people who<br /><em>actually listen.</em></h2>
+      <p class="sub">Every feature below ships today — no waitlist, no subscription, no account required.</p>
+    </div>
+
+    <div class="bento">
+
+      <!-- karaoke lyrics -->
+      <article class="tile f-lyrics rv">
+        <div class="tile-ico"><svg><use href="#i-mic"/></svg></div>
+        <h3>Word-level karaoke lyrics</h3>
+        <p style="margin-bottom:18px">
+          Synced to the syllable with the BetterLyrics TTML engine, with automatic fallback across
+          15+ providers, instrumental gaps, background vocals and per-line offset tuning.
+        </p>
+
+        <div class="karaoke" id="karaoke">
+          <div class="kara-line prev" id="kara-prev"></div>
+          <div class="kara-line" id="kara-cur"></div>
+          <div class="kara-tr"><span class="badge-ai">AI</span><span id="kara-tr"></span></div>
+        </div>
+
+        <div class="prov-row">
+          <span class="chip">BetterLyrics TTML</span>
+          <span class="chip">LRCLib</span>
+          <span class="chip">Genius</span>
+          <span class="chip">Musixmatch</span>
+          <span class="chip">KuGou</span>
+          <span class="chip">YouTube captions</span>
+          <span class="chip">Embedded &amp; local</span>
+        </div>
+      </article>
+
+      <!-- interactive player -->
+      <article class="tile f-player rv">
+        <div class="tile-ico"><svg><use href="#i-wave"/></svg></div>
+        <h3>Waveform &amp; spectrum scrubbers</h3>
+        <p>Linear, waveform or live spectrum — pick how your progress bar moves.</p>
+
+        <div class="player">
+          <div class="player-top">
+            <div class="art" id="art"><span class="art-glyph" id="art-glyph">IN</span></div>
+            <div class="player-meta">
+              <div class="t" id="pl-title">Starboy</div>
+              <div class="a" id="pl-artist">The Weeknd, Daft Punk</div>
+              <span class="src-chip" id="pl-src">JIOSAAVN · 320</span>
+            </div>
+          </div>
+
+          <canvas id="viz" width="600" height="112" aria-hidden="true"></canvas>
+
+          <div class="seek">
+            <div class="seek-track" id="seek-track">
+              <div class="seek-fill" id="seek-fill"></div>
+            </div>
+            <div class="seek-time"><span id="t-cur">0:00</span><span id="t-dur">4:33</span></div>
+          </div>
+
+          <div class="controls">
+            <button class="cbtn" id="btn-shuffle" aria-label="Shuffle"><svg><use href="#i-shuffle"/></svg></button>
+            <button class="cbtn" id="btn-prev" aria-label="Previous track"><svg><use href="#i-prev"/></svg></button>
+            <button class="play" id="btn-play" aria-label="Play or pause demo"><svg id="play-icon"><use href="#i-play"/></svg></button>
+            <button class="cbtn" id="btn-next" aria-label="Next track"><svg><use href="#i-next"/></svg></button>
+            <button class="cbtn" id="btn-repeat" aria-label="Repeat"><svg><use href="#i-repeat"/></svg></button>
+          </div>
+        </div>
+      </article>
+
+      <!-- dynamic theming -->
+      <article class="tile f-theme rv">
+        <div class="tile-ico"><svg><use href="#i-palette"/></svg></div>
+        <h3>Instant dynamic theming</h3>
+        <p>
+          An isolate-based palette extractor pulls colors straight from the album art in
+          <b style="color:var(--accent-soft)">0&nbsp;ms</b> — plus 10+ Material 3 accents and a full
+          custom color wheel. Try it: this whole page re-themes live.
+        </p>
+        <div class="swatches" id="swatches"></div>
+        <div class="theme-note">↑ tap a color to retheme the site</div>
+      </article>
+
+      <!-- jams -->
+      <article class="tile f-jams rv">
+        <div class="tile-ico"><svg><use href="#i-users"/></svg></div>
+        <h3>Jams — listen together</h3>
+        <div class="jam-vis">
+          <div class="avatar host" style="background:linear-gradient(140deg,#ff4d57,#a80b15)">N</div>
+          <div class="avatar" style="background:linear-gradient(140deg,#8b5cf6,#4c1d95)">A</div>
+          <div class="avatar" style="background:linear-gradient(140deg,#06b6d4,#0e7490)">R</div>
+          <div class="avatar" style="background:linear-gradient(140deg,#f59e0b,#b45309)">K</div>
+          <div class="avatar" style="background:linear-gradient(140deg,#22c55e,#15803d)">+9</div>
+          <span class="live-dot">IN SYNC</span>
+        </div>
+        <p>
+          Real-time synchronized playback over Supabase WebSockets. Shared queue,
+          drag-to-reorder, host &amp; participant roles, drift correction and
+          last-controller-wins conflict resolution.
+        </p>
+      </article>
+
+      <!-- HQ audio -->
+      <article class="tile f-hq rv">
+        <div class="tile-ico"><svg><use href="#i-speaker"/></svg></div>
+        <h3>320 kbps HQ source</h3>
+        <p>
+          Optional JioSaavn source with DES-decrypted streams and smart track matching,
+          gapless playback, stream prefetching and adjustable crossfade.
+        </p>
+        <div class="prov-row">
+          <span class="chip">Gapless</span>
+          <span class="chip">Crossfade</span>
+          <span class="chip">Prefetch</span>
+        </div>
+      </article>
+
+      <!-- android auto -->
+      <article class="tile tile-img f-auto rv">
+        <div class="shot-holder swap" style="aspect-ratio:16/9">
+          <img src="assets/shots/android_auto.jpg" alt="Inzx browsing a library on Android Auto" loading="lazy" width="1000" height="563" />
+          <img class="swap-b" src="assets/shots/android_auto_np.jpg" alt="Inzx now playing on Android Auto" loading="lazy" width="1000" height="563" />
+        </div>
+        <div class="body">
+          <h3>Android Auto</h3>
+          <p>Full dashboard integration — browse your library, queue and now playing from the car.</p>
+        </div>
+      </article>
+
+      <!-- widgets -->
+      <article class="tile tile-img f-widget rv">
+        <div class="widget-holder">
+          <img src="assets/shots/widget2.jpg" alt="Inzx 4x2 home screen widget" loading="lazy" width="620" height="262" />
+          <img src="assets/shots/widget1.jpg" alt="Inzx 4x1 home screen widget" loading="lazy" width="620" height="262" />
+        </div>
+        <div class="body">
+          <h3>Home-screen widgets</h3>
+          <p>Compact 4×1 and expanded 4×2 widgets that follow your dynamic album colors.</p>
+        </div>
+      </article>
+
+      <!-- AI translation -->
+      <article class="tile f-ai rv">
+        <div class="tile-ico"><svg><use href="#i-globe"/></svg></div>
+        <h3>AI lyric translation</h3>
+        <p>
+          Translate and transliterate lyrics line-by-line while they play. Bring your own key —
+          nothing is proxied through us.
+        </p>
+        <div class="prov-row">
+          <span class="chip">OpenRouter</span>
+          <span class="chip">DeepL</span>
+          <span class="chip">Gemini</span>
+        </div>
+      </article>
+
+      <!-- offline / privacy -->
+      <article class="tile f-3 rv">
+        <div class="tile-ico"><svg><use href="#i-lock"/></svg></div>
+        <h3>Private by default</h3>
+        <p>
+          Offline-first and fully usable without a connection. Credentials live in encrypted
+          secure storage, and there is zero third-party analytics or telemetry — ever.
+        </p>
+      </article>
+
+      <!-- OTA -->
+      <article class="tile f-3 rv">
+        <div class="tile-ico"><svg><use href="#i-bolt"/></svg></div>
+        <h3>Instant OTA updates</h3>
+        <p>
+          Shorebird code push delivers patches straight to your device — fixes and features land
+          without waiting on a full reinstall.
+        </p>
+      </article>
+
+      <!-- library -->
+      <article class="tile f-3 rv">
+        <div class="tile-ico"><svg><use href="#i-lib"/></svg></div>
+        <h3>Your whole library</h3>
+        <p>
+          Sync playlists, likes, albums and artists from YouTube Music, mix in local files by
+          folder, build custom playlists and download anything for offline.
+        </p>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SCREENS ===================== -->
+<section class="section" id="screens">
+  <div class="wrap">
+    <div class="section-head rv">
+      <span class="tag">Screenshots</span>
+      <h2 class="title">Look around <em>the app.</em></h2>
+      <p class="sub">Real screens, no mockup filler. Tap through to see how Inzx handles each part of your library.</p>
+    </div>
+
+    <div class="showcase rv">
+      <div class="phone-stage">
+        <div class="phone">
+          <div class="phone-notch"></div>
+          <div class="phone-screen" id="phone-screen"></div>
+        </div>
+      </div>
+
+      <div class="showcase-side">
+        <span class="tag">Interactive</span>
+        <div class="tabs" id="tabs"></div>
+        <div id="panes"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== EVERYTHING ===================== -->
+<section class="section" id="everything">
+  <div class="wrap">
+    <div class="section-head rv">
+      <span class="tag">The full spec</span>
+      <h2 class="title">Everything <em>Inzx does.</em></h2>
+      <p class="sub">The complete feature set, grouped the way you'd actually go looking for it.</p>
+    </div>
+
+    <div class="spec-grid">
+
+      <article class="tile spec rv">
+        <div class="spec-head">
+          <div class="tile-ico"><svg><use href="#i-speaker"/></svg></div>
+          <h3>Playback &amp; audio</h3>
+        </div>
+        <ul>
+          <li><b>YouTube Music engine</b> via native InnerTube API</li>
+          <li><b>JioSaavn HQ source</b> — up to 320 kbps</li>
+          <li><b>Prefer audio versions</b> — auto-skip music videos</li>
+          <li><b>Gapless playback</b> &amp; stream prefetching</li>
+          <li><b>Crossfade</b> with adjustable duration</li>
+          <li><b>Background playback</b> — notification, lock screen, media session</li>
+          <li><b>Smart audio routing</b> — shows the active output device</li>
+          <li><b>Robust audio session</b> — focus, calls &amp; Bluetooth handled</li>
+        </ul>
+      </article>
+
+      <article class="tile spec rv">
+        <div class="spec-head">
+          <div class="tile-ico"><svg><use href="#i-mic"/></svg></div>
+          <h3>Lyrics</h3>
+        </div>
+        <ul>
+          <li><b>Word-level synced</b> karaoke lyrics via BetterLyrics TTML</li>
+          <li><b>15+ providers</b> with smart fallback — LRCLib, Genius, KuGou, Musixmatch, Megalobiz, YouTube captions, embedded &amp; local</li>
+          <li><b>AI translation &amp; transliteration</b> — OpenRouter, DeepL, Gemini (BYO key)</li>
+          <li><b>Line &amp; word offset tuning</b></li>
+          <li><b>Instrumental gaps</b> &amp; background vocals</li>
+        </ul>
+      </article>
+
+      <article class="tile spec rv">
+        <div class="spec-head">
+          <div class="tile-ico"><svg><use href="#i-palette"/></svg></div>
+          <h3>Interface &amp; now playing</h3>
+        </div>
+        <ul>
+          <li><b>Instant dynamic colors</b> — 0 ms isolate palette + caching</li>
+          <li><b>Material 3</b> with 10+ accents &amp; custom color wheel</li>
+          <li><b>Now Playing styles</b> — Default, Cinematic, Ripple, OG</li>
+          <li><b>Progress bar styles</b> — linear, waveform, spectrum</li>
+          <li><b>Animated album art (Canvas)</b> with ambient reflections</li>
+          <li><b>Liquid-glass nav</b>, rotating mini-player art &amp; lyric preview</li>
+          <li><b>Skeletonizer</b> shimmer loading everywhere</li>
+        </ul>
+      </article>
+
+      <article class="tile spec rv">
+        <div class="spec-head">
+          <div class="tile-ico"><svg><use href="#i-users"/></svg></div>
+          <h3>Jams</h3>
+        </div>
+        <ul>
+          <li><b>Real-time sync</b> via Supabase WebSockets</li>
+          <li><b>Host &amp; participant roles</b> with granular permissions</li>
+          <li><b>Shared queue</b> — collaborative edit &amp; drag-to-reorder</li>
+          <li><b>Live playback sync</b> with drift correction</li>
+          <li><b>“Last controller wins”</b> conflict resolution</li>
+        </ul>
+      </article>
+
+      <article class="tile spec rv">
+        <div class="spec-head">
+          <div class="tile-ico"><svg><use href="#i-lib"/></svg></div>
+          <h3>Library, search &amp; downloads</h3>
+        </div>
+        <ul>
+          <li><b>YouTube Music sync</b> — playlists, likes, albums, artists</li>
+          <li><b>Local files</b> organized by folders</li>
+          <li><b>Custom playlists</b></li>
+          <li><b>Download manager</b> with background progress</li>
+          <li><b>Podcasts</b> — browse &amp; play episodes</li>
+          <li><b>Dynamic search</b> — suggestions, history &amp; filters</li>
+        </ul>
+      </article>
+
+      <article class="tile spec rv">
+        <div class="spec-head">
+          <div class="tile-ico"><svg><use href="#i-car"/></svg></div>
+          <h3>Platform &amp; system</h3>
+        </div>
+        <ul>
+          <li><b>Android Auto</b> dashboard integration</li>
+          <li><b>Home-screen widgets</b> — compact 4×1 &amp; expanded 4×2</li>
+          <li><b>Instant OTA updates</b> via Shorebird code push</li>
+          <li><b>Backup &amp; restore</b> app data</li>
+          <li><b>Deep links &amp; sharing</b> for tracks, albums &amp; playlists</li>
+        </ul>
+      </article>
+
+    </div>
+
+    <!-- tech stack -->
+    <div class="bento" style="margin-top:var(--gap)">
+      <article class="tile rv" style="grid-column:span 12">
+        <div class="spec-head" style="margin-bottom:22px">
+          <div class="tile-ico"><svg><use href="#i-code"/></svg></div>
+          <h3>Architecture &amp; tech stack</h3>
+        </div>
+        <div class="prov-row" style="margin-top:0">
+          <span class="chip">Flutter</span>
+          <span class="chip">Dart</span>
+          <span class="chip">Riverpod</span>
+          <span class="chip">Hive</span>
+          <span class="chip">Secure Storage</span>
+          <span class="chip">Shared Preferences</span>
+          <span class="chip">Supabase Realtime</span>
+          <span class="chip">InnerTube API</span>
+          <span class="chip">just_audio</span>
+          <span class="chip">audio_service</span>
+          <span class="chip">audio_session</span>
+          <span class="chip">JioSaavn source</span>
+          <span class="chip">AlbumColorExtractor</span>
+          <span class="chip">Skeletonizer</span>
+          <span class="chip">Iconsax</span>
+          <span class="chip">Cached Network Image</span>
+          <span class="chip">video_player</span>
+          <span class="chip">Shorebird</span>
+        </div>
+      </article>
+    </div>
+
+    <!-- localization -->
+    <div class="section-head rv" style="margin-top:72px">
+      <span class="tag">Localization</span>
+      <h2 class="title">Speaks <em>your language.</em></h2>
+      <p class="sub">A fully localized UI plus locale-aware YouTube Music catalog requests.</p>
+    </div>
+    <div class="langs rv" id="langs"></div>
+  </div>
+</section>
+
+<!-- ===================== ROADMAP ===================== -->
+<section class="section" id="roadmap">
+  <div class="wrap">
+    <div class="section-head rv">
+      <span class="tag">Roadmap</span>
+      <h2 class="title">Shipped, and <em>what's next.</em></h2>
+    </div>
+    <div class="road rv" id="road"></div>
+  </div>
+</section>
+
+<!-- ===================== DOWNLOAD ===================== -->
+<section class="section" id="download">
+  <div class="wrap">
+    <div class="section-head rv">
+      <span class="tag">Install</span>
+      <h2 class="title">Get Inzx on <em>your phone.</em></h2>
+      <p class="sub">Android only. Two ways in — both free, both take under a minute.</p>
+    </div>
+
+    <div class="dl-grid">
+      <article class="tile dl primary rv">
+        <span class="rec">RECOMMENDED</span>
+        <h3>Obtainium</h3>
+        <p>
+          Installs straight from GitHub releases and keeps itself updated automatically.
+          Add the repo once and you're done.
+        </p>
+        <a class="cta" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/nirmaleeswar30/Inzx/" target="_blank" rel="noopener">
+          <svg><use href="#i-dl"/></svg> Add to Obtainium
+        </a>
+      </article>
+
+      <article class="tile dl rv">
+        <h3>GitHub Releases</h3>
+        <p>
+          Grab the APK directly. Universal and split-per-ABI builds are published for every
+          release, with changelogs.
+        </p>
+        <a class="cta-outline" href="https://github.com/nirmaleeswar30/Inzx/releases/latest" target="_blank" rel="noopener">
+          <svg><use href="#i-github"/></svg> Latest release
+        </a>
+      </article>
+
+      <article class="tile dl rv">
+        <h3>Sideload with ADB</h3>
+        <p>Already have the APK and a cable? One command.</p>
+        <div class="code">
+          <span><span class="dollar">$ </span><span id="adb-cmd">adb install app-release.apk</span></span>
+          <button class="copy" id="copy-btn" data-copy="adb install app-release.apk">COPY</button>
+        </div>
+      </article>
+    </div>
+
+    <div class="notice rv" style="margin-top:var(--gap)">
+      <svg><use href="#i-alert"/></svg>
+      <div>
+        <b>Only install Inzx from the sources on this page.</b> Inzx is not on the Play Store or any
+        other site claiming to offer official releases. If we ever publish to additional platforms it
+        will be announced on GitHub first — please avoid unofficial or modified builds for your safety.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SUPPORT ===================== -->
+<section class="section" id="support">
+  <div class="wrap">
+    <div class="support rv">
+      <article class="tile support-main">
+        <span class="tag">Support</span>
+        <h2 class="title" style="font-size:clamp(1.7rem,3vw,2.4rem)">Keep Inzx <em>alive.</em></h2>
+        <p class="sub" style="max-width:520px">
+          Inzx is free and open source, built in spare time. If it makes your day a little better,
+          a sponsorship keeps the project actively maintained — and costs you nothing to skip.
+        </p>
+        <div class="hero-actions" style="margin-top:26px">
+          <a class="cta" href="https://github.com/sponsors/nirmaleeswar30" target="_blank" rel="noopener">
+            <svg><use href="#i-heart"/></svg> Sponsor on GitHub
+          </a>
+          <a class="cta-outline" href="https://github.com/nirmaleeswar30/Inzx" target="_blank" rel="noopener">
+            <svg><use href="#i-github"/></svg> Star the repo
+          </a>
+        </div>
+      </article>
+
+      <article class="tile support-qr">
+        <img src="assets/upi.jpg" alt="UPI QR code to support Inzx" loading="lazy" />
+        <span>SCAN TO PAY VIA UPI</span>
+      </article>
+    </div>
+
+    <div class="notice rv" style="margin-top:var(--gap);border-color:var(--line);background:rgba(255,255,255,0.025)">
+      <svg style="color:var(--txt-3)"><use href="#i-alert"/></svg>
+      <div>
+        <b>Disclaimer.</b> Inzx is an independent, open-source project. It is not affiliated with,
+        endorsed by, or sponsored by Google, YouTube, YouTube Music, JioSaavn or any of their
+        subsidiaries. We do not host any content — only publicly available data is used. All
+        trademarks and content belong to their respective owners. Inzx is provided for personal and
+        educational use; please respect the terms of service of the platforms you access.
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a class="brand" href="#top">
+          <img src="assets/logo.png" alt="" width="34" height="34" />
+          <span>in<i>z</i>x</span>
+        </a>
+        <p>A beautiful, open-source YouTube Music client for Android. Made with Flutter, released under MIT.</p>
+      </div>
+
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#screens">Screenshots</a></li>
+          <li><a href="#everything">Full spec</a></li>
+          <li><a href="#roadmap">Roadmap</a></li>
+          <li><a href="#download">Install</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>Project</h4>
+        <ul>
+          <li><a href="https://github.com/nirmaleeswar30/Inzx" target="_blank" rel="noopener">Source code</a></li>
+          <li><a href="https://github.com/nirmaleeswar30/Inzx/releases" target="_blank" rel="noopener">Releases</a></li>
+          <li><a href="https://github.com/nirmaleeswar30/Inzx/issues" target="_blank" rel="noopener">Report an issue</a></li>
+          <li><a href="https://github.com/nirmaleeswar30/Inzx/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a></li>
+          <li><a href="https://github.com/nirmaleeswar30/Inzx/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>Built on</h4>
+        <ul>
+          <li><a href="https://flutter.dev" target="_blank" rel="noopener">Flutter</a></li>
+          <li><a href="https://github.com/boidushya/better-lyrics" target="_blank" rel="noopener">BetterLyrics</a></li>
+          <li><a href="https://lrclib.net" target="_blank" rel="noopener">LRCLib</a></li>
+          <li><a href="https://supabase.com" target="_blank" rel="noopener">Supabase</a></li>
+          <li><a href="https://shorebird.dev" target="_blank" rel="noopener">Shorebird</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bot">
+      <span>© <span id="year">2026</span> Inzx · Released under the MIT License</span>
+      <div class="socials">
+        <a href="https://github.com/nirmaleeswar30/Inzx" target="_blank" rel="noopener" aria-label="GitHub"><svg><use href="#i-github"/></svg></a>
+        <a href="https://github.com/sponsors/nirmaleeswar30" target="_blank" rel="noopener" aria-label="Sponsor"><svg><use href="#i-heart"/></svg></a>
+        <a href="https://github.com/nirmaleeswar30/Inzx/releases/latest" target="_blank" rel="noopener" aria-label="Download"><svg><use href="#i-dl"/></svg></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div><!-- /shell -->
+
+<button class="to-top" id="to-top" aria-label="Back to top"><svg><use href="#i-up"/></svg></button>
+
+<script src="js/player.js"></script>
+</body>
+</html>

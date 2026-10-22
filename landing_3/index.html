@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inzx — The Ultimate Open-Source YouTube Music Client for Android</title>
+  <meta name="description" content="Inzx is a beautiful, open-source YouTube Music & JioSaavn client for Android featuring word-level synced karaoke lyrics, 320 kbps studio audio, 0ms dynamic theming, and real-time listening Jams.">
+  <meta name="theme-color" content="#070709">
+
+  <!-- Open Graph / Social Media -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Inzx — Music Without Limits. Crafted for Android.">
+  <meta property="og:description" content="Beautiful, ad-free YouTube Music client with word-level karaoke lyrics, 320 kbps studio sound, dynamic theming, and collaborative Jams.">
+  <meta property="og:image" content="assets/backdrop.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/icon/logo_dark.png">
+
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Ambient Glow Atmosphere Background -->
+  <div class="ambient-glow-container">
+    <div class="ambient-glow-top"></div>
+    <div class="ambient-glow-center"></div>
+    <div class="ambient-glow-bottom"></div>
+  </div>
+  <div class="backdrop-pattern"></div>
+
+  <!-- ==========================================================================
+       SITE HEADER / NAVIGATION
+       ========================================================================== -->
+  <header class="site-header">
+    <div class="container nav-container">
+      <a href="#" class="brand-link">
+        <img src="assets/brand_transparent.png" alt="Inzx Logo" class="brand-logo-img">
+        <span class="brand-text">Inzx<span>.</span></span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#features" class="nav-link">Features</a></li>
+        <li><a href="#lyrics" class="nav-link">Syllable Lyrics</a></li>
+        <li><a href="#screenshots" class="nav-link">Screenshots</a></li>
+        <li><a href="#compare" class="nav-link">Compare</a></li>
+        <li><a href="#download" class="nav-link">Download</a></li>
+        <li><a href="#support" class="nav-link">Support</a></li>
+        <li><a href="#faq" class="nav-link">FAQ</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="https://github.com/nirmaleeswar30/Inzx" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+          <span>GitHub</span> ⭐
+        </a>
+        <a href="#download" class="btn btn-primary btn-sm">
+          <span>Get Inzx</span>
+        </a>
+        <button class="mobile-menu-btn" aria-label="Toggle Navigation Menu">&#9776;</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ==========================================================================
+         HERO SECTION
+         ========================================================================== -->
+    <section class="hero-section">
+      <div class="container">
+        <div class="hero-grid">
+          
+          <!-- Hero Left Content -->
+          <div class="hero-content">
+            <div class="pill-badge">
+              <span class="pulse-dot"></span>
+              <span>v1.0 • Open Source • 320 kbps HQ • 100% Ad-Free</span>
+            </div>
+
+            <h1 class="hero-title">
+              Music Without Limits.<br>
+              <span class="gradient-text">Crafted for Android.</span>
+            </h1>
+
+            <p class="hero-subtitle">
+              A high-performance YouTube Music & JioSaavn streaming client. Experience word-level karaoke lyrics synced to the syllable, instant 0ms dynamic album-art theming, studio-quality sound, and real-time listening Jams with friends.
+            </p>
+
+            <div class="hero-cta-group">
+              <a href="#download" class="btn btn-primary btn-lg">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Download APK</span>
+              </a>
+
+              <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/nirmaleeswar30/Inzx/" target="_blank" rel="noopener noreferrer" class="badge-obtainium-link">
+                <img src="assets/badge-obtainium.png" alt="Get it on Obtainium">
+              </a>
+
+              <a href="https://github.com/nirmaleeswar30/Inzx" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-lg">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                <span>View Source</span>
+              </a>
+            </div>
+
+            <!-- Specs Row -->
+            <div class="hero-specs-row">
+              <div class="spec-item">
+                <span class="spec-icon">✦</span>
+                <span>Word-Level Syllables</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-icon">✦</span>
+                <span>320 kbps Studio Audio</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-icon">✦</span>
+                <span>Zero Telemetry</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-icon">✦</span>
+                <span>Android 8.0+ Ready</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hero Right Mockup with interactive chips -->
+          <div class="hero-visual">
+            <div class="phone-mockup-wrap">
+              <div class="phone-border">
+                <div class="phone-screen">
+                  <img src="assets/screenshots/nowplaying.png" alt="Inzx Now Playing Screen">
+                </div>
+              </div>
+
+              <!-- Floating Interactive Badges -->
+              <div class="floating-chip chip-top-left">
+                <span>🎤 Syllable Synced Karaoke</span>
+              </div>
+              <div class="floating-chip chip-mid-left">
+                <span>⚡ 0ms Isolate Palette</span>
+              </div>
+              <div class="floating-chip chip-bottom-right">
+                <span>🔊 JioSaavn 320 kbps HQ</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ==========================================================================
+             INTERACTIVE MUSIC PLAYER BAR WITH LIVE CANVAS VISUALIZER
+             ========================================================================== -->
+        <div class="player-showcase-bar">
+          <div class="player-inner">
+            <!-- Track Info -->
+            <div class="track-info-group">
+              <div class="track-art">
+                <img src="assets/brand_transparent.png" alt="Inzx Audio Engine">
+              </div>
+              <div class="track-meta">
+                <h4>Starboy (ft. Daft Punk)<span class="track-badge">320 KBPS</span></h4>
+                <p>The Weeknd • JioSaavn Studio HQ</p>
+              </div>
+            </div>
+
+            <!-- Canvas Frequency Visualizer & Scrubber -->
+            <div class="visualizer-wrapper">
+              <canvas id="audioVisualizerCanvas" height="38"></canvas>
+              <div class="track-scrubber">
+                <span id="visualizerCurrentTime">1:21</span>
+                <div id="visualizerScrubBar" class="scrub-bar">
+                  <div id="visualizerScrubProgress" class="scrub-progress"></div>
+                </div>
+                <span>3:50</span>
+              </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="player-controls-group">
+              <button class="ctrl-btn" title="Previous Track">⏮</button>
+              <button id="visualizerPlayBtn" class="ctrl-btn-play" title="Play/Pause">
+                <span>⏸</span>
+              </button>
+              <button class="ctrl-btn" title="Next Track">⏭</button>
+              <button class="ctrl-btn" title="Word-level Lyrics">🎤</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         SHOWCASE: SYLLABLE KARAOKE & AI TRANSLATION
+         ========================================================================== -->
+    <section id="lyrics" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="pill-badge">
+            <span class="pulse-dot"></span>
+            <span>Unmatched Lyrics Precision</span>
+          </div>
+          <h2 class="section-title">Syllable-Level Karaoke.<br><span class="gradient-text">Powered by AI Translation.</span></h2>
+          <p class="section-description">
+            Forget crude line-by-line scrolling. Inzx implements BetterLyrics TTML with syllable precision from 15+ providers, complete with live AI translation and phonetic transliteration.
+          </p>
+        </div>
+
+        <div class="lyrics-showcase-box">
+          
+          <!-- Live Interactive Karaoke Demo Pane -->
+          <div class="lyrics-demo-pane">
+            <div class="lyrics-status-bar">
+              <div class="provider-tag">
+                <span>●</span> BetterLyrics TTML Engine
+              </div>
+              <div class="ai-toggle-buttons">
+                <button class="ai-tab" data-lang="original">Original</button>
+                <button class="ai-tab active" data-lang="en">AI English</button>
+                <button class="ai-tab" data-lang="romaji">Phonetic / Romaji</button>
+              </div>
+            </div>
+
+            <div class="karaoke-lines-container">
+              <div class="karaoke-line active">
+                <span class="syllable sung">君</span>
+                <span class="syllable sung">の</span>
+                <span class="syllable current">声</span>
+                <span class="syllable">を</span>
+                <span class="syllable">聴</span>
+                <span class="syllable">か</span>
+                <span class="syllable">せ</span>
+                <span class="syllable">て</span>
+                <span class="translation-subline">Let me hear your voice</span>
+              </div>
+
+              <div class="karaoke-line">
+                <span class="syllable">夜</span>
+                <span class="syllable">空</span>
+                <span class="syllable">に</span>
+                <span class="syllable">咲</span>
+                <span class="syllable">く</span>
+                <span class="syllable">花</span>
+                <span class="syllable">の</span>
+                <span class="syllable">よ</span>
+                <span class="syllable">う</span>
+                <span class="syllable">に</span>
+                <span class="translation-subline">Like flowers blooming in the midnight sky</span>
+              </div>
+            </div>
+
+            <div style="margin-top: 30px; font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; justify-content: space-between;">
+              <span>AI Engine: Gemini & DeepL BYO-Key</span>
+              <span style="color: var(--accent-red); font-weight: 600;">15+ Providers Fallback</span>
+            </div>
+          </div>
+
+          <!-- Real In-App Animated Capture -->
+          <div class="lyrics-gif-pane">
+            <div class="gif-frame">
+              <img src="assets/screenshots/output.gif" alt="Inzx Word-Level Synced Lyrics Demo">
+            </div>
+            <p class="gif-caption">
+              Live in-app capture of word-level syllable highlights with ambient background reflections.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         FEATURES BENTO GRID
+         ========================================================================== -->
+    <section id="features" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="pill-badge">
+            <span class="pulse-dot"></span>
+            <span>Feature-Packed Architecture</span>
+          </div>
+          <h2 class="section-title">Engineered For Audiophiles.<br><span class="gradient-text">Built For Everyone.</span></h2>
+          <p class="section-description">
+            Every screen, animation, and playback pipeline is handcrafted for uncompromising performance and visual beauty.
+          </p>
+        </div>
+
+        <div class="bento-grid">
+          
+          <!-- Bento 1: Dual Audio Source (Span 2) -->
+          <div class="bento-card col-span-2">
+            <div class="bento-icon-wrapper">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
+            </div>
+            <h3>Dual-Engine Audio: YouTube Music + JioSaavn 320 kbps</h3>
+            <p>
+              Get the entire universe of YouTube Music's catalog with an optional seamless toggle for JioSaavn's 320 kbps studio-master audio streams. Features gapless playback, intelligent stream prefetching for zero buffering, and adjustable crossfade.
+            </p>
+            <div class="quality-toggle-demo">
+              <div class="quality-pill">
+                <span>YouTube Music InnerTube (256k Opus)</span>
+              </div>
+              <div class="quality-pill active">
+                <img src="assets/icon/JioSaavn.png" alt="JioSaavn">
+                <span>JioSaavn HQ (320 kbps Lossless)</span>
+              </div>
+            </div>
+            <span class="bento-feature-badge">✓ Auto-skip music video audio • Auto stream retry</span>
+          </div>
+
+          <!-- Bento 2: Instant Theming -->
+          <div class="bento-card">
+            <div class="bento-icon-wrapper">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg>
+            </div>
+            <h3>0 ms Dynamic Theming</h3>
+            <p>
+              Background Dart isolate extracts dynamic palettes from album covers instantaneously without dropping a single frame. Enjoy Material 3 with 10+ custom accents or an interactive color wheel.
+            </p>
+            <span class="bento-feature-badge">✓ Liquid-glass navigation • Ambient reflections</span>
+          </div>
+
+          <!-- Bento 3: Jams Synchronized Listening -->
+          <div class="bento-card">
+            <div class="bento-icon-wrapper">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+            <h3>Jams: Collaborative Listening</h3>
+            <p>
+              Listen together with friends in real time anywhere in the world. Powered by Supabase WebSockets with automatic drift correction, shared queue reordering, and conflict-free playback.
+            </p>
+            <span class="bento-feature-badge">✓ Host & Guest permissions • Realtime sync</span>
+          </div>
+
+          <!-- Bento 4: AI Lyric Translation -->
+          <div class="bento-card">
+            <div class="bento-icon-wrapper">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            </div>
+            <h3>AI Lyric Translation</h3>
+            <p>
+              Sing songs in any language. Plug in your own API key for DeepL, Google Gemini, or OpenRouter to get instant contextual line translations and phonetic Romanized transliterations.
+            </p>
+            <span class="bento-feature-badge">✓ Gemini & DeepL BYO-Key • Syllable mapping</span>
+          </div>
+
+          <!-- Bento 5: Android Auto & Widgets -->
+          <div class="bento-card">
+            <div class="bento-icon-wrapper">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+            </div>
+            <h3>Android Auto & Widgets</h3>
+            <p>
+              Hit the road safely with native Android Auto dashboard navigation and controls. On your phone, pin 4×1 compact or 4×2 expanded home-screen widgets with live lyric peeks.
+            </p>
+            <span class="bento-feature-badge">✓ Car dashboard mode • 4×1 & 4×2 widgets</span>
+          </div>
+
+          <!-- Bento 6: Privacy & Offline First (Span 2) -->
+          <div class="bento-card col-span-2">
+            <div class="bento-icon-wrapper">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            </div>
+            <h3>Zero Telemetry, 100% Offline-First & Private</h3>
+            <p>
+              No ads, no tracking scripts, and no analytics telemetry. Inzx respects your device and data. Download full tracks and albums for offline road trips, browse local storage folders directly, and store your tokens encrypted in Android secure storage.
+            </p>
+            <span class="bento-feature-badge">✓ Encrypted local cache • Full offline download manager • Local folder scanner</span>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         SCREENSHOTS GALLERY & LIGHTBOX
+         ========================================================================== -->
+    <section id="screenshots" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="pill-badge">
+            <span class="pulse-dot"></span>
+            <span>App Tour</span>
+          </div>
+          <h2 class="section-title">Crafted Down to the Pixel.<br><span class="gradient-text">Explore the Interface.</span></h2>
+          <p class="section-description">
+            Designed from the ground up for modern Android with fluid gestures, crisp contrast, and tactile feedback.
+          </p>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="gallery-filter-tabs">
+          <button class="gallery-tab-btn active" data-filter="all">All Screens</button>
+          <button class="gallery-tab-btn" data-filter="player">Now Playing & Lyrics</button>
+          <button class="gallery-tab-btn" data-filter="discovery">Home & Search</button>
+          <button class="gallery-tab-btn" data-filter="social">Jams & Library</button>
+          <button class="gallery-tab-btn" data-filter="auto">Android Auto & Widgets</button>
+        </div>
+
+        <!-- Screenshots Grid -->
+        <div class="screenshots-grid">
+          
+          <div class="screenshot-card" data-category="discovery">
+            <img src="assets/screenshots/home.png" alt="Home Screen" loading="lazy">
+            <div class="screenshot-overlay">
+              <div class="overlay-title">Home Screen</div>
+              <div class="overlay-caption">Quick picks, personalized mixes & dynamic themes</div>
+            </div>
+          </div>
+
+          <div class="screenshot-card" data-category="player">
+            <img src="assets/screenshots/nowplaying.png" alt="Now Playing Screen" loading="lazy">
+            <div class="screenshot-overlay">
+              <div class="overlay-title">Now Playing</div>
+              <div class="overlay-caption">Cinematic waveform scrubber & ambient glow</div>
+            </div>
+          </div>
+
+          <div class="screenshot-card" data-category="player">
+            <img src="assets/screenshots/lyrics.png" alt="Word-Level Synced Lyrics" loading="lazy">
+            <div class="screenshot-overlay">
+              <div class="overlay-title">Syllable Karaoke</div>
+              <div class="overlay-caption">Karaoke synced with AI translation badge</div>
+            </div>
+          </div>
+
+          <div class="screenshot-card" data-category="social">
+            <img src="assets/screenshots/jam.png" alt="Realtime Jams" loading="lazy">
+            <div class="screenshot-overlay">
+              <div class="overlay-title">Jams Listening Party</div>
+              <div class="overlay-caption">Real-time synchronized listening via WebSockets</div>
+            </div>
+          </div>
+
+          <div class="screenshot-card" data-category="discovery">
+            <img src="assets/screenshots/search.png" alt="Dynamic Search" loading="lazy">
+            <div class="screenshot-overlay">
+              <div class="overlay-title">Instant Search</div>
+              <div class="overlay-caption">Smart autocomplete, filter chips & YouTube Music library</div>
+            </div>
+          </div>
+
+          <div class="screenshot-card" data-category="social">
+            <img src="assets/screenshots/playlist.png" alt="Custom Playlists" loading="lazy">
+            <div class="screenshot-overlay">
+              <div class="overlay-title">Playlists & Albums</div>
+              <div class="overlay-caption">Drag-and-drop reordering & offline caching</div>
+            </div>
+          </div>
+
+          <div class="screenshot-card" data-category="social">
+            <img src="assets/screenshots/library.png" alt="Library & Downloads" loading="lazy">
+            <div class="screenshot-overlay">
+              <div class="overlay-title">Library & Downloads</div>
+              <div class="overlay-caption">Organized downloads, liked tracks & albums</div>
+            </div>
+          </div>
+
+          <div class="screenshot-card" data-category="social">
+            <img src="assets/screenshots/folders.png" alt="Local Folder Browser" loading="lazy">
+            <div class="screenshot-overlay">
+              <div class="overlay-title">Local Music Folders</div>
+              <div class="overlay-caption">Full device file organization with folder hierarchy</div>
+            </div>
+          </div>
+
+          <!-- Landscape Screenshots: Android Auto -->
+          <div class="screenshot-card landscape-card" data-category="auto">
+            <img src="assets/screenshots/android_auto.png" alt="Android Auto Dashboard" loading="lazy">
+            <div class="screenshot-overlay">
+              <div class="overlay-title">Android Auto Dashboard</div>
+              <div class="overlay-caption">Distraction-free interface designed for the road</div>
+            </div>
+          </div>
+
+          <div class="screenshot-card landscape-card" data-category="auto">
+            <img src="assets/screenshots/android_auto-nowplaying.png" alt="Android Auto Now Playing" loading="lazy">
+            <div class="screenshot-overlay">
+              <div class="overlay-title">Android Auto Now Playing</div>
+              <div class="overlay-caption">Large touch targets & seamless Bluetooth sync</div>
+            </div>
+          </div>
+
+          <!-- Landscape Screenshots: Widgets -->
+          <div class="screenshot-card landscape-card" data-category="auto">
+            <img src="assets/screenshots/widget-4x2.png" alt="4x2 Home Screen Widget" loading="lazy">
+            <div class="screenshot-overlay">
+              <div class="overlay-title">Expanded Home Widget (4×2)</div>
+              <div class="overlay-caption">Live queue preview, album art and playback controls</div>
+            </div>
+          </div>
+
+          <div class="screenshot-card landscape-card" data-category="auto">
+            <img src="assets/screenshots/widget-4x1.png" alt="4x1 Home Screen Widget" loading="lazy">
+            <div class="screenshot-overlay">
+              <div class="overlay-title">Compact Home Widget (4×1)</div>
+              <div class="overlay-caption">Minimalist pill widget with dynamic color theme</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Lightbox Modal -->
+    <div id="screenshotLightbox" class="lightbox-modal" role="dialog" aria-modal="true">
+      <button class="lightbox-close" aria-label="Close Lightbox">&times;</button>
+      <button class="lightbox-nav-btn lightbox-prev" aria-label="Previous Screenshot">&#10094;</button>
+      <div class="lightbox-content">
+        <img id="lightboxImg" class="lightbox-img" src="" alt="Screenshot Full View">
+        <div id="lightboxCaption" class="lightbox-caption"></div>
+      </div>
+      <button class="lightbox-nav-btn lightbox-next" aria-label="Next Screenshot">&#10095;</button>
+    </div>
+
+    <!-- ==========================================================================
+         COMPARISON MATRIX (INZX VS OTHERS)
+         ========================================================================== -->
+    <section id="compare" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="pill-badge">
+            <span class="pulse-dot"></span>
+            <span>Why Choose Inzx</span>
+          </div>
+          <h2 class="section-title">The Clear Difference.<br><span class="gradient-text">Inzx vs Other Players.</span></h2>
+          <p class="section-description">
+            See how Inzx gives you complete audio freedom without recurring fees, trackers, or DRM walls.
+          </p>
+        </div>
+
+        <div class="comparison-wrapper">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th class="highlight-col"><span style="color: var(--accent-red); font-size: 1.1rem; font-weight: 800;">Inzx</span> (Open Source)</th>
+                <th>YouTube Music (Official)</th>
+                <th>Spotify (Free / Premium)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Price & Licensing</strong></td>
+                <td class="highlight-col"><span class="status-check">✓</span> 100% Free & Open Source (MIT)</td>
+                <td>$10.99 / month</td>
+                <td>$11.99 / month</td>
+              </tr>
+              <tr>
+                <td><strong>Audio Quality Bitrate</strong></td>
+                <td class="highlight-col"><span class="status-check">✓</span> Up to <strong>320 kbps HQ</strong> (JioSaavn)</td>
+                <td>Up to 256 kbps (AAC/Opus)</td>
+                <td>Up to 320 kbps (Ogg Vorbis)</td>
+              </tr>
+              <tr>
+                <td><strong>Karaoke Syllable Lyrics</strong></td>
+                <td class="highlight-col"><span class="status-check">✓</span> Word & Syllable Sync (15+ sources)</td>
+                <td><span class="status-cross">✗</span> Basic line sync or none</td>
+                <td><span class="status-cross">✗</span> Musixmatch line sync</td>
+              </tr>
+              <tr>
+                <td><strong>AI Lyric Translation & Transliteration</strong></td>
+                <td class="highlight-col"><span class="status-check">✓</span> Built-in (Gemini / DeepL)</td>
+                <td><span class="status-cross">✗</span> Not supported</td>
+                <td><span class="status-cross">✗</span> Not supported</td>
+              </tr>
+              <tr>
+                <td><strong>Collaborative Realtime Jams</strong></td>
+                <td class="highlight-col"><span class="status-check">✓</span> Free WebSockets sync</td>
+                <td><span class="status-cross">✗</span> Not available</td>
+                <td>Premium-only requirement</td>
+              </tr>
+              <tr>
+                <td><strong>Advertisements</strong></td>
+                <td class="highlight-col"><span class="status-check">✓</span> Zero Ads Ever</td>
+                <td>Frequent video & banner ads</td>
+                <td>Audio & banner ads on Free</td>
+              </tr>
+              <tr>
+                <td><strong>Privacy & Tracking</strong></td>
+                <td class="highlight-col"><span class="status-check">✓</span> Zero Telemetry / Local Storage</td>
+                <td>Heavy tracking & profiling</td>
+                <td>Heavy cross-app telemetry</td>
+              </tr>
+              <tr>
+                <td><strong>Android Auto & Widgets</strong></td>
+                <td class="highlight-col"><span class="status-check">✓</span> Full Auto Dashboard + 4x1/4x2 Widgets</td>
+                <td>Supported</td>
+                <td>Supported</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         DOWNLOAD & INSTALLATION HUB
+         ========================================================================== -->
+    <section id="download" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="pill-badge">
+            <span class="pulse-dot"></span>
+            <span>Get Started</span>
+          </div>
+          <h2 class="section-title">Ready for Better Music?<br><span class="gradient-text">Download Inzx Now.</span></h2>
+          <p class="section-description">
+            Available directly for Android devices. Choose between Obtainium automatic updates or direct GitHub releases.
+          </p>
+        </div>
+
+        <div class="download-card-grid">
+          
+          <!-- Obtainium Method -->
+          <div class="download-box">
+            <div>
+              <div class="pill-badge" style="margin-bottom: 12px; background: rgba(0, 191, 165, 0.12); border-color: rgba(0, 191, 165, 0.4); color: #00e5ff;">
+                <span>Recommended Option</span>
+              </div>
+              <h3>Install via Obtainium</h3>
+              <p>
+                Obtainium pulls APK updates directly from GitHub releases as soon as they drop. Enjoy smooth automatic updates without opening a browser.
+              </p>
+            </div>
+
+            <div class="download-cta-row">
+              <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/nirmaleeswar30/Inzx/" target="_blank" rel="noopener noreferrer" class="badge-obtainium-link">
+                <img src="assets/badge-obtainium.png" alt="Add to Obtainium">
+              </a>
+              <span style="font-size: 0.85rem; color: var(--text-muted);">One-click import repository</span>
+            </div>
+          </div>
+
+          <!-- Direct GitHub APK Download -->
+          <div class="download-box">
+            <div>
+              <div class="pill-badge" style="margin-bottom: 12px;">
+                <span>Latest Release: v1.0</span>
+              </div>
+              <h3>Direct APK Download</h3>
+              <p>
+                Grab the universal release APK or download ABI-optimized split packages (ARM64-v8a / ARMv7a) directly from GitHub releases.
+              </p>
+            </div>
+
+            <div class="download-cta-row">
+              <a href="https://github.com/nirmaleeswar30/Inzx/releases/latest" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>GitHub Releases</span>
+              </a>
+
+              <a href="https://github.com/nirmaleeswar30/Inzx/releases" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+                <span>All Build Variants</span>
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Terminal ADB Snippet & Shorebird Callout -->
+        <div class="adb-terminal-box">
+          <div class="adb-header">
+            <div class="terminal-dots">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <span>Fast ADB Terminal Install</span>
+            <button class="copy-cmd-btn" data-copy-target="#adbCmdText">Copy Command</button>
+          </div>
+          <code id="adbCmdText" class="terminal-code">adb install inzx-release.apk</code>
+        </div>
+
+        <div style="margin-top: 24px; text-align: center; font-size: 0.9rem; color: var(--text-muted);">
+          ⚡ Powered by <strong>Shorebird Code Push</strong> — minor bug fixes and improvements sync over-the-air automatically.
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         SUPPORT & DONATION SECTION
+         ========================================================================== -->
+    <section id="support" class="section">
+      <div class="container">
+        <div class="support-section-box">
+          <div class="pill-badge">
+            <span class="pulse-dot"></span>
+            <span>Keep Inzx Alive</span>
+          </div>
+          <h2 class="section-title">Support Inzx Development</h2>
+          <p class="section-description">
+            Inzx is completely free, ad-free, and independently developed. If it brings music into your daily routine, consider buying a coffee or contributing to cover API & server expenses.
+          </p>
+
+          <div class="support-actions">
+            <!-- GitHub Sponsors -->
+            <a href="https://github.com/sponsors/nirmaleeswar30" target="_blank" rel="noopener noreferrer" class="btn btn-outline-red btn-lg">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+              <span>Sponsor on GitHub</span>
+            </a>
+
+            <!-- UPI Payment Button -->
+            <button id="openUpiModalBtn" class="btn btn-primary btn-lg">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              <span>Scan & Pay via UPI</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- UPI Modal -->
+    <div id="upiModal" class="upi-modal" role="dialog" aria-modal="true">
+      <div class="upi-modal-card">
+        <button id="closeUpiModalBtn" class="lightbox-close" style="top: 14px; right: 18px;" aria-label="Close">&times;</button>
+        <h3 style="font-size: 1.3rem; margin-bottom: 6px;">Support via UPI</h3>
+        <p style="font-size: 0.85rem; color: var(--text-secondary);">Scan with any UPI app (GPay, PhonePe, Paytm, CRED)</p>
+        
+        <img src="assets/upi.jpeg" alt="UPI QR Code" class="upi-qr-img">
+
+        <div class="upi-id-box">
+          <span id="upiVpaText" style="font-family: monospace; font-weight: 700; color: #ff6b70;">nirmaleeswar30@okaxis</span>
+          <button class="copy-cmd-btn" data-copy-target="#upiVpaText">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+         FREQUENTLY ASKED QUESTIONS (FAQ)
+         ========================================================================== -->
+    <section id="faq" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="pill-badge">
+            <span class="pulse-dot"></span>
+            <span>Answers</span>
+          </div>
+          <h2 class="section-title">Frequently Asked Questions</h2>
+          <p class="section-description">
+            Everything you need to know about Inzx, audio sources, accounts, and security.
+          </p>
+        </div>
+
+        <div class="faq-grid">
+          
+          <div class="faq-item active">
+            <button class="faq-question">
+              <span>Do I need a Google or YouTube account to use Inzx?</span>
+              <span class="faq-arrow">▼</span>
+            </button>
+            <div class="faq-answer">
+              No! Inzx works out-of-the-box without requiring any login. You can browse, search, and stream millions of tracks immediately. If you want to sync your YouTube Music playlists and likes, you can log in securely via InnerTube credentials stored encrypted on your device.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>How does the 320 kbps JioSaavn audio source work?</span>
+              <span class="faq-arrow">▼</span>
+            </button>
+            <div class="faq-answer">
+              When enabled in settings, Inzx's intelligent track matcher automatically matches your YouTube Music search or queue items against JioSaavn's lossless and 320 kbps CDN tracks. If a match is found, you receive studio-grade audio seamlessly. If no match is found, it effortlessly falls back to YouTube Music's high-bitrate Opus stream.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>How do syllable-level karaoke lyrics work?</span>
+              <span class="faq-arrow">▼</span>
+            </button>
+            <div class="faq-answer">
+              Inzx integrates with BetterLyrics TTML engine, parsing timed syllables from 15+ community providers (including LRCLib, Genius, Musixmatch, and KuGou). Words highlight rhythmically in real time as the artist sings each syllable.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Is Inzx available on Google Play Store?</span>
+              <span class="faq-arrow">▼</span>
+            </button>
+            <div class="faq-answer">
+              No. Inzx is only published through official GitHub releases and Obtainium. It is NOT hosted on Google Play. Please beware of malicious third-party websites offering modified APKs. Always download directly from our official repository.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>What are Jams and how do they work?</span>
+              <span class="faq-arrow">▼</span>
+            </button>
+            <div class="faq-answer">
+              Jams allow multiple users to join a shared room and listen to music in complete synchrony. Utilizing Supabase real-time WebSockets, Inzx corrects playback drift continuously so everyone experiences the exact same beat with shared queue collaboration.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Does Inzx collect telemetry or personal data?</span>
+              <span class="faq-arrow">▼</span>
+            </button>
+            <div class="faq-answer">
+              Zero telemetry. Inzx has no third-party analytics trackers, no Google Analytics, no crash telemetry, and no ad libraries. All user preferences, history, and cached songs remain strictly on your physical Android device.
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==========================================================================
+       SITE FOOTER
+       ========================================================================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top-grid">
+        
+        <div class="footer-brand">
+          <a href="#" class="brand-link">
+            <img src="assets/brand_transparent.png" alt="Inzx Logo" class="brand-logo-img">
+            <span class="brand-text">Inzx<span>.</span></span>
+          </a>
+          <p>
+            An open-source, privacy-first YouTube Music & JioSaavn Android client crafted for audiophiles and lyric enthusiasts.
+          </p>
+          <div style="margin-top: 16px; display: flex; gap: 12px;">
+            <a href="https://github.com/nirmaleeswar30/Inzx" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">GitHub Repo</a>
+            <a href="https://github.com/nirmaleeswar30/Inzx/releases" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">Releases</a>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4>Navigation</h4>
+          <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#lyrics">Karaoke Lyrics</a></li>
+            <li><a href="#screenshots">Screenshots</a></li>
+            <li><a href="#compare">Why Inzx</a></li>
+            <li><a href="#download">Download APK</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Community & Project</h4>
+          <ul>
+            <li><a href="https://github.com/nirmaleeswar30/Inzx/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Contributing</a></li>
+            <li><a href="https://github.com/nirmaleeswar30/Inzx/issues" target="_blank" rel="noopener noreferrer">Issue Tracker</a></li>
+            <li><a href="https://github.com/sponsors/nirmaleeswar30" target="_blank" rel="noopener noreferrer">GitHub Sponsors</a></li>
+            <li><a href="https://github.com/nirmaleeswar30/Inzx/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <div>
+          &copy; 2026 Inzx. Released under the <strong>MIT License</strong>.
+        </div>
+        <div>
+          Crafted with care by <a href="https://github.com/nirmaleeswar30" target="_blank" rel="noopener noreferrer" style="color: var(--accent-red); font-weight: 600;">nirmaleeswar30</a>.
+        </div>
+      </div>
+
+      <div class="footer-disclaimer">
+        Disclaimer: Inzx is an independent open-source client. It is not affiliated with, endorsed by, or sponsored by Google, YouTube, YouTube Music, or JioSaavn. All trademarks, service marks, and logos belong to their respective owners.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Floating Back to Top Button -->
+  <button id="backToTopBtn" class="back-to-top-btn" aria-label="Back to Top">
+    ▲
+  </button>
+
+  <!-- Script -->
+  <script src="js/main.js"></script>
+</body>
+</html>

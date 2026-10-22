@@ -270,7 +270,7 @@ class YTPlayerUtils {
       visitorData = _poToken.visitorData;
     }
 
-    // Metrolist-style content-aware fallback:
+    // Content-aware fallback:
     // Start with default clients, detect content type on first failure,
     // then switch to content-specific client list
     List<InnerTubeClient> playbackClients = InnerTubeClient.defaultClients;
@@ -331,7 +331,7 @@ class YTPlayerUtils {
       _clientFailures[client.name] = failures + 1;
       lastError = result;
 
-      // Metrolist-style: detect content type from failure and switch client list
+      // Detect content type from failure and switch client list
       if (!contentAwareSwitchDone && result.data == null) {
         contentAwareSwitchDone = true;
         // Check if the error indicates a specific content type

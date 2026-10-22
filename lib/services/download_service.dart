@@ -976,7 +976,7 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
     return false;
   }
 
-  /// Concurrently fetch lyrics for a track during download (BitChord style)
+  /// Concurrently fetch lyrics for a track during download
   Future<String?> _fetchLyricsForTrack(Track track) async {
     try {
       // 1. Check Hive cache first
@@ -1034,7 +1034,7 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
     return null;
   }
 
-  /// Concurrently fetch cover art image bytes during download (BitChord style)
+  /// Concurrently fetch cover art image bytes during download
   Future<Uint8List?> _fetchCoverArtBytes(String? thumbnailUrl) async {
     final rawUrl = thumbnailUrl?.trim();
     if (rawUrl == null || rawUrl.isEmpty) return null;
@@ -1313,7 +1313,7 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
       final filePath = '${dir.path}/$fileName';
       final file = File(filePath);
 
-      // Duplicate prevention (BitChord style)
+      // Duplicate prevention
       // Check if file already exists with this name (or any common audio extension)
       final possibleExtensions = [extension, '.m4a', '.mp3', '.opus', '.webm'];
       File? existingFile;
@@ -1356,7 +1356,7 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
         return;
       }
 
-      // Launch parallel lyrics & cover art lookups (BitChord style)
+      // Launch parallel lyrics & cover art lookups
       final lyricsFuture = _fetchLyricsForTrack(task.track);
       final coverArtFuture = _fetchCoverArtBytes(task.track.thumbnailUrl);
 
@@ -1633,7 +1633,7 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
       final lyricsLrc = await lyricsFuture;
       final coverBytes = await coverArtFuture;
 
-      // In-file metadata tagging (BitChord style)
+      // In-file metadata tagging
       // Embeds Title, Artist, Album, Synced Lyrics, and Artwork directly into the audio container
       await MediaTagger.tagFile(
         audioFile: downloadedFile,

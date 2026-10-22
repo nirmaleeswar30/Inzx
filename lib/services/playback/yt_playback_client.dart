@@ -2,8 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show compute, kDebugMode;
 import 'package:http/http.dart' as http;
 
-/// InnerTube client configuration
-/// Metrolist uses content-aware fallback strategy
+/// InnerTube client configuration with content-aware fallback strategy
 class InnerTubeClient {
   final String name;
   final String version;
@@ -285,7 +284,7 @@ class InnerTubeClient {
     supportsSignatureCipher: false,
   );
 
-  /// Default playback client order (Metrolist-style content-aware fallback)
+  /// Default playback client order (content-aware fallback)
   /// Starts with clients that DON'T need cipher/PoToken for fastest playback
   static List<InnerTubeClient> get playbackClients => defaultClients;
 
@@ -466,7 +465,7 @@ class InnerTubeApi {
         ...innerTubeClient.headers,
       };
 
-      // Add visitorData header for binding (Metrolist approach)
+      // Add visitorData header for binding
       if (visitorData != null && visitorData.isNotEmpty) {
         headers['X-Goog-Visitor-Id'] = visitorData;
       }
@@ -557,7 +556,7 @@ class InnerTubeApi {
     return 20073; // Fallback
   }
 
-  /// Validate stream URL with HEAD request (Metrolist approach)
+  /// Validate stream URL with HEAD request
   /// Includes visitorData header for consistency
   Future<bool> validateStreamUrl(String url, {String? visitorData}) async {
     try {

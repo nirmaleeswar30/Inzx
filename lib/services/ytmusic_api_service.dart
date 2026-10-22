@@ -44,7 +44,7 @@ class InnerTubeService {
   static const Map<String, dynamic> _clientContext = {
     'client': {
       'clientName': 'WEB_REMIX',
-      'clientVersion': '1.20231204.01.00',
+      'clientVersion': '1.20260114.03.00',
       'hl': 'en',
       'gl': 'US',
       'experimentIds': [],
@@ -69,6 +69,7 @@ class InnerTubeService {
   void setAuthCookies(Map<String, String> cookies) {
     _cookies = cookies;
     _sapisid = cookies['SAPISID'] ?? cookies['__Secure-3PAPISID'];
+    debugPrint('[YTM-Tracking] InnerTubeService.setAuthCookies: count=${cookies.length}, hasSAPISID=${_sapisid != null && _sapisid!.isNotEmpty}, isAuthenticated=$isAuthenticated');
   }
 
   /// Clear authentication
@@ -129,14 +130,21 @@ class InnerTubeService {
   /// auth cookies, because YouTube ties history to the session that made the
   /// original player request.
   Future<Map<String, dynamic>?> getAuthenticatedPlaybackTracking(
-    String videoId,
-  ) async {
+    String videoId, {
+    String? playlistId,
+  }) async {
     if (!isAuthenticated) return null;
 
-    final response = await _request('player', {
+    final body = <String, dynamic>{
       'videoId': videoId,
-      'playlistId': null,
-    }, authenticated: true);
+      'racyCheckOk': true,
+      'contentCheckOk': true,
+    };
+    if (playlistId != null && playlistId.isNotEmpty) {
+      body['playlistId'] = playlistId;
+    }
+
+    final response = await _request('player', body, authenticated: true);
 
     if (response == null) return null;
     return response['playbackTracking'] as Map<String, dynamic>?;
@@ -158,23 +166,35 @@ class InnerTubeService {
         authenticated: true,
         origin: origin,
         referer: '$origin/',
-      )..remove('Content-Type');
+      )
+        ..remove('Content-Type')
+        ..remove('X-Goog-Visitor-Id');
+      headers['X-Origin'] = origin;
+
+      final isWatchtime = uri.path.contains('watchtime');
+      final isPlayback = uri.path.contains('playback');
+      final cpn = uri.queryParameters['cpn'];
+      final cmt = uri.queryParameters['cmt'];
+      final state = uri.queryParameters['state'];
+      final docid = uri.queryParameters['docid'];
+
+      final st = uri.queryParameters['st'];
+      final et = uri.queryParameters['et'];
+      debugPrint('[YTM-Tracking] >> Sending ${isWatchtime ? 'WATCHTIME' : (isPlayback ? 'PLAYBACK' : 'STATS')} ping: docid=$docid, cpn=$cpn, state=$state, cmt=$cmt${isWatchtime ? ', st=$st, et=$et' : ''}');
+      debugPrint('[YTM-Tracking]    Has AuthHeader=${headers.containsKey('Authorization')}, CookieCount=${_cookies.length}, Origin=${headers['Origin']}');
 
       final response = await http
           .get(uri, headers: headers)
           .timeout(const Duration(seconds: 8));
 
       final ok = response.statusCode >= 200 && response.statusCode < 400;
-      if (kDebugMode) {
-        debugPrint(
-          'InnerTube playback stats (status: ${response.statusCode}, ok: $ok): $url',
-        );
+      debugPrint('[YTM-Tracking] << ${isWatchtime ? 'WATCHTIME' : (isPlayback ? 'PLAYBACK' : 'STATS')} response status: ${response.statusCode} (ok=$ok)');
+      if (response.body.isNotEmpty) {
+        debugPrint('[YTM-Tracking]    response body: ${response.body}');
       }
       return ok;
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('InnerTube playback stats error: $e');
-      }
+      debugPrint('[YTM-Tracking] << ERROR sending playback stats: $e');
       return false;
     }
   }
@@ -4796,7 +4816,7 @@ class InnerTubeService {
   ///
   /// Search and shelf subtitle runs can contain type labels, artist, album, and duration.
   /// This extracts (artist, artistId, duration, album, albumId) using browse endpoints
-  /// and pageType detection matching BitChord's creditsOf parser.
+  /// and pageType detection for the creditsOf parser.
   (String, String?, Duration?, String?, String?) _extractArtistInfoFromSubtitleRuns(List runs) {
     final chunks = <({String text, String? browseId, String pageType})>[];
     Duration? duration;
@@ -7319,7 +7339,7 @@ class InnerTubeService {
     return {
       'client': {
         'clientName': 'WEB_REMIX',
-        'clientVersion': '1.20231204.01.00',
+        'clientVersion': '1.20260114.03.00',
         'hl': languageCode,
         'gl': countryCode,
         'experimentIds': <dynamic>[],

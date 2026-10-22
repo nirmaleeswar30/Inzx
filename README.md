@@ -35,20 +35,15 @@ Inzx is an independent, open-source project. It is **not affiliated with, endors
 
 A quick look at what makes Inzx stand out:
 
-<table width="100%">
-<tr><td align="center">
 
-🎤 **Word-level karaoke lyrics** — synced to the syllable, from 15+ providers<br>
-🌐 **AI lyric translation** — translate & transliterate live (OpenRouter · DeepL · Gemini)<br>
-🔊 **Studio-quality audio** — optional JioSaavn source, up to 320 kbps<br>
-🎨 **Instant dynamic theming** — 0 ms album-art colors, 10+ accents, custom wheel<br>
-🖼️ **Multiple Now Playing styles** — Default, Cinematic, Ripple & OG + waveform / spectrum scrubbers<br>
-🎞️ **Animated album art (Canvas)** — with ambient glow reflection backgrounds<br>
-👥 **Jams** — real-time synchronized listening with friends<br>
-🚗 **Android Auto & widgets** — plus home-screen widgets and instant OTA updates
-
-</td></tr>
-</table>
+- 🎤 **Word-level karaoke lyrics** — synced to the syllable, from 15+ providers
+- 🌐 **AI lyric translation** — translate & transliterate live (OpenRouter · DeepL · Gemini)
+- 🔊 **Studio-quality audio** — optional JioSaavn source, up to 320 kbps
+- 🎨 **Instant dynamic theming** — 0 ms album-art colors, 10+ accents, custom wheel
+- 🖼️ **Multiple Now Playing styles** — Default, Cinematic, Ripple & OG + waveform / spectrum scrubbers
+- 🎞️ **Animated album art (Canvas)** — with ambient glow reflection backgrounds
+- 👥 **Jams** — real-time synchronized listening with friends
+- 🚗 **Android Auto & widgets** — plus home-screen widgets and instant OTA updates
 
 
 ## ❤️ Support Inzx
@@ -70,72 +65,78 @@ Inzx is free and open source. If it makes your day a little better, consider sup
 
 ## 🎯 Features
 
-<table width="100%">
-<tr><td align="center">
-
 ### 🎧 Playback & Audio
 
-**YouTube Music engine** via native InnerTube API<br>
-**JioSaavn HQ source** — up to 320 kbps<br>
-**Prefer Audio Versions** — auto-skip music videos<br>
-**Gapless playback & stream prefetching** for near-zero latency<br>
-**Crossfade** with adjustable duration<br>
-**Background playback** — notification, lock-screen & media session<br>
-**Smart audio routing** — shows the active output device<br>
-**Robust audio session** — focus, calls & Bluetooth handled
+- **YouTube Music engine** via native InnerTube API
+- **JioSaavn HQ source** — up to 320 kbps
+- **Prefer Audio Versions** — auto-skip music videos
+- **Gapless playback & stream prefetching** for near-zero latency
+- **Crossfade** with adjustable duration
+- **Background playback** — notification, lock-screen & media session
+- **Smart audio routing** — shows the active output device
+- **Robust audio session** — focus, calls & Bluetooth handled
+
+&nbsp;
 
 ### 🎤 Lyrics
 
-**Word-level synced (karaoke) lyrics** via BetterLyrics TTML<br>
-**15+ providers with smart fallback** — LRCLib, Genius, KuGou, Musixmatch, Megalobiz, YouTube captions, embedded & local…<br>
-**AI translation & transliteration** — OpenRouter, DeepL, Gemini (BYO key)<br>
-**Line & word offset tuning**<br>
-**Instrumental gaps & background vocals**
+- **Word-level synced (karaoke) lyrics** via BetterLyrics TTML
+- **15+ providers with smart fallback** — LRCLib, Genius, KuGou, Musixmatch, Megalobiz, YouTube captions, embedded & local…
+- **AI translation & transliteration** — OpenRouter, DeepL, Gemini (BYO key)
+- **Line & word offset tuning**
+- **Instrumental gaps & background vocals**
+
+&nbsp;
 
 ### 🎨 Interface & Now Playing
 
-**Instant dynamic colors** — 0 ms isolate palette + caching<br>
-**Material 3** with 10+ accents & custom color wheel<br>
-**Now Playing styles** — Default, Cinematic, Ripple, OG<br>
-**Progress bar styles** — linear, waveform, spectrum<br>
-**Animated album art (Canvas)** with ambient reflections<br>
-**Liquid-glass nav, rotating mini-player art & lyric preview**<br>
-**Skeletonizer** shimmer loading everywhere<br>
-**Localized UI** in 20+ languages with catalog-region control
+- **Instant dynamic colors** — 0 ms isolate palette + caching
+- **Material 3** with 10+ accents & custom color wheel
+- **Now Playing styles** — Default, Cinematic, Ripple, OG
+- **Progress bar styles** — linear, waveform, spectrum
+- **Animated album art (Canvas)** with ambient reflections
+- **Liquid-glass nav, rotating mini-player art & lyric preview**
+- **Skeletonizer** shimmer loading everywhere
+- **Localized UI** in 20+ languages with catalog-region control
+
+&nbsp;
 
 ### 👥 Jams — Collaborative Listening
 
-**Real-time sync** via Supabase WebSockets<br>
-**Host & participant roles** with granular permissions<br>
-**Shared queue** — collaborative edit & drag-to-reorder<br>
-**Live playback sync** with drift correction<br>
-**"Last controller wins"** conflict resolution
+- **Real-time sync** via Supabase WebSockets
+- **Host & participant roles** with granular permissions
+- **Shared queue** — collaborative edit & drag-to-reorder
+- **Live playback sync** with drift correction
+- **"Last controller wins"** conflict resolution
+
+&nbsp;
 
 ### 📚 Library, Search & Downloads
 
-**YouTube Music sync** — playlists, likes, albums, artists<br>
-**Local files** organized by folders<br>
-**Custom playlists**<br>
-**Download manager** with background progress<br>
-**Podcasts** — browse & play episodes<br>
-**Dynamic search** — suggestions, history & filters
+- **YouTube Music sync** — playlists, likes, albums, artists
+- **Local files** organized by folders
+- **Custom playlists**
+- **Download manager** with background progress
+- **Podcasts** — browse & play episodes
+- **Dynamic search** — suggestions, history & filters
+
+&nbsp;
 
 ### 📱 Platform & System
 
-**Android Auto** dashboard integration<br>
-**Home-screen widgets** — compact (4×1) & expanded (4×2)<br>
-**Instant OTA updates** via Shorebird code push<br>
-**Backup & restore** app data<br>
-**Deep links & sharing** for tracks, albums & playlists
+- **Android Auto** dashboard integration
+- **Home-screen widgets** — compact (4×1) & expanded (4×2)
+- **Instant OTA updates** via Shorebird code push
+- **Backup & restore** app data
+- **Deep links & sharing** for tracks, albums & playlists
+
+&nbsp;
 
 ### 🔒 Privacy
 
-**Offline-first** — usable without a connection<br>
-**Encrypted credentials** via secure storage<br>
-**No third-party tracking** — no analytics telemetry
-
-</td></tr>
-</table>
+- **Offline-first** — usable without a connection
+- **Encrypted credentials** via secure storage
+- **No third-party tracking** — no analytics telemetry
 
 ---
 
@@ -303,8 +304,8 @@ For larger features, please open an issue first so we can align on the approach.
 - [OuterTune](https://github.com/OuterTune/OuterTune) & [InnerTune](https://github.com/z-huang/InnerTune) — design and architecture inspiration
 - [BetterLyrics](https://github.com/boidushya/better-lyrics) — word-level synced lyrics
 - [LRCLib](https://lrclib.net) — open synced-lyrics database
-- [Metrolist](https://lrclib.net) — Kotlin based ytm client
-- [Bitchord](https://lrclib.net) — another kotlin ytm client built on top of metrolist
+- [Metrolist](https://github.com/metrolistgroup/metrolist) — Kotlin based ytm client
+- [Bitchord](https://github.com/kushagrasinghx/BitChord) — another kotlin ytm client built on top of metrolist
 - [just_audio](https://pub.dev/packages/just_audio) — audio playback engine
 - [Supabase](https://supabase.com) — real-time infrastructure
 - [Shorebird](https://shorebird.dev) — Flutter over-the-air updates

@@ -15,6 +15,7 @@ import 'ytmusic_auth_service.dart';
 import '../data/entities/track_entity.dart';
 import 'widget_sync_service.dart';
 import 'local_artwork_service.dart';
+import 'discord/discord_rpc_service.dart';
 /// Audio handler for background playback and media controls
 ///
 /// This is the Android MediaLibraryService equivalent.
@@ -29,9 +30,11 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
   final player.AudioPlayerService _playerService = player.AudioPlayerService();
   final _ytMusicService = InnerTubeService();
 
-  Future<void> _initAuth() async {
+  Future<void> initAuth() async {
     final authService = YTMusicAuthService(_ytMusicService);
-    await authService.restoreCachedAuth();
+    final restored = await authService.restoreCachedAuth();
+    debugPrint('[YTM-Tracking] InzxAudioHandler: Auth cache restored=$restored, isAuthenticated=${_ytMusicService.isAuthenticated}');
+    _playerService.setInnerTubeService(_ytMusicService);
   }
   StreamSubscription<player.PlaybackState>? _stateSubscription;
   StreamSubscription<Duration>? _positionSubscription;
@@ -40,6 +43,7 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
   String? _lastTrackId;
   String? _lastTrackArtist;
   String? _lastTrackTitle;
+  Duration? _lastTrackDuration;
   int? _lastQueueLength;
   DateTime? _lastPositionSyncAt;
 
@@ -57,24 +61,44 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   void _init() {
-    _initAuth();
+    _playerService.setInnerTubeService(_ytMusicService);
+    unawaited(initAuth());
     _loadLikedTrackIds();
     // Listen to player service state for track/play state changes
     // Position is handled separately via positionStream
     _stateSubscription = _playerService.stateStream.listen((state) {
-      // Update playback state with current position values
-      _updatePlaybackState(state);
-
-      // Update media item when track changes or metadata (artist/title) is enriched
       final cur = state.currentTrack;
-      if (cur?.id != _lastTrackId ||
+
+      // Reset tracked position if track changed to avoid carrying over old progress
+      if (cur?.id != _lastTrackId) {
+        _currentPosition = state.position > Duration.zero
+            ? state.position
+            : Duration.zero;
+      }
+
+      // Update media item when track changes, metadata is enriched, or duration becomes available
+      final effectiveDuration =
+          (cur?.duration != null && cur!.duration > Duration.zero)
+              ? cur.duration
+              : (state.duration != null && state.duration! > Duration.zero
+                  ? state.duration
+                  : null);
+
+      final trackChanged = cur?.id != _lastTrackId ||
           cur?.artist != _lastTrackArtist ||
-          cur?.title != _lastTrackTitle) {
+          cur?.title != _lastTrackTitle ||
+          effectiveDuration != _lastTrackDuration;
+
+      if (trackChanged) {
         _lastTrackId = cur?.id;
         _lastTrackArtist = cur?.artist;
         _lastTrackTitle = cur?.title;
-        _updateMediaItem(cur);
+        _lastTrackDuration = effectiveDuration;
+        _updateMediaItem(cur, duration: effectiveDuration);
       }
+
+      // Update playback state with current position values
+      _updatePlaybackState(state);
 
       // Only update queue when it changes
       if (state.queue.length != _lastQueueLength) {
@@ -88,20 +112,41 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
           statusLabel: _playerService.isJamsModeEnabled ? 'INZX JAM' : null,
         ),
       );
+
+      DiscordRpcService.instance.updatePlayback(
+        track: state.currentTrack,
+        isPlaying: state.isPlaying,
+        position: _currentPosition,
+        duration: effectiveDuration ?? state.duration,
+      );
     });
 
     // Separate position stream for system UI updates (more frequent)
     _positionSubscription = _playerService.positionStream.listen((position) {
+      final prevPosition = _currentPosition;
       _currentPosition = position;
       final now = DateTime.now();
       final shouldSyncPosition =
           _lastPositionSyncAt == null ||
           now.difference(_lastPositionSyncAt!) >= _positionSyncInterval;
 
-      if (shouldSyncPosition) {
+      // If a seek or jump happened (> 2 sec discrepancy), sync immediately
+      final isSeekOrJump =
+          (position - prevPosition).abs() > const Duration(seconds: 2);
+
+      if (shouldSyncPosition || isSeekOrJump) {
         _lastPositionSyncAt = now;
 
         final state = _playerService.state;
+        if (state.isPlaying) {
+          playbackState.add(
+            playbackState.value.copyWith(
+              updatePosition: position,
+              bufferedPosition: _bufferedPosition,
+            ),
+          );
+        }
+
         unawaited(
           WidgetSyncService.syncProgress(
             track: state.currentTrack,
@@ -111,6 +156,15 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
             duration: state.duration,
           ),
         );
+
+        if (state.isPlaying) {
+          DiscordRpcService.instance.updatePlayback(
+            track: state.currentTrack,
+            isPlaying: true,
+            position: position,
+            duration: state.duration,
+          );
+        }
       }
     });
 
@@ -150,9 +204,12 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
         androidCompactActionIndices: const [0, 1, 2],
         processingState: _mapProcessingState(state),
         playing: state.isPlaying,
-        updatePosition:
-            _currentPosition, // Use tracked position, not state.position
-        bufferedPosition: _bufferedPosition,
+        updatePosition: _currentPosition > Duration.zero
+            ? _currentPosition
+            : state.position,
+        bufferedPosition: _bufferedPosition > Duration.zero
+            ? _bufferedPosition
+            : state.bufferedPosition,
         speed: state.speed,
         queueIndex: state.currentIndex >= 0 ? state.currentIndex : null,
       ),
@@ -167,7 +224,7 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
     return AudioProcessingState.ready;
   }
 
-  void _updateMediaItem(Track? track) {
+  void _updateMediaItem(Track? track, {Duration? duration}) {
     if (track == null) {
       mediaItem.add(null);
       return;
@@ -183,13 +240,22 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
       }
     }
 
+    final effectiveDuration = (duration != null && duration > Duration.zero)
+        ? duration
+        : (track.duration > Duration.zero
+            ? track.duration
+            : (_playerService.state.duration != null &&
+                    _playerService.state.duration! > Duration.zero
+                ? _playerService.state.duration
+                : null));
+
     mediaItem.add(
       MediaItem(
         id: track.id,
         title: track.title,
         artist: track.artist,
         album: track.album ?? '',
-        duration: track.duration,
+        duration: effectiveDuration,
         artUri: artUri,
       ),
     );
@@ -205,7 +271,7 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
               title: track.title,
               artist: track.artist,
               album: track.album ?? '',
-              duration: track.duration,
+              duration: effectiveDuration,
               artUri: Uri.file(file.path),
             ),
           );
@@ -228,12 +294,14 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
                   artUri = Uri.file(cachedFile.path);
                 }
               }
+              final itemDuration =
+                  track.duration > Duration.zero ? track.duration : null;
               return MediaItem(
                 id: track.id,
                 title: track.title,
                 artist: track.artist,
                 album: track.album ?? '',
-                duration: track.duration,
+                duration: itemDuration,
                 artUri: artUri,
               );
             },
@@ -255,7 +323,15 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   @override
-  Future<void> seek(Duration position) => _playerService.seek(position);
+  Future<void> seek(Duration position) async {
+    _currentPosition = position;
+    playbackState.add(
+      playbackState.value.copyWith(
+        updatePosition: position,
+      ),
+    );
+    await _playerService.seek(position);
+  }
 
   @override
   Future<void> skipToNext() => _playerService.skipToNext();
@@ -921,8 +997,15 @@ Future<InzxAudioHandler> initAudioService() async {
     debugPrint('AudioSession configuration failed: $e');
   }
 
+  final handler = InzxAudioHandler();
+  try {
+    await handler.initAuth();
+  } catch (e) {
+    debugPrint('InzxAudioHandler initAuth error: $e');
+  }
+
   return await AudioService.init(
-    builder: () => InzxAudioHandler(),
+    builder: () => handler,
     config: AudioServiceConfig(
       androidNotificationChannelId: 'com.nirmal.inzx',
       androidNotificationChannelName: 'Inzx Music',

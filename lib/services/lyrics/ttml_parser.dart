@@ -3,7 +3,6 @@ import 'package:xml/xml.dart';
 import 'lyrics_models.dart';
 
 /// TTML (Timed Text Markup Language) parser for BetterLyrics
-/// Dart port of Metrolist's TTMLParser.kt
 class TTMLParser {
   /// Parse TTML XML string into LyricLines with word-level timing.
   /// Runs in a background isolate via compute().

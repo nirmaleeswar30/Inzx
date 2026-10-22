@@ -13,11 +13,11 @@ import '../../services/lyrics/instrumental_gaps.dart';
 import 'karaoke_word.dart';
 import 'lyrics_menu_sheet.dart';
 
-/// Preview duration before auto-scroll resumes after manual scrolling (matching Metrolist)
+/// Preview duration before auto-scroll resumes after manual scrolling
 const _lyricsPreviewTimeMs = 8000;
-const _lyricsAnchorRatio = 0.35; // 35% from the top of the viewport (Metrolist standard)
+const _lyricsAnchorRatio = 0.35; // 35% from the top of the viewport
 
-/// Lyrics view widget for Now Playing screen with Metrolist-style animations
+/// Lyrics view widget for Now Playing screen with synced animations
 class LyricsView extends ConsumerStatefulWidget {
   final Duration currentPosition;
   final bool isActive;
@@ -44,7 +44,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
   int _lastAudioMs = 0;
   int _lastSyncEpochMs = 0;
 
-  // Auto-scroll management (Metrolist behavior)
+  // Auto-scroll management
   bool _isAutoScrollEnabled = true;
   Timer? _autoScrollResumeTimer;
   bool _isUserScrolling = false;
@@ -566,7 +566,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
                   );
                 }
 
-                // Standard line-level animation (Metrolist distance-based scaling)
+                // Standard line-level animation (distance-based scaling)
                 return RepaintBoundary(
                   child: _buildLineSyncRow(
                     line: line,
@@ -583,7 +583,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
           ),
         ),
 
-        // Metrolist-style floating auto-scroll sync button
+        // Floating auto-scroll sync button
         Positioned(
           bottom: 16,
           left: 0,
@@ -787,7 +787,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     );
   }
 
-  /// Line-level synced row with Metrolist-style distance attenuation and smooth fade transitions
+  /// Line-level synced row with distance attenuation and smooth fade transitions
   Widget _buildLineSyncRow({
     required LyricLine line,
     required int index,
@@ -805,7 +805,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
         ? FontWeight.bold
         : (dist == 1 ? FontWeight.w500 : FontWeight.w400);
 
-    // Metrolist-style distance opacity curve
+    // Distance-based opacity curve
     double opacity;
     if (isCurrentLine) {
       opacity = 1.0;
@@ -934,7 +934,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     );
   }
 
-  /// Word-level synced line with Metrolist-style bouncy karaoke animation, isolated word repaints, and smooth fade transitions
+  /// Word-level synced line with bouncy karaoke animation, isolated word repaints, and smooth fade transitions
   Widget _buildWordSyncLine({
     required LyricLine line,
     required int index,

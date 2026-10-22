@@ -378,7 +378,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
       }
     }
 
-    // 2. Parallel race all online providers (BitChord architecture)
+    // 2. Parallel race all online providers
     final onlineProviders = providerNames.where((p) => p != ProviderName.embedded).toList();
 
     bool foundWordSync = false;

@@ -18,6 +18,7 @@ import 'services/jams/jams_background_service_native.dart';
 import 'services/notification_service.dart';
 import 'services/shorebird_update_service.dart';
 import 'services/supabase_config.dart';
+import 'services/discord/discord_rpc_service.dart';
 import 'providers/providers.dart';
 import 'providers/repository_providers.dart';
 import 'screens/music_app.dart';
@@ -107,6 +108,15 @@ void main() async {
   } catch (e) {
     debugPrint('Jams background service initialization failed: $e');
   }
+
+  // Initialize Discord Rich Presence service
+  try {
+    await DiscordRpcService.instance.init();
+    debugPrint('✅ Discord RPC service initialized');
+  } catch (e) {
+    debugPrint('⚠️ Discord RPC service initialization failed: $e');
+  }
+
   // Set preferred orientations & enable edge-to-edge
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -116,7 +126,29 @@ void main() async {
   ]);
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
+  // Consume OAuth callback deep links (e.g. inzxdiscord://oauth2/callback)
+  // before Flutter's default router tries to navigate to them and throws
+  // "Could not find a generator for route /callback". These are handled by
+  // app_links inside the Discord OAuth flow, not by named routes.
+  WidgetsBinding.instance.addObserver(_OAuthDeepLinkGuard());
+
   runApp(RestartableApp(audioHandler: audioHandler));
+}
+
+/// Swallows platform route pushes for our OAuth redirect so they don't reach
+/// the Navigator (the app uses imperative navigation + app_links, not named
+/// routes). Returning true marks the route information as handled.
+class _OAuthDeepLinkGuard with WidgetsBindingObserver {
+  @override
+  Future<bool> didPushRouteInformation(RouteInformation routeInformation) async {
+    final uri = routeInformation.uri;
+    if (uri.scheme == 'inzxdiscord' ||
+        uri.path == '/callback' ||
+        uri.path.endsWith('/oauth2/callback')) {
+      return true;
+    }
+    return false;
+  }
 }
 
 class RestartableApp extends StatefulWidget {

@@ -1,0 +1,16 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "inzx-website",
+      "runtimeExecutable": "dart",
+      "runtimeArgs": [
+        "run",
+        "C:/Users/nirma/AppData/Local/Temp/claude/C--Users-nirma-Development-Inzx/bf1b67d7-3392-4d4b-a186-baf68a7c7a44/scratchpad/serve.dart",
+        "C:/Users/nirma/Development/Inzx/website",
+        "4321"
+      ],
+      "port": 4321
+    }
+  ]
+}

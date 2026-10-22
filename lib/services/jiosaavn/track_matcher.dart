@@ -112,7 +112,7 @@ class TitleParts {
       'TitleParts(words: $words, core: "$core", versions: $versions, context: $context)';
 }
 
-/// Port of BitChord's strict 6-layer [TrackMatcher] engine.
+/// Strict 6-layer [TrackMatcher] engine.
 ///
 /// Decides whether one catalogue's track is genuinely the same recording
 /// as another's, preventing wrong music, remixes, karaoke, loops, and covers

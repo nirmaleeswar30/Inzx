@@ -829,7 +829,7 @@ class _LiquidGlassNavItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Liquid glass content contrast (BitChord's glassContentColor principle):
+    // Liquid glass content contrast:
     // Razor-sharp contrast against arbitrary dynamic backdrops.
     final unselectedColor = isDark
         ? Colors.white.withValues(alpha: 0.60)

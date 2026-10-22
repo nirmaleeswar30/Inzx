@@ -3,7 +3,7 @@ import 'lyrics_models.dart';
 /// Shorter instrumental breaks aren't worth interrupting the line for.
 const int minGapMs = 4000;
 
-/// Playful phrases displayed during instrumental stretches (matching BitChord)
+/// Playful phrases displayed during instrumental stretches
 class InstrumentalGapTexts {
   static const List<String> introPhrases = [
     'Let it breathe',
@@ -42,7 +42,7 @@ class InstrumentalGapTexts {
   }
 }
 
-/// Playful phrases displayed while lyrics are being searched and loaded (matching BitChord)
+/// Playful phrases displayed while lyrics are being searched and loaded
 class LyricsLoadingTexts {
   static const List<String> phrases = [
     'Finding the words',

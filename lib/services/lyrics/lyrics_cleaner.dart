@@ -1,5 +1,4 @@
 /// Utility for cleaning and normalizing song titles and artist names for lyrics search.
-/// Matches the normalization strategies used in Metrolist & Paxsenix.
 class LyricsCleaner {
   /// Clean a song title by stripping metadata, movie references, video tags, etc.
   static String cleanTitle(String title) {

@@ -27,6 +27,9 @@ import '../services/github_release_update_service.dart';
 import '../services/shorebird_update_service.dart';
 import 'widgets/whats_new_dialog.dart';
 import 'widgets/color_picker_dialog.dart';
+import '../services/discord/discord_rpc_service.dart';
+import 'discord_rich_presence_screen.dart';
+import 'widgets/discord_logo.dart';
 
 /// Provider for sync service
 final ytMusicSyncServiceProvider = Provider<YTMusicSyncService>((ref) {
@@ -260,6 +263,22 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
         subtitle: l10n.smartAudioRoutingSubtitle,
         icon: Iconsax.volume_high,
         screen: const AudioSettingsScreen(),
+      ),
+      // Discord Rich Presence
+      _SearchableItem(
+        tags: [
+          'discord',
+          'rich presence',
+          'rpc',
+          'status',
+          'presence',
+          'social',
+          'listening activity',
+        ],
+        title: 'Discord Rich Presence',
+        subtitle: 'Show your listening activity on Discord',
+        icon: Iconsax.game,
+        screen: const DiscordRichPresenceScreen(),
       ),
     ];
   }
@@ -1174,6 +1193,51 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
             context,
             MaterialPageRoute(builder: (_) => const BackupRestoreScreen()),
           ),
+        ),
+        Divider(
+          height: 1,
+          color: _isDark ? InzxColors.darkDivider : InzxColors.divider,
+        ),
+        ValueListenableBuilder<DiscordRpcState>(
+          valueListenable: DiscordRpcService.instance.stateNotifier,
+          builder: (context, rpcState, _) {
+            final connected = DiscordRpcService.instance.isAuthorized;
+            return ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF5865F2).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: DiscordLogo(size: 20, color: Color(0xFF5865F2)),
+                ),
+              ),
+              title: Text(
+                'Discord Rich Presence',
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: _textPrimary,
+                  fontSize: 14,
+                ),
+              ),
+              subtitle: Text(
+                connected
+                    ? 'Connected as ${rpcState.displayName}'
+                    : 'Show your listening activity on Discord',
+                style: TextStyle(fontSize: 12, color: _textSecondary),
+              ),
+              trailing: Icon(Iconsax.arrow_right_3, size: 18, color: _textTertiary),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const DiscordRichPresenceScreen(),
+                ),
+              ),
+            );
+          },
         ),
       ],
     );

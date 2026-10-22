@@ -300,7 +300,7 @@ class JioSaavnService {
   }
 
   /// Get the best stream for [track] from JioSaavn, using cache when available.
-  /// Follows BitChord's strict TrackMatcher query & validation pipeline.
+  /// Follows the strict TrackMatcher query & validation pipeline.
   Future<JioSaavnStream?> getBestStreamForTrack(Track track) async {
     // 1. Check in-memory stream cache
     if (_streamCache.containsKey(track.id)) {
@@ -390,7 +390,7 @@ class JioSaavnService {
           continue;
         }
 
-        // BitChord MIN_USABLE_KBPS check:
+        // MIN_USABLE_KBPS check:
         // A rendition <= 96kbps is worse than YouTube's ~160kbps Opus stream.
         if (stream.kbps != null && stream.kbps! <= minUsableKbps) {
           if (kDebugMode) {
