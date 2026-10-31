@@ -31,16 +31,40 @@
   <main class="docs-main">
     <article class="prose">
 <span class="crumb">Around the app</span>
-<h1>Integrations</h1>
+<h1>Integrations &amp; Ecosystem</h1>
 
-<h2 id="discord">Discord Rich Presence</h2>
-<p>Settings → Discord shows what you're listening to on your Discord profile. Sign in with Discord there to turn it on.</p>
+<h2 id="discord">Discord Rich Presence (RPC)</h2>
+<p>Broadcast your current listening status directly to Discord:</p>
+<ul>
+  <li><b>Live Profile Status:</b> Shows "Listening to Inzx" on your Discord profile card.</li>
+  <li><b>Rich Metadata:</b> Broadcasts current song title, performing artist, album name, and cover artwork thumbnail.</li>
+  <li><b>Live Timestamps:</b> Shows elapsed track duration and remaining time in real time.</li>
+  <li><b>Setup:</b> Head to <b>Settings → Discord</b> and log in with your Discord account to authorize Rich Presence updates.</li>
+</ul>
 
-<h2 id="backup">Backup &amp; restore</h2>
-<p>Settings → Backup &amp; restore exports your settings, local playlists and statistics to a file you can import on another phone.</p>
+<h2 id="jams">Real-Time Jams</h2>
+<p>Listen together with friends in perfect synchronization:</p>
+<ul>
+  <li><b>Sub-Second Sync:</b> Powered by Supabase Realtime WebSockets with continuous clock drift compensation.</li>
+  <li><b>Collaborative Queues:</b> Anyone in the Jam can propose tracks, reorder upcoming songs, or vote on what plays next.</li>
+  <li><b>Host Permissions:</b> Host can assign DJ privileges or enforce host-only playback controls to avoid tug-of-war.</li>
+  <li><b>Instant Join:</b> Friends can join via a 6-digit room code or a direct deep link shared over chat.</li>
+</ul>
 
 <h2 id="auto">Android Auto</h2>
-<p>Inzx works with Android Auto: browse your library and control playback from the car screen.</p>
+<p>Inzx features built-in automotive integration through Android Auto:</p>
+<ul>
+  <li><b>Distraction-Free UI:</b> High-contrast interface with large, generous touch targets for safe interaction while driving.</li>
+  <li><b>Steering-Wheel Media Keys:</b> Full integration with steering-wheel seek, skip, and volume buttons via standard Android MediaSession.</li>
+  <li><b>Car Dashboard Browsing:</b> Browse your Liked Songs, playlists, and cached offline music directly on the vehicle's infotainment screen.</li>
+</ul>
+
+<h2 id="backup">Backup &amp; Restore</h2>
+<p>Export your app configuration and data to a portable file:</p>
+<ul>
+  <li><b>Export Data:</b> <b>Settings → Backup &amp; restore</b> bundles your settings, local custom playlists, search history, and listening statistics into an encrypted JSON backup.</li>
+  <li><b>Restore Anywhere:</b> Easily import your backup when setting up a new phone or migrating builds with zero data loss.</li>
+</ul>
 
     </article>
     <nav class="pager" id="pager" aria-label="Previous and next page"></nav>

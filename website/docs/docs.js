@@ -8,18 +8,18 @@
       { slug: 'sign-in', title: 'Signing in', keys: 'google account login youtube music sign in one login profile history guest' },
     ] },
     { title: 'Listening', pages: [
-      { slug: 'player', title: 'Now playing', keys: 'player cinematic ripple og default lyrics up next queue related shuffle repeat like device output' },
-      { slug: 'lyrics', title: 'Lyrics', keys: 'synced karaoke word translation ai offset provider lrclib musixmatch' },
+      { slug: 'player', title: 'Now playing', keys: 'player cinematic ripple og default lyrics up next queue related shuffle repeat like device output spectrum waveform liquid glass' },
+      { slug: 'lyrics', title: 'Lyrics & AI translation', keys: 'synced karaoke word translation ai offset provider lrclib musixmatch ttml deepl gemini openrouter transliteration romanization' },
       { slug: 'audio', title: 'Audio & quality', keys: 'quality 320kbps jiosaavn high quality sources crossfade cache streaming routing bluetooth' },
       { slug: 'downloads', title: 'Downloads & offline', keys: 'offline download local files folders storage' },
     ] },
     { title: 'Together', pages: [
-      { slug: 'jams', title: 'Jams', keys: 'listen together friends sync code link host controller permission' },
+      { slug: 'jams', title: 'Jams', keys: 'listen together friends sync code link host controller permission websocket' },
       { slug: 'sharing', title: 'Sharing links', keys: 'share link preview whatsapp discord open in app short url' },
     ] },
     { title: 'Around the app', pages: [
-      { slug: 'widgets', title: 'Home screen widgets', keys: 'widget pill square wide launcher' },
-      { slug: 'integrations', title: 'Integrations', keys: 'discord rich presence backup restore android auto' },
+      { slug: 'widgets', title: 'Home screen widgets', keys: 'widget pill square wide launcher 2x2 4x4 4x1' },
+      { slug: 'integrations', title: 'Integrations', keys: 'discord rich presence rpc backup restore android auto' },
     ] },
     { title: 'Help', pages: [
       { slug: 'faq', title: 'Troubleshooting & FAQ', keys: 'help problem error wrong song not playing history login crash bug report' },

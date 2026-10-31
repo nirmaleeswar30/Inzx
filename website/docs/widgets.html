@@ -32,15 +32,35 @@
     <article class="prose">
 <span class="crumb">Around the app</span>
 <h1>Home screen widgets</h1>
-<p class="lead">Inzx has three widgets. Long-press your home screen, then Widgets → Inzx.</p>
+<p class="lead">Inzx includes three high-fidelity home screen widgets designed to blend seamlessly into your Android launcher with dynamic colors, crisp album art, and instant playback controls.</p>
 
-<h2 id="kinds">The widgets</h2>
+<h2 id="adding">Adding a widget</h2>
+<ol>
+  <li>Long-press any empty space on your Android home screen.</li>
+  <li>Select <b>Widgets</b> from the menu.</li>
+  <li>Scroll down to <b>Inzx</b> and choose from the three available widget layouts.</li>
+  <li>Drag the widget to your desired position on your home screen.</li>
+</ol>
+
+<h2 id="kinds">Available widget layouts</h2>
 <ul>
-  <li><b>Pill:</b> a slim bar with artwork, title and play/pause.</li>
-  <li><b>Square:</b> the artwork with controls laid over it.</li>
-  <li><b>Wide:</b> artwork, title and artist, with shuffle, previous, play/pause, next and like.</li>
+  <li>
+    <b>2×2 Square Widget:</b> Compact and art-centric. Displays high-resolution album artwork with frosted translucent playback controls (previous, play/pause, next) and like toggle laid over the cover. Ideal for minimalist grid configurations.
+  </li>
+  <li>
+    <b>4×1 Pill Widget:</b> A slim, low-profile horizontal pill. Shows circular or rounded song thumbnail, track title, artist name, and a responsive play/pause button. Fits cleanly above or below your app dock without consuming vertical space.
+  </li>
+  <li>
+    <b>4×4 (or 4×2) Wide Console Widget:</b> The complete music dashboard for your home screen. Features large full-resolution artwork, detailed track metadata, a seek progress bar with live elapsed time, and a full row of controls: shuffle, previous track, play/pause, next track, and like toggle.
+  </li>
 </ul>
-<p>Each one carries the Inzx logo in its corner.</p>
+
+<h2 id="features">Features &amp; optimization</h2>
+<ul>
+  <li><b>Material You Dynamic Colors:</b> On Android 12 and newer, widget backgrounds and accent buttons automatically extract matching palettes from your active wallpaper and current album art.</li>
+  <li><b>Zero Battery Drain:</b> State updates are pushed through Android's native <code>AppWidgetProvider</code> broadcasts only when track state transitions, avoiding battery-draining polling loops.</li>
+  <li><b>Quick Open:</b> Tapping the album artwork or song title anywhere on the widget instantly opens the Inzx Now Playing screen.</li>
+</ul>
 
     </article>
     <nav class="pager" id="pager" aria-label="Previous and next page"></nav>

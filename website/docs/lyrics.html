@@ -31,24 +31,37 @@
   <main class="docs-main">
     <article class="prose">
 <span class="crumb">Listening</span>
-<h1>Lyrics</h1>
-<p class="lead">Inzx searches several lyric providers and picks the best synced version it can find.</p>
+<h1>Lyrics &amp; AI Translation</h1>
+<p class="lead">Inzx includes a state-of-the-art lyrics engine powered by the BetterLyrics TTML karaoke system, querying 15+ providers with automatic fallback, real-time AI translation, and transliteration.</p>
 
-<h2 id="types">Kinds of lyrics</h2>
+<h2 id="types">Syllable &amp; Word-Level Sync</h2>
 <ul>
-  <li><b>Word-synced:</b> each word lights up as it's sung, karaoke style.</li>
-  <li><b>Line-synced:</b> the current line is highlighted and the sheet scrolls along.</li>
-  <li><b>Plain:</b> unsynced text, when nothing better exists.</li>
+  <li><b>Word-by-word karaoke (TTML):</b> Every individual word and syllable smoothly lights up in real time with high-precision timing, powered by the BetterLyrics TTML engine.</li>
+  <li><b>Line-synced:</b> The active lyric line glows and centers itself as playback progresses, complete with smooth elastic scrolling.</li>
+  <li><b>Background vocals &amp; ad-libs:</b> Secondary vocal harmonies, ad-libs, and backup singers are formatted on separate subdued lines to preserve primary readability.</li>
+  <li><b>Instrumental breaks:</b> Prolonged guitar solos and instrumental gaps display animated dot pulses rather than static dead air.</li>
 </ul>
 
-<h2 id="following">Following along</h2>
-<p>The sheet glides to each new line just before it's sung. Scroll by hand to read ahead; it picks up again after a few seconds, or tap <b>Auto-scroll</b>. Tap any line to jump there.</p>
+<h2 id="ai-translation">AI Translation &amp; Romanization</h2>
+<p>Understand music in any foreign language with built-in AI translation:</p>
+<ul>
+  <li><b>Supported Providers:</b> Connect your own API key for <b>Google Gemini</b>, <b>DeepL</b>, or <b>OpenRouter</b>.</li>
+  <li><b>Zero Telemetry:</b> Your API keys are encrypted locally using Android Keystore / Flutter Secure Storage and requests go straight from your device to the chosen AI provider.</li>
+  <li><b>Transliteration:</b> Automatically converts non-Latin scripts (Japanese Kanji/Hiragana/Katakana, Korean Hangul, Cyrillic, Hindi Devanagari, Arabic, and more) into Romanized phonetic text so you can sing along.</li>
+  <li><b>Bilingual Display:</b> Displays the AI translation or transliteration directly beneath each original lyric line.</li>
+</ul>
 
-<h2 id="translation">AI translation</h2>
-<p>Turn on AI lyric translation from the lyrics menu (⋯) to show a translation under each line.</p>
+<h2 id="providers">Lyric Providers &amp; Fallback</h2>
+<p>Inzx queries multiple community and official lyrics databases concurrently:</p>
+<p><b>LRCLib</b>, <b>Musixmatch</b>, <b>Genius</b>, <b>KuGou</b>, <b>Megalobiz</b>, <b>YouTube Captions</b>, and <b>Embedded ID3 Tags</b>.</p>
+<p>If the default matched lyrics are incorrect or poorly timed, tap the lyrics menu (⋯) to manually select any alternative provider from the results list.</p>
 
-<h2 id="providers">Wrong or out-of-sync lyrics</h2>
-<p>From the lyrics menu you can pick a different provider, or nudge the timing offset if lines run early or late.</p>
+<h2 id="timing">Offset Calibration &amp; Navigation</h2>
+<ul>
+  <li><b>Timing Offset:</b> If a lyrics track runs slightly early or late, use the +/- millisecond offset slider in the lyrics menu to calibrate sync.</li>
+  <li><b>Tap to Seek:</b> Tap any lyric line to jump playback directly to that exact timestamp in the song.</li>
+  <li><b>Auto-Scroll Resume:</b> You can freely scroll the sheet up or down to read upcoming verses; after 4 seconds of inactivity or tapping the <b>Auto-Scroll</b> button, the sheet smoothly snaps back to the singing line.</li>
+</ul>
 
     </article>
     <nav class="pager" id="pager" aria-label="Previous and next page"></nav>

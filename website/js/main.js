@@ -491,46 +491,147 @@
     });
   }
 
-  /* ───────── gallery rail ───────── */
-  var rail = $('#rail');
-  if (rail) {
-    var prev = $('#galPrev');
-    var next = $('#galNext');
+  /* ───────── showcase sticky scroll controller ───────── */
+  var showcasePin = $('#showcase') || $('.showcase-pin-wrap');
+  var showcaseTrack = $('#showcaseTrack');
+  var showcaseSlides = $$('.showcase-slide');
+  var showcaseCur = $('#showcaseCur');
+  var showcaseTag = $('#showcaseTag');
+  var showcaseDots = $$('.showcase-dot');
 
-    function stepSize() {
-      var shot = $('.shot', rail);
-      if (!shot) return 300;
-      var styles = getComputedStyle(rail);
-      return shot.getBoundingClientRect().width + (parseFloat(styles.columnGap || styles.gap) || 24);
+  if (showcasePin && showcaseTrack && showcaseSlides.length) {
+    var count = showcaseSlides.length;
+    var currentIndex = -1;
+    var targetProgress = 0;
+    var currentProgress = 0;
+    var isTicking = false;
+    var isLerping = false;
+
+    var slideData = showcaseSlides.map(function (el) {
+      return {
+        title: el.getAttribute('data-title') || 'Screen',
+        index: parseInt(el.getAttribute('data-index') || '0', 10)
+      };
+    });
+
+    function getSlideCenter(idx) {
+      var slide = showcaseSlides[idx];
+      if (!slide) return 0;
+      return slide.offsetLeft + (slide.offsetWidth / 2);
     }
-    if (prev) prev.addEventListener('click', function () { rail.scrollBy({ left: -stepSize(), behavior: 'smooth' }); });
-    if (next) next.addEventListener('click', function () { rail.scrollBy({ left: stepSize(), behavior: 'smooth' }); });
 
-    // drag to scroll
-    var down = false, startX = 0, startLeft = 0, moved = 0;
-    rail.addEventListener('pointerdown', function (e) {
-      if (e.pointerType === 'touch') return; // native touch scrolling is fine
-      down = true; moved = 0;
-      startX = e.clientX;
-      startLeft = rail.scrollLeft;
-      rail.classList.add('dragging');
-      rail.setPointerCapture(e.pointerId);
+    function applyProgress(prog) {
+      var p = Math.max(0, Math.min(1, prog));
+      var maxIdx = count - 1;
+      var continuousIndex = p * maxIdx;
+
+      var baseIdx = Math.floor(continuousIndex);
+      var nextIdx = Math.min(maxIdx, baseIdx + 1);
+      var frac = continuousIndex - baseIdx;
+
+      var stage = showcaseTrack.parentElement;
+      var stageWidth = stage ? stage.clientWidth : window.innerWidth;
+      var centerA = getSlideCenter(baseIdx);
+      var centerB = getSlideCenter(nextIdx);
+      var interpolatedCenter = centerA + (centerB - centerA) * frac;
+      var translateX = (stageWidth / 2) - interpolatedCenter;
+
+      showcaseTrack.style.transform = 'translate3d(' + translateX.toFixed(2) + 'px, 0, 0)';
+
+      var activeIdx = Math.max(0, Math.min(maxIdx, Math.round(continuousIndex)));
+      if (activeIdx !== currentIndex) {
+        currentIndex = activeIdx;
+        for (var i = 0; i < count; i++) {
+          if (i === activeIdx) {
+            showcaseSlides[i].classList.add('active');
+            if (showcaseDots[i]) showcaseDots[i].classList.add('active');
+          } else {
+            showcaseSlides[i].classList.remove('active');
+            if (showcaseDots[i]) showcaseDots[i].classList.remove('active');
+          }
+        }
+        if (showcaseCur) {
+          showcaseCur.textContent = (activeIdx + 1 < 10 ? '0' : '') + (activeIdx + 1);
+        }
+        if (showcaseTag && slideData[activeIdx]) {
+          showcaseTag.textContent = slideData[activeIdx].title;
+        }
+      }
+    }
+
+    function lerpLoop() {
+      var diff = targetProgress - currentProgress;
+      if (Math.abs(diff) < 0.0006) {
+        currentProgress = targetProgress;
+        applyProgress(currentProgress);
+        isLerping = false;
+        return;
+      }
+      currentProgress += diff * 0.22;
+      applyProgress(currentProgress);
+      requestAnimationFrame(lerpLoop);
+    }
+
+    function updateFromScroll() {
+      var rect = showcasePin.getBoundingClientRect();
+      var totalScroll = showcasePin.offsetHeight - window.innerHeight;
+      if (totalScroll <= 0) {
+        targetProgress = 0;
+      } else {
+        var scrolled = -rect.top;
+        targetProgress = Math.max(0, Math.min(1, scrolled / totalScroll));
+      }
+
+      if (reduced) {
+        currentProgress = targetProgress;
+        applyProgress(currentProgress);
+        return;
+      }
+
+      if (!isLerping) {
+        isLerping = true;
+        requestAnimationFrame(lerpLoop);
+      }
+    }
+
+    function scrollToSlide(idx) {
+      var totalScroll = showcasePin.offsetHeight - window.innerHeight;
+      var pinTopFromDoc = showcasePin.getBoundingClientRect().top + window.scrollY;
+      var targetY = pinTopFromDoc + (idx / (count - 1)) * totalScroll;
+      window.scrollTo({ top: targetY, behavior: 'smooth' });
+    }
+
+    showcaseDots.forEach(function (dot, i) {
+      dot.addEventListener('click', function () {
+        scrollToSlide(i);
+      });
     });
-    rail.addEventListener('pointermove', function (e) {
-      if (!down) return;
-      var dx = e.clientX - startX;
-      moved = Math.abs(dx);
-      rail.scrollLeft = startLeft - dx;
+
+    showcaseSlides.forEach(function (slide, i) {
+      slide.addEventListener('click', function () {
+        if (i !== currentIndex) {
+          scrollToSlide(i);
+        }
+      });
     });
-    var endDrag = function (e) {
-      if (!down) return;
-      down = false;
-      rail.classList.remove('dragging');
-      try { rail.releasePointerCapture(e.pointerId); } catch (_) {}
-    };
-    rail.addEventListener('pointerup', endDrag);
-    rail.addEventListener('pointercancel', endDrag);
-    rail.addEventListener('click', function (e) { if (moved > 6) { e.preventDefault(); e.stopPropagation(); } }, true);
+
+    window.addEventListener('scroll', function () {
+      if (!isTicking) {
+        requestAnimationFrame(function () {
+          updateFromScroll();
+          isTicking = false;
+        });
+        isTicking = true;
+      }
+    }, { passive: true });
+
+    window.addEventListener('resize', function () {
+      applyProgress(currentProgress);
+    }, { passive: true });
+
+    updateFromScroll();
+    currentProgress = targetProgress;
+    applyProgress(currentProgress);
   }
 
   /* ───────── tabs ───────── */
@@ -579,12 +680,14 @@
     if (!window.fetch) return;
 
     var starEl = $('#ghStars');
+    var supportStarEl = $('#supportGhStars');
 
     async function getStarCount(owner, repo) {
       // 1. Check cached count in localStorage
       var cached = localStorage.getItem('inzx_gh_stars');
-      if (cached && starEl) {
-        starEl.textContent = cached;
+      if (cached) {
+        if (starEl) starEl.textContent = cached;
+        if (supportStarEl) supportStarEl.textContent = cached;
       }
 
       // 2. Try primary GitHub API
@@ -630,9 +733,10 @@
     }
 
     getStarCount('nirmaleeswar30', 'Inzx').then(function (stars) {
-      if (!starEl || stars == null) return;
+      if (stars == null) return;
       var formatted = formatCount(stars);
-      starEl.textContent = formatted;
+      if (starEl) starEl.textContent = formatted;
+      if (supportStarEl) supportStarEl.textContent = formatted;
       try { localStorage.setItem('inzx_gh_stars', formatted); } catch (e) {}
     });
 
@@ -665,5 +769,312 @@
         }
       })
       .catch(function () { /* offline or rate-limited — the static fallbacks stay */ });
+  })();
+
+  /* ───────── Dynamic Theming card live palette extractor ───────── */
+  (function () {
+    var card = document.getElementById('themeCard');
+    if (!card) return;
+
+    var THEMES = [
+      {
+        title: 'Starboy',
+        artist: 'The Weeknd',
+        primary: '#ff1f3d',
+        vibrant: '#ff6b72',
+        surface: '#2a0409',
+        glow: 'rgba(255, 31, 61, 0.32)',
+        border: 'rgba(255, 31, 61, 0.45)',
+        badgeBg: 'rgba(255, 31, 61, 0.12)',
+        badgeColor: '#ff9fa4'
+      },
+      {
+        title: 'Espresso',
+        artist: 'Sabrina Carpenter',
+        primary: '#f59e0b',
+        vibrant: '#fbbf24',
+        surface: '#2e1808',
+        glow: 'rgba(245, 158, 11, 0.32)',
+        border: 'rgba(245, 158, 11, 0.45)',
+        badgeBg: 'rgba(245, 158, 11, 0.14)',
+        badgeColor: '#fde68a'
+      },
+      {
+        title: 'Sienna',
+        artist: 'The Marías',
+        primary: '#0ea5e9',
+        vibrant: '#38bdf8',
+        surface: '#071526',
+        glow: 'rgba(14, 165, 233, 0.34)',
+        border: 'rgba(56, 189, 248, 0.45)',
+        badgeBg: 'rgba(14, 165, 233, 0.15)',
+        badgeColor: '#bae6fd'
+      }
+    ];
+
+    var posters = card.querySelectorAll('.theme-poster-item');
+    var titleEl = card.querySelector('.theme-track-title');
+    var artistEl = card.querySelector('.theme-track-artist');
+    var stage = card.querySelector('.theme-poster-stage');
+    var currentIndex = 0;
+    var timer = null;
+
+    function applyTheme(idx) {
+      var t = THEMES[idx];
+      if (!t) return;
+      currentIndex = idx;
+      card.setAttribute('data-theme-idx', String(idx));
+      card.style.setProperty('--t-primary', t.primary);
+      card.style.setProperty('--t-vibrant', t.vibrant);
+      card.style.setProperty('--t-surface', t.surface);
+      card.style.setProperty('--t-glow', t.glow);
+      card.style.setProperty('--t-border', t.border);
+      card.style.setProperty('--t-badge-bg', t.badgeBg);
+      card.style.setProperty('--t-badge-color', t.badgeColor);
+
+      if (titleEl) titleEl.textContent = t.title;
+      if (artistEl) artistEl.textContent = t.artist;
+
+      posters.forEach(function (poster, i) {
+        if (i === idx) {
+          poster.classList.add('active');
+        } else {
+          poster.classList.remove('active');
+        }
+      });
+    }
+
+    function nextTheme() {
+      var next = (currentIndex + 1) % THEMES.length;
+      applyTheme(next);
+    }
+
+    function startCycle() {
+      stopCycle();
+      timer = setInterval(nextTheme, 3600);
+    }
+
+    function stopCycle() {
+      if (timer) clearInterval(timer);
+      timer = null;
+    }
+
+    if (stage) {
+      stage.addEventListener('click', function () {
+        nextTheme();
+        stopCycle();
+        setTimeout(startCycle, 5000);
+      });
+    }
+
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) {
+            startCycle();
+          } else {
+            stopCycle();
+          }
+        });
+      }, { threshold: 0.15 }).observe(card);
+    } else {
+      startCycle();
+    }
+  })();
+
+  /* ───────── AI Translation Studio Deck Auto-Cycle ───────── */
+  (function () {
+    var card = document.getElementById('aiCard');
+    if (!card) return;
+
+    var DEMOS = [
+      {
+        lang: 'ja',
+        nativeWords: [
+          { text: '夜', state: 'sung' },
+          { text: 'に', state: 'sung' },
+          { text: '駆', state: 'active-word' },
+          { text: 'け', state: '' },
+          { text: 'る', state: '' }
+        ],
+        phoneticLabel: 'ROMAJI',
+        phonetic: 'Yo • ru ni ka • ke • ru',
+        meaning: '“Racing into the night”',
+        latency: '34 ms stream',
+        provider: 'Gemini 2.5 Flash'
+      },
+      {
+        lang: 'ko',
+        nativeWords: [
+          { text: '보고', state: 'sung' },
+          { text: '싶다', state: 'active-word' },
+          { text: '이렇게', state: '' }
+        ],
+        phoneticLabel: 'HANGUL',
+        phonetic: 'Bo • go sip • da i • reoh • ge',
+        meaning: '“I miss you, saying this hurts more”',
+        latency: '41 ms stream',
+        provider: 'DeepL Translate'
+      },
+      {
+        lang: 'hi',
+        nativeWords: [
+          { text: 'कभी', state: 'sung' },
+          { text: 'कभी', state: 'sung' },
+          { text: 'मेरे', state: 'active-word' },
+          { text: 'दिल', state: '' },
+          { text: 'में', state: '' }
+        ],
+        phoneticLabel: 'DEVANAGARI',
+        phonetic: 'Ka • bhi ka • bhi me • re dil mein',
+        meaning: '“Sometimes, deep within my heart…”',
+        latency: '38 ms stream',
+        provider: 'Llama 3.3 70B'
+      },
+      {
+        lang: 'es',
+        nativeWords: [
+          { text: 'De', state: 'sung' },
+          { text: 'música', state: 'active-word' },
+          { text: 'ligera', state: '' },
+          { text: 'nada', state: '' },
+          { text: 'más', state: '' }
+        ],
+        phoneticLabel: 'SPANISH',
+        phonetic: 'De mú • si • ca li • ge • ra',
+        meaning: '“Of light music, nothing else remains”',
+        latency: '29 ms stream',
+        provider: 'Claude 3.5 Sonnet'
+      }
+    ];
+
+    var tabs = card.querySelectorAll('.ai-tab');
+    var content = card.querySelector('.ai-stream-content');
+    var nativeEl = card.querySelector('.ai-text-native');
+    var labelEl = card.querySelector('.ai-phonetic-label');
+    var phoneticEl = card.querySelector('.ai-text-phonetic');
+    var meaningEl = card.querySelector('.ai-text-meaning');
+    var latencyEl = card.querySelector('.ai-latency-text');
+    var providerEl = card.querySelector('.ai-providers-tag');
+    var currentIndex = 0;
+    var timer = null;
+
+    function applyDemo(idx) {
+      var d = DEMOS[idx];
+      if (!d || !content) return;
+      currentIndex = idx;
+
+      tabs.forEach(function (tab, i) {
+        if (i === idx) {
+          tab.classList.add('active');
+          tab.setAttribute('aria-selected', 'true');
+        } else {
+          tab.classList.remove('active');
+          tab.setAttribute('aria-selected', 'false');
+        }
+      });
+
+      content.classList.add('animating');
+      setTimeout(function () {
+        if (nativeEl) {
+          nativeEl.innerHTML = d.nativeWords.map(function (w) {
+            return '<span class="ai-word ' + (w.state || '') + '">' + w.text + '</span>';
+          }).join(' ');
+        }
+        if (labelEl) labelEl.textContent = d.phoneticLabel;
+        if (phoneticEl) phoneticEl.textContent = d.phonetic;
+        if (meaningEl) meaningEl.textContent = d.meaning;
+        if (latencyEl) latencyEl.textContent = d.latency;
+        if (providerEl) providerEl.textContent = d.provider;
+
+        content.classList.remove('animating');
+      }, 160);
+    }
+
+    function nextDemo() {
+      var next = (currentIndex + 1) % DEMOS.length;
+      applyDemo(next);
+    }
+
+    function startCycle() {
+      stopCycle();
+      timer = setInterval(nextDemo, 3800);
+    }
+
+    function stopCycle() {
+      if (timer) clearInterval(timer);
+      timer = null;
+    }
+
+    tabs.forEach(function (tab, i) {
+      tab.addEventListener('click', function () {
+        applyDemo(i);
+        stopCycle();
+        setTimeout(startCycle, 6000);
+      });
+    });
+
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) startCycle();
+          else stopCycle();
+        });
+      }, { threshold: 0.15 }).observe(card);
+    } else {
+      startCycle();
+    }
+  })();
+
+  /* ───────── Jams Interactive Session Controller ───────── */
+  (function () {
+    var card = document.getElementById('togetherCard');
+    if (!card) return;
+
+    var addBtn = card.querySelector('#jamAddQueueBtn');
+    var badge = card.querySelector('#jamQueuedBadge');
+    var countEl = card.querySelector('#jamListenersText');
+    var syncChip = card.querySelector('#jamSyncIndicator');
+    var added = false;
+    var resetTimeout = null;
+
+    if (addBtn) {
+      addBtn.addEventListener('click', function () {
+        if (resetTimeout) clearTimeout(resetTimeout);
+        added = !added;
+
+        if (added) {
+          addBtn.classList.add('queued-state');
+          addBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Queued by You</span>';
+          if (badge) badge.textContent = 'Queued by You (Next)';
+          if (countEl) countEl.textContent = '9 listening';
+          if (syncChip) {
+            syncChip.style.borderColor = 'rgba(126, 224, 176, 0.4)';
+            syncChip.style.background = 'rgba(126, 224, 176, 0.08)';
+          }
+        } else {
+          addBtn.classList.remove('queued-state');
+          addBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add to Queue</span>';
+          if (badge) badge.textContent = 'Queued by Alex';
+          if (countEl) countEl.textContent = '8 listening';
+          if (syncChip) {
+            syncChip.style.borderColor = '';
+            syncChip.style.background = '';
+          }
+        }
+
+        resetTimeout = setTimeout(function () {
+          added = false;
+          addBtn.classList.remove('queued-state');
+          addBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add to Queue</span>';
+          if (badge) badge.textContent = 'Queued by Alex';
+          if (countEl) countEl.textContent = '8 listening';
+          if (syncChip) {
+            syncChip.style.borderColor = '';
+            syncChip.style.background = '';
+          }
+        }, 5000);
+      });
+    }
   })();
 })();
