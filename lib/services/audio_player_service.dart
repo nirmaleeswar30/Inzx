@@ -2667,18 +2667,16 @@ class AudioPlayerService {
         if (_currentTrack?.id != trackId) return;
         if (attempt > 0) await Future.delayed(const Duration(seconds: 2));
         try {
-          int? fallbackSts;
-          if (attempt > 0) {
-            fallbackSts = await InnerTubeApi().getSignatureTimestamp(trackId);
-          }
-          final json = await innerTube!.getAuthenticatedPlaybackTracking(
+          final fallbackSts = innerTube!.sessionSignatureTimestamp ??
+              await InnerTubeApi().getSignatureTimestamp(trackId);
+          final json = await innerTube.getAuthenticatedPlaybackTracking(
             trackId,
             signatureTimestamp: fallbackSts,
           );
           final t = PlaybackTracking.fromJson(json);
           if (t.hasStatsUrls) tracking = t;
-        } catch (e) {
-          debugPrint('[YTM-Tracking] Resolve attempt ${attempt + 1} failed: $e');
+        } catch (e, st) {
+          debugPrint('[YTM-Tracking] Resolve attempt ${attempt + 1} failed: $e\n$st');
         }
       }
 

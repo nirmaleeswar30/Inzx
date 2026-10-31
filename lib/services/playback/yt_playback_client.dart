@@ -582,23 +582,75 @@ class InnerTubeApi {
     }
   }
 
-  /// Get signature timestamp from embed page
-  Future<int> getSignatureTimestamp(String videoId) async {
+  static int? _cachedSignatureTimestamp;
+  static DateTime? _cachedSignatureTimestampAt;
+
+  /// Get signature timestamp from embed page or player JS.
+  ///
+  /// BitChord/MetroList approach: first try the embed page for a quick inline
+  /// `"sts"` value, then fall back to fetching the actual player base.js and
+  /// extracting `signatureTimestamp: <number>` from it. YouTube has stopped
+  /// including STS in page HTML on some builds, so the player JS path is the
+  /// reliable source. Cached for 6 hours so base.js isn't repeatedly fetched.
+  Future<int> getSignatureTimestamp(String videoId, {bool refresh = false}) async {
+    final cachedAt = _cachedSignatureTimestampAt;
+    if (!refresh &&
+        _cachedSignatureTimestamp != null &&
+        cachedAt != null &&
+        DateTime.now().difference(cachedAt) < const Duration(hours: 6)) {
+      return _cachedSignatureTimestamp!;
+    }
+    const ua =
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
     try {
       final response = await _client
           .get(
             Uri.parse('https://www.youtube.com/embed/$videoId'),
-            headers: {
-              'User-Agent':
-                  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            },
+            headers: {'User-Agent': ua},
           )
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        final match = RegExp(r'"sts"\s*:\s*(\d+)').firstMatch(response.body);
+        final body = response.body;
+
+        // Try inline STS first (fast path).
+        final match = RegExp(r'"sts"\s*:\s*(\d+)').firstMatch(body);
         if (match != null) {
-          return int.tryParse(match.group(1)!) ?? 20073;
+          final sts = int.tryParse(match.group(1)!);
+          if (sts != null) {
+            _cachedSignatureTimestamp = sts;
+            _cachedSignatureTimestampAt = DateTime.now();
+            return sts;
+          }
+        }
+
+        // No inline STS — extract from the player JS referenced in the page.
+        final jsUrlMatch =
+            RegExp(r'"jsUrl"\s*:\s*"([^"]+)"').firstMatch(body) ??
+            RegExp(r'(/s/player/[^"]+/base\.js)').firstMatch(body);
+        if (jsUrlMatch != null) {
+          var jsPath = jsUrlMatch.group(1)!.replaceAll(r'\/', '/');
+          if (jsPath.startsWith('/')) {
+            jsPath = 'https://www.youtube.com$jsPath';
+          }
+          final jsResponse = await _client
+              .get(Uri.parse(jsPath), headers: {'User-Agent': ua})
+              .timeout(const Duration(seconds: 15));
+          if (jsResponse.statusCode == 200) {
+            final stsMatch = RegExp(r'signatureTimestamp\s*[:=]\s*(\d+)')
+                .firstMatch(jsResponse.body);
+            if (stsMatch != null) {
+              final sts = int.tryParse(stsMatch.group(1)!);
+              if (sts != null) {
+                _cachedSignatureTimestamp = sts;
+                _cachedSignatureTimestampAt = DateTime.now();
+                if (kDebugMode) {
+                  print('InnerTubeApi: STS from player JS: $sts');
+                }
+                return sts;
+              }
+            }
+          }
         }
       }
     } catch (e) {
@@ -606,7 +658,7 @@ class InnerTubeApi {
         print('InnerTubeApi: Failed to get STS: $e');
       }
     }
-    return 20073; // Fallback
+    return _cachedSignatureTimestamp ?? 20753; // Current fallback (was 20073)
   }
 
   /// Validate stream URL with HEAD request

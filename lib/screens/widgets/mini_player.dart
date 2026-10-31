@@ -549,10 +549,11 @@ class _MusicMiniPlayerState extends ConsumerState<MusicMiniPlayer> {
               HapticFeedback.mediumImpact();
               ref.read(audioPlayerServiceProvider).clearQueue();
             },
-            child: GestureDetector(
-              onTap: widget.onTap,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: widget.onTap,
                 child: capsule,
               ),
             ),
@@ -569,12 +570,12 @@ class _MusicMiniPlayerState extends ConsumerState<MusicMiniPlayer> {
             HapticFeedback.mediumImpact();
             ref.read(audioPlayerServiceProvider).clearQueue();
           },
-          child: BouncyTouch(
-            style: BouncyStyle.card,
-            customScale: 0.985,
-            onTap: widget.onTap,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
+            child: BouncyTouch(
+              style: BouncyStyle.card,
+              customScale: 0.985,
+              onTap: widget.onTap,
               child: capsule,
             ),
           ),

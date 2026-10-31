@@ -1677,9 +1677,16 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
           _tabController.index = 1;
         }
         _isDrawerExpanded = false;
+        final stagePage = _stageViewPageController.hasClients
+            ? (_stageViewPageController.page?.round() ?? 1)
+            : 1;
+        _showLyrics = stagePage == 1;
+        _showQueue = stagePage == 0;
       } else {
         // Returning to portrait: keep drawer collapsed so the user sees the full Now Playing view
         _isDrawerExpanded = false;
+        _showLyrics = false;
+        _showQueue = false;
       }
     }
 
@@ -2259,8 +2266,17 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
                         const Spacer(),
 
-                        // Output device, pinned to the very bottom
-                        _buildCollapsedBottomBar(textColor, accentColor),
+                        // Output device & bottom bubbles, pinned to the very bottom
+                        _buildCollapsedBottomBar(
+                          textColor,
+                          accentColor,
+                          padding: EdgeInsets.fromLTRB(
+                            24,
+                            4,
+                            24,
+                            MediaQuery.of(context).padding.bottom > 0 ? 8 : 14,
+                          ),
+                        ),
 
                         SizedBox(height: MediaQuery.of(context).padding.bottom),
                       ],
@@ -2370,7 +2386,11 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                           secondaryTextColor,
                           surfaceColor,
                         ),
-                        _buildLyricsView(),
+                        _buildLyricsView(
+                          isActive: _stageViewPageController.hasClients
+                              ? (_stageViewPageController.page?.round() ?? 1) == 1
+                              : _showLyrics,
+                        ),
                         _buildRelatedContent(textColor, secondaryTextColor),
                       ],
                     ),
@@ -3465,11 +3485,16 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
   /// Bottom of every portrait now playing layout: lyrics and Up Next bubbles
   /// either side of the output device, all on one level.
-  Widget _buildCollapsedBottomBar(Color textColor, Color accentColor) {
+  Widget _buildCollapsedBottomBar(
+    Color textColor,
+    Color accentColor, {
+    EdgeInsetsGeometry? padding,
+  }) {
     return NowPlayingBottomBar(
       textColor: textColor,
       onOpenLyrics: _openLyricsSheet,
       onOpenQueue: _openQueueSheet,
+      padding: padding,
       center: ref.watch(showSmartAudioRoutingProvider)
           ? AudioRoutingPill(textColor: textColor, accentColor: accentColor)
           : null,

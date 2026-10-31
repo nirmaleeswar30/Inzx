@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/providers/locale_provider.dart';
 import '../models/models.dart';
+import 'playback/yt_playback_client.dart' show InnerTubeApi;
 
 /// YouTube Music API Service (InnerTube API)
 /// Note: Handles both authenticated and unauthenticated requests.
@@ -106,6 +107,9 @@ class InnerTubeService {
   /// Account the session is scoped to (brand channel when one is selected).
   String? get sessionDataSyncId => _sessionDataSyncId;
 
+  /// Current signature timestamp for the session.
+  int? get sessionSignatureTimestamp => _sessionSignatureTimestamp;
+
   static const String _webUserAgent =
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
       '(KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36';
@@ -151,8 +155,32 @@ class InnerTubeService {
 
       _sessionClientVersion =
           read('INNERTUBE_CLIENT_VERSION') ?? _sessionClientVersion;
+      // Try reading STS directly from the page HTML (older YTM builds).
       final sts = RegExp(r'"STS"\s*:\s*(\d+)').firstMatch(html)?.group(1);
-      if (sts != null) _sessionSignatureTimestamp = int.tryParse(sts);
+      if (sts != null) {
+        _sessionSignatureTimestamp = int.tryParse(sts);
+      }
+
+      // BitChord / MetroList approach: YouTube no longer embeds STS in the
+      // page HTML on current builds. The page *does* reference the player
+      // script via `jsUrl`, so fetch that script and extract
+      // `signatureTimestamp: <number>` from it.
+      if (_sessionSignatureTimestamp == null) {
+        final jsUrlMatch =
+            RegExp(r'jsUrl":"([^"]+)"').firstMatch(html)?.group(1) ??
+            RegExp(r'"PLAYER_JS_URL":"([^"]+)"').firstMatch(html)?.group(1);
+        if (jsUrlMatch != null) {
+          final cleanJsUrl = jsUrlMatch.replaceAll(r'\/', '/');
+          final jsUrl = cleanJsUrl.startsWith('/')
+              ? 'https://music.youtube.com$cleanJsUrl'
+              : cleanJsUrl;
+          await _extractStsFromPlayerJs(jsUrl, headers);
+        }
+      }
+
+      // If page player JS didn't yield STS, resolve from InnerTubeApi
+      _sessionSignatureTimestamp ??=
+          await InnerTubeApi().getSignatureTimestamp('dQw4w9WgXcQ');
 
       final loggedIn = RegExp(
             r'"LOGGED_IN"\s*:\s*(true|false)',
@@ -189,6 +217,46 @@ class InnerTubeService {
       );
     } catch (e) {
       debugPrint('[YTM-Tracking] Could not read session scope: $e');
+    }
+  }
+
+  /// Fetch the YouTube player JS and extract `signatureTimestamp` from it.
+  ///
+  /// This is the BitChord/MetroList approach: the page no longer carries
+  /// `"STS"` in the inline config, but the `jsUrl` (player script) still
+  /// contains `signatureTimestamp: <number>`. Fetching ~1 MB of JS is
+  /// heavier than a regex on the HTML, but it only runs once per 6-hour
+  /// session scope refresh and only when the HTML path misses.
+  Future<void> _extractStsFromPlayerJs(
+    String jsUrl,
+    Map<String, String> headers,
+  ) async {
+    try {
+      final jsResponse = await http
+          .get(Uri.parse(jsUrl), headers: {
+            'User-Agent': headers['User-Agent'] ?? _webUserAgent,
+          })
+          .timeout(const Duration(seconds: 15));
+      if (jsResponse.statusCode != 200) {
+        debugPrint(
+          '[YTM-Tracking] Player JS fetch failed: ${jsResponse.statusCode}',
+        );
+        return;
+      }
+      final jsBody = jsResponse.body;
+      final stsMatch =
+          RegExp(r'signatureTimestamp\s*[:=]\s*(\d+)').firstMatch(jsBody);
+      if (stsMatch != null) {
+        _sessionSignatureTimestamp = int.tryParse(stsMatch.group(1)!);
+        debugPrint(
+          '[YTM-Tracking] Extracted STS from player JS: '
+          '$_sessionSignatureTimestamp',
+        );
+      } else {
+        debugPrint('[YTM-Tracking] No signatureTimestamp found in player JS');
+      }
+    } catch (e) {
+      debugPrint('[YTM-Tracking] Player JS STS extraction failed: $e');
     }
   }
 
@@ -251,7 +319,11 @@ class InnerTubeService {
     if (!isAuthenticated) return null;
     await ensureSessionScope();
 
-    final sts = _sessionSignatureTimestamp ?? signatureTimestamp;
+    var sts = _sessionSignatureTimestamp ?? signatureTimestamp;
+    if (sts == null) {
+      sts = await InnerTubeApi().getSignatureTimestamp(videoId);
+      _sessionSignatureTimestamp ??= sts;
+    }
     final context = _buildMusicContext(
       languageCode: 'en',
       countryCode: await _resolveRequestCountryCode(),
@@ -262,8 +334,9 @@ class InnerTubeService {
       client['visitorData'] = _sessionVisitorData;
     }
     if (_sessionDataSyncId != null) {
-      (context['user'] as Map<String, dynamic>)['onBehalfOfUser'] =
-          _sessionDataSyncId;
+      final user = Map<String, dynamic>.from(context['user'] as Map? ?? const {});
+      user['onBehalfOfUser'] = _sessionDataSyncId;
+      context['user'] = user;
     }
 
     Map<String, dynamic> buildBody(int? timestamp) => {
@@ -276,7 +349,7 @@ class InnerTubeService {
         'contentPlaybackContext': {
           'html5Preference': 'HTML5_PREF_WANTS',
           'referer': 'https://music.youtube.com/watch?v=$videoId',
-          'signatureTimestamp': ?timestamp,
+          if (timestamp != null) 'signatureTimestamp': timestamp,
         },
       },
     };
@@ -297,8 +370,14 @@ class InnerTubeService {
     );
     // Usually a stale timestamp after a player rollout.
     await ensureSessionScope(refresh: true);
-    final retrySts = _sessionSignatureTimestamp ?? signatureTimestamp;
-    if (retrySts == null || retrySts == sts) return null;
+    var retrySts = _sessionSignatureTimestamp ?? signatureTimestamp;
+    if (retrySts == null || retrySts == sts) {
+      retrySts =
+          await InnerTubeApi().getSignatureTimestamp(videoId, refresh: true);
+      _sessionSignatureTimestamp = retrySts;
+    }
+    // Only skip retry when we got the exact same non-null STS back.
+    if (retrySts == sts) return null;
     response = await _request(
       'player',
       buildBody(retrySts),
@@ -2181,7 +2260,7 @@ class InnerTubeService {
             'hl': 'en',
             'gl': 'US',
           },
-          'user': {'lockedSafetyMode': false},
+          'user': <String, dynamic>{'lockedSafetyMode': false},
         },
         ...body,
       };
@@ -3876,7 +3955,7 @@ class InnerTubeService {
           'osVersion': '17.2.1',
           'platform': 'MOBILE',
         },
-        'user': {'lockedSafetyMode': false},
+        'user': <String, dynamic>{'lockedSafetyMode': false},
       };
 
       final response = await http
@@ -3939,7 +4018,7 @@ class InnerTubeService {
           'osVersion': '17.2.1',
           'platform': 'MOBILE',
         },
-        'user': {'lockedSafetyMode': false},
+        'user': <String, dynamic>{'lockedSafetyMode': false},
       };
 
       final response = await http
@@ -4383,7 +4462,7 @@ class InnerTubeService {
             'hl': 'en',
             'gl': 'US',
           },
-          'user': {'lockedSafetyMode': false},
+          'user': <String, dynamic>{'lockedSafetyMode': false},
         },
         'headers': {
           'User-Agent':
@@ -4405,7 +4484,7 @@ class InnerTubeService {
             'hl': 'en',
             'gl': 'US',
           },
-          'user': {'lockedSafetyMode': false},
+          'user': <String, dynamic>{'lockedSafetyMode': false},
         },
         'headers': {
           'User-Agent':
@@ -4425,7 +4504,7 @@ class InnerTubeService {
             'gl': 'US',
           },
           'thirdParty': {'embedUrl': 'https://www.youtube.com'},
-          'user': {'lockedSafetyMode': false},
+          'user': <String, dynamic>{'lockedSafetyMode': false},
         },
         'headers': {
           'User-Agent':
@@ -4446,7 +4525,7 @@ class InnerTubeService {
             'hl': 'en',
             'gl': 'US',
           },
-          'user': {'lockedSafetyMode': false},
+          'user': <String, dynamic>{'lockedSafetyMode': false},
         },
         'headers': {
           'User-Agent':
@@ -7613,7 +7692,7 @@ class InnerTubeService {
         'platform': 'DESKTOP',
         'utcOffsetMinutes': 0,
       },
-      'user': {'lockedSafetyMode': false},
+      'user': <String, dynamic>{'lockedSafetyMode': false},
     };
   }
 

@@ -13,6 +13,7 @@ class NowPlayingBottomBar extends StatelessWidget {
     required this.onOpenLyrics,
     required this.onOpenQueue,
     this.center,
+    this.padding,
   });
 
   final Color textColor;
@@ -22,10 +23,13 @@ class NowPlayingBottomBar extends StatelessWidget {
   /// Usually the output device pill; empty space when routing is hidden.
   final Widget? center;
 
+  /// Custom padding for the bottom bar row. Defaults to EdgeInsets.fromLTRB(24, 4, 24, 30).
+  final EdgeInsetsGeometry? padding;
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 4, 24, 30),
+      padding: padding ?? const EdgeInsets.fromLTRB(24, 4, 24, 30),
       child: Row(
         children: [
           _BubbleButton(

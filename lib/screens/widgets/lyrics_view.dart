@@ -114,6 +114,15 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     // song is playing; otherwise it would tick (and wake the CPU) for nothing.
     ref.listenManual(isPlayingProvider, (_, _) => _syncTicker());
     _syncTicker();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && widget.isActive) {
+        _checkLineIndexChange(_lastAudioMs);
+        if (_isAutoScrollEnabled) {
+          _scrollToCurrentLine(immediate: true);
+        }
+      }
+    });
   }
 
   void _syncTicker() {

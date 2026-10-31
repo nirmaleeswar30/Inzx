@@ -215,6 +215,9 @@ class RenderLiquidGlass extends RenderProxyBox {
     );
   }
 
+  @override
+  bool hitTestSelf(Offset position) => _rrect(Offset.zero).contains(position);
+
   /// Android's blur radius → Gaussian sigma, in logical pixels.
   double _sigma(double radius) => radius * 0.57735 + 0.5 / _dpr;
 
