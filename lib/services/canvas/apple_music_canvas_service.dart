@@ -41,20 +41,20 @@ class AppleMusicCanvasService {
         term.write(' $album');
       }
 
-      final uri = Uri.parse('$_ampBase/us/search').replace(
-        queryParameters: {
-          'term': term.toString().trim(),
-          'types': 'songs',
-          'limit': '10',
-          'extend': 'editorialVideo',
-          'include': 'albums',
-        },
-      );
+      final uri = Uri.parse('$_ampBase/${CanvasArtwork.storefront}/search')
+          .replace(
+            queryParameters: {
+              'term': term.toString().trim(),
+              'types': 'songs',
+              'limit': '10',
+              'extend': 'editorialVideo',
+              'include': 'albums',
+            },
+          );
 
-      final response = await _client.get(
-        uri,
-        headers: _authHeaders(token),
-      ).timeout(const Duration(seconds: 6));
+      final response = await _client
+          .get(uri, headers: _authHeaders(token))
+          .timeout(const Duration(seconds: 6));
 
       if (response.statusCode == 401) {
         _cachedToken = null;
@@ -69,24 +69,23 @@ class AppleMusicCanvasService {
       final hits = songs?['data'] as List<dynamic>?;
       if (hits == null || hits.isEmpty) return null;
 
+      // Rank every hit rather than taking the first plausible one: Apple
+      // lists the artist's other songs freely, and the right one is often
+      // further down.
+      final ranked = <(int, Map<String, dynamic>)>[];
       for (final hit in hits) {
         if (hit is! Map<String, dynamic>) continue;
-        final attributes = hit['attributes'] as Map<String, dynamic>?;
-        if (attributes == null) continue;
+        final score = _score(hit, title, artist, album);
+        if (score != null && score >= _minScore) ranked.add((score, hit));
+      }
+      ranked.sort((a, b) => b.$1.compareTo(a.$1));
 
+      for (final (_, hit) in ranked) {
+        final attributes = hit['attributes'] as Map<String, dynamic>;
         final songName = attributes['name'] as String?;
         final songArtist = attributes['artistName'] as String?;
         final songAlbum = attributes['albumName'] as String?;
-
         if (songName == null || songArtist == null) continue;
-        if (!CanvasArtwork(
-          url: '',
-          title: songName,
-          artist: songArtist,
-          source: CanvasSource.appleMusic,
-        ).matches(title, artist, album)) {
-          continue;
-        }
 
         // 1. Check inline editorialVideo on song
         final editorialVideo =
@@ -102,7 +101,9 @@ class AppleMusicCanvasService {
               album: songAlbum,
               source: CanvasSource.appleMusic,
             );
-            debugPrint('AppleMusicCanvas: Found inline motion artwork for "$songName"');
+            debugPrint(
+              'AppleMusicCanvas: Found inline motion artwork for "$songName"',
+            );
             return candidate;
           }
         }
@@ -129,7 +130,8 @@ class AppleMusicCanvasService {
 
   static String? _extractAlbumId(Map<String, dynamic> songHit) {
     try {
-      final relationshipId = songHit['relationships']?['albums']?['data']?[0]?['id'] as String?;
+      final relationshipId =
+          songHit['relationships']?['albums']?['data']?[0]?['id'] as String?;
       if (relationshipId != null && !relationshipId.startsWith('pl.')) {
         return relationshipId;
       }
@@ -153,11 +155,12 @@ class AppleMusicCanvasService {
     required String songArtist,
   }) async {
     try {
-      final albumUri = Uri.parse('$_ampBase/us/albums/$albumId?extend=editorialVideo');
-      final response = await _client.get(
-        albumUri,
-        headers: _authHeaders(bearer),
-      ).timeout(const Duration(seconds: 5));
+      final albumUri = Uri.parse(
+        '$_ampBase/${CanvasArtwork.storefront}/albums/$albumId?extend=editorialVideo',
+      );
+      final response = await _client
+          .get(albumUri, headers: _authHeaders(bearer))
+          .timeout(const Duration(seconds: 5));
 
       if (response.statusCode != 200) return null;
 
@@ -174,7 +177,9 @@ class AppleMusicCanvasService {
       final urls = _extractMotionUrls(albumVideo);
       if (urls == null) return null;
 
-      debugPrint('AppleMusicCanvas: Found album motion artwork on "$albumName" for "$songName"');
+      debugPrint(
+        'AppleMusicCanvas: Found album motion artwork on "$albumName" for "$songName"',
+      );
       return CanvasArtwork(
         url: urls.$1,
         fallbackUrl: urls.$2,
@@ -187,6 +192,85 @@ class AppleMusicCanvasService {
       debugPrint('AppleMusicCanvas: Fetch album motion error: $e');
       return null;
     }
+  }
+
+  /// A hit has to reach this: the right artist with the exact title, or the
+  /// right artist, a near title and the right album.
+  static const int _minScore = 12;
+
+  static const List<String> _editionWords = [
+    'deluxe',
+    'expanded',
+    'remastered',
+    'remix',
+    'version',
+    'edit',
+    'mix',
+    'bonus',
+  ];
+
+  /// How well [hit] fits the request, or null when it can't be right at all.
+  /// The artist is a hard requirement, not a weight: a clip credited to
+  /// someone else is never the right one. [albumIsSelf] is for album hits,
+  /// whose own name is the album being compared.
+  static int? _score(
+    Map<String, dynamic> hit,
+    String title,
+    String artist,
+    String? album, {
+    bool albumIsSelf = false,
+  }) {
+    final attributes = hit['attributes'] as Map<String, dynamic>?;
+    if (attributes == null) return null;
+    final hitName = attributes['name'] as String? ?? '';
+    final hitArtist = attributes['artistName'] as String? ?? '';
+    final hitAlbum = albumIsSelf
+        ? hitName
+        : attributes['albumName'] as String? ?? '';
+
+    if (_isCompilation(hitName) || _isCompilation(hitAlbum)) return null;
+    if (!CanvasArtwork.allCredited(
+      artist,
+      CanvasArtwork.splitArtists(hitArtist),
+    )) {
+      return null;
+    }
+
+    var score = 10;
+    final want = CanvasArtwork.normalizeForMatch(title);
+    final got = CanvasArtwork.normalizeForMatch(hitName);
+    if (got == want) {
+      score += 15;
+    } else if (got.contains(want) || want.contains(got)) {
+      score += 7;
+    } else {
+      score -= 10; // same artist, another song
+    }
+
+    if (album != null && album.isNotEmpty && hitAlbum.isNotEmpty) {
+      final wantAlbum = CanvasArtwork.normalizeForMatch(album);
+      final gotAlbum = CanvasArtwork.normalizeForMatch(hitAlbum);
+      if (gotAlbum == wantAlbum) {
+        score += 20;
+      } else if (gotAlbum.contains(wantAlbum) || wantAlbum.contains(gotAlbum)) {
+        score += 10;
+      }
+    }
+
+    // An edition marker on one side only usually means another master,
+    // often with another clip.
+    final lowerTitle = title.toLowerCase();
+    final lowerHit = hitName.toLowerCase();
+    for (final word in _editionWords) {
+      final inWanted = lowerTitle.contains(word);
+      final inHit = lowerHit.contains(word);
+      if (inWanted && inHit) {
+        score += 5;
+      } else if (inHit) {
+        score -= 3;
+      }
+    }
+    return score;
   }
 
   static bool _isCompilation(String name) {
@@ -214,19 +298,19 @@ class AppleMusicCanvasService {
           ? album
           : '$artist $album';
 
-      final uri = Uri.parse('$_ampBase/us/search').replace(
-        queryParameters: {
-          'term': term,
-          'types': 'albums',
-          'limit': '10',
-          'extend': 'editorialVideo',
-        },
-      );
+      final uri = Uri.parse('$_ampBase/${CanvasArtwork.storefront}/search')
+          .replace(
+            queryParameters: {
+              'term': term,
+              'types': 'albums',
+              'limit': '10',
+              'extend': 'editorialVideo',
+            },
+          );
 
-      final response = await _client.get(
-        uri,
-        headers: _authHeaders(token),
-      ).timeout(const Duration(seconds: 6));
+      final response = await _client
+          .get(uri, headers: _authHeaders(token))
+          .timeout(const Duration(seconds: 6));
 
       if (response.statusCode == 401) {
         _cachedToken = null;
@@ -241,11 +325,18 @@ class AppleMusicCanvasService {
       final hits = albums?['data'] as List<dynamic>?;
       if (hits == null || hits.isEmpty) return null;
 
+      // Scored with the album as its own album, which keeps a deluxe
+      // edition from outranking the plain one.
+      final ranked = <(int, Map<String, dynamic>)>[];
       for (final hit in hits) {
         if (hit is! Map<String, dynamic>) continue;
-        final attributes = hit['attributes'] as Map<String, dynamic>?;
-        if (attributes == null) continue;
+        final score = _score(hit, album, artist, album, albumIsSelf: true);
+        if (score != null && score >= _minScore) ranked.add((score, hit));
+      }
+      ranked.sort((a, b) => b.$1.compareTo(a.$1));
 
+      for (final (_, hit) in ranked) {
+        final attributes = hit['attributes'] as Map<String, dynamic>;
         final albumName = attributes['name'] as String?;
         final artistName = attributes['artistName'] as String?;
         final editorialVideo =
@@ -263,7 +354,9 @@ class AppleMusicCanvasService {
             source: CanvasSource.appleMusic,
           );
           if (candidate.matches(album, artist, album)) {
-            debugPrint('AppleMusicCanvas: Found album motion artwork for "$albumName"');
+            debugPrint(
+              'AppleMusicCanvas: Found album motion artwork for "$albumName"',
+            );
             return candidate;
           }
         }
@@ -281,7 +374,8 @@ class AppleMusicCanvasService {
       return (asset['video'] ??
               asset['videoUrl'] ??
               asset['hlsUrl'] ??
-              asset['url']) as String?;
+              asset['url'])
+          as String?;
     }
 
     final square = link('motionDetailSquare') ?? link('motionSquareVideo1x1');
@@ -300,11 +394,11 @@ class AppleMusicCanvasService {
   }
 
   static Map<String, String> _authHeaders(String bearer) => {
-        'Authorization': 'Bearer $bearer',
-        'Origin': 'https://music.apple.com',
-        'Referer': 'https://music.apple.com/',
-        'User-Agent': _userAgent,
-      };
+    'Authorization': 'Bearer $bearer',
+    'Origin': 'https://music.apple.com',
+    'Referer': 'https://music.apple.com/',
+    'User-Agent': _userAgent,
+  };
 
   static Future<String?> _getToken() async {
     final now = DateTime.now();
@@ -319,41 +413,46 @@ class AppleMusicCanvasService {
     }
 
     try {
-      final htmlResp = await _client.get(
-        Uri.parse(_webPlayerUrl),
-        headers: {'User-Agent': _userAgent},
-      ).timeout(const Duration(seconds: 8));
+      final htmlResp = await _client
+          .get(Uri.parse(_webPlayerUrl), headers: {'User-Agent': _userAgent})
+          .timeout(const Duration(seconds: 8));
 
       if (htmlResp.statusCode != 200) {
         _retryTokenAfter = now.add(const Duration(minutes: 15));
         return null;
       }
 
-      final scriptMatches = RegExp(r'/assets/index(?:-legacy)?[~-][A-Za-z0-9_-]+\.js')
-          .allMatches(htmlResp.body)
-          .map((m) => m.group(0))
-          .whereType<String>()
-          .toSet();
+      final scriptMatches =
+          RegExp(r'/assets/index(?:-legacy)?[~-][A-Za-z0-9_-]+\.js')
+              .allMatches(htmlResp.body)
+              .map((m) => m.group(0))
+              .whereType<String>()
+              .toSet();
 
       for (final scriptPath in scriptMatches) {
-        final scriptResp = await _client.get(
-          Uri.parse('https://music.apple.com$scriptPath'),
-          headers: {'User-Agent': _userAgent},
-        ).timeout(const Duration(seconds: 8));
+        final scriptResp = await _client
+            .get(
+              Uri.parse('https://music.apple.com$scriptPath'),
+              headers: {'User-Agent': _userAgent},
+            )
+            .timeout(const Duration(seconds: 8));
 
         if (scriptResp.statusCode != 200) continue;
 
-        final jwtMatches = RegExp(r'ey[A-Za-z0-9_-]+\.ey[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+')
-            .allMatches(scriptResp.body)
-            .map((m) => m.group(0))
-            .whereType<String>();
+        final jwtMatches =
+            RegExp(r'ey[A-Za-z0-9_-]+\.ey[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+')
+                .allMatches(scriptResp.body)
+                .map((m) => m.group(0))
+                .whereType<String>();
 
         for (final jwt in jwtMatches) {
           final exp = _extractJwtExpiry(jwt);
           if (exp != null && exp.isAfter(now)) {
             _cachedToken = jwt;
             _tokenExpiresAt = exp;
-            debugPrint('AppleMusicCanvas: Scraped anonymous web token (expires in ${exp.difference(now).inHours}h)');
+            debugPrint(
+              'AppleMusicCanvas: Scraped anonymous web token (expires in ${exp.difference(now).inHours}h)',
+            );
             return jwt;
           }
         }
@@ -374,7 +473,9 @@ class AppleMusicCanvasService {
       while (normalized.length % 4 != 0) {
         normalized += '=';
       }
-      final payload = jsonDecode(utf8.decode(base64Decode(normalized))) as Map<String, dynamic>;
+      final payload =
+          jsonDecode(utf8.decode(base64Decode(normalized)))
+              as Map<String, dynamic>;
       final expSec = payload['exp'] as int?;
       if (expSec != null) {
         return DateTime.fromMillisecondsSinceEpoch(expSec * 1000);

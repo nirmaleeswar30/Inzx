@@ -23,22 +23,35 @@ class TidalCanvasService {
     String? album,
   ]) async {
     // 1. Try clean artist + title search first (best for singles & variant album releases)
-    var result = await _executeTrackSearch('$artist $title', title, artist, album);
+    var result = await _executeTrackSearch(
+      '$artist $title',
+      title,
+      artist,
+      album,
+    );
     if (result != null) return result;
 
     // 2. If artist contains multiple artists or features, try primary artist + title
     final primaryArtist = artist.split(RegExp(r'[,&]')).first.trim();
     if (primaryArtist.isNotEmpty &&
         primaryArtist.toLowerCase() != artist.toLowerCase()) {
-      result =
-          await _executeTrackSearch('$primaryArtist $title', title, artist, album);
+      result = await _executeTrackSearch(
+        '$primaryArtist $title',
+        title,
+        artist,
+        album,
+      );
       if (result != null) return result;
     }
 
     // 3. If no hit and album is known, try album + primary artist + title
     if (album != null && album.trim().isNotEmpty) {
       result = await _executeTrackSearch(
-          '$album $primaryArtist $title', title, artist, album);
+        '$album $primaryArtist $title',
+        title,
+        artist,
+        album,
+      );
       if (result != null) return result;
     }
 
@@ -57,17 +70,16 @@ class TidalCanvasService {
           'query': query,
           'limit': '10',
           'types': 'TRACKS',
-          'countryCode': 'US',
+          'countryCode': CanvasArtwork.storefront.toUpperCase(),
         },
       );
 
-      final response = await _client.get(
-        uri,
-        headers: {
-          'X-Tidal-Token': _embedToken,
-          'User-Agent': _userAgent,
-        },
-      ).timeout(const Duration(seconds: 6));
+      final response = await _client
+          .get(
+            uri,
+            headers: {'X-Tidal-Token': _embedToken, 'User-Agent': _userAgent},
+          )
+          .timeout(const Duration(seconds: 6));
 
       if (response.statusCode != 200) return null;
 
@@ -82,7 +94,8 @@ class TidalCanvasService {
         if (trackTitle == null) continue;
 
         final artistsList = item['artists'] as List<dynamic>?;
-        final artistNames = artistsList
+        final artistNames =
+            artistsList
                 ?.whereType<Map<String, dynamic>>()
                 .map((a) => a['name'] as String? ?? '')
                 .where((name) => name.isNotEmpty)
@@ -105,7 +118,9 @@ class TidalCanvasService {
         );
 
         if (candidate.matches(wantTitle, wantArtist, wantAlbum)) {
-          debugPrint('TidalCanvas: Found video cover for "$trackTitle" by ${artistNames.join(', ')}');
+          debugPrint(
+            'TidalCanvas: Found video cover for "$trackTitle" by ${artistNames.join(', ')}',
+          );
           return candidate;
         }
       }
@@ -123,17 +138,16 @@ class TidalCanvasService {
           'query': '$album $artist',
           'limit': '10',
           'types': 'ALBUMS',
-          'countryCode': 'US',
+          'countryCode': CanvasArtwork.storefront.toUpperCase(),
         },
       );
 
-      final response = await _client.get(
-        uri,
-        headers: {
-          'X-Tidal-Token': _embedToken,
-          'User-Agent': _userAgent,
-        },
-      ).timeout(const Duration(seconds: 6));
+      final response = await _client
+          .get(
+            uri,
+            headers: {'X-Tidal-Token': _embedToken, 'User-Agent': _userAgent},
+          )
+          .timeout(const Duration(seconds: 6));
 
       if (response.statusCode != 200) return null;
 
@@ -148,7 +162,8 @@ class TidalCanvasService {
         if (recordTitle == null) continue;
 
         final artistsList = item['artists'] as List<dynamic>?;
-        final artistNames = artistsList
+        final artistNames =
+            artistsList
                 ?.whereType<Map<String, dynamic>>()
                 .map((a) => a['name'] as String? ?? '')
                 .where((name) => name.isNotEmpty)
@@ -170,7 +185,9 @@ class TidalCanvasService {
         );
 
         if (candidate.matches(album, artist, album)) {
-          debugPrint('TidalCanvas: Found album video cover for "$recordTitle" by ${artistNames.join(', ')}');
+          debugPrint(
+            'TidalCanvas: Found album video cover for "$recordTitle" by ${artistNames.join(', ')}',
+          );
           return candidate;
         }
       }

@@ -114,32 +114,16 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
           child: Stack(
             children: [
               // --- AMBIENT REFLECTION BACKGROUND ---
-              // An inverted mirror: the artwork flipped upside down and laid
-              // directly under the art at the same size, so the art's bottom
-              // edge meets its own reflection, fading out downwards.
               if (widget.ambientArt != null)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  top: artHeight,
-                  height: artHeight,
+                Positioned.fill(
                   child: AnimatedOpacity(
                     duration: const Duration(milliseconds: 400),
                     opacity: widget.forceFallbackGradient ? 0.0 : 0.85,
-                    child: ShaderMask(
-                      blendMode: BlendMode.dstIn,
-                      shaderCallback: (rect) => const LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Colors.white, Color(0x55FFFFFF)],
-                      ).createShader(rect),
-                      // A light blur, so it reads as a reflection.
+                    child: Transform.scale(
+                      scale: 1.5, // Scale it up normally to fill and bleed
                       child: ImageFiltered(
-                        imageFilter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                        child: Transform.flip(
-                          flipY: true,
-                          child: widget.ambientArt!,
-                        ),
+                        imageFilter: ImageFilter.blur(sigmaX: 80, sigmaY: 80), // Massive blur
+                        child: widget.ambientArt!,
                       ),
                     ),
                   ),

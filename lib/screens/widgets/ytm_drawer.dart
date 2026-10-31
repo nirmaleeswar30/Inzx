@@ -46,6 +46,12 @@ class YTMDrawer extends StatefulWidget {
   /// Whether vertical drag gestures are enabled
   final bool enableDrag;
 
+  /// Turned on while the sheet is moving (neither closed nor fully open).
+  /// The Now Playing content is drawn from a snapshot then, and the parent
+  /// can hand the same controller to its own heavy layers (blurred ambient
+  /// art), so a moving sheet only redraws pictures instead of re-running
+  /// video, blur and shader layers every frame.
+  final SnapshotController? snapshotController;
 
   const YTMDrawer({
     super.key,
@@ -63,6 +69,7 @@ class YTMDrawer extends StatefulWidget {
     this.onDismissDragUpdate,
     this.onDismissDragEnd,
     this.enableDrag = true,
+    this.snapshotController,
   });
 
   @override
@@ -72,6 +79,9 @@ class YTMDrawer extends StatefulWidget {
 class YTMDrawerState extends State<YTMDrawer>
     with SingleTickerProviderStateMixin {
   late AnimationController _animController;
+  SnapshotController? _ownSnapshot;
+  SnapshotController get _snapshot =>
+      widget.snapshotController ?? (_ownSnapshot ??= SnapshotController());
 
   /// 0.0 = collapsed (Now Playing visible)
   /// 1.0 = expanded (Up Next visible)
@@ -105,11 +115,20 @@ class YTMDrawerState extends State<YTMDrawer>
       setState(() {
         _dragProgress = _animController.value;
       });
+      _syncSnapshot();
     });
+  }
+
+  /// Snapshot only mid-transition: at rest the content is drawn live, so a
+  /// song change while the sheet was open is never shown stale, and every
+  /// transition starts from a fresh snapshot.
+  void _syncSnapshot() {
+    _snapshot.allowSnapshotting = _dragProgress > 0.0 && _dragProgress < 1.0;
   }
 
   @override
   void dispose() {
+    _ownSnapshot?.dispose();
     _animController.dispose();
     super.dispose();
   }
@@ -178,6 +197,7 @@ class YTMDrawerState extends State<YTMDrawer>
     });
 
     _animController.value = _dragProgress;
+    _syncSnapshot();
   }
 
   void _onVerticalDragEnd(DragEndDetails details) {
@@ -214,10 +234,10 @@ class YTMDrawerState extends State<YTMDrawer>
     // Position-based tab selection when expanding
     if (shouldExpand && !_isExpanded) {
       final screenWidth = MediaQuery.of(context).size.width;
-      final thirdWidth = screenWidth / 3;
 
-      // Left third → LYRICS (where the lyrics button sits), rest → UP NEXT
-      final tabIndex = _dragStartX < thirdWidth ? 1 : 0;
+      // Swipe up from the left half → LYRICS (the lyrics bubble's side),
+      // from the right half → UP NEXT (the queue bubble's side).
+      final tabIndex = _dragStartX < screenWidth / 2 ? 1 : 0;
 
       widget.onTabFromPosition?.call(tabIndex);
     }
@@ -249,14 +269,21 @@ class YTMDrawerState extends State<YTMDrawer>
             // Now Playing content (bottom layer)
             Opacity(
               opacity: nowPlayingOpacity.clamp(0.0, 1.0),
-              // Fully covered by the sheet: stop its animations (marquees,
-              // waveform, equalizers) instead of ticking them unseen.
+              // Paused as soon as the sheet moves: while it moves the content
+              // is a snapshot (nothing ticking should repaint it), and once
+              // covered there's no point ticking marquees or equalizers.
               child: TickerMode(
-                enabled: _dragProgress < 1.0,
+                enabled: _dragProgress == 0.0,
                 child: Transform.scale(
                   scale: albumScale,
                   alignment: Alignment.topCenter,
-                  child: widget.nowPlayingContent,
+                  // Scaling and fading one picture is cheap; doing it to live
+                  // video plus blur layers is what spiked the raster thread.
+                  child: SnapshotWidget(
+                    controller: _snapshot,
+                    mode: SnapshotMode.permissive,
+                    child: widget.nowPlayingContent,
+                  ),
                 ),
               ),
             ),

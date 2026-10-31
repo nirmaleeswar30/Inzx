@@ -31,7 +31,14 @@ class _CacheEntry {
 /// Tidal, Community, and Apple Music providers.
 ///
 /// Features:
-/// - Priority: Tidal (1280x1280 Square MP4) -> Community Canvas -> Apple Music.
+/// - Priority: Apple Music (largest catalogue) -> Tidal (square covers on much
+///   of what Apple misses) -> Community Canvas (the only one reaching back
+///   catalogue). Each is asked only if the ones before found nothing.
+/// - Every answer is re-checked against the request; a mismatch counts as
+///   nothing found and the next source is asked.
+/// - Lookups run one at a time, so skipping through a queue doesn't put
+///   three providers' requests per track on the wire at once, and a track
+///   resolved while waiting is answered from the cache.
 /// - In-flight query deduplication.
 /// - LRU memory cache with negative-caching to eliminate redundant queries for songs without canvas.
 /// - Intelligent title noise scrubbing (removes YouTube packaging such as "| Official Video").
@@ -42,6 +49,15 @@ class CanvasRepository {
   static const int _maxCacheSize = 128;
   final LinkedHashMap<String, _CacheEntry> _cache = LinkedHashMap();
   final Map<String, Future<CanvasArtwork?>> _inFlight = {};
+
+  /// Tail of the lookup queue; each lookup waits for the one before it.
+  Future<void> _queue = Future<void>.value();
+
+  Future<CanvasArtwork?> _serially(Future<CanvasArtwork?> Function() task) {
+    final run = _queue.then((_) => task());
+    _queue = run.then((_) {}, onError: (_) {});
+    return run;
+  }
 
   /// Get the animated canvas for a [track], or null if none exists.
   Future<CanvasArtwork?> canvasFor(Track track) async {
@@ -69,11 +85,14 @@ class CanvasRepository {
 
     try {
       final result = await future;
-      _putCache(key, _CacheEntry(
-        artwork: result,
-        withAlbum: hasAlbum,
-        timestamp: DateTime.now(),
-      ));
+      _putCache(
+        key,
+        _CacheEntry(
+          artwork: result,
+          withAlbum: hasAlbum,
+          timestamp: DateTime.now(),
+        ),
+      );
       return result;
     } finally {
       _inFlight.remove(key);
@@ -99,11 +118,14 @@ class CanvasRepository {
 
     try {
       final result = await future;
-      _putCache(key, _CacheEntry(
-        artwork: result,
-        withAlbum: true,
-        timestamp: DateTime.now(),
-      ));
+      _putCache(
+        key,
+        _CacheEntry(
+          artwork: result,
+          withAlbum: true,
+          timestamp: DateTime.now(),
+        ),
+      );
       return result;
     } finally {
       _inFlight.remove(key);
@@ -115,48 +137,52 @@ class CanvasRepository {
     String artist,
     String? album,
     bool hasAlbum,
-  ) async {
-    // 1. Tidal (Preferred: pristine 1280x1280 1:1 square MP4s)
-    try {
-      final tidalHit = await TidalCanvasService.search(title, artist, album);
-      if (tidalHit != null) return tidalHit;
-    } catch (e) {
-      debugPrint('CanvasRepository: Tidal error: $e');
-    }
-
-    // 2. Apple Music (Huge catalog coverage via album motion artwork)
-    try {
-      final appleHit = await AppleMusicCanvasService.search(title, artist, album);
-      if (appleHit != null) return appleHit;
-    } catch (e) {
-      debugPrint('CanvasRepository: Apple Music error: $e');
-    }
-
-    // 3. Community Canvas (Fast index lookup for classic tracks and curated loops)
-    try {
-      final communityHit = await CommunityCanvasService.search(title, artist, album);
-      if (communityHit != null) return communityHit;
-    } catch (e) {
-      debugPrint('CanvasRepository: Community error: $e');
-    }
-
-    return null;
+  ) {
+    return _firstHit([
+      (
+        'Apple Music',
+        () => AppleMusicCanvasService.search(title, artist, album),
+      ),
+      ('Tidal', () => TidalCanvasService.search(title, artist, album)),
+      ('Community', () => CommunityCanvasService.search(title, artist, album)),
+    ], (found) => found.matches(title, artist, album));
   }
 
-  Future<CanvasArtwork?> _resolveAlbum(String album, String artist) async {
-    // 1. Tidal
-    final tidalHit = await TidalCanvasService.searchAlbum(album, artist);
-    if (tidalHit != null) return tidalHit;
+  Future<CanvasArtwork?> _resolveAlbum(String album, String artist) {
+    return _firstHit([
+      ('Apple Music', () => AppleMusicCanvasService.searchAlbum(album, artist)),
+      ('Tidal', () => TidalCanvasService.searchAlbum(album, artist)),
+      ('Community', () => CommunityCanvasService.searchAlbum(album, artist)),
+    ], (found) => found.matches(album, artist, album));
+  }
 
-    // 2. Community
-    final communityHit = await CommunityCanvasService.searchAlbum(album, artist);
-    if (communityHit != null) return communityHit;
-
-    // 3. Apple Music
-    final appleHit = await AppleMusicCanvasService.searchAlbum(album, artist);
-    if (appleHit != null) return appleHit;
-
-    return null;
+  /// The first source whose answer survives [accept]. Sources run lazily,
+  /// in order, so later ones are only paid for when earlier ones come up
+  /// empty; one that throws counts as one that found nothing.
+  Future<CanvasArtwork?> _firstHit(
+    List<(String, Future<CanvasArtwork?> Function())> sources,
+    bool Function(CanvasArtwork) accept,
+  ) {
+    return _serially(() async {
+      for (final (name, source) in sources) {
+        CanvasArtwork? found;
+        try {
+          found = await source();
+        } catch (e) {
+          debugPrint('CanvasRepository: $name error: $e');
+        }
+        if (found == null) continue;
+        if (!accept(found)) {
+          debugPrint(
+            'CanvasRepository: $name answered "${found.title}" by '
+            '"${found.artist}", not a match',
+          );
+          continue;
+        }
+        return found;
+      }
+      return null;
+    });
   }
 
   void _putCache(String key, _CacheEntry entry) {
@@ -212,7 +238,10 @@ class CanvasRepository {
     var s = input
         .replaceAll(RegExp(r'\s*-\s*Topic', caseSensitive: false), '')
         .replaceAll(RegExp(r'\s*VEVO', caseSensitive: false), '')
-        .replaceAll(RegExp(r'\s*Official\s*(?:Channel)?', caseSensitive: false), '')
+        .replaceAll(
+          RegExp(r'\s*Official\s*(?:Channel)?', caseSensitive: false),
+          '',
+        )
         .trim();
     return s.isEmpty ? input.trim() : s;
   }

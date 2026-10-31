@@ -42,32 +42,37 @@ class CommunityCanvasService {
 
       final wantTitle = CanvasArtwork.normalizeForMatch(title);
       final wantArtist = CanvasArtwork.normalizeForMatch(artist);
-      final wantAlbum =
-          album != null ? CanvasArtwork.normalizeForMatch(album) : null;
+      final wantAlbum = album != null
+          ? CanvasArtwork.normalizeForMatch(album)
+          : null;
 
       for (final entry in entries) {
         final song = CanvasArtwork.normalizeForMatch(entry.song);
         final credited = CanvasArtwork.normalizeForMatch(entry.artist);
         final listedAlbum = CanvasArtwork.normalizeForMatch(entry.album);
 
-        final titleOk = song.isNotEmpty &&
+        final titleOk =
+            song.isNotEmpty &&
             (wantTitle.contains(song) ||
                 song.contains(wantTitle) ||
                 wantTitle == song);
 
-        final artistOk = credited.isNotEmpty &&
+        final artistOk =
+            credited.isNotEmpty &&
             (wantArtist.contains(credited) ||
                 credited.contains(wantArtist) ||
                 wantArtist == credited);
 
-        final albumOk = listedAlbum.isEmpty ||
+        final albumOk =
+            listedAlbum.isEmpty ||
             wantAlbum == null ||
             wantAlbum.isEmpty ||
             listedAlbum == wantAlbum;
 
         if (titleOk && artistOk && albumOk) {
           debugPrint(
-              'CommunityCanvas: Manifest hit for "${entry.song}" by "${entry.artist}"');
+            'CommunityCanvas: Manifest hit for "${entry.song}" by "${entry.artist}"',
+          );
           return CanvasArtwork(
             url: entry.url,
             title: entry.song,
@@ -84,10 +89,7 @@ class CommunityCanvasService {
   }
 
   /// Search community index for an album.
-  static Future<CanvasArtwork?> searchAlbum(
-    String album,
-    String artist,
-  ) async {
+  static Future<CanvasArtwork?> searchAlbum(String album, String artist) async {
     try {
       final entries = await _getManifest();
       if (entries.isEmpty) return null;
@@ -104,7 +106,8 @@ class CommunityCanvasService {
             credited.isNotEmpty &&
             (wantArtist.contains(credited) || credited.contains(wantArtist))) {
           debugPrint(
-              'CommunityCanvas: Album hit for "${entry.album}" by "${entry.artist}"');
+            'CommunityCanvas: Album hit for "${entry.album}" by "${entry.artist}"',
+          );
           return CanvasArtwork(
             url: entry.url,
             title: entry.album,
@@ -132,13 +135,15 @@ class CommunityCanvasService {
     _isLoading = true;
 
     try {
-      final response = await _client.get(
-        Uri.parse(_manifestUrl),
-        headers: {
-          'User-Agent':
-              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        },
-      ).timeout(const Duration(seconds: 8));
+      final response = await _client
+          .get(
+            Uri.parse(_manifestUrl),
+            headers: {
+              'User-Agent':
+                  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            },
+          )
+          .timeout(const Duration(seconds: 8));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -152,18 +157,21 @@ class CommunityCanvasService {
             final url = item['url'] as String?;
             if (song == null || artist == null || url == null) continue;
 
-            parsed.add(_CommunityEntry(
-              song: song,
-              artist: artist,
-              album: item['album'] as String? ?? '',
-              url: url,
-            ));
+            parsed.add(
+              _CommunityEntry(
+                song: song,
+                artist: artist,
+                album: item['album'] as String? ?? '',
+                url: url,
+              ),
+            );
           }
           if (parsed.isNotEmpty) {
             _entries = parsed;
             _fetchedAt = now;
             debugPrint(
-                'CommunityCanvas: Loaded ${_entries.length} canvas entries');
+              'CommunityCanvas: Loaded ${_entries.length} canvas entries',
+            );
           }
         }
       }

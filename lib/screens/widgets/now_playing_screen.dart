@@ -1461,6 +1461,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   late PageController
   _stageViewPageController; // For swiping right panel in Stage View
   final GlobalKey<YTMDrawerState> _drawerKey = GlobalKey<YTMDrawerState>();
+  /// On while the Up Next / Lyrics sheet is moving: the drawer and the
+  /// blurred ambient background are drawn from snapshots then.
+  final SnapshotController _sheetSnapshot = SnapshotController();
   /// The playing canvas video's layer, sampled by the ambient glow.
   final GlobalKey _canvasCaptureKey = GlobalKey();
   AlbumColors _currentColors = AlbumColors.defaultColors();
@@ -1572,6 +1575,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
   @override
   void dispose() {
+    _sheetSnapshot.dispose();
     _colorAnimController.dispose();
     _tabController.dispose();
     _pageController.dispose();
@@ -1922,14 +1926,20 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                           // Follows the canvas video (sampled small, Nivio-
                           // style), flipped upside down: an inverted mirror.
                           // A light blur, so it reads as a reflection.
-                          child: ImageFiltered(
-                            imageFilter: ImageFilter.blur(
-                              sigmaX: 18,
-                              sigmaY: 18,
-                            ),
-                            child: Transform.flip(
-                              flipY: true,
-                              child: _buildAmbientArt(track),
+                          // Snapshotted while the sheet moves so the blur
+                          // isn't recomputed every animation frame.
+                          child: SnapshotWidget(
+                            controller: _sheetSnapshot,
+                            mode: SnapshotMode.permissive,
+                            child: ImageFiltered(
+                              imageFilter: ImageFilter.blur(
+                                sigmaX: 18,
+                                sigmaY: 18,
+                              ),
+                              child: Transform.flip(
+                                flipY: true,
+                                child: _buildAmbientArt(track),
+                              ),
                             ),
                           ),
                         ),
@@ -1937,6 +1947,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                     ),
                   YTMDrawer(
                     key: _drawerKey,
+                    snapshotController: _sheetSnapshot,
                     backgroundColor: Colors.transparent,
                     surfaceColor: colors.surface,
                     surfaceDecoration: BoxDecoration(

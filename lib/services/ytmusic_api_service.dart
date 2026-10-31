@@ -155,6 +155,9 @@ class InnerTubeService {
 
       _sessionClientVersion =
           read('INNERTUBE_CLIENT_VERSION') ?? _sessionClientVersion;
+      // Re-read the timestamp on every scope fetch: a refresh happens after a
+      // stale timestamp was refused, so keeping the old one would stick.
+      _sessionSignatureTimestamp = null;
       // Try reading STS directly from the page HTML (older YTM builds).
       final sts = RegExp(r'"STS"\s*:\s*(\d+)').firstMatch(html)?.group(1);
       if (sts != null) {
@@ -354,11 +357,7 @@ class InnerTubeService {
       },
     };
 
-    var response = await _request(
-      'player',
-      buildBody(sts),
-      authenticated: true,
-    );
+    var response = await _trackingPlayerRequest(buildBody(sts));
     var tracking = response?['playbackTracking'] as Map<String, dynamic>?;
     if (tracking != null) return tracking;
 
@@ -378,13 +377,47 @@ class InnerTubeService {
     }
     // Only skip retry when we got the exact same non-null STS back.
     if (retrySts == sts) return null;
-    response = await _request(
-      'player',
-      buildBody(retrySts),
-      authenticated: true,
-    );
+    response = await _trackingPlayerRequest(buildBody(retrySts));
     tracking = response?['playbackTracking'] as Map<String, dynamic>?;
     return tracking;
+  }
+
+  /// The authenticated WEB_REMIX `player` call that issues the tracking
+  /// block, signed the way the signed-in web client signs it (BitChord's
+  /// postMusic): the session's own visitor id (matching context.visitorData,
+  /// never a random one), its account slot and brand-channel page id, and
+  /// the client's name/version headers. No API key.
+  Future<Map<String, dynamic>?> _trackingPlayerRequest(
+    Map<String, dynamic> body,
+  ) async {
+    try {
+      final headers = {
+        ..._statsHeaders(),
+        'Content-Type': 'application/json',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'X-Goog-Api-Format-Version': '1',
+        'X-YouTube-Client-Name': '67',
+        'X-YouTube-Client-Version': _webRemixVersion,
+      };
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/player?prettyPrint=false'),
+            headers: headers,
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 15));
+      if (response.statusCode != 200) {
+        debugPrint(
+          '[YTM-Tracking] player HTTP ${response.statusCode}: '
+          '${response.body.length > 300 ? response.body.substring(0, 300) : response.body}',
+        );
+        return null;
+      }
+      return await compute(_jsonDecodeIsolate, response.body);
+    } catch (e) {
+      debugPrint('[YTM-Tracking] player request failed: $e');
+      return null;
+    }
   }
 
   /// Headers the tracking block asks for by name (USER_AUTH, VISITOR_ID,
