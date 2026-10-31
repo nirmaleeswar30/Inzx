@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:iconsax/iconsax.dart';
 import '../providers/providers.dart';
+import '../services/deep_link_handler.dart';
+import 'ytmusic_login_screen.dart';
 import '../services/jams/jams_models.dart';
 import '../core/design_system/colors.dart';
 import '../core/l10n/app_localizations_x.dart';
@@ -43,7 +45,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final googleAuth = ref.watch(googleAuthStateProvider);
+    final isSignedIn = ref.watch(appAccountProvider) != null;
     final currentSession = ref.watch(currentJamSessionProvider).valueOrNull;
     final jamsUIState = ref.watch(jamsNotifierProvider);
     final connectionState = ref.watch(jamsConnectionStateProvider).valueOrNull;
@@ -76,7 +78,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: googleAuth.isSignedIn
+      body: isSignedIn
           ? currentSession != null
                 ? _buildActiveSession(
                     isDark,
@@ -89,7 +91,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
     );
   }
 
-  /// Prompt to sign in with Google
+  /// Prompt to sign in (single Google / YouTube Music login)
   Widget _buildSignInPrompt(bool isDark, AlbumColors albumColors) {
     final l10n = context.l10n;
     final hasAlbumColors = !albumColors.isDefault;
@@ -133,7 +135,7 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
             const SizedBox(height: 32),
             ElevatedButton.icon(
               onPressed: () async {
-                await ref.read(googleAuthStateProvider.notifier).signIn();
+                await openSignIn(context);
               },
               icon: const Icon(Icons.login),
               label: Text(l10n.signInWithGoogle),
@@ -513,6 +515,14 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
                           );
                         },
                         icon: Icon(Icons.copy, color: secondaryColor),
+                      ),
+                      IconButton(
+                        tooltip: 'Share Jam link',
+                        onPressed: () => shareJamInvite(
+                          session.sessionCode,
+                          videoId: ref.read(currentTrackProvider)?.id,
+                        ),
+                        icon: Icon(Icons.share_rounded, color: secondaryColor),
                       ),
                     ],
                   ),

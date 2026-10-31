@@ -14,6 +14,8 @@ import 'tabs/library_tab.dart';
 import 'tabs/folders_tab.dart';
 import 'widgets/mini_player.dart';
 import 'widgets/now_playing_screen.dart';
+import 'widgets/jiosaavn_notice_sheet.dart';
+import 'widgets/liquid_glass_nav.dart';
 
 /// Standalone Music App with its own navigation
 class MusicApp extends ConsumerStatefulWidget {
@@ -24,10 +26,16 @@ class MusicApp extends ConsumerStatefulWidget {
 }
 
 class _MusicAppState extends ConsumerState<MusicApp>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   int _currentIndex = 0;
   String? _lastTrackedId;
   late AnimationController _animationController;
+  late final AnimationController _bottomNavAnimationController;
+  late final Animation<double> _bottomNavAnimation;
+  bool _isBottomNavVisible = true;
+  double _accumulatedDelta = 0.0;
+  static const double _hideThreshold = 25.0;
+  static const double _showThreshold = 20.0;
 
   final List<Widget> _tabs = const [
     MusicHomeTab(),
@@ -43,15 +51,91 @@ class _MusicAppState extends ConsumerState<MusicApp>
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
+    _bottomNavAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+      value: 1.0,
+    );
+    _bottomNavAnimation = CurvedAnimation(
+      parent: _bottomNavAnimationController,
+      curve: Curves.easeInOutCubic,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future.delayed(const Duration(milliseconds: 1200));
+      if (mounted) await JioSaavnNoticeSheet.maybeShow(context, ref);
+    });
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _bottomNavAnimationController.dispose();
     super.dispose();
   }
 
+  bool _handleScrollNotification(ScrollNotification notification) {
+    if (notification.metrics.axis != Axis.vertical) return false;
+
+    if (notification is ScrollUpdateNotification) {
+      final metrics = notification.metrics;
+      final delta = notification.scrollDelta;
+      if (delta == null || delta == 0) return false;
+
+      // When near or at top, always reveal bottom navbar
+      if (metrics.pixels <= 15.0) {
+        if (!_isBottomNavVisible) {
+          _isBottomNavVisible = true;
+          _bottomNavAnimationController.forward();
+        }
+        _accumulatedDelta = 0.0;
+        return false;
+      }
+
+      // Avoid toggling when overscrolling past bottom or top extent
+      if (metrics.pixels > metrics.maxScrollExtent || metrics.pixels < 0) {
+        return false;
+      }
+
+      // When near bottom, reveal nav so user can navigate
+      if (metrics.maxScrollExtent > 0 &&
+          metrics.pixels >= metrics.maxScrollExtent - 20.0) {
+        if (!_isBottomNavVisible) {
+          _isBottomNavVisible = true;
+          _bottomNavAnimationController.forward();
+        }
+        _accumulatedDelta = 0.0;
+        return false;
+      }
+
+      if (delta > 0) {
+        // Scrolling DOWN -> hide bottom navbar
+        if (_accumulatedDelta < 0) _accumulatedDelta = 0;
+        _accumulatedDelta += delta;
+        if (_accumulatedDelta > _hideThreshold && _isBottomNavVisible) {
+          _isBottomNavVisible = false;
+          _bottomNavAnimationController.reverse();
+          _accumulatedDelta = 0;
+        }
+      } else if (delta < 0) {
+        // Scrolling UP -> reveal bottom navbar
+        if (_accumulatedDelta > 0) _accumulatedDelta = 0;
+        _accumulatedDelta += delta;
+        if (_accumulatedDelta < -_showThreshold && !_isBottomNavVisible) {
+          _isBottomNavVisible = true;
+          _bottomNavAnimationController.forward();
+          _accumulatedDelta = 0;
+        }
+      }
+    }
+    return false;
+  }
+
   void _onTabSelected(int index) {
+    if (!_isBottomNavVisible) {
+      _isBottomNavVisible = true;
+      _bottomNavAnimationController.forward();
+    }
+    _accumulatedDelta = 0.0;
     if (index != _currentIndex) {
       setState(() => _currentIndex = index);
       _animationController.forward(from: 0);
@@ -109,69 +193,102 @@ class _MusicAppState extends ConsumerState<MusicApp>
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         backgroundColor: backgroundColor,
-        body: Stack(
-          children: [
-            // Strong accent gradient at the very top (like YT Music)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 250,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: hasAlbumColors
-                        ? [
-                            albumColors.accent.withValues(
-                              alpha: isDark ? 0.4 : 0.25,
-                            ),
-                            albumColors.accent.withValues(alpha: 0),
-                          ]
-                        : [
-                            accentColor.withValues(alpha: isDark ? 0.35 : 0.2),
-                            accentColor.withValues(alpha: 0),
-                          ],
+        body: NotificationListener<ScrollNotification>(
+          onNotification: _handleScrollNotification,
+          child: Stack(
+            children: [
+              // Strong accent gradient at the very top (like YT Music)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 250,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: hasAlbumColors
+                          ? [
+                              albumColors.accent.withValues(
+                                alpha: isDark ? 0.4 : 0.25,
+                              ),
+                              albumColors.accent.withValues(alpha: 0),
+                            ]
+                          : [
+                              accentColor.withValues(alpha: isDark ? 0.35 : 0.2),
+                              accentColor.withValues(alpha: 0),
+                            ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            // Main content (extends full screen behind floating nav)
-            Positioned.fill(
-              child: IndexedStack(index: _currentIndex, children: _tabs),
-            ),
-            // Mini player + nav bar positioned at bottom
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (hasCurrentTrack)
-                    MusicMiniPlayer(
-                      onTap: () => NowPlayingScreen.show(context),
-                    ),
-                  _ModernFloatingNav(
-                    currentIndex: _currentIndex,
-                    onTap: _onTabSelected,
-                    isDark: isDark,
-                    accentColor: accentColor,
-                  ),
-                ],
+              // Main content (extends full screen behind floating nav)
+              Positioned.fill(
+                child: IndexedStack(index: _currentIndex, children: _tabs),
               ),
-            ),
-          ],
+              // Mini player + nav bar positioned at bottom
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (hasCurrentTrack)
+                      AnimatedBuilder(
+                        animation: _bottomNavAnimation,
+                        builder: (context, child) {
+                          final safeBottom =
+                              MediaQuery.of(context).padding.bottom;
+                          final extraBottom = (1.0 - _bottomNavAnimation.value) *
+                              (safeBottom > 0 ? safeBottom + 4 : 12.0);
+                          return Padding(
+                            padding: EdgeInsets.only(bottom: extraBottom),
+                            child: child,
+                          );
+                        },
+                        child: MusicMiniPlayer(
+                          onTap: () => NowPlayingScreen.show(context),
+                        ),
+                      ),
+                    // Clips the hide animation, but lets the glass nav's
+                    // lifted lens rise above the bar's top edge.
+                    ClipRect(
+                      clipper: const _TopOverflowClipper(16),
+                      // SizeTransition's own animation without its built-in
+                      // ClipRect, which cut the lens off at the bar's edge.
+                      child: AnimatedBuilder(
+                        animation: _bottomNavAnimation,
+                        builder: (context, child) => Align(
+                          alignment: Alignment.topCenter,
+                          heightFactor: _bottomNavAnimation.value.clamp(0.0, 1.0),
+                          child: child,
+                        ),
+                        child: FadeTransition(
+                          opacity: _bottomNavAnimation,
+                          child: _ModernFloatingNav(
+                            currentIndex: _currentIndex,
+                            onTap: _onTabSelected,
+                            isDark: isDark,
+                            accentColor: accentColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-/// Modern floating bottom navigation that dynamically switches between
-/// the standard navbar (from commit 6ee4ad9) and the Liquid Glass navbar
-/// based on the user's preference in Settings.
+/// Floating bottom navigation (the liquid glass bar is built separately,
+/// see _MusicAppState._buildGlassTabBar).
 class _ModernFloatingNav extends ConsumerWidget {
   final int currentIndex;
   final Function(int) onTap;
@@ -187,13 +304,41 @@ class _ModernFloatingNav extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isLiquidGlass = ref.watch(liquidGlassNavProvider);
-    if (isLiquidGlass) {
-      return _LiquidGlassFloatingNav(
+    if (ref.watch(liquidGlassNavProvider)) {
+      final l10n = context.l10n;
+      final albumColors = ref.watch(albumColorsProvider);
+      // The bar is dark glass in both themes, so the accent must read on dark.
+      final accent = readableAccent(
+        albumColors.isDefault ? accentColor : albumColors.accent,
+        isDark: true,
+      );
+      return LiquidGlassNav(
+        items: [
+          LiquidGlassNavItem(
+            icon: Icons.home_outlined,
+            selectedIcon: Icons.home_rounded,
+            label: l10n.home,
+          ),
+          LiquidGlassNavItem(
+            icon: Icons.music_note_outlined,
+            selectedIcon: Icons.music_note_rounded,
+            label: l10n.songs,
+          ),
+          LiquidGlassNavItem(
+            icon: Icons.library_music_outlined,
+            selectedIcon: Icons.library_music_rounded,
+            label: l10n.library,
+          ),
+          LiquidGlassNavItem(
+            icon: Icons.folder_outlined,
+            selectedIcon: Icons.folder_rounded,
+            label: l10n.folders,
+          ),
+        ],
         currentIndex: currentIndex,
         onTap: onTap,
         isDark: isDark,
-        accentColor: accentColor,
+        accentColor: accent,
       );
     }
     return _StandardFloatingNav(
@@ -311,8 +456,12 @@ class _StandardFloatingNavState extends ConsumerState<_StandardFloatingNav>
 
     final albumColors = ref.watch(albumColorsProvider);
     final hasAlbumColors = !albumColors.isDefault;
-    final dynamicAccentColor =
-        hasAlbumColors ? albumColors.accent : widget.accentColor;
+    // The bar is dark glass in both themes, so the accent must read on dark
+    // (a black accent would otherwise vanish).
+    final dynamicAccentColor = readableAccent(
+      hasAlbumColors ? albumColors.accent : widget.accentColor,
+      isDark: true,
+    );
 
     final List<Color> gradientColors;
     final Color borderColor = dynamicAccentColor.withValues(
@@ -538,324 +687,20 @@ class _StandardNavItemWidget extends StatelessWidget {
   }
 }
 
-/// Liquid Glass floating bottom navigation with authentic optical refraction,
-/// 72px height, and fluid shape-shifting droplet indicator.
-class _LiquidGlassFloatingNav extends ConsumerStatefulWidget {
-  final int currentIndex;
-  final Function(int) onTap;
-  final bool isDark;
-  final Color accentColor;
 
-  const _LiquidGlassFloatingNav({
-    required this.currentIndex,
-    required this.onTap,
-    required this.isDark,
-    required this.accentColor,
-  });
+/// A [ClipRect] clip extended [overflow] px above the child, so content that
+/// rises out of the top of the bar (the liquid glass nav's lifted lens) is
+/// not cut off.
+class _TopOverflowClipper extends CustomClipper<Rect> {
+  const _TopOverflowClipper(this.overflow);
+
+  final double overflow;
 
   @override
-  ConsumerState<_LiquidGlassFloatingNav> createState() =>
-      _LiquidGlassFloatingNavState();
-}
-
-class _LiquidGlassFloatingNavState extends ConsumerState<_LiquidGlassFloatingNav>
-    with TickerProviderStateMixin {
-  late AnimationController _fluidController;
-  late AnimationController _bounceController;
-  late Animation<double> _bounceAnimation;
-  int _previousIndex = 0;
+  Rect getClip(Size size) =>
+      Rect.fromLTRB(0, -overflow, size.width, size.height);
 
   @override
-  void initState() {
-    super.initState();
-    _previousIndex = widget.currentIndex;
-
-    // Fluid droplet transit controller
-    _fluidController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 360),
-    );
-
-    // Bounce animation for selected tab icon
-    _bounceController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 320),
-    );
-
-    _bounceAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.82), weight: 25),
-      TweenSequenceItem(tween: Tween(begin: 0.82, end: 1.14), weight: 40),
-      TweenSequenceItem(tween: Tween(begin: 1.14, end: 1.0), weight: 35),
-    ]).animate(
-      CurvedAnimation(parent: _bounceController, curve: Curves.easeOutCubic),
-    );
-  }
-
-  @override
-  void dispose() {
-    _fluidController.dispose();
-    _bounceController.dispose();
-    super.dispose();
-  }
-
-  @override
-  void didUpdateWidget(covariant _LiquidGlassFloatingNav oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.currentIndex != widget.currentIndex) {
-      _previousIndex = oldWidget.currentIndex;
-      _fluidController.forward(from: 0.0);
-      _bounceController.forward(from: 0.0);
-    }
-  }
-
-  void _onItemTapped(int index) {
-    HapticFeedback.selectionClick();
-    if (index == widget.currentIndex) {
-      _bounceController.forward(from: 0.0);
-    } else {
-      widget.onTap(index);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
-    final l10n = context.l10n;
-    final navItems = [
-      (Icons.home_outlined, Icons.home_rounded, l10n.home),
-      (Icons.music_note_outlined, Icons.music_note_rounded, l10n.songs),
-      (Icons.library_music_outlined, Icons.library_music_rounded, l10n.library),
-      (Icons.folder_outlined, Icons.folder_rounded, l10n.folders),
-    ];
-
-    final albumColors = ref.watch(albumColorsProvider);
-    final hasAlbumColors = !albumColors.isDefault;
-    final dynamicAccentColor =
-        hasAlbumColors ? albumColors.accent : widget.accentColor;
-
-    final bottomMargin = (bottomPadding > 0 ? bottomPadding : 10.0) + 14.0;
-    final navY = MediaQuery.of(context).size.height - bottomMargin - 72.0;
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(10, 0, 10, bottomMargin),
-      child: LiquidGlassContainer(
-        borderRadius: 36.0,
-        blurSigma: 2.0, // Crisp 2.0px optical liquid dispersion (never frosted fog)
-        refractionScale: 1.05, // 5% convex lens optical magnification
-        refractionDeflection: 2.8, // Enhanced optical ray bending: visible lateral bend towards center and back
-        isDark: widget.isDark,
-        surfaceColor: Colors.black.withValues(alpha: widget.isDark ? 0.45 : 0.35),
-        accentColor: dynamicAccentColor,
-        height: 72.0,
-        globalOffset: Offset(10.0, navY),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final totalWidth = constraints.maxWidth;
-            if (totalWidth <= 0) return const SizedBox.shrink();
-            final contentHeight =
-                constraints.maxHeight > 0 ? constraints.maxHeight : 62.0;
-            final itemWidth = totalWidth / navItems.length;
-            final baseWidth = (itemWidth * 0.82).clamp(52.0, 74.0);
-            const baseHeight = 52.0;
-
-            return Stack(
-              alignment: Alignment.center,
-              children: [
-                // Fluid Shape-Shifting Liquid Droplet Indicator
-                AnimatedBuilder(
-                  animation: _fluidController,
-                  builder: (context, child) {
-                    final t = _fluidController.value;
-                    final double currentCenterX;
-                    final double currentWidth;
-                    final double stretchRatio;
-                    final double currentHeight;
-
-                    if (_previousIndex == widget.currentIndex ||
-                        !_fluidController.isAnimating) {
-                      currentCenterX = (widget.currentIndex + 0.5) * itemWidth;
-                      currentWidth = baseWidth;
-                      stretchRatio = 0.0;
-                      currentHeight = baseHeight;
-                    } else {
-                      final startCenterX =
-                          (_previousIndex + 0.5) * itemWidth;
-                      final endCenterX =
-                          (widget.currentIndex + 0.5) * itemWidth;
-
-                      if (widget.currentIndex > _previousIndex) {
-                        // Moving right: right edge is leading, left edge is trailing
-                        final startLeading = startCenterX + baseWidth / 2;
-                        final startTrailing = startCenterX - baseWidth / 2;
-                        final endLeading = endCenterX + baseWidth / 2;
-                        final endTrailing = endCenterX - baseWidth / 2;
-
-                        final leadT = Curves.easeOutCubic.transform(t);
-                        final trailT = Curves.easeOutBack.transform(t);
-
-                        final currentLeading =
-                            lerpDouble(startLeading, endLeading, leadT) ??
-                            endLeading;
-                        final currentTrailing =
-                            lerpDouble(startTrailing, endTrailing, trailT) ??
-                            endTrailing;
-
-                        final rawWidth =
-                            (currentLeading - currentTrailing).abs();
-                        currentWidth = rawWidth.clamp(
-                          baseWidth * 0.80,
-                          baseWidth * 2.2,
-                        );
-                        currentCenterX =
-                            (currentLeading + currentTrailing) / 2;
-                        stretchRatio = ((currentWidth - baseWidth) /
-                                baseWidth)
-                            .clamp(0.0, 1.0);
-                        currentHeight = (baseHeight - stretchRatio * 8.0)
-                            .clamp(42.0, baseHeight);
-                      } else {
-                        // Moving left: left edge is leading, right edge is trailing
-                        final startLeading = startCenterX - baseWidth / 2;
-                        final startTrailing = startCenterX + baseWidth / 2;
-                        final endLeading = endCenterX - baseWidth / 2;
-                        final endTrailing = endCenterX + baseWidth / 2;
-
-                        final leadT = Curves.easeOutCubic.transform(t);
-                        final trailT = Curves.easeOutBack.transform(t);
-
-                        final currentLeading =
-                            lerpDouble(startLeading, endLeading, leadT) ??
-                            endLeading;
-                        final currentTrailing =
-                            lerpDouble(startTrailing, endTrailing, trailT) ??
-                            endTrailing;
-
-                        final rawWidth =
-                            (currentTrailing - currentLeading).abs();
-                        currentWidth = rawWidth.clamp(
-                          baseWidth * 0.80,
-                          baseWidth * 2.2,
-                        );
-                        currentCenterX =
-                            (currentLeading + currentTrailing) / 2;
-                        stretchRatio = ((currentWidth - baseWidth) /
-                                baseWidth)
-                            .clamp(0.0, 1.0);
-                        currentHeight = (baseHeight - stretchRatio * 8.0)
-                            .clamp(42.0, baseHeight);
-                      }
-                    }
-
-                    return Positioned(
-                      left: currentCenterX - currentWidth / 2,
-                      top: (contentHeight - currentHeight) / 2,
-                      width: currentWidth,
-                      height: currentHeight,
-                      child: CustomPaint(
-                        painter: LiquidDropletPainter(
-                          borderRadius: currentHeight / 2,
-                          isDark: widget.isDark,
-                          accentColor: dynamicAccentColor,
-                          stretchFactor: stretchRatio,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-
-                // Nav items
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: List.generate(navItems.length, (index) {
-                    final item = navItems[index];
-                    final isSelected = widget.currentIndex == index;
-
-                    return GestureDetector(
-                      onTap: () => _onItemTapped(index),
-                      behavior: HitTestBehavior.opaque,
-                      child: SizedBox(
-                        width: itemWidth,
-                        height: contentHeight,
-                        child: AnimatedBuilder(
-                          animation: _bounceController,
-                          builder: (context, child) {
-                            final scale =
-                                isSelected && _bounceController.isAnimating
-                                    ? _bounceAnimation.value
-                                    : 1.0;
-                            return Transform.scale(
-                              scale: scale,
-                              child: _LiquidGlassNavItemWidget(
-                                icon: item.$1,
-                                selectedIcon: item.$2,
-                                label: item.$3,
-                                isSelected: isSelected,
-                                accentColor: dynamicAccentColor,
-                                isDark: widget.isDark,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _LiquidGlassNavItemWidget extends StatelessWidget {
-  final IconData icon;
-  final IconData selectedIcon;
-  final String label;
-  final bool isSelected;
-  final Color accentColor;
-  final bool isDark;
-
-  const _LiquidGlassNavItemWidget({
-    required this.icon,
-    required this.selectedIcon,
-    required this.label,
-    required this.isSelected,
-    required this.accentColor,
-    required this.isDark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // Liquid glass content contrast:
-    // Razor-sharp contrast against arbitrary dynamic backdrops.
-    final unselectedColor = isDark
-        ? Colors.white.withValues(alpha: 0.60)
-        : Colors.black.withValues(alpha: 0.55);
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          isSelected ? selectedIcon : icon,
-          size: isSelected ? 25 : 23,
-          color: isSelected ? accentColor : unselectedColor,
-        ),
-        const SizedBox(height: 3),
-        AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 200),
-          style: TextStyle(
-            fontSize: isSelected ? 11.5 : 10.5,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? accentColor : unselectedColor,
-            letterSpacing: isSelected ? 0.2 : 0,
-          ),
-          child: Text(label),
-        ),
-      ],
-    );
-  }
+  bool shouldReclip(covariant _TopOverflowClipper oldClipper) =>
+      oldClipper.overflow != overflow;
 }

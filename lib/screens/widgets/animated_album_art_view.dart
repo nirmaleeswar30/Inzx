@@ -27,6 +27,10 @@ class AnimatedAlbumArtView extends ConsumerStatefulWidget {
   final BoxFit fit;
   final void Function(bool hasCanvas)? onCanvasLoaded;
 
+  /// Key for the video's RepaintBoundary, so an ambient glow can sample its
+  /// frames (see CanvasAmbientGlow).
+  final GlobalKey? captureKey;
+
   const AnimatedAlbumArtView({
     super.key,
     required this.track,
@@ -34,6 +38,7 @@ class AnimatedAlbumArtView extends ConsumerStatefulWidget {
     this.borderRadius = const BorderRadius.all(Radius.circular(16)),
     this.fit = BoxFit.cover,
     this.onCanvasLoaded,
+    this.captureKey,
   });
 
   @override
@@ -41,7 +46,8 @@ class AnimatedAlbumArtView extends ConsumerStatefulWidget {
       _AnimatedAlbumArtViewState();
 }
 
-class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView> {
+class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView>
+    with WidgetsBindingObserver {
   VideoPlayerController? _controller;
   bool _isInitialized = false;
   int _loadRequestId = 0;
@@ -49,7 +55,22 @@ class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadCanvas();
+  }
+
+  /// Nobody sees the canvas while the app is in the background, so don't
+  /// keep decoding it (it costs battery and holds a hardware decoder).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final controller = _controller;
+    if (controller == null || !_isInitialized) return;
+    if (state == AppLifecycleState.resumed) {
+      if (ref.read(isPlayingProvider)) controller.play();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      controller.pause();
+    }
   }
 
   @override
@@ -248,6 +269,7 @@ class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _stopAndReset(notifyState: false);
     super.dispose();
   }
@@ -309,7 +331,12 @@ class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView> {
                       height: controller.value.size.height > 0
                           ? controller.value.size.height
                           : 1280,
-                      child: VideoPlayer(controller),
+                      // Own layer: the video repaints every frame and
+                      // shouldn't drag the rest of the screen with it.
+                      child: RepaintBoundary(
+                        key: widget.captureKey,
+                        child: VideoPlayer(controller),
+                      ),
                     ),
                   ),
                 ),

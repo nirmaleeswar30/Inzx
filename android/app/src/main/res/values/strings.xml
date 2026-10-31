@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="music_widget_description">Inzx Mini (4x1)</string>
-    <string name="music_widget_description_expanded">Inzx Now Playing (4x2)</string>
-    <string name="music_widget_artwork">Current track artwork</string>
-    <string name="music_widget_previous">Previous</string>
-    <string name="music_widget_play_pause">Play or pause</string>
-    <string name="music_widget_next">Next</string>
+    <string name="widget_inzx_square_description">Cover art with playback controls (2×2)</string>
+    <string name="widget_inzx_wide_description">Cover art, track and controls (4×2)</string>
+    <string name="widget_inzx_pill_description">Compact now playing bar (4×1)</string>
+    <string name="widget_inzx_artwork">Current track artwork</string>
+    <string name="widget_inzx_previous">Previous</string>
+    <string name="widget_inzx_play_pause">Play or pause</string>
+    <string name="widget_inzx_next">Next</string>
+    <string name="widget_inzx_like">Like</string>
+    <string name="widget_inzx_shuffle">Shuffle</string>
+    <string name="widget_inzx_logo">Inzx</string>
+    <string name="widget_inzx_not_playing">Not playing</string>
 </resources>

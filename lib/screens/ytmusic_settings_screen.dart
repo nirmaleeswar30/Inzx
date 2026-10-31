@@ -8,7 +8,6 @@ import '../../core/providers/locale_provider.dart';
 import '../../core/design_system/design_system.dart';
 import '../providers/providers.dart';
 import '../providers/repository_providers.dart';
-import '../services/auth/google_auth_service.dart';
 import '../services/ytmusic_sync_service.dart';
 import 'package:shorebird_code_push/shorebird_code_push.dart';
 import '../../core/providers/theme_provider.dart';
@@ -30,6 +29,7 @@ import 'widgets/color_picker_dialog.dart';
 import '../services/discord/discord_rpc_service.dart';
 import 'discord_rich_presence_screen.dart';
 import 'widgets/discord_logo.dart';
+import 'widgets/ai_lyrics_settings_sheet.dart';
 
 /// Provider for sync service
 final ytMusicSyncServiceProvider = Provider<YTMusicSyncService>((ref) {
@@ -91,11 +91,12 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
   Color get _textTertiary =>
       _isDark ? InzxColors.darkTextTertiary : InzxColors.textTertiary;
 
-  /// Deep-link searchable items from nested screens (Audio, Downloads, Backup)
+  /// Searchable items from nested screens (Audio, Downloads, Backup, Appearance)
+  /// and direct quick actions on the main settings screen.
   List<_SearchableItem> get _deepSearchItems {
     final l10n = context.l10n;
     return [
-      // Audio Settings
+      // ── Audio Settings Screen ───────────────────────────────────────────
       _SearchableItem(
         tags: [
           'streaming',
@@ -108,6 +109,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           'medium',
           'high',
           'max',
+          'sound',
         ],
         title: l10n.streamingQuality,
         subtitle: l10n.streamingQualitySubtitle,
@@ -115,22 +117,101 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
         screen: const AudioSettingsScreen(),
       ),
       _SearchableItem(
-        tags: ['crossfade', 'transition', 'blend', 'gapless', 'playback'],
+        tags: [
+          'jiosaavn',
+          'saavn',
+          '320kbps',
+          'high quality',
+          'studio',
+          'studio quality',
+          'external sources',
+          'hd audio',
+          'lossless',
+          'aac',
+          'stream',
+          'sources',
+        ],
+        title: 'High Quality Sources (JioSaavn 320kbps)',
+        subtitle:
+            'Enable external studio-quality 320kbps streams for matching tracks',
+        icon: Iconsax.music_dashboard,
+        screen: const AudioSettingsScreen(),
+      ),
+      _SearchableItem(
+        tags: [
+          'crossfade',
+          'transition',
+          'blend',
+          'gapless',
+          'playback',
+          'duration',
+          'overlap',
+          'fade',
+        ],
         title: l10n.crossfadeTransition,
         subtitle: l10n.crossfadeTransitionSubtitle,
         icon: Iconsax.blend,
         screen: const AudioSettingsScreen(),
       ),
       _SearchableItem(
-        tags: ['streaming', 'cache', 'buffer', 'preload', 'wifi'],
+        tags: [
+          'streaming cache',
+          'cache',
+          'buffer',
+          'preload',
+          'wifi only',
+          'wifi',
+          'limit',
+          'max concurrent',
+          'pre-cache',
+          'data saver',
+        ],
         title: l10n.streamingCache,
         subtitle: l10n.streamingCacheSubtitle,
         icon: Iconsax.cpu,
         screen: const AudioSettingsScreen(),
       ),
-      // Download Settings
       _SearchableItem(
-        tags: ['download', 'quality', 'offline', 'bitrate'],
+        tags: [
+          'prefer audio versions',
+          'audio version',
+          'skip music video',
+          'official audio',
+          'video',
+          'music video',
+        ],
+        title: l10n.preferAudioVersions,
+        subtitle: l10n.preferAudioVersionsSubtitle,
+        icon: Iconsax.music,
+        screen: const AudioSettingsScreen(),
+      ),
+      _SearchableItem(
+        tags: [
+          'smart audio routing',
+          'audio output',
+          'output device',
+          'bluetooth',
+          'speaker',
+          'headphone',
+          'routing',
+        ],
+        title: l10n.smartAudioRouting,
+        subtitle: l10n.smartAudioRoutingSubtitle,
+        icon: Iconsax.volume_high,
+        screen: const AudioSettingsScreen(),
+      ),
+
+      // ── Download Settings Screen ────────────────────────────────────────
+      _SearchableItem(
+        tags: [
+          'download',
+          'quality',
+          'offline',
+          'bitrate',
+          'audio quality',
+          'kbps',
+          'save',
+        ],
         title: l10n.downloadQuality,
         subtitle: l10n.downloadQualitySubtitle,
         icon: Iconsax.document_download,
@@ -144,6 +225,9 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           'folder',
           'storage',
           'directory',
+          'save to',
+          'internal storage',
+          'sd card',
         ],
         title: l10n.downloadLocation,
         subtitle: l10n.downloadLocationSubtitle,
@@ -151,28 +235,55 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
         screen: const DownloadSettingsScreen(),
       ),
       _SearchableItem(
-        tags: ['data', 'usage', 'network', 'bandwidth', 'mobile'],
+        tags: [
+          'data',
+          'usage',
+          'network',
+          'bandwidth',
+          'mobile',
+          'storage info',
+          'disk space',
+          'mb',
+          'megabytes',
+        ],
         title: l10n.dataUsageInfo,
         subtitle: l10n.dataUsageInfoSubtitle,
         icon: Iconsax.chart_1,
         screen: const DownloadSettingsScreen(),
       ),
-      // Backup & Restore
+
+      // ── Backup & Restore Screen ─────────────────────────────────────────
       _SearchableItem(
-        tags: ['backup', 'export', 'save', 'file'],
+        tags: [
+          'backup',
+          'export',
+          'save',
+          'file',
+          'json',
+          'export playlists',
+          'data export',
+        ],
         title: l10n.createBackup,
         subtitle: l10n.createBackupSubtitle,
         icon: Iconsax.export_1,
         screen: const BackupRestoreScreen(),
       ),
       _SearchableItem(
-        tags: ['restore', 'import', 'load', 'file'],
+        tags: [
+          'restore',
+          'import',
+          'load',
+          'file',
+          'recover data',
+          'import playlists',
+        ],
         title: l10n.restoreBackup,
         subtitle: l10n.restoreBackupSubtitle,
         icon: Iconsax.import_1,
         screen: const BackupRestoreScreen(),
       ),
-      // Player & Now Playing appearance
+
+      // ── Player & Now Playing Appearance Screen ──────────────────────────
       _SearchableItem(
         tags: [
           'now playing style',
@@ -181,6 +292,8 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           'cinematic',
           'edge',
           'layout',
+          'full player',
+          'ui',
         ],
         title: l10n.nowPlayingStyle,
         subtitle: getNowPlayingStyleName(ref.watch(nowPlayingStyleProvider)),
@@ -195,6 +308,8 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           'scrubber',
           'spectrum',
           'seek',
+          'seekbar',
+          'slider',
         ],
         title: l10n.progressBarStyle,
         subtitle: getProgressBarStyleName(ref.watch(progressBarStyleProvider)),
@@ -202,10 +317,35 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
         screen: const PlayerAppearanceScreen(),
       ),
       _SearchableItem(
-        tags: ['liquid glass', 'glass', 'navbar', 'nav', 'blur'],
+        tags: [
+          'liquid glass',
+          'glass',
+          'navbar',
+          'nav',
+          'blur',
+          'floating navbar',
+          'frosted',
+          'translucent',
+        ],
         title: l10n.liquidGlass,
         subtitle: l10n.liquidGlassSubtitle,
         icon: Icons.water_drop_rounded,
+        screen: const PlayerAppearanceScreen(),
+      ),
+      _SearchableItem(
+        tags: [
+          'rotating miniplayer art',
+          'rotating album art',
+          'spin',
+          'vinyl',
+          'disc',
+          'record player',
+          'miniplayer',
+          'rotate',
+        ],
+        title: l10n.rotatingMiniplayerArt,
+        subtitle: l10n.rotatingMiniplayerArtSubtitle,
+        icon: Icons.album_rounded,
         screen: const PlayerAppearanceScreen(),
       ),
       _SearchableItem(
@@ -214,10 +354,9 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           'canvas',
           'motion',
           'rotate',
-          'rotating album art',
-          'miniplayer',
-          'ambient',
-          'reflection',
+          'moving art',
+          'canvas video',
+          'animation',
         ],
         title: l10n.animatedAlbumArt,
         subtitle: l10n.animatedAlbumArtSubtitle,
@@ -226,45 +365,79 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       ),
       _SearchableItem(
         tags: [
+          'ambient reflection canvas',
+          'ambient reflection',
+          'cinematic ambient',
+          'glow',
+          'glow reflection',
+          'background glow',
+        ],
+        title: l10n.ambientReflectionCanvasTitle,
+        subtitle: l10n.ambientReflectionCanvasSubtitle,
+        icon: Icons.blur_on_rounded,
+        screen: const PlayerAppearanceScreen(),
+      ),
+      _SearchableItem(
+        tags: [
+          'dynamic ambient canvas',
+          'dynamic ambient',
+          'pulsing glow',
+          'live glow',
+          'ambient light',
+          'lighting',
+        ],
+        title: l10n.dynamicAmbientCanvasTitle,
+        subtitle: l10n.dynamicAmbientCanvasSubtitle,
+        icon: Icons.lightbulb_outline_rounded,
+        screen: const PlayerAppearanceScreen(),
+      ),
+      _SearchableItem(
+        tags: [
           'lyrics',
           'lyrics below album art',
-          'ai lyrics',
-          'translation',
-          'translate',
-          'transliterate',
+          'now playing lyrics',
+          'embedded lyrics',
+          'text',
         ],
         title: l10n.lyricsBelowAlbumArt,
         subtitle: l10n.lyricsBelowAlbumArtSubtitle,
         icon: Iconsax.text,
         screen: const PlayerAppearanceScreen(),
       ),
-      // Audio playback behavior
       _SearchableItem(
         tags: [
-          'prefer audio versions',
-          'audio version',
-          'skip music video',
-          'official audio',
+          'ai lyrics translation',
+          'ai lyrics',
+          'lyrics translation',
+          'translation',
+          'translate',
+          'transliterate',
+          'pronunciation',
+          'furigana',
+          'romaji',
+          'transliteration',
+          'romanization',
+          'gemini',
+          'openai',
+          'deepseek',
+          'japanese',
+          'korean',
+          'chinese',
         ],
-        title: l10n.preferAudioVersions,
-        subtitle: l10n.preferAudioVersionsSubtitle,
-        icon: Iconsax.music,
-        screen: const AudioSettingsScreen(),
+        title: l10n.aiLyricsTranslation,
+        subtitle: l10n.aiLyricsTranslationSubtitle,
+        icon: Iconsax.translate,
+        onTap: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => const AiLyricsSettingsSheet(),
+          );
+        },
       ),
-      _SearchableItem(
-        tags: [
-          'smart audio routing',
-          'audio output',
-          'output device',
-          'bluetooth',
-          'speaker',
-        ],
-        title: l10n.smartAudioRouting,
-        subtitle: l10n.smartAudioRoutingSubtitle,
-        icon: Iconsax.volume_high,
-        screen: const AudioSettingsScreen(),
-      ),
-      // Discord Rich Presence
+
+      // ── Discord Rich Presence Screen ──────────────────────────────────
       _SearchableItem(
         tags: [
           'discord',
@@ -274,11 +447,238 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           'presence',
           'social',
           'listening activity',
+          'game activity',
         ],
         title: 'Discord Rich Presence',
         subtitle: 'Show your listening activity on Discord',
         icon: Iconsax.game,
         screen: const DiscordRichPresenceScreen(),
+      ),
+
+      // ── App Logs & Diagnostics Screen ─────────────────────────────────
+      _SearchableItem(
+        tags: [
+          'app logs',
+          'logs',
+          'diagnostics',
+          'crash diagnostics',
+          'crash',
+          'error',
+          'debug',
+          'traces',
+          'stack trace',
+          'export logs',
+        ],
+        title: 'App Logs & Diagnostics',
+        subtitle: 'View, copy & export crash traces',
+        icon: Iconsax.document_code,
+        screen: const AppLogsScreen(),
+      ),
+
+      // ── Direct Settings Actions ───────────────────────────────────────
+      _SearchableItem(
+        tags: [
+          'language',
+          'app language',
+          'locale',
+          'translate ui',
+          'idioma',
+          'lang',
+        ],
+        title: l10n.language,
+        subtitle: _languageLabel(ref.watch(appLocaleProvider)),
+        icon: Iconsax.language_square,
+        onTap: _showLanguageSelector,
+      ),
+      _SearchableItem(
+        tags: [
+          'content location',
+          'country',
+          'region',
+          'recommendations location',
+          'trending country',
+        ],
+        title: l10n.contentLocation,
+        subtitle: _contentLocationLabel(ref.watch(appContentCountryProvider)),
+        icon: Icons.public_rounded,
+        onTap: _showContentLocationSelector,
+      ),
+      _SearchableItem(
+        tags: [
+          'accent color',
+          'custom color',
+          'color wheel',
+          'theme color',
+          'palette',
+          'custom accent',
+          'hex color',
+        ],
+        title: l10n.customColorWheel,
+        subtitle: 'Customize the app accent color with a precision color wheel',
+        icon: Iconsax.colorfilter,
+        onTap: () => _openCustomColorPicker(ref.read(customAccentColorProvider)),
+      ),
+      _SearchableItem(
+        tags: [
+          'theme',
+          'theme mode',
+          'dark mode',
+          'light mode',
+          'system theme',
+          'auto theme',
+          'night mode',
+        ],
+        title: l10n.theme,
+        subtitle: ref.watch(themeModeProvider) == InzxThemeMode.system
+            ? l10n.themeAuto
+            : ref.watch(themeModeProvider) == InzxThemeMode.light
+            ? l10n.themeLight
+            : l10n.themeDark,
+        icon: Iconsax.moon,
+        onTap: () {
+          final nextMode = ref.read(themeModeProvider) == InzxThemeMode.dark
+              ? InzxThemeMode.light
+              : ref.read(themeModeProvider) == InzxThemeMode.light
+              ? InzxThemeMode.system
+              : InzxThemeMode.dark;
+          ref.read(themeModeProvider.notifier).setThemeMode(nextMode);
+        },
+      ),
+      _SearchableItem(
+        tags: [
+          'stats for nerds',
+          'nerd stats',
+          'audio stats',
+          'debug stats',
+          'technical info',
+        ],
+        title: l10n.statsForNerds,
+        subtitle: ref.watch(showNerdStatsProvider) ? 'Enabled' : 'Disabled',
+        icon: Iconsax.status,
+        onTap: () {
+          final current = ref.read(showNerdStatsProvider);
+          ref.read(audioPlayerServiceProvider).setShowNerdStats(!current);
+        },
+      ),
+      _SearchableItem(
+        tags: [
+          'share links',
+          'share youtube music links',
+          'share',
+          'native links',
+          'youtube music link format',
+        ],
+        title: l10n.shareYoutubeMusicLinks,
+        subtitle: ref.watch(shareNativeLinksProvider)
+            ? 'Sharing YouTube Music links'
+            : 'Sharing standard YouTube links',
+        icon: Iconsax.share,
+        onTap: () {
+          final current = ref.read(shareNativeLinksProvider);
+          ref.read(shareNativeLinksProvider.notifier).setEnabled(!current);
+        },
+      ),
+      _SearchableItem(
+        tags: [
+          'check for updates',
+          'update',
+          'ota',
+          'patch',
+          'github update',
+          'new version',
+          'shorebird',
+        ],
+        title: 'Check for App Updates',
+        subtitle: 'Check GitHub & OTA for new versions and updates',
+        icon: Iconsax.refresh_circle,
+        onTap: _handleCheckForUpdates,
+      ),
+      _SearchableItem(
+        tags: [
+          'what\'s new',
+          'changelog',
+          'release notes',
+          'features',
+          'new features',
+          'version notes',
+        ],
+        title: 'What\'s New',
+        subtitle: 'View release notes, changelogs & new features',
+        icon: Iconsax.document_text,
+        onTap: () => WhatsNewDialog.show(context),
+      ),
+      _SearchableItem(
+        tags: [
+          'version details',
+          'app info',
+          'version',
+          'build number',
+          'credits',
+          'about inzx',
+        ],
+        title: 'Version Details',
+        subtitle: 'App logo, version, patch number & credits',
+        icon: Iconsax.device_message,
+        onTap: _showAppInfoPopup,
+      ),
+      _SearchableItem(
+        tags: [
+          'sponsor',
+          'support',
+          'donate',
+          'upi',
+          'github sponsors',
+          'contribute',
+        ],
+        title: 'Sponsor Inzx',
+        subtitle: 'Support the development via GitHub Sponsors or UPI',
+        icon: Iconsax.heart5,
+        onTap: _showSupportSheet,
+      ),
+      _SearchableItem(
+        tags: [
+          'cleanup cache',
+          'clear cache',
+          'clean cache',
+          'free up space',
+          'storage cleanup',
+          'disk cache',
+        ],
+        title: l10n.cleanUp,
+        subtitle: l10n.clearCache,
+        icon: Iconsax.refresh,
+        onTap: () async {
+          final cacheManager = ref.read(cacheManagementProvider);
+          await cacheManager.cleanupExpiredCache();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  l10n.cacheCleanupComplete,
+                  style: TextStyle(color: _colors.onInverseSurface),
+                ),
+                backgroundColor: _colors.inverseSurface,
+              ),
+            );
+            setState(() {});
+          }
+        },
+      ),
+      _SearchableItem(
+        tags: [
+          'sync',
+          'sync now',
+          'sync library',
+          'refresh library',
+          'refresh playlists',
+          'sync liked songs',
+        ],
+        title: l10n.syncNow,
+        subtitle: _isSyncing
+            ? l10n.syncing
+            : 'Sync liked songs, albums & playlists',
+        icon: Iconsax.refresh_2,
+        onTap: _sync,
       ),
     ];
   }
@@ -480,10 +880,17 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                 iconBg: _accentColor.withValues(alpha: 0.8),
                 title: item.title,
                 subtitle: item.subtitle,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => item.screen),
-                ),
+                onTap: () {
+                  _searchFocusNode.unfocus();
+                  if (item.onTap != null) {
+                    item.onTap!();
+                  } else if (item.screen != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => item.screen!),
+                    );
+                  }
+                },
               ),
               if (index < items.length - 1)
                 Divider(
@@ -512,38 +919,55 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
     'appearance',
     'theme',
     'dark',
+    'dark mode',
     'light',
+    'light mode',
     'mode',
+    'system',
+    'auto',
     'accent color',
     'color',
+    'custom color',
+    'color wheel',
+    'palette',
     // Player & Now Playing sub-screen (discoverable from Appearance)
     'player',
     'now playing',
+    'now playing style',
+    'progress bar',
+    'waveform',
+    'liquid glass',
+    'rotating miniplayer art',
+    'animated album art',
+    'ambient reflection',
+    'dynamic ambient',
+    'lyrics',
+    'ai lyrics',
     'stats for nerds',
     'nerd stats',
     'content location',
     'region',
     'country',
+    'language',
+    'locale',
   ];
 
   List<_TaggedSection> _loggedOutSections() => [
     _TaggedSection([
       context.l10n.yourProfile,
       context.l10n.signInWithGoogle,
-      context.l10n.googleUser,
-      'profile',
-      'google',
-      'account',
-      'sign in',
-    ], _buildGoogleAccountSection()),
-    _TaggedSection([
       context.l10n.connectYoutubeMusic,
       context.l10n.connectYoutubeMusicSubtitle,
-      context.l10n.connectYtMusicButton,
+      'profile',
+      'google',
       'youtube',
       'yt music',
       'connect',
+      'account',
+      'sign in',
       'login',
+      'auth',
+      'jams',
     ], _buildYTMusicConnectCard()),
     _TaggedSection(_appearanceTags, _buildAppearanceSection()),
     _TaggedSection([
@@ -559,6 +983,13 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       'crossfade',
       'cache',
       'jiosaavn',
+      '320kbps',
+      'download',
+      'download location',
+      'backup',
+      'restore',
+      'discord',
+      'rpc',
     ], _buildQuickActions()),
     _TaggedSection([
       context.l10n.appInfo,
@@ -570,6 +1001,13 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       'patch',
       'version',
       'update',
+      'check for updates',
+      'what\'s new',
+      'changelog',
+      'logs',
+      'crash diagnostics',
+      'sponsor',
+      'donate',
       'share',
       'youtube music links',
       'native links',
@@ -590,7 +1028,8 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       'youtube',
       'yt music',
       'connected',
-    ], _buildGoogleAccountSection(ytMusicAuth: authState)),
+      'auth',
+    ], _buildAccountSection(authState)),
     _TaggedSection(_appearanceTags, _buildAppearanceSection()),
     _TaggedSection([
       context.l10n.quickActions,
@@ -605,8 +1044,13 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       'quality',
       'crossfade',
       'download',
+      'download location',
       'backup',
       'restore',
+      'jiosaavn',
+      '320kbps',
+      'discord',
+      'rpc',
     ], _buildQuickActions()),
     _TaggedSection([
       context.l10n.sync,
@@ -615,6 +1059,8 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       'sync',
       'refresh',
       'library',
+      'sync now',
+      'sync library',
     ], _buildSyncSection()),
     _TaggedSection([
       context.l10n.library,
@@ -627,6 +1073,8 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       'albums',
       'playlists',
       'artists',
+      'stats',
+      'saved songs',
     ], _buildLibraryStats()),
     _TaggedSection([
       context.l10n.streamingCache,
@@ -636,6 +1084,10 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       'storage',
       'cleanup',
       'clear',
+      'clear cache',
+      'clean up',
+      'free up space',
+      'disk space',
     ], _buildCacheSection()),
     _TaggedSection([
       context.l10n.analytics,
@@ -644,8 +1096,9 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       'misses',
       'network',
       'stats',
+      'bandwidth',
+      'cache analytics',
     ], _buildAnalyticsSection()),
-
     _TaggedSection([
       context.l10n.appInfo,
       context.l10n.settings,
@@ -656,6 +1109,13 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       'patch',
       'version',
       'update',
+      'check for updates',
+      'what\'s new',
+      'changelog',
+      'logs',
+      'crash diagnostics',
+      'sponsor',
+      'donate',
       'share',
       'youtube music links',
       'native links',
@@ -753,7 +1213,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            l10n.connectYoutubeMusic,
+            l10n.signInWithGoogle,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -762,7 +1222,8 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            l10n.connectYoutubeMusicSubtitle,
+            'One sign-in for your YouTube Music library, listening history, '
+            'profile and Jams.',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 14, color: _textSecondary),
           ),
@@ -770,7 +1231,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           FilledButton.icon(
             onPressed: _login,
             icon: const Icon(Icons.login_rounded, size: 18),
-            label: Text(l10n.connectYtMusicButton),
+            label: Text(l10n.signInWithGoogle),
             style: FilledButton.styleFrom(
               backgroundColor: _accentColor,
               foregroundColor: _colors.onPrimary,
@@ -920,11 +1381,9 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
-              ...InzxAccentColor.values
-                  .where((c) => c != InzxAccentColor.custom)
-                  .map((preset) {
+              ...pickerAccentColors.map((preset) {
                 final isSelected = ref.watch(accentColorProvider) == preset;
-                final presetColor = getAccentColor(preset, isDark: _isDark);
+                final presetColor = accentSwatchColor(preset, isDark: _isDark);
                 return Padding(
                   padding: const EdgeInsets.only(right: 10),
                   child: GestureDetector(
@@ -1042,29 +1501,19 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
 
         const SizedBox(height: 14),
 
-        // Dynamic color note
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: _accentColor.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            children: [
-              Icon(Iconsax.colorfilter, size: 18, color: _accentColor),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  l10n.dynamicColorsNote,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: _textSecondary,
-                    height: 1.4,
-                  ),
-                ),
-              ),
-            ],
-          ),
+        // Dynamic colours: follow the artwork, or stay on the accent above
+        _switchTile(
+          icon: Iconsax.colorfilter,
+          iconBg: _accentColor,
+          title: 'Dynamic colours',
+          subtitle: ref.watch(dynamicColorsEnabledProvider)
+              ? l10n.dynamicColorsNote
+              : 'Off: the app uses your accent colour. Now Playing still follows the artwork.',
+          value: ref.watch(dynamicColorsEnabledProvider),
+          onChanged: (enabled) {
+            HapticFeedback.selectionClick();
+            ref.read(dynamicColorsEnabledProvider.notifier).setEnabled(enabled);
+          },
         ),
         const SizedBox(height: 18),
 
@@ -1312,7 +1761,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       trailing: Switch(
         value: value,
         onChanged: onChanged,
-        activeThumbColor: Colors.white,
+        activeThumbColor: InzxColors.contrastTextOn(_accentColor),
         activeTrackColor: _accentColor,
         inactiveThumbColor: _isDark ? Colors.white70 : Colors.white,
         inactiveTrackColor: _isDark
@@ -1825,244 +2274,94 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
     );
   }
 
-  Widget _buildGoogleAccountSection({YTMusicAuthState? ytMusicAuth}) {
-    final googleAuthState = ref.watch(googleAuthStateProvider);
+  /// Profile card for the app's single sign-in (Google account via
+  /// YouTube Music) — it powers library sync, history, profile and Jams.
+  Widget _buildAccountSection(YTMusicAuthState authState) {
     final l10n = context.l10n;
+    final account = authState.account;
+    final subtitle = account?.email ?? account?.handle ?? l10n.youtubeMusicLabel;
+
+    Widget initialsAvatar() => Center(
+      child: Text(
+        account?.initials ?? 'U',
+        style: TextStyle(
+          color: _colors.onPrimary,
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
+        ),
+      ),
+    );
 
     return _sectionCard(
       children: [
         _sectionHeader(l10n.yourProfile, Iconsax.user),
         const SizedBox(height: 16),
-        if (googleAuthState.isLoading)
-          Center(
-            child: CircularProgressIndicator(
-              color: _accentColor,
-              strokeWidth: 2,
-            ),
-          )
-        else if (googleAuthState.isSignedIn && googleAuthState.user != null)
-          _buildGoogleSignedInRow(googleAuthState.user!)
-        else
-          _buildGoogleSignInButton(),
-        // YT Music connected status (only show when logged in)
-        if (ytMusicAuth != null && ytMusicAuth.isLoggedIn) ...[
-          const SizedBox(height: 16),
-          _buildYTMusicConnectedRow(ytMusicAuth),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildYTMusicConnectedRow(YTMusicAuthState authState) {
-    final l10n = context.l10n;
-    final connectedColor = _isDark
-        ? _accentColor
-        : HSLColor.fromColor(_accentColor).withLightness(0.3).toColor();
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: _isDark
-            ? _accentColor.withValues(alpha: 0.08)
-            : _accentColor.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _accentColor.withValues(alpha: 0.15)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [_accentColor, _accentColor.withValues(alpha: 0.7)],
+        Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [_accentColor, _accentColor.withValues(alpha: 0.6)],
+                ),
               ),
-              shape: BoxShape.circle,
+              child: ClipOval(
+                child: account?.avatarUrl != null
+                    ? CachedNetworkImage(
+                        imageUrl: account!.avatarUrl!,
+                        fit: BoxFit.cover,
+                        placeholder: (_, _) => initialsAvatar(),
+                        errorWidget: (_, _, _) => initialsAvatar(),
+                      )
+                    : initialsAvatar(),
+              ),
             ),
-            child: authState.account?.avatarUrl != null
-                ? ClipOval(
-                    child: Image.network(
-                      authState.account!.avatarUrl!,
-                      fit: BoxFit.cover,
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    account?.name ?? l10n.connected,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: _textPrimary,
                     ),
-                  )
-                : Icon(Iconsax.music, color: _colors.onPrimary, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.youtubeMusicLabel,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: _textPrimary,
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  authState.account?.name ?? l10n.connected,
-                  style: TextStyle(color: _textSecondary, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: _accentColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              l10n.connected,
-              style: TextStyle(
-                color: connectedColor,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGoogleSignedInRow(GoogleUserProfile user) {
-    final l10n = context.l10n;
-    return Row(
-      children: [
-        Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: user.photoUrl == null
-                ? LinearGradient(
-                    colors: [_accentColor, _accentColor.withValues(alpha: 0.6)],
-                  )
-                : null,
-          ),
-          child: ClipOval(
-            child: user.photoUrl != null
-                ? CachedNetworkImage(
-                    imageUrl: user.photoUrl!,
-                    fit: BoxFit.cover,
-                    placeholder: (_, _) => Center(
-                      child: Text(
-                        user.initials,
-                        style: TextStyle(
-                          color: _colors.onPrimary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 13, color: _textSecondary),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
                     ),
-                    errorWidget: (_, _, _) => Center(
-                      child: Text(
-                        user.initials,
-                        style: TextStyle(
-                          color: _colors.onPrimary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
+                    decoration: BoxDecoration(
+                      color: _accentColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
                     ),
-                  )
-                : Center(
                     child: Text(
-                      user.initials,
+                      'Library · History · Jams',
                       style: TextStyle(
-                        color: _colors.onPrimary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: _accentColor,
                       ),
                     ),
                   ),
-          ),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                user.displayName ?? l10n.googleUser,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: _textPrimary,
-                ),
-              ),
-              if (user.email != null)
-                Text(
-                  user.email!,
-                  style: TextStyle(fontSize: 13, color: _textSecondary),
-                ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: _accentColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  l10n.jamsAndProfile,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: _accentColor,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        IconButton(
-          onPressed: () async {
-            await ref.read(googleAuthStateProvider.notifier).signOut();
-          },
-          icon: Icon(Iconsax.logout, color: _textTertiary, size: 20),
-          tooltip: context.l10n.signOut,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGoogleSignInButton() {
-    final l10n = context.l10n;
-    return Column(
-      children: [
-        Text(
-          l10n.signInGoogleProfilePictureJams,
-          style: TextStyle(fontSize: 13, color: _textSecondary),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: () async {
-              await ref.read(googleAuthStateProvider.notifier).signIn();
-            },
-            icon: Image.network(
-              'https://www.google.com/favicon.ico',
-              width: 18,
-              height: 18,
-              errorBuilder: (_, _, _) => const Icon(Icons.person, size: 18),
-            ),
-            label: Text(l10n.signInWithGoogle),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: _textPrimary,
-              side: BorderSide(
-                color: _isDark ? InzxColors.darkBorder : InzxColors.border,
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                ],
               ),
             ),
-          ),
+          ],
         ),
       ],
     );
@@ -3420,13 +3719,14 @@ class _TaggedSection {
   const _TaggedSection(this.tags, this.widget);
 }
 
-/// A deep-link searchable item that navigates to a specific screen.
+/// A deep-link searchable item that navigates to a specific screen or triggers an action.
 class _SearchableItem {
   final List<String> tags;
   final String title;
   final String subtitle;
   final IconData icon;
-  final Widget screen;
+  final Widget? screen;
+  final VoidCallback? onTap;
 
   List<String> get searchTerms => [...tags, title, subtitle];
 
@@ -3435,6 +3735,10 @@ class _SearchableItem {
     required this.title,
     required this.subtitle,
     required this.icon,
-    required this.screen,
-  });
+    this.screen,
+    this.onTap,
+  }) : assert(
+         screen != null || onTap != null,
+         'Either screen or onTap must be provided',
+       );
 }

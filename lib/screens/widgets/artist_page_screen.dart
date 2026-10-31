@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:palette_generator/palette_generator.dart';
+import '../../services/album_color_extractor.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/design_system/design_system.dart';
 import '../../core/l10n/app_localizations_x.dart';
@@ -55,36 +55,21 @@ final artistSubscribeOptimisticProvider = StateProvider.autoDispose
 final artistDescriptionExpandedProvider = StateProvider.autoDispose
     .family<bool, String>((ref, artistId) => false);
 
-/// Dynamic theme colors from artist image
-/// Uses a smaller image size to reduce CPU load on main thread
-final artistColorsProvider = FutureProvider.autoDispose.family<Color?, String?>(
-  (ref, imageUrl) async {
-    if (imageUrl == null || imageUrl.isEmpty) return null;
-
-    try {
-      // Use a small image size for color extraction (reduces CPU load)
-      // YouTube thumbnail URLs can be modified to request smaller sizes
-      String optimizedUrl = imageUrl;
-      if (imageUrl.contains('googleusercontent.com') ||
-          imageUrl.contains('ytimg.com')) {
-        // Request a tiny thumbnail for color extraction only
-        optimizedUrl = imageUrl
-            .replaceAll(RegExp(r'w\d+-h\d+'), 'w60-h60')
-            .replaceAll(RegExp(r's\d+'), 's60');
+/// Page palette extracted from the artist image (same extractor as the
+/// player, so the page is tinted the way the artist's photo is).
+final artistColorsProvider =
+    FutureProvider.autoDispose.family<AlbumColors?, String?>((
+      ref,
+      imageUrl,
+    ) async {
+      if (imageUrl == null || imageUrl.isEmpty) return null;
+      try {
+        final colors = await AlbumColorExtractor.extractFromUrl(imageUrl);
+        return colors.isDefault ? null : colors;
+      } catch (_) {
+        return null;
       }
-
-      final paletteGenerator = await PaletteGenerator.fromImageProvider(
-        CachedNetworkImageProvider(optimizedUrl),
-        maximumColorCount: 4, // Fewer colors = faster
-        size: const Size(60, 60), // Resize target for faster processing
-      );
-      return paletteGenerator.dominantColor?.color ??
-          paletteGenerator.vibrantColor?.color;
-    } catch (e) {
-      return null;
-    }
-  },
-);
+    });
 
 // ============ ARTIST SCREEN ============
 
@@ -317,7 +302,11 @@ class _ArtistContent extends ConsumerWidget {
     final themeColorAsync = ref.watch(
       artistColorsProvider(artistData.thumbnailUrl ?? initialThumbnail),
     );
-    final themeColor = themeColorAsync.valueOrNull ?? colorScheme.primary;
+    final rawArtistColors = themeColorAsync.valueOrNull;
+    final artistColors = rawArtistColors == null
+        ? null
+        : (isDark ? rawArtistColors : rawArtistColors.toLightMode());
+    final themeColor = artistColors?.accent ?? colorScheme.primary;
 
     // Check if this artist's tracks are currently playing
     final queueSourceId = ref.watch(queueSourceIdProvider);
@@ -328,7 +317,12 @@ class _ArtistContent extends ConsumerWidget {
     return Stack(
       children: [
         // Dynamic background gradient
-        _buildBackground(context, artistData.thumbnailUrl, themeColor),
+        _buildBackground(
+          context,
+          artistData.thumbnailUrl,
+          themeColor,
+          artistColors,
+        ),
 
         Column(
           children: [
@@ -388,11 +382,16 @@ class _ArtistContent extends ConsumerWidget {
               ),
             ),
 
-            // Mini player
-            if (hasCurrentTrack)
-              MusicMiniPlayer(onTap: () => NowPlayingScreen.show(context)),
           ],
         ),
+        // Mini player: floats over the list (which scrolls behind it).
+        if (hasCurrentTrack)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: MusicMiniPlayer(onTap: () => NowPlayingScreen.show(context)),
+          ),
       ],
     );
   }
@@ -423,41 +422,49 @@ class _ArtistContent extends ConsumerWidget {
     BuildContext context,
     String? imageUrl,
     Color themeColor,
+    AlbumColors? artistColors,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
+    final pageBase = artistColors?.backgroundPrimary ??
+        (isDark ? Colors.black : colorScheme.surface);
+    final pageEnd = artistColors?.backgroundSecondary ?? pageBase;
 
     return Positioned.fill(
       child: Stack(
         fit: StackFit.expand,
         children: [
+          // Whole page tinted with the colours extracted from the artist image
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 450),
+            curve: Curves.easeOutCubic,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [pageBase, pageEnd],
+              ),
+            ),
+          ),
           if (imageUrl != null)
             CachedNetworkImage(
               imageUrl: imageUrl,
               fit: BoxFit.cover,
               alignment: Alignment.topCenter,
               memCacheWidth: 100,
-              color: (isDark ? Colors.black : Colors.white).withValues(
-                alpha: isDark ? 0.5 : 0.5,
-              ),
-              colorBlendMode: isDark ? BlendMode.darken : BlendMode.lighten,
+              color: pageBase.withValues(alpha: 0.55),
+              colorBlendMode: BlendMode.srcOver,
             ),
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: isDark
-                    ? [
-                        themeColor.withValues(alpha: 0.3),
-                        Colors.black.withValues(alpha: 0.7),
-                        Colors.black,
-                      ]
-                    : [
-                        themeColor.withValues(alpha: 0.14),
-                        colorScheme.surface.withValues(alpha: 0.75),
-                        colorScheme.surface,
-                      ],
+                colors: [
+                  themeColor.withValues(alpha: isDark ? 0.3 : 0.14),
+                  pageBase.withValues(alpha: 0.75),
+                  pageEnd,
+                ],
                 stops: const [0.0, 0.4, 1.0],
               ),
             ),

@@ -113,6 +113,33 @@ class Track extends Equatable {
   /// Get the best available thumbnail
   String? get bestThumbnail => highResThumbnailUrl ?? thumbnailUrl;
 
+  /// Artwork handed to the system (notification, lock screen, widgets,
+  /// Android Auto): always the largest version of the cover. YT Music covers
+  /// usually arrive as small `=w120-h120` thumbnails, which look pixelated
+  /// when Android scales them up.
+  String? get systemArtworkUrl {
+    final thumb = thumbnailUrl;
+    if (thumb != null && isResizableArtworkUrl(thumb)) {
+      return upgradeArtworkUrl(thumb);
+    }
+    final best = bestThumbnail;
+    return best == null ? null : upgradeArtworkUrl(best);
+  }
+
+  static bool isResizableArtworkUrl(String url) =>
+      url.contains('googleusercontent.com') || url.contains('ggpht.com');
+
+  /// Rewrites a googleusercontent / ggpht image URL to its 1200px version.
+  /// Other URLs are returned unchanged.
+  static String upgradeArtworkUrl(String url) {
+    if (!isResizableArtworkUrl(url)) return url;
+    final sizeSuffix = RegExp(r'=(w\d+-h\d+|s\d+)[^/=]*$');
+    if (sizeSuffix.hasMatch(url)) {
+      return url.replaceFirst(sizeSuffix, '=w1200-h1200-l90-rj');
+    }
+    return url.contains('=') ? url : '$url=w1200-h1200-l90-rj';
+  }
+
   /// Format duration as mm:ss or h:mm:ss
   String get formattedDuration {
     final hours = duration.inHours;

@@ -12,7 +12,7 @@ import android.media.AudioDeviceInfo
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import com.nirmal.inzx.jams.JamsForegroundService
-import com.nirmal.inzx.widget.MusicWidgetProvider
+import com.nirmal.inzx.widget.InzxWidgets
 import com.ryanheise.audioservice.AudioServiceFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -322,9 +322,9 @@ class MainActivity : AudioServiceFragmentActivity() {
                     try {
                         val args = call.arguments as? Map<*, *>
                         if (args != null) {
-                            MusicWidgetProvider.saveState(this, args)
+                            InzxWidgets.saveState(this, args)
                         }
-                        MusicWidgetProvider.updateAllWidgets(this)
+                        InzxWidgets.updateAll(this)
                         result.success(true)
                     } catch (e: Exception) {
                         result.error("WIDGET_SYNC_ERROR", e.message, null)
@@ -333,7 +333,7 @@ class MainActivity : AudioServiceFragmentActivity() {
 
                 "refreshWidget" -> {
                     try {
-                        MusicWidgetProvider.updateAllWidgets(this)
+                        InzxWidgets.updateAll(this)
                         result.success(true)
                     } catch (e: Exception) {
                         result.error("WIDGET_REFRESH_ERROR", e.message, null)

@@ -2,290 +2,279 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show compute, kDebugMode;
 import 'package:http/http.dart' as http;
 
-/// InnerTube client configuration with content-aware fallback strategy
+/// InnerTube client configuration with content-aware fallback strategy.
+///
+/// Versions, device profiles and endpoints track Metrolist's innertubex
+/// (2026-10) and BitChord: stale web/TV versions and sending the VR/visionOS
+/// clients to www.youtube.com are what made every client fail at once.
 class InnerTubeClient {
   final String name;
   final String version;
+
+  /// X-YouTube-Client-Name.
+  final String clientId;
+  final String userAgent;
   final Map<String, dynamic> context;
-  final Map<String, String> headers;
   final bool useWebPoTokens;
   final bool supportsSignatureCipher;
+
+  /// Player requests go to music.youtube.com instead of www.youtube.com.
+  final bool useMusicPlayerEndpoint;
+
+  /// Embedded player (thirdParty.embedUrl, reddit referer).
+  final bool isEmbedded;
 
   const InnerTubeClient({
     required this.name,
     required this.version,
+    required this.clientId,
+    required this.userAgent,
     required this.context,
-    required this.headers,
     this.useWebPoTokens = false,
     this.supportsSignatureCipher = false,
+    this.useMusicPlayerEndpoint = false,
+    this.isEmbedded = false,
   });
 
-  /// VISIONOS - Unreleased client, no cipher/PoToken needed. Best first-try.
+  /// Request headers for this client's InnerTube calls.
+  Map<String, String> get headers => {
+    'User-Agent': userAgent,
+    'X-YouTube-Client-Name': clientId,
+    'X-YouTube-Client-Version': version,
+  };
+
+  static Map<String, dynamic> _context(Map<String, dynamic> client) => {
+    'client': {...client, 'hl': 'en', 'gl': 'US'},
+    'user': {'lockedSafetyMode': false},
+  };
+
+  static const String _webUserAgent =
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0';
+  static const String _tvUserAgent =
+      'Mozilla/5.0 (ChromiumStylePlatform) Cobalt/25.lts.30.1034943-gold '
+      '(unlike Gecko), Unknown_TV_Unknown_0/Unknown (Unknown, Unknown)';
+
+  /// VISIONOS 1.02 — current visionOS profile; no cipher / PoToken.
   static final visionOs = InnerTubeClient(
     name: 'VISIONOS',
-    version: '0.1',
-    context: {
-      'client': {
-        'clientName': 'VISIONOS',
-        'clientVersion': '0.1',
-        'osName': 'visionOS',
-        'osVersion': '1.3.21O771',
-        'deviceMake': 'Apple',
-        'deviceModel': 'RealityDevice14,1',
-        'hl': 'en',
-        'gl': 'US',
-      },
-      'user': {'lockedSafetyMode': false},
-    },
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15',
-      'X-YouTube-Client-Name': '101',
-      'X-YouTube-Client-Version': '0.1',
-    },
+    version: '1.02',
+    clientId: '101',
+    userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 '
+        '(KHTML, like Gecko) Version/26.0 Safari/605.1.15',
+    context: _context({
+      'clientName': 'VISIONOS',
+      'clientVersion': '1.02',
+      'osName': 'visionOS',
+      'osVersion': '26.5.23O471',
+      'deviceMake': 'Apple',
+      'deviceModel': 'RealityDevice17,1',
+    }),
+    useMusicPlayerEndpoint: true,
   );
 
-  /// ANDROID_VR 1.65 - No cipher/PoToken, very reliable
-  static final androidVr165 = InnerTubeClient(
+  /// VISIONOS 0.1 — the original unreleased build, kept as a fallback.
+  static final visionOs01 = InnerTubeClient(
+    name: 'VISIONOS_0_1',
+    version: '0.1',
+    clientId: '101',
+    userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) AppleWebKit/605.1.15 '
+        '(KHTML, like Gecko) Version/17.5 Safari/605.1.15',
+    context: _context({
+      'clientName': 'VISIONOS',
+      'clientVersion': '0.1',
+      'osName': 'VISION_OS',
+      'osVersion': '1.3',
+      'deviceMake': 'Apple',
+      'deviceModel': 'RealityDevice14,1',
+      'platform': 'MOBILE',
+    }),
+    useMusicPlayerEndpoint: true,
+  );
+
+  static InnerTubeClient _androidVr({
+    required String name,
+    required String version,
+    required String userAgent,
+    required String osVersion,
+  }) => InnerTubeClient(
+    name: name,
+    version: version,
+    clientId: '28',
+    userAgent: userAgent,
+    context: _context({
+      'clientName': 'ANDROID_VR',
+      'clientVersion': version,
+      'osName': 'Android',
+      'osVersion': osVersion,
+      'deviceMake': 'Oculus',
+      'deviceModel': 'Quest 3',
+      'androidSdkVersion': 32,
+      'userAgent': userAgent,
+    }),
+    useMusicPlayerEndpoint: true,
+  );
+
+  /// ANDROID_VR 1.65 — no cipher / PoToken, very reliable.
+  static final androidVr165 = _androidVr(
     name: 'ANDROID_VR',
     version: '1.65.10',
-    context: {
-      'client': {
-        'clientName': 'ANDROID_VR',
-        'clientVersion': '1.65.10',
-        'osName': 'Android',
-        'osVersion': '12L',
-        'deviceMake': 'Oculus',
-        'deviceModel': 'Quest 3',
-        'androidSdkVersion': 32,
-        'userAgent': 'com.google.android.apps.youtube.vr.oculus/1.65.10 (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip',
-        'hl': 'en',
-        'gl': 'US',
-      },
-      'user': {'lockedSafetyMode': false},
-    },
-    headers: {
-      'User-Agent': 'com.google.android.apps.youtube.vr.oculus/1.65.10 (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip',
-      'X-YouTube-Client-Name': '28',
-      'X-YouTube-Client-Version': '1.65.10',
-    },
+    osVersion: '12L',
+    userAgent:
+        'com.google.android.apps.youtube.vr.oculus/1.65.10 '
+        '(Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip',
   );
 
-  /// ANDROID_VR 1.43 - Uses non-adaptive bitrate, fixes audio stuttering
-  static final androidVr143 = InnerTubeClient(
+  /// ANDROID_VR 1.43 — non-adaptive bitrate, avoids audio stutter.
+  static final androidVr143 = _androidVr(
     name: 'ANDROID_VR_143',
     version: '1.43.32',
-    context: {
-      'client': {
-        'clientName': 'ANDROID_VR',
-        'clientVersion': '1.43.32',
-        'osName': 'Android',
-        'osVersion': '12',
-        'deviceMake': 'Oculus',
-        'deviceModel': 'Quest 3',
-        'androidSdkVersion': 32,
-        'userAgent': 'com.google.android.apps.youtube.vr.oculus/1.43.32 (Linux; U; Android 12; en_US; Quest 3; Build/SQ3A.220605.009.A1; Cronet/107.0.5284.2)',
-        'hl': 'en',
-        'gl': 'US',
-      },
-      'user': {'lockedSafetyMode': false},
-    },
-    headers: {
-      'User-Agent': 'com.google.android.apps.youtube.vr.oculus/1.43.32 (Linux; U; Android 12; en_US; Quest 3; Build/SQ3A.220605.009.A1; Cronet/107.0.5284.2)',
-      'X-YouTube-Client-Name': '28',
-      'X-YouTube-Client-Version': '1.43.32',
-    },
+    osVersion: '12',
+    userAgent:
+        'com.google.android.apps.youtube.vr.oculus/1.43.32 '
+        '(Linux; U; Android 12; en_US; Quest 3; Build/SQ3A.220605.009.A1; '
+        'Cronet/107.0.5284.2)',
   );
 
-  /// WEB_REMIX - YouTube Music web (needs poToken + cipher)
+  /// ANDROID_VR 1.61.
+  static final androidVr161 = _androidVr(
+    name: 'ANDROID_VR_161',
+    version: '1.61.48',
+    osVersion: '12',
+    userAgent:
+        'com.google.android.apps.youtube.vr.oculus/1.61.48 '
+        '(Linux; U; Android 12; en_US; Quest 3; Build/SQ3A.220605.009.A1; '
+        'Cronet/132.0.6808.3)',
+  );
+
+  /// WEB_REMIX — YouTube Music web (needs poToken + cipher).
   static final webRemix = InnerTubeClient(
     name: 'WEB_REMIX',
-    version: '1.20260114.03.00',
-    context: {
-      'client': {
-        'clientName': 'WEB_REMIX',
-        'clientVersion': '1.20260114.03.00',
-        'hl': 'en',
-        'gl': 'US',
-      },
-      'user': {'lockedSafetyMode': false},
-    },
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0',
-      'Origin': 'https://music.youtube.com',
-      'Referer': 'https://music.youtube.com/',
-    },
+    version: '1.20260707.12.00',
+    clientId: '67',
+    userAgent: _webUserAgent,
+    context: _context({
+      'clientName': 'WEB_REMIX',
+      'clientVersion': '1.20260707.12.00',
+    }),
     useWebPoTokens: true,
     supportsSignatureCipher: true,
+    useMusicPlayerEndpoint: true,
   );
 
-  /// TVHTML5 - TV client (needs cipher)
+  /// TVHTML5 — TV client (needs cipher).
   static final tvhtml5 = InnerTubeClient(
     name: 'TVHTML5',
-    version: '7.20260114.12.00',
-    context: {
-      'client': {
-        'clientName': 'TVHTML5',
-        'clientVersion': '7.20260114.12.00',
-        'userAgent': 'Mozilla/5.0 (ChromiumStylePlatform) Cobalt/25.lts.30.1034943-gold (unlike Gecko), Unknown_TV_Unknown_0/Unknown (Unknown, Unknown)',
-        'hl': 'en',
-        'gl': 'US',
-      },
-      'user': {'lockedSafetyMode': false},
-    },
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (ChromiumStylePlatform) Cobalt/25.lts.30.1034943-gold (unlike Gecko), Unknown_TV_Unknown_0/Unknown (Unknown, Unknown)',
-      'X-YouTube-Client-Name': '7',
-      'X-YouTube-Client-Version': '7.20260114.12.00',
-    },
+    version: '7.20260707.07.00',
+    clientId: '7',
+    userAgent: _tvUserAgent,
+    context: _context({
+      'clientName': 'TVHTML5',
+      'clientVersion': '7.20260707.07.00',
+      'userAgent': _tvUserAgent,
+    }),
     useWebPoTokens: true,
     supportsSignatureCipher: true,
   );
 
-  /// TVHTML5_SIMPLY - Simple TV (needs cipher + poToken required)
+  /// TVHTML5_SIMPLY — simple TV (needs cipher + poToken).
   static final tvhtml5Simply = InnerTubeClient(
     name: 'TVHTML5_SIMPLY',
     version: '1.0',
-    context: {
-      'client': {
-        'clientName': 'TVHTML5_SIMPLY',
-        'clientVersion': '1.0',
-        'hl': 'en',
-        'gl': 'US',
-      },
-      'user': {'lockedSafetyMode': false},
-    },
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (ChromiumStylePlatform) Cobalt/25.lts.30.1034943-gold (unlike Gecko), Unknown_TV_Unknown_0/Unknown (Unknown, Unknown)',
-      'X-YouTube-Client-Name': '75',
-      'X-YouTube-Client-Version': '1.0',
-    },
+    clientId: '75',
+    userAgent: _tvUserAgent,
+    context: _context({
+      'clientName': 'TVHTML5_SIMPLY',
+      'clientVersion': '1.0',
+    }),
     useWebPoTokens: true,
     supportsSignatureCipher: true,
+    useMusicPlayerEndpoint: true,
   );
 
-  /// TVHTML5_SIMPLY_EMBEDDED_PLAYER - Can bypass age-restriction
+  /// TVHTML5_SIMPLY_EMBEDDED_PLAYER — can bypass age restriction.
   static final tvEmbedded = InnerTubeClient(
     name: 'TVHTML5_SIMPLY_EMBEDDED_PLAYER',
     version: '2.0',
+    clientId: '85',
+    userAgent: _tvUserAgent,
     context: {
-      'client': {
+      ..._context({
         'clientName': 'TVHTML5_SIMPLY_EMBEDDED_PLAYER',
         'clientVersion': '2.0',
-        'platform': 'TV',
-        'clientScreen': 'EMBED',
-        'hl': 'en',
-        'gl': 'US',
-      },
+      }),
       'thirdParty': {'embedUrl': 'https://www.reddit.com/'},
-      'user': {'lockedSafetyMode': false},
     },
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (PlayStation; PlayStation 4/12.02) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.4 Safari/605.1.15',
-      'X-YouTube-Client-Name': '85',
-      'X-YouTube-Client-Version': '2.0',
-    },
+    useWebPoTokens: true,
     supportsSignatureCipher: true,
+    isEmbedded: true,
   );
 
-  /// WEB_CREATOR - YouTube Studio web client (login required)
+  /// WEB_CREATOR — YouTube Studio web client (login required).
   static final webCreator = InnerTubeClient(
     name: 'WEB_CREATOR',
-    version: '1.20260114.05.00',
-    context: {
-      'client': {
-        'clientName': 'WEB_CREATOR',
-        'clientVersion': '1.20260114.05.00',
-        'hl': 'en',
-        'gl': 'US',
-      },
-      'user': {'lockedSafetyMode': false},
-    },
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0',
-      'Origin': 'https://music.youtube.com',
-      'Referer': 'https://music.youtube.com/',
-    },
+    version: '1.20260708.06.00',
+    clientId: '62',
+    userAgent: _webUserAgent,
+    context: _context({
+      'clientName': 'WEB_CREATOR',
+      'clientVersion': '1.20260708.06.00',
+    }),
     useWebPoTokens: true,
     supportsSignatureCipher: true,
   );
 
-  /// WEB - Regular YouTube web client  
+  /// WEB — regular YouTube web client.
   static final web = InnerTubeClient(
     name: 'WEB',
-    version: '2.20260114.08.00',
-    context: {
-      'client': {
-        'clientName': 'WEB',
-        'clientVersion': '2.20260114.08.00',
-        'hl': 'en',
-        'gl': 'US',
-      },
-      'user': {'lockedSafetyMode': false},
-    },
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0',
-      'Origin': 'https://www.youtube.com',
-      'Referer': 'https://www.youtube.com/',
-    },
+    version: '2.20260708.00.00',
+    clientId: '1',
+    userAgent: _webUserAgent,
+    context: _context({
+      'clientName': 'WEB',
+      'clientVersion': '2.20260708.00.00',
+    }),
     useWebPoTokens: true,
     supportsSignatureCipher: true,
   );
 
-  /// IOS - Fallback with direct URLs
+  /// IOS — direct URLs.
   static final ios = InnerTubeClient(
     name: 'IOS',
-    version: '21.03.1',
-    context: {
-      'client': {
-        'clientName': 'IOS',
-        'clientVersion': '21.03.1',
-        'deviceMake': 'Apple',
-        'deviceModel': 'iPhone14,3',
-        'osName': 'iOS',
-        'osVersion': '17.5.1',
-        'hl': 'en',
-        'gl': 'US',
-        'platform': 'MOBILE',
-      },
-      'user': {'lockedSafetyMode': false},
-    },
-    headers: {
-      'User-Agent': 'com.google.ios.youtube/21.03.1 (iPhone16,2; U; CPU iOS 18_2 like Mac OS X;)',
-      'X-YouTube-Client-Name': '5',
-      'X-YouTube-Client-Version': '21.03.1',
-    },
-    useWebPoTokens: false,
-    supportsSignatureCipher: false,
+    version: '21.26.4',
+    clientId: '5',
+    userAgent:
+        'com.google.ios.youtube/21.26.4 (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X;)',
+    context: _context({
+      'clientName': 'IOS',
+      'clientVersion': '21.26.4',
+      'deviceMake': 'Apple',
+      'deviceModel': 'iPhone16,2',
+      'osName': 'iPhone',
+      'osVersion': '18.3.2.22D82',
+    }),
   );
 
-  /// ANDROID_MUSIC - YouTube Music Android app client
+  /// ANDROID_MUSIC — YouTube Music Android app.
   static final androidMusic = InnerTubeClient(
     name: 'ANDROID_MUSIC',
-    version: '7.16.53',
-    context: {
-      'client': {
-        'clientName': 'ANDROID_MUSIC',
-        'clientVersion': '7.16.53',
-        'androidSdkVersion': 34,
-        'osName': 'Android',
-        'osVersion': '14',
-        'platform': 'MOBILE',
-        'hl': 'en',
-        'gl': 'US',
-      },
-      'user': {'lockedSafetyMode': false},
-    },
-    headers: {
-      'User-Agent': 'com.google.android.apps.youtube.music/7.16.53 (Linux; U; Android 14; Pixel 8) gzip',
-      'X-YouTube-Client-Name': '21',
-      'X-YouTube-Client-Version': '7.16.53',
-    },
-    useWebPoTokens: false,
-    supportsSignatureCipher: false,
+    version: '8.39.42',
+    clientId: '21',
+    userAgent:
+        'com.google.android.apps.youtube.music/8.39.42 '
+        '(Linux; U; Android 15; en_US; Pixel 9 Pro; Build/AP4A.250205.002) gzip',
+    context: _context({
+      'clientName': 'ANDROID_MUSIC',
+      'clientVersion': '8.39.42',
+      'androidSdkVersion': 35,
+      'osName': 'Android',
+      'osVersion': '15',
+    }),
   );
 
-  /// Default playback client order (content-aware fallback)
-  /// Starts with clients that DON'T need cipher/PoToken for fastest playback
+  /// Default playback client order (content-aware fallback). Starts with
+  /// clients that don't need cipher / PoToken — Metrolist's automatic order.
   static List<InnerTubeClient> get playbackClients => defaultClients;
 
   /// Content-aware fallback: choose clients based on content type
@@ -302,43 +291,88 @@ class InnerTubeClient {
     return defaultClients;
   }
 
-  static final defaultClients = [
+  static final List<InnerTubeClient> defaultClients = List.unmodifiable([
     visionOs,
+    visionOs01,
     androidVr165,
     androidVr143,
-    webRemix,
+    androidVr161,
     tvhtml5,
+    webRemix,
     tvhtml5Simply,
-  ];
+  ]);
 
-  static final uploadedClients = [
+  static final List<InnerTubeClient> uploadedClients = List.unmodifiable([
     tvhtml5,
     webRemix,
     webCreator,
-  ];
+  ]);
 
-  static final explicitClients = [
+  static final List<InnerTubeClient> explicitClients = List.unmodifiable([
     visionOs,
     tvhtml5,
+    tvEmbedded,
     webRemix,
-  ];
+  ]);
 
-  static final kidsClients = [
+  static final List<InnerTubeClient> kidsClients = List.unmodifiable([
     tvhtml5,
     webRemix,
     tvhtml5Simply,
     webCreator,
-  ];
+  ]);
 
-  static final liveClients = [
+  static final List<InnerTubeClient> liveClients = List.unmodifiable([
     tvhtml5,
     webRemix,
     webCreator,
     tvhtml5Simply,
-  ];
+  ]);
 
   /// Client for METADATA - separate from playback to reduce fingerprinting
   static InnerTubeClient get metadataClient => webRemix;
+
+  /// Headers for fetching a googlevideo stream URL: the user agent (and for
+  /// web clients the origin) of the client that produced it, which the URL
+  /// names in its `c` / `cver` parameters. A mismatched user agent gets
+  /// throttled or refused.
+  static Map<String, String> streamHeadersFor(Uri url) {
+    if (!url.host.endsWith('googlevideo.com')) return const {};
+    final name = url.queryParameters['c']?.toUpperCase();
+    final cver = url.queryParameters['cver'];
+    InnerTubeClient client;
+    if (name == null) {
+      return const {};
+    } else if (name == 'ANDROID_VR') {
+      client = [androidVr143, androidVr161].firstWhere(
+        (c) => c.version == cver,
+        orElse: () => androidVr165,
+      );
+    } else if (name == 'VISIONOS') {
+      client = cver == visionOs01.version ? visionOs01 : visionOs;
+    } else if (name.startsWith('TVHTML5')) {
+      client = tvhtml5;
+    } else if (name == 'WEB_REMIX') {
+      return {
+        'User-Agent': webRemix.userAgent,
+        'Origin': 'https://music.youtube.com',
+        'Referer': 'https://music.youtube.com/',
+      };
+    } else if (name.startsWith('WEB') || name == 'MWEB') {
+      return {
+        'User-Agent': web.userAgent,
+        'Origin': 'https://www.youtube.com',
+        'Referer': 'https://www.youtube.com/',
+      };
+    } else if (name == 'ANDROID_MUSIC') {
+      client = androidMusic;
+    } else if (name.startsWith('IOS')) {
+      client = ios;
+    } else {
+      return const {};
+    }
+    return {'User-Agent': client.userAgent};
+  }
 }
 
 /// Playability status from YouTube
@@ -432,7 +466,6 @@ class InnerTubeApi {
       'https://www.youtube.com/youtubei/v1/player';
   static const String _musicPlayerApiUrl =
       'https://music.youtube.com/youtubei/v1/player';
-  static const String _apiKey = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
 
   final http.Client _client;
 
@@ -450,18 +483,28 @@ class InnerTubeApi {
   }) async {
     final innerTubeClient = client ?? InnerTubeClient.visionOs;
 
-    // Use music API for web clients, otherwise standard
-    final baseUrl =
-        (innerTubeClient.name == 'WEB_REMIX' || innerTubeClient.name == 'WEB')
-        ? _musicPlayerApiUrl
-        : _playerApiUrl;
+    // Endpoint and origin as YouTube's own clients use them (Metrolist
+    // innertubex): the VR / visionOS / Simply / WEB_REMIX clients talk to
+    // music.youtube.com, the rest to www.youtube.com. No API key.
+    final musicEndpoint = innerTubeClient.useMusicPlayerEndpoint;
+    final baseUrl = musicEndpoint ? _musicPlayerApiUrl : _playerApiUrl;
+    final origin = musicEndpoint
+        ? 'https://music.youtube.com'
+        : 'https://www.youtube.com';
 
     try {
-      final url = Uri.parse('$baseUrl?key=$_apiKey&prettyPrint=false');
+      final url = Uri.parse('$baseUrl?prettyPrint=false');
 
       final headers = {
         'Content-Type': 'application/json',
         'Accept-Encoding': 'gzip, deflate',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'X-Goog-Api-Format-Version': '1',
+        'Origin': origin,
+        'X-Origin': origin,
+        'Referer': innerTubeClient.isEmbedded
+            ? 'https://www.reddit.com/'
+            : '$origin/',
         ...innerTubeClient.headers,
       };
 
@@ -471,26 +514,36 @@ class InnerTubeApi {
       }
 
       // Build context with visitorData embedded
+      // Copy the client map too: it's shared by every request for this client.
       final context = Map<String, dynamic>.from(innerTubeClient.context);
+      final clientContext = Map<String, dynamic>.from(
+        context['client'] as Map<String, dynamic>,
+      );
       if (visitorData != null && visitorData.isNotEmpty) {
-        (context['client'] as Map<String, dynamic>)['visitorData'] =
-            visitorData;
+        clientContext['visitorData'] = visitorData;
       }
+      context['client'] = clientContext;
 
       final body = <String, dynamic>{
         'context': context,
         'videoId': videoId,
         'racyCheckOk': true,
         'contentCheckOk': true,
+        if (!musicEndpoint) 'videoCheckOk': true,
       };
 
       if (playlistId != null) {
         body['playlistId'] = playlistId;
       }
 
-      if (signatureTimestamp != null) {
+      if (innerTubeClient.supportsSignatureCipher || innerTubeClient.isEmbedded) {
         body['playbackContext'] = {
-          'contentPlaybackContext': {'signatureTimestamp': signatureTimestamp},
+          'contentPlaybackContext': {
+            if (!musicEndpoint) 'html5Preference': 'HTML5_PREF_WANTS',
+            if (signatureTimestamp != null &&
+                innerTubeClient.supportsSignatureCipher)
+              'signatureTimestamp': signatureTimestamp,
+          },
         };
       }
 

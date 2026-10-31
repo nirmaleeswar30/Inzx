@@ -5,6 +5,8 @@ import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:marquee/marquee.dart';
 import '../../providers/providers.dart';
+import '../../services/deep_link_handler.dart';
+import '../ytmusic_login_screen.dart';
 import '../../services/jams/jams_models.dart';
 import '../../core/design_system/colors.dart';
 import '../../core/l10n/app_localizations_x.dart';
@@ -57,7 +59,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final googleAuth = ref.watch(googleAuthStateProvider);
+    final isSignedIn = ref.watch(appAccountProvider) != null;
     final session = ref.watch(currentJamSessionProvider).valueOrNull;
     final jamsState = ref.watch(jamsNotifierProvider);
 
@@ -121,7 +123,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
           Flexible(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: googleAuth.isSignedIn
+              child: isSignedIn
                   ? (session != null
                         ? _buildActiveSession(session)
                         : _buildNoSession(jamsState))
@@ -136,7 +138,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
   );
   }
 
-  /// Prompt to sign in with Google
+  /// Prompt to sign in (single Google / YouTube Music login)
   Widget _buildSignInPrompt() {
     final l10n = context.l10n;
     return Padding(
@@ -169,7 +171,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () async {
-              await ref.read(googleAuthStateProvider.notifier).signIn();
+              await openSignIn(context);
             },
             icon: const Icon(Icons.login),
             label: Text(l10n.signInWithGoogle),
@@ -416,6 +418,14 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
                       );
                     },
                     icon: Icon(Iconsax.copy, color: widget.accentColor),
+                  ),
+                  IconButton(
+                    tooltip: 'Share Jam link',
+                    onPressed: () => shareJamInvite(
+                      session.sessionCode,
+                      videoId: ref.read(currentTrackProvider)?.id,
+                    ),
+                    icon: Icon(Iconsax.share, color: widget.accentColor),
                   ),
                 ],
               ),

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stand-in cover for the widget picker previews. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="22dp" />
+    <gradient
+        android:angle="315"
+        android:centerColor="#FF7A1E52"
+        android:endColor="#FF1B1035"
+        android:startColor="#FFE53935"
+        android:type="linear" />
+</shape>

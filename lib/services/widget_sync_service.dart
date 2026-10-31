@@ -8,12 +8,12 @@ class WidgetSyncService {
   static const MethodChannel _channel = MethodChannel('inzx/widget');
 
   static String? _lastFingerprint;
-  static String? _lastProgressFingerprint;
   static String? _lastArtworkTrackId;
 
   static Future<void> syncPlaybackState(
     player.PlaybackState state, {
     String? statusLabel,
+    bool isLiked = false,
   }) async {
     final track = state.currentTrack;
     final hasTrack = track != null;
@@ -28,21 +28,20 @@ class WidgetSyncService {
       'hasTrack': hasTrack,
       'positionMs': state.position.inMilliseconds,
       'durationMs': effectiveDuration.inMilliseconds,
+      'isLiked': isLiked,
+      'shuffle': state.shuffleEnabled,
     };
     payload['statusLabel'] = statusLabel?.trim() ?? '';
 
-    final fingerprint = _fingerprintFrom(
-      track,
-      state.isPlaying,
-      hasTrack,
-      statusLabel,
-    );
+    final fingerprint =
+        '${_fingerprintFrom(track, state.isPlaying, hasTrack, statusLabel)}'
+        '|$isLiked|${state.shuffleEnabled}';
     if (_lastFingerprint == fingerprint) return;
     _lastFingerprint = fingerprint;
 
     if (track?.id != _lastArtworkTrackId) {
       _lastArtworkTrackId = track?.id;
-      final thumbnail = track?.bestThumbnail;
+      final thumbnail = track?.systemArtworkUrl;
       if (thumbnail != null && thumbnail.isNotEmpty) {
         final artBytes = await _downloadArtworkBytes(thumbnail);
         if (artBytes != null && artBytes.isNotEmpty) {
@@ -50,38 +49,6 @@ class WidgetSyncService {
         }
       }
     }
-
-    try {
-      await _channel.invokeMethod('syncPlaybackState', payload);
-    } catch (_) {
-      // Widget sync is best-effort and should never block playback controls.
-    }
-  }
-
-  static Future<void> syncProgress({
-    required Track? track,
-    required bool isPlaying,
-    required bool hasTrack,
-    required Duration position,
-    required Duration? duration,
-  }) async {
-    if (!hasTrack) return;
-
-    // Widget progress updates are throttled to 1-second buckets.
-    final secondBucket = position.inSeconds;
-    final durationMs =
-        (duration ?? track?.duration ?? Duration.zero).inMilliseconds;
-    final progressFingerprint =
-        '${track?.id ?? ''}|$secondBucket|$durationMs|$isPlaying';
-    if (_lastProgressFingerprint == progressFingerprint) return;
-    _lastProgressFingerprint = progressFingerprint;
-
-    final payload = <String, dynamic>{
-      'positionMs': position.inMilliseconds,
-      'durationMs': durationMs,
-      'hasTrack': hasTrack,
-      'isPlaying': isPlaying,
-    };
 
     try {
       await _channel.invokeMethod('syncPlaybackState', payload);

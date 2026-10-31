@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Height of the strip at the foot of the cover widgets that the
+         transport sits on; the art is blurred under it. -->
+    <dimen name="widget_inzx_band_square">72dp</dimen>
+    <dimen name="widget_inzx_band_wide">60dp</dimen>
+    <dimen name="widget_inzx_band_padding">8dp</dimen>
+    <!-- How much of the cover is blurred: from the bottom up to the top of
+         the text (2×2: 4 padding + 40 buttons + 3 gap + ~15 title;
+         4×2: the 60dp band with its ~34dp text block centred). -->
+    <dimen name="widget_inzx_blur_square">62dp</dimen>
+    <dimen name="widget_inzx_blur_wide">48dp</dimen>
+    <dimen name="widget_inzx_button_square">40dp</dimen>
+    <dimen name="widget_inzx_button_wide">44dp</dimen>
+    <!-- The 4×1 capsule: its height, round cover and its five buttons. -->
+    <dimen name="widget_inzx_pill_height">78dp</dimen>
+    <dimen name="widget_inzx_pill_art">64dp</dimen>
+    <dimen name="widget_inzx_button_pill">38dp</dimen>
+    <dimen name="widget_inzx_logo">20dp</dimen>
+</resources>

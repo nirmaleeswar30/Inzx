@@ -18,7 +18,6 @@ import 'ripple_circular_progress_scrubber.dart';
 import 'ripple_flower_clipper.dart';
 import 'jam_indicator_badge.dart';
 import 'explicit_badge.dart';
-import 'audio_routing_pill.dart';
 
 /// The 'Ripple' minimalist Now Playing screen layout.
 /// Features an 8-petal wavy album art mask, concentric waveform seek ring,
@@ -73,7 +72,6 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
   @override
   Widget build(BuildContext context) {
     final duration = widget.state.duration ?? Duration.zero;
-    final isLiquidGlass = ref.watch(liquidGlassNavProvider);
 
     final lyricsState = ref.watch(lyricsProvider);
     final isFetchingLyrics =
@@ -127,7 +125,7 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
               child: Column(
                 children: [
                   // 1. Top Bar with Back button, "NOW PLAYING" / stats in center, and 3-dot menu
-                  _buildTopHeader(isLiquidGlass),
+                  _buildTopHeader(),
 
                   const Spacer(flex: 2),
 
@@ -280,21 +278,11 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
                 const Spacer(flex: 2),
 
                 // 5. Playback Controls Row
-                _buildControlsRow(isLiquidGlass),
-
-                if (ref.watch(showSmartAudioRoutingProvider)) ...[
-                  const SizedBox(height: 32),
-                  Center(
-                    child: AudioRoutingPill(
-                      textColor: widget.textColor,
-                      accentColor: widget.accentColor,
-                    ),
-                  ),
-                ],
+                _buildControlsRow(),
 
                 const Spacer(flex: 2),
 
-                // 6. Drawer Tabs Bar (UP NEXT | LYRICS | RELATED)
+                // 6. Bottom bar (output device), pinned to the very bottom
                 widget.tabsWidget,
 
                 SizedBox(
@@ -311,7 +299,7 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
 
 
   /// Top Bar with dismiss button, centered track/stats, and 3-dot menu
-  Widget _buildTopHeader(bool isLiquidGlass) {
+  Widget _buildTopHeader() {
     final playbackState = ref.watch(playbackStateProvider).valueOrNull;
     final queueTitle = playbackState?.queueTitle;
     final hasQueueTitle = queueTitle != null && queueTitle.trim().isNotEmpty;
@@ -338,7 +326,7 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
       displaySubtext = null;
     }
 
-    final albumColors = ref.watch(albumColorsProvider);
+    final albumColors = ref.watch(playerAlbumColorsProvider);
     final hasAlbumColors = !albumColors.isDefault;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -346,49 +334,6 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
       required Widget icon,
       required VoidCallback onTap,
     }) {
-      if (isLiquidGlass) {
-        return LiquidGlassContainer(
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          blurSigma: 2.0,
-          refractionScale: 1.08,
-          refractionDeflection: 2.8,
-          isDark: isDark,
-          surfaceColor: Colors.black.withValues(
-            alpha: isDark ? 0.38 : 0.22,
-          ),
-          accentColor: hasAlbumColors
-              ? widget.accentColor.withValues(alpha: 0.50)
-              : (isDark ? Colors.white24 : Colors.black12),
-          padding: EdgeInsets.zero,
-          additionalShadows: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.28 : 0.10),
-              blurRadius: 10,
-              spreadRadius: -1,
-              offset: const Offset(0, 3),
-            ),
-            if (hasAlbumColors)
-              BoxShadow(
-                color: widget.accentColor.withValues(
-                  alpha: isDark ? 0.20 : 0.10,
-                ),
-                blurRadius: 12,
-                spreadRadius: 0,
-              ),
-          ],
-          child: SizedBox.expand(
-            child: BouncyTouch(
-              style: BouncyStyle.button,
-              customScale: 0.88,
-              onTap: onTap,
-              child: Center(child: icon),
-            ),
-          ),
-        );
-      }
-
       return BouncyTouch(
         style: BouncyStyle.button,
         customScale: 0.90,
@@ -419,7 +364,7 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
       icon: Icon(
         Icons.keyboard_arrow_down_rounded,
         color: widget.textColor,
-        size: isLiquidGlass ? 26 : 28,
+        size: 28,
       ),
       onTap: widget.onDismiss,
     );
@@ -428,7 +373,7 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
       icon: Icon(
         Icons.more_vert_rounded,
         color: widget.textColor,
-        size: isLiquidGlass ? 20 : 22,
+        size: 22,
       ),
       onTap: () => widget.onOpenOptions?.call(),
     );
@@ -631,34 +576,17 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
     );
   }
 
-  /// Minimalist controls row: Shuffle, Previous, Play/Pause, Next, Repeat
-  Widget _buildControlsRow(bool isLiquidGlass) {
+  /// Minimalist controls row: Previous, Play/Pause, Next
+  Widget _buildControlsRow() {
     final isInJam = ref.watch(isInJamSessionProvider);
     final canControl = ref.watch(canControlJamPlaybackProvider);
     final canSkip = !isInJam || canControl;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 44.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // Shuffle
-          BouncyTouch(
-            style: BouncyStyle.button,
-            customScale: 0.90,
-            onTap: () => widget.playerService.toggleShuffle(),
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Icon(
-                Iconsax.shuffle,
-                color: widget.state.shuffleEnabled
-                    ? widget.accentColor
-                    : widget.textColor.withValues(alpha: 0.55),
-                size: 22,
-              ),
-            ),
-          ),
-
           // Previous
           BouncyTouch(
             style: BouncyStyle.button,
@@ -685,7 +613,6 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
             size: 68.0,
             iconSize: 38.0,
             backgroundColor: widget.accentColor,
-            isLiquidGlass: isLiquidGlass,
           ),
 
           // Next
@@ -705,24 +632,6 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
             ),
           ),
 
-          // Repeat
-          BouncyTouch(
-            style: BouncyStyle.button,
-            customScale: 0.90,
-            onTap: () => widget.playerService.cycleLoopMode(),
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Icon(
-                widget.state.loopMode == LoopMode.one
-                    ? Iconsax.repeate_one
-                    : Iconsax.repeate_music,
-                color: widget.state.loopMode != LoopMode.off
-                    ? widget.accentColor
-                    : widget.textColor.withValues(alpha: 0.55),
-                size: 22,
-              ),
-            ),
-          ),
         ],
       ),
     );

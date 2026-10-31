@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Picker image for the 2×2 widget (launchers without previewLayout):
+     cover, darker foot, title bar and three transport dots. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:width="110dp"
+        android:height="110dp"
+        android:drawable="@drawable/widget_inzx_preview_art" />
+    <item
+        android:width="110dp"
+        android:height="34dp"
+        android:gravity="bottom">
+        <shape android:shape="rectangle">
+            <corners
+                android:bottomLeftRadius="22dp"
+                android:bottomRightRadius="22dp" />
+            <solid android:color="#66000000" />
+        </shape>
+    </item>
+    <item
+        android:width="56dp"
+        android:height="5dp"
+        android:gravity="bottom|center_horizontal"
+        android:bottom="24dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="3dp" />
+            <solid android:color="#E6FFFFFF" />
+        </shape>
+    </item>
+    <item
+        android:width="9dp"
+        android:height="9dp"
+        android:gravity="bottom|left"
+        android:bottom="9dp"
+        android:left="24dp">
+        <shape android:shape="oval">
+            <solid android:color="#CCFFFFFF" />
+        </shape>
+    </item>
+    <item
+        android:width="12dp"
+        android:height="12dp"
+        android:gravity="bottom|center_horizontal"
+        android:bottom="7dp">
+        <shape android:shape="oval">
+            <solid android:color="#FFFFFFFF" />
+        </shape>
+    </item>
+    <item
+        android:width="9dp"
+        android:height="9dp"
+        android:gravity="bottom|right"
+        android:bottom="9dp"
+        android:right="24dp">
+        <shape android:shape="oval">
+            <solid android:color="#CCFFFFFF" />
+        </shape>
+    </item>
+</layer-list>

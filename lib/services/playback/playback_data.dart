@@ -179,9 +179,16 @@ class PlaybackTracking {
   final String? videostatsPlaybackUrl;
   final String? videostatsWatchtimeUrl;
 
+  /// The ping real clients fire a few seconds in; separates a play that
+  /// started from a play that happened.
+  final String? atrUrl;
+  final int atrAfterSeconds;
+
   const PlaybackTracking({
     this.videostatsPlaybackUrl,
     this.videostatsWatchtimeUrl,
+    this.atrUrl,
+    this.atrAfterSeconds = 5,
   });
 
   bool get hasStatsUrls =>
@@ -195,6 +202,10 @@ class PlaybackTracking {
           json['videostatsPlaybackUrl']?['baseUrl'] as String?,
       videostatsWatchtimeUrl:
           json['videostatsWatchtimeUrl']?['baseUrl'] as String?,
+      atrUrl: json['atrUrl']?['baseUrl'] as String?,
+      atrAfterSeconds:
+          int.tryParse('${json['atrUrl']?['elapsedMediaTimeSeconds'] ?? ''}') ??
+          5,
     );
   }
 }

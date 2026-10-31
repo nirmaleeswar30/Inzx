@@ -11,6 +11,7 @@ import 'betterlyrics_portato_provider.dart';
 import 'betterlyrics_provider.dart';
 import 'paxsenix_provider.dart';
 import 'binilyrics_provider.dart';
+import 'lrcred_provider.dart';
 import 'unison_provider.dart';
 import 'megalobiz_provider.dart';
 import 'lyricsplus_provider.dart';
@@ -25,6 +26,7 @@ import 'instrumental_gaps.dart';
 
 /// Provider names enum for type safety
 enum ProviderName {
+  lrcRed,
   betterLyrics,
   betterLyricsPortato,
   paxSenix,
@@ -41,20 +43,24 @@ enum ProviderName {
   embedded,
 }
 
-/// All available provider names in priority order
+/// All available provider names in priority order — BitChord's default
+/// order: the Apple-timed, syllable-synced sources first, then the
+/// line-synced ones, Genius (plain text) last. Embedded tags (local files)
+/// are asked first on their own.
 const providerNames = [
+  ProviderName.lrcRed,
+  ProviderName.biniLyrics,
   ProviderName.betterLyrics,
   ProviderName.betterLyricsPortato,
   ProviderName.paxSenix,
-  ProviderName.simpMusic,
   ProviderName.lyricsPlus,
-  ProviderName.lrclib,
+  ProviderName.simpMusic,
   ProviderName.unison,
-  ProviderName.biniLyrics,
-  ProviderName.musixmatch,
-  ProviderName.kugou,
-  ProviderName.megalobiz,
   ProviderName.youtubeMusic,
+  ProviderName.megalobiz,
+  ProviderName.kugou,
+  ProviderName.lrclib,
+  ProviderName.musixmatch,
   ProviderName.genius,
   ProviderName.embedded,
 ];
@@ -63,6 +69,8 @@ const providerNames = [
 extension ProviderNameExt on ProviderName {
   String get displayName {
     switch (this) {
+      case ProviderName.lrcRed:
+        return 'lrc.red';
       case ProviderName.biniLyrics:
         return 'BiniLyrics';
       case ProviderName.unison:
@@ -101,6 +109,8 @@ class LyricsWarmupService {
   static final LyricsWarmupService instance = LyricsWarmupService._();
   LyricsWarmupService._();
 
+  final LrcRedProvider _lrcRed = LrcRedProvider();
+  final BiniLyricsProvider _biniLyrics = BiniLyricsProvider();
   final BetterLyricsProvider _betterLyrics = BetterLyricsProvider();
   final BetterLyricsPortatoProvider _betterLyricsPortato = BetterLyricsPortatoProvider();
   final PaxSenixProvider _paxSenix = PaxSenixProvider();
@@ -135,8 +145,10 @@ class LyricsWarmupService {
 
       LyricResult? bestResult;
 
-      // 1. Race word-synced providers with timeout
+      // 1. Race word-synced providers with timeout (BitChord's order)
       final wordSyncFutures = [
+        _lrcRed.search(info),
+        _biniLyrics.search(info),
         _betterLyrics.search(info),
         _betterLyricsPortato.search(info),
         _paxSenix.search(info),
@@ -287,6 +299,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
 
   LyricsNotifier()
     : _providers = {
+        ProviderName.lrcRed: LrcRedProvider(),
         ProviderName.biniLyrics: BiniLyricsProvider(),
         ProviderName.unison: UnisonProvider(),
         ProviderName.megalobiz: MegalobizProvider(),
@@ -378,8 +391,11 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
       }
     }
 
-    // 2. Parallel race all online providers
-    final onlineProviders = providerNames.where((p) => p != ProviderName.embedded).toList();
+    // 2. Race every online provider at once (BitChord). Genius is plain text
+    // only, so it is asked afterwards, and only if nothing synced turned up.
+    final onlineProviders = providerNames
+        .where((p) => p != ProviderName.embedded && p != ProviderName.genius)
+        .toList();
 
     bool foundWordSync = false;
 
@@ -410,6 +426,13 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
         }
       }),
     );
+
+    final anySynced = state.providers.values.any(
+      (s) => s.data?.hasSyncedLyrics ?? false,
+    );
+    if (!anySynced && mounted) {
+      await _fetchFromProvider(ProviderName.genius, info);
+    }
 
     // Auto-select best provider if not manually switched
     if (!state.hasManuallySwitched) {
@@ -458,6 +481,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
     if (normalized.contains('embedded') || normalized.contains('local')) {
       return ProviderName.embedded;
     }
+    if (normalized.contains('lrc.red')) return ProviderName.lrcRed;
     if (normalized.contains('betterlyrics portato')) return ProviderName.betterLyricsPortato;
     if (normalized.contains('betterlyrics')) return ProviderName.betterLyrics;
     if (normalized.contains('paxsenix')) return ProviderName.paxSenix;
@@ -637,60 +661,22 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
       bias -= 5;
     }
 
-    // Quality bonus
+    // Quality first, as BitChord picks: a word-synced answer wins outright,
+    // then line-synced, then plain text. The gaps are wider than the
+    // priority tie-break below, so quality can never be outranked by order.
     if (status.data?.hasWordSync ?? false) {
-      bias += 25; // Word-level sync wins outright
+      bias += 100;
     } else if (status.data?.hasSyncedLyrics ?? false) {
-      bias += 12; // Line-level sync
+      bias += 50;
     } else if (status.data?.hasPlainLyrics ?? false) {
-      bias += 3; // Plain text
+      bias += 10;
     } else {
       return -15; // No lyrics
     }
 
-    // Tie-breaker priority ranking
-    switch (name) {
-      case ProviderName.embedded:
-        bias += 9;
-        break;
-      case ProviderName.betterLyrics:
-        bias += 8;
-        break;
-      case ProviderName.betterLyricsPortato:
-        bias += 7;
-        break;
-      case ProviderName.paxSenix:
-        bias += 7;
-        break;
-      case ProviderName.lyricsPlus:
-        bias += 6;
-        break;
-      case ProviderName.simpMusic:
-        bias += 5;
-        break;
-      case ProviderName.biniLyrics:
-      case ProviderName.unison:
-        bias += 5;
-        break;
-      case ProviderName.lrclib:
-        bias += 4;
-        break;
-      case ProviderName.musixmatch:
-        bias += 3;
-        break;
-      case ProviderName.megalobiz:
-      case ProviderName.kugou:
-        bias += 2;
-        break;
-      case ProviderName.youtubeMusic:
-        bias += 1;
-        break;
-      case ProviderName.genius:
-        bias += 0;
-        break;
-    }
-
-    return bias;
+    // Same quality: the higher-priority source wins (embedded tags first).
+    if (name == ProviderName.embedded) return bias + providerNames.length + 1;
+    return bias + (providerNames.length - providerNames.indexOf(name));
   }
 
   /// Select the best provider based on bias

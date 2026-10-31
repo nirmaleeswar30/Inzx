@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Picker image for the 4×1 widget (launchers without previewLayout):
+     capsule, round cover, title and a row of five buttons. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:width="250dp"
+        android:height="78dp"
+        android:drawable="@drawable/widget_inzx_preview_pill_bg" />
+    <item
+        android:width="64dp"
+        android:height="64dp"
+        android:gravity="center_vertical|left"
+        android:left="7dp"
+        android:drawable="@drawable/widget_inzx_preview_circle" />
+    <item
+        android:width="90dp"
+        android:height="6dp"
+        android:gravity="top|left"
+        android:top="20dp"
+        android:left="88dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="3dp" />
+            <solid android:color="#E6FFFFFF" />
+        </shape>
+    </item>
+    <item
+        android:width="148dp"
+        android:height="8dp"
+        android:gravity="top|left"
+        android:top="46dp"
+        android:left="88dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="4dp" />
+            <solid android:color="#80FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

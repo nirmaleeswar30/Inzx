@@ -1,0 +1,19 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/s/:id", "destination": "/api/redirect?type=song&id=:id" },
+    { "source": "/a/:id", "destination": "/api/redirect?type=album&id=:id" },
+    { "source": "/p/:id", "destination": "/api/redirect?type=playlist&id=:id" },
+    { "source": "/ar/:id", "destination": "/api/redirect?type=artist&id=:id" },
+    { "source": "/pod/:id", "destination": "/api/redirect?type=podcast&id=:id" },
+    { "source": "/jam/:code", "destination": "/api/redirect?type=jam&id=:code" },
+    { "source": "/open", "destination": "/api/redirect" },
+    { "source": "/redirect", "destination": "/api/redirect" }
+  ],
+  "headers": [
+    {
+      "source": "/.well-known/assetlinks.json",
+      "headers": [{ "key": "Content-Type", "value": "application/json" }]
+    }
+  ]
+}

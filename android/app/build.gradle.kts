@@ -44,6 +44,8 @@ android {
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
     implementation("androidx.appcompat:appcompat:1.6.1")
+    // MediaBrowserCompat for widget Like / Shuffle (talks to audio_service)
+    implementation("androidx.media:media:1.7.0")
 }
 
 flutter {

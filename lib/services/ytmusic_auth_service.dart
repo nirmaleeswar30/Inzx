@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'ytmusic_api_service.dart';
 
@@ -126,6 +127,27 @@ class YTMusicAuthService {
     }
   }
 
+  /// Fetch name / email / photo / account id for the signed-in session and
+  /// persist them. Returns the merged account, or the current one on failure.
+  Future<YTMusicAccount?> refreshAccountInfo() async {
+    if (!isLoggedIn) return _account;
+    try {
+      final info = await _innerTubeService.getAccountInfo();
+      if (info == null) return _account;
+      final fetched = YTMusicAccount.fromJson(info);
+      _account = (_account ?? YTMusicAccount()).mergedWith(fetched);
+      await _secureStorage.write(
+        key: _accountInfoKey,
+        value: jsonEncode(_account!.toJson()),
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to refresh YT Music account info: $e');
+      }
+    }
+    return _account;
+  }
+
   /// Logout and clear stored cookies
   Future<void> logout() async {
     _cookies.clear();
@@ -175,14 +197,28 @@ class YTMusicAuthService {
   }
 }
 
-/// YouTube Music account information
+/// YouTube Music account information.
+///
+/// This is the app's single identity: profile picture, greeting name and the
+/// Jams user id all come from here (there is no separate Google Sign-In).
 class YTMusicAccount {
   final String? name;
   final String? email;
   final String? avatarUrl;
   final String? channelId;
+  final String? handle;
 
-  YTMusicAccount({this.name, this.email, this.avatarUrl, this.channelId});
+  /// Stable Google account id (DATASYNC_ID) of the signed-in session.
+  final String? accountId;
+
+  YTMusicAccount({
+    this.name,
+    this.email,
+    this.avatarUrl,
+    this.channelId,
+    this.handle,
+    this.accountId,
+  });
 
   factory YTMusicAccount.fromJson(Map<String, dynamic> json) {
     return YTMusicAccount(
@@ -190,6 +226,8 @@ class YTMusicAccount {
       email: json['email'] as String?,
       avatarUrl: json['avatarUrl'] as String?,
       channelId: json['channelId'] as String?,
+      handle: json['handle'] as String?,
+      accountId: json['accountId'] as String?,
     );
   }
 
@@ -198,5 +236,35 @@ class YTMusicAccount {
     'email': email,
     'avatarUrl': avatarUrl,
     'channelId': channelId,
+    'handle': handle,
+    'accountId': accountId,
   };
+
+  /// Prefer non-null values from [other].
+  YTMusicAccount mergedWith(YTMusicAccount other) => YTMusicAccount(
+    name: other.name ?? name,
+    email: other.email ?? email,
+    avatarUrl: other.avatarUrl ?? avatarUrl,
+    channelId: other.channelId ?? channelId,
+    handle: other.handle ?? handle,
+    accountId: other.accountId ?? accountId,
+  );
+
+  /// Id used to identify this user in Jams and other per-user features.
+  String get stableId {
+    if (accountId != null && accountId!.isNotEmpty) return 'yt_$accountId';
+    if (channelId != null && channelId!.isNotEmpty) return 'yt_$channelId';
+    final seed = email ?? handle ?? name ?? 'anonymous';
+    return 'yt_${sha1.convert(utf8.encode(seed)).toString().substring(0, 20)}';
+  }
+
+  String get initials {
+    final source = (name?.trim().isNotEmpty == true ? name : email) ?? '';
+    if (source.isEmpty) return 'U';
+    final parts = source.trim().split(RegExp(r'\s+'));
+    if (parts.length >= 2 && parts[1].isNotEmpty) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return source[0].toUpperCase();
+  }
 }

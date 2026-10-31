@@ -22,6 +22,8 @@ import 'services/discord/discord_rpc_service.dart';
 import 'providers/providers.dart';
 import 'providers/repository_providers.dart';
 import 'screens/music_app.dart';
+import 'screens/onboarding_screen.dart';
+import 'core/liquid_glass/liquid_glass_kit.dart' show GlassShaders;
 import 'services/deep_link_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -33,6 +35,9 @@ final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
 final GlobalKey<NavigatorState> rootNavigatorKey =
     GlobalKey<NavigatorState>();
 VoidCallback? requestAppRestart;
+
+/// True on a fresh install until onboarding finishes.
+bool showOnboarding = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -79,6 +84,10 @@ void main() async {
     final prefs = await SharedPreferences.getInstance();
     DeepLinkHandler.useNativeYtMusicLinks =
         prefs.getBool(DeepLinkHandler.shareNativeLinksPrefKey) ?? false;
+    // Existing installs (they have already seen a changelog) skip onboarding.
+    showOnboarding =
+        !(prefs.getBool(OnboardingScreen.completedPrefKey) ?? false) &&
+        prefs.getString('last_seen_changelog_version') == null;
   } catch (_) {}
 
   // Initialize Supabase for Jams feature
@@ -116,6 +125,10 @@ void main() async {
   } catch (e) {
     debugPrint('⚠️ Discord RPC service initialization failed: $e');
   }
+
+  // Liquid glass lens + highlight shaders (glass falls back to blur + tint
+  // without a lens if they can't load).
+  await GlassShaders.ensureLoaded();
 
   // Set preferred orientations & enable edge-to-edge
   SystemChrome.setPreferredOrientations([
@@ -255,6 +268,12 @@ class _InzxAppState extends ConsumerState<InzxApp> {
       final currentVersion = packageInfo.version;
       final lastSeenVersion = prefs.getString('last_seen_changelog_version');
 
+      if (showOnboarding) {
+        // Fresh install: onboarding is the introduction, not a changelog.
+        await prefs.setString('last_seen_changelog_version', currentVersion);
+        return;
+      }
+
       if (lastSeenVersion != currentVersion) {
         final releaseInfo = await GithubReleaseUpdateService.instance.fetchLatestReleaseInfo();
         if (!mounted) return;
@@ -266,6 +285,20 @@ class _InzxAppState extends ConsumerState<InzxApp> {
     } catch (e) {
       debugPrint('Error showing changelog dialog: $e');
     }
+  }
+
+  void _finishOnboarding() {
+    showOnboarding = false;
+    rootNavigatorKey.currentState?.pushReplacement(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 600),
+        pageBuilder: (_, _, _) => const MusicApp(),
+        transitionsBuilder: (_, animation, _, child) => FadeTransition(
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+          child: child,
+        ),
+      ),
+    );
   }
 
   void _showPatchUpdateBanner() {
@@ -355,7 +388,9 @@ class _InzxAppState extends ConsumerState<InzxApp> {
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: toFlutterThemeMode(themeMode),
-      home: const MusicApp(),
+      home: showOnboarding
+          ? OnboardingScreen(onFinished: _finishOnboarding)
+          : const MusicApp(),
       builder: (context, child) {
         // Update system UI
         final brightness = Theme.of(context).brightness;

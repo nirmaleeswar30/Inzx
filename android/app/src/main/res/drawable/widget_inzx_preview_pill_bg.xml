@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stand-in for the blurred-cover capsule in the picker preview. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="200dp" />
+    <gradient
+        android:angle="0"
+        android:endColor="#E62A1430"
+        android:startColor="#E65A1A22" />
+</shape>

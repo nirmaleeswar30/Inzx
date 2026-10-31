@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Picker image for the 4×2 widget (launchers without previewLayout):
+     cover, darker foot, title and artist on the left, transport on the right. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:width="250dp"
+        android:height="110dp"
+        android:drawable="@drawable/widget_inzx_preview_art" />
+    <item
+        android:width="250dp"
+        android:height="34dp"
+        android:gravity="bottom">
+        <shape android:shape="rectangle">
+            <corners
+                android:bottomLeftRadius="22dp"
+                android:bottomRightRadius="22dp" />
+            <solid android:color="#66000000" />
+        </shape>
+    </item>
+    <item
+        android:width="70dp"
+        android:height="6dp"
+        android:gravity="bottom|left"
+        android:bottom="19dp"
+        android:left="14dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="3dp" />
+            <solid android:color="#E6FFFFFF" />
+        </shape>
+    </item>
+    <item
+        android:width="44dp"
+        android:height="5dp"
+        android:gravity="bottom|left"
+        android:bottom="9dp"
+        android:left="14dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="3dp" />
+            <solid android:color="#99FFFFFF" />
+        </shape>
+    </item>
+    <item
+        android:width="9dp"
+        android:height="9dp"
+        android:gravity="bottom|right"
+        android:bottom="12dp"
+        android:right="64dp">
+        <shape android:shape="oval">
+            <solid android:color="#CCFFFFFF" />
+        </shape>
+    </item>
+    <item
+        android:width="12dp"
+        android:height="12dp"
+        android:gravity="bottom|right"
+        android:bottom="11dp"
+        android:right="40dp">
+        <shape android:shape="oval">
+            <solid android:color="#FFFFFFFF" />
+        </shape>
+    </item>
+    <item
+        android:width="9dp"
+        android:height="9dp"
+        android:gravity="bottom|right"
+        android:bottom="12dp"
+        android:right="18dp">
+        <shape android:shape="oval">
+            <solid android:color="#CCFFFFFF" />
+        </shape>
+    </item>
+</layer-list>

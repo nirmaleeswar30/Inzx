@@ -69,6 +69,7 @@ class InnerTubeService {
   void setAuthCookies(Map<String, String> cookies) {
     _cookies = cookies;
     _sapisid = cookies['SAPISID'] ?? cookies['__Secure-3PAPISID'];
+    _resetSessionScope();
     debugPrint('[YTM-Tracking] InnerTubeService.setAuthCookies: count=${cookies.length}, hasSAPISID=${_sapisid != null && _sapisid!.isNotEmpty}, isAuthenticated=$isAuthenticated');
   }
 
@@ -76,6 +77,119 @@ class InnerTubeService {
   void clearAuth() {
     _cookies.clear();
     _sapisid = null;
+    _resetSessionScope();
+  }
+
+  void _resetSessionScope() {
+    _sessionVisitorData = null;
+    _sessionDataSyncId = null;
+    _sessionPageId = null;
+    _sessionAuthUser = '0';
+    _sessionScopeFetchedAt = null;
+  }
+
+  // ============ SESSION SCOPE (history attribution) ============
+
+  /// Values read from the signed-in music.youtube.com shell (`ytcfg`). The
+  /// stats pings that write listening history are attributed against these,
+  /// so a play reported under a random visitor id or the wrong account/brand
+  /// channel never shows up in the user's YT Music history.
+  String? _sessionVisitorData;
+  String? _sessionDataSyncId;
+  String? _sessionPageId;
+  String _sessionAuthUser = '0';
+  String? _sessionClientVersion;
+  int? _sessionSignatureTimestamp;
+  DateTime? _sessionScopeFetchedAt;
+  Future<void>? _sessionScopeInFlight;
+
+  /// Account the session is scoped to (brand channel when one is selected).
+  String? get sessionDataSyncId => _sessionDataSyncId;
+
+  static const String _webUserAgent =
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+      '(KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36';
+
+  /// Client version reported to stats endpoints. Must match the version the
+  /// player request was made with or YouTube discards the ping.
+  String get _webRemixVersion =>
+      _sessionClientVersion ??
+      (_clientContext['client'] as Map<String, dynamic>)['clientVersion']
+          as String;
+
+  /// Reads the signed-in shell once per login (refreshed every 6h so the
+  /// signature timestamp follows YouTube's player rollouts).
+  Future<void> ensureSessionScope({bool refresh = false}) {
+    if (!isAuthenticated) return Future.value();
+    final fresh = _sessionScopeFetchedAt != null &&
+        DateTime.now().difference(_sessionScopeFetchedAt!) <
+            const Duration(hours: 6);
+    if (!refresh && fresh) return Future.value();
+    return _sessionScopeInFlight ??= _fetchSessionScope().whenComplete(() {
+      _sessionScopeInFlight = null;
+    });
+  }
+
+  Future<void> _fetchSessionScope() async {
+    try {
+      final headers = <String, String>{
+        'User-Agent': _webUserAgent,
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Cookie': _cookies.entries.map((e) => '${e.key}=${e.value}').join('; '),
+      };
+      final hash = _generateSapisidHash();
+      if (hash != null) headers['Authorization'] = hash;
+
+      final response = await http
+          .get(Uri.parse('https://music.youtube.com/'), headers: headers)
+          .timeout(const Duration(seconds: 12));
+      if (response.statusCode != 200) return;
+      final html = response.body;
+
+      String? read(String key) =>
+          RegExp('"$key"\\s*:\\s*"([^"]+)"').firstMatch(html)?.group(1);
+
+      _sessionClientVersion =
+          read('INNERTUBE_CLIENT_VERSION') ?? _sessionClientVersion;
+      final sts = RegExp(r'"STS"\s*:\s*(\d+)').firstMatch(html)?.group(1);
+      if (sts != null) _sessionSignatureTimestamp = int.tryParse(sts);
+
+      final loggedIn = RegExp(
+            r'"LOGGED_IN"\s*:\s*(true|false)',
+          ).firstMatch(html)?.group(1) ==
+          'true';
+      if (loggedIn) {
+        // DATASYNC_ID looks like `account||delegated`; the delegated half
+        // (brand channel) wins when present.
+        _sessionPageId = read('DELEGATED_SESSION_ID');
+        final rawDataSync = read('DATASYNC_ID');
+        String? dataSync;
+        if (rawDataSync != null) {
+          final parts = rawDataSync.split('||');
+          dataSync = parts.length > 1 && parts[1].isNotEmpty
+              ? parts[1]
+              : parts.first;
+        }
+        _sessionDataSyncId = _sessionPageId ?? dataSync;
+        _sessionAuthUser =
+            RegExp(r'"SESSION_INDEX"\s*:\s*"?(\d+)').firstMatch(html)?.group(1) ??
+            '0';
+        final visitor = read('VISITOR_DATA');
+        if (visitor != null && visitor.isNotEmpty) {
+          _sessionVisitorData = visitor;
+        }
+      }
+      _sessionScopeFetchedAt = DateTime.now();
+      debugPrint(
+        '[YTM-Tracking] Session scope: loggedIn=$loggedIn, '
+        'cver=$_sessionClientVersion, sts=$_sessionSignatureTimestamp, '
+        'authUser=$_sessionAuthUser, pageId=${_sessionPageId != null}, '
+        'dataSyncId=${_sessionDataSyncId != null}, '
+        'visitor=${_sessionVisitorData != null}',
+      );
+    } catch (e) {
+      debugPrint('[YTM-Tracking] Could not read session scope: $e');
+    }
   }
 
   /// Generate SAPISIDHASH for authenticated requests
@@ -122,79 +236,149 @@ class InnerTubeService {
 
   /// Fetch playback tracking URLs via an authenticated WEB_REMIX player request.
   ///
-  /// The tracking URLs (videostatsPlaybackUrl, videostatsWatchtimeUrl) returned
-  /// by an authenticated request are bound to the user's session. Hitting them
-  /// during playback updates the user's YT Music play history and
-  /// recommendations. Tracking URLs from unauthenticated player clients
-  /// (ANDROID_VR, IOS, etc.) do NOT update play history, even when sent with
-  /// auth cookies, because YouTube ties history to the session that made the
-  /// original player request.
+  /// The tracking URLs (videostatsPlaybackUrl, videostatsWatchtimeUrl, atrUrl)
+  /// returned by an authenticated request are bound to the user's session.
+  /// Hitting them during playback updates the user's YT Music play history.
+  ///
+  /// WEB_REMIX must quote the current player's signature timestamp: without
+  /// it (or with a stale one) YouTube answers 200 / UNPLAYABLE and silently
+  /// omits `playbackTracking` — no ping is ever sent, so history never moves.
   Future<Map<String, dynamic>?> getAuthenticatedPlaybackTracking(
     String videoId, {
     String? playlistId,
+    int? signatureTimestamp,
   }) async {
     if (!isAuthenticated) return null;
+    await ensureSessionScope();
 
-    final body = <String, dynamic>{
+    final sts = _sessionSignatureTimestamp ?? signatureTimestamp;
+    final context = _buildMusicContext(
+      languageCode: 'en',
+      countryCode: await _resolveRequestCountryCode(),
+    );
+    final client = context['client'] as Map<String, dynamic>;
+    client['clientVersion'] = _webRemixVersion;
+    if (_sessionVisitorData != null) {
+      client['visitorData'] = _sessionVisitorData;
+    }
+    if (_sessionDataSyncId != null) {
+      (context['user'] as Map<String, dynamic>)['onBehalfOfUser'] =
+          _sessionDataSyncId;
+    }
+
+    Map<String, dynamic> buildBody(int? timestamp) => {
+      'context': context,
       'videoId': videoId,
       'racyCheckOk': true,
       'contentCheckOk': true,
+      if (playlistId != null && playlistId.isNotEmpty) 'playlistId': playlistId,
+      'playbackContext': {
+        'contentPlaybackContext': {
+          'html5Preference': 'HTML5_PREF_WANTS',
+          'referer': 'https://music.youtube.com/watch?v=$videoId',
+          'signatureTimestamp': ?timestamp,
+        },
+      },
     };
-    if (playlistId != null && playlistId.isNotEmpty) {
-      body['playlistId'] = playlistId;
-    }
 
-    final response = await _request('player', body, authenticated: true);
+    var response = await _request(
+      'player',
+      buildBody(sts),
+      authenticated: true,
+    );
+    var tracking = response?['playbackTracking'] as Map<String, dynamic>?;
+    if (tracking != null) return tracking;
 
-    if (response == null) return null;
-    return response['playbackTracking'] as Map<String, dynamic>?;
+    final playability = response?['playabilityStatus'];
+    debugPrint(
+      '[YTM-Tracking] No playbackTracking for $videoId '
+      '(status=${playability?['status']}, reason=${playability?['reason']}, '
+      'sts=$sts) — refreshing session scope and retrying',
+    );
+    // Usually a stale timestamp after a player rollout.
+    await ensureSessionScope(refresh: true);
+    final retrySts = _sessionSignatureTimestamp ?? signatureTimestamp;
+    if (retrySts == null || retrySts == sts) return null;
+    response = await _request(
+      'player',
+      buildBody(retrySts),
+      authenticated: true,
+    );
+    tracking = response?['playbackTracking'] as Map<String, dynamic>?;
+    return tracking;
   }
 
-  /// Send a YouTube playback stats URL with the active YT Music auth cookies.
+  /// Headers the tracking block asks for by name (USER_AUTH, VISITOR_ID,
+  /// PLUS_PAGE_ID). Sending fewer makes a ping land outside the listener's
+  /// own history.
+  Map<String, String> _statsHeaders() {
+    const origin = 'https://music.youtube.com';
+    final headers = <String, String>{
+      'User-Agent': _webUserAgent,
+      'Accept': '*/*',
+      'Origin': origin,
+      'X-Origin': origin,
+      'Referer': '$origin/',
+    };
+    if (_sessionVisitorData != null) {
+      headers['X-Goog-Visitor-Id'] = _sessionVisitorData!;
+    }
+    if (isAuthenticated) {
+      headers['Cookie'] =
+          _cookies.entries.map((e) => '${e.key}=${e.value}').join('; ');
+      headers['X-Goog-AuthUser'] = _sessionAuthUser;
+      if (_sessionPageId != null) headers['X-Goog-PageId'] = _sessionPageId!;
+      final hash = _generateSapisidHash(origin: origin);
+      if (hash != null) headers['Authorization'] = hash;
+    }
+    return headers;
+  }
+
+  /// Send one YouTube stats ping (playback / watchtime / atr).
   ///
-  /// Player responses include fully formed videostats URLs. Hitting those URLs
-  /// while playback progresses lets YouTube update watch history and
-  /// recommendations for signed-in users.
-  Future<bool> sendPlaybackStatsUrl(String url) async {
+  /// [baseUrl] is the URL straight from the player response. Playback and
+  /// watchtime pings get the client identity params a real WEB_REMIX client
+  /// sends; [extraParams] carry per-ping values (st/et/cmt/state/final).
+  /// ATR URLs already carry ver/c/cver, so they only get the `cpn`.
+  /// All pings of one play must share the same [cpn].
+  Future<bool> sendPlaybackStatsPing(
+    String baseUrl, {
+    required String cpn,
+    Map<String, String> extraParams = const {},
+    bool isAtr = false,
+  }) async {
     try {
-      final uri = Uri.parse(url);
-      // Always use music.youtube.com origin because our auth cookies (SAPISID)
-      // are bound to the YT Music origin. Even if the stats URL is on
-      // s.youtube.com, the request needs YT Music context.
-      const origin = 'https://music.youtube.com';
-      final headers = _buildHeaders(
-        authenticated: true,
-        origin: origin,
-        referer: '$origin/',
-      )
-        ..remove('Content-Type')
-        ..remove('X-Goog-Visitor-Id');
-      headers['X-Origin'] = origin;
-
-      final isWatchtime = uri.path.contains('watchtime');
-      final isPlayback = uri.path.contains('playback');
-      final cpn = uri.queryParameters['cpn'];
-      final cmt = uri.queryParameters['cmt'];
-      final state = uri.queryParameters['state'];
-      final docid = uri.queryParameters['docid'];
-
-      final st = uri.queryParameters['st'];
-      final et = uri.queryParameters['et'];
-      debugPrint('[YTM-Tracking] >> Sending ${isWatchtime ? 'WATCHTIME' : (isPlayback ? 'PLAYBACK' : 'STATS')} ping: docid=$docid, cpn=$cpn, state=$state, cmt=$cmt${isWatchtime ? ', st=$st, et=$et' : ''}');
-      debugPrint('[YTM-Tracking]    Has AuthHeader=${headers.containsKey('Authorization')}, CookieCount=${_cookies.length}, Origin=${headers['Origin']}');
+      final uri = Uri.parse(baseUrl);
+      final params = Map<String, String>.from(uri.queryParameters);
+      params['cpn'] = cpn;
+      if (!isAtr) {
+        params.addAll({
+          'ver': '2',
+          'c': 'WEB_REMIX',
+          'cver': _webRemixVersion,
+          'cplayer': 'UNIPLAYER',
+          'cbr': 'Chrome',
+          'cbrver': '141.0.0.0',
+          'cos': 'Windows',
+          'cosver': '10.0',
+          'hl': 'en_US',
+          'cr': await _resolveRequestCountryCode(),
+        });
+      }
+      params.addAll(extraParams);
+      final url = uri.replace(queryParameters: params);
 
       final response = await http
-          .get(uri, headers: headers)
-          .timeout(const Duration(seconds: 8));
-
+          .get(url, headers: _statsHeaders())
+          .timeout(const Duration(seconds: 10));
       final ok = response.statusCode >= 200 && response.statusCode < 400;
-      debugPrint('[YTM-Tracking] << ${isWatchtime ? 'WATCHTIME' : (isPlayback ? 'PLAYBACK' : 'STATS')} response status: ${response.statusCode} (ok=$ok)');
-      if (response.body.isNotEmpty) {
-        debugPrint('[YTM-Tracking]    response body: ${response.body}');
-      }
+      debugPrint(
+        '[YTM-Tracking] ${url.path} docid=${params['docid']} '
+        'state=${params['state']} et=${params['et']} -> ${response.statusCode}',
+      );
       return ok;
     } catch (e) {
-      debugPrint('[YTM-Tracking] << ERROR sending playback stats: $e');
+      debugPrint('[YTM-Tracking] Stats ping failed: $e');
       return false;
     }
   }
@@ -286,6 +470,84 @@ class InnerTubeService {
       }
     }
 
+    return null;
+  }
+
+  // ============ ACCOUNT ============
+
+  /// Signed-in account details from `account/account_menu`.
+  ///
+  /// This is what lets the YT Music login double as the app's only login:
+  /// it returns the same name / handle / photo Google Sign-In used to, and
+  /// [sessionDataSyncId] gives a stable per-account id (used for Jams).
+  Future<Map<String, String?>?> getAccountInfo() async {
+    if (!isAuthenticated) return null;
+    await ensureSessionScope();
+    final response = await _request(
+      'account/account_menu',
+      {},
+      authenticated: true,
+    );
+    if (response == null) return null;
+
+    final header = _findFirstKey(response, 'activeAccountHeaderRenderer');
+    if (header is! Map) return null;
+
+    String? runsText(dynamic node) {
+      final runs = node is Map ? node['runs'] : null;
+      if (runs is List && runs.isNotEmpty) return runs.first['text'] as String?;
+      return node is Map ? node['simpleText'] as String? : null;
+    }
+
+    String? photo;
+    final thumbs = header['accountPhoto']?['thumbnails'];
+    if (thumbs is List && thumbs.isNotEmpty) {
+      photo = (thumbs.last['url'] as String?)?.replaceAll(
+        RegExp(r'=s\d+'),
+        '=s240',
+      );
+    }
+
+    String? channelId;
+    void findChannel(dynamic node) {
+      if (channelId != null) return;
+      if (node is Map) {
+        final id = node['browseEndpoint']?['browseId'];
+        if (id is String && id.startsWith('UC')) {
+          channelId = id;
+          return;
+        }
+        node.values.forEach(findChannel);
+      } else if (node is List) {
+        node.forEach(findChannel);
+      }
+    }
+
+    findChannel(response);
+
+    return {
+      'name': runsText(header['accountName']),
+      'email': runsText(header['email']),
+      'handle': runsText(header['channelHandle']),
+      'avatarUrl': photo,
+      'channelId': channelId,
+      'accountId': _sessionDataSyncId,
+    };
+  }
+
+  dynamic _findFirstKey(dynamic node, String key) {
+    if (node is Map) {
+      if (node.containsKey(key)) return node[key];
+      for (final value in node.values) {
+        final found = _findFirstKey(value, key);
+        if (found != null) return found;
+      }
+    } else if (node is List) {
+      for (final value in node) {
+        final found = _findFirstKey(value, key);
+        if (found != null) return found;
+      }
+    }
     return null;
   }
 

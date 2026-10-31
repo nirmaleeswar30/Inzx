@@ -23,7 +23,7 @@ class InzxTheme {
       // Colors
       colorScheme: ColorScheme.light(
         primary: accentColor,
-        onPrimary: Colors.white,
+        onPrimary: InzxColors.contrastTextOn(accentColor),
         primaryContainer: InzxColors.surfaceVariant,
         onPrimaryContainer: InzxColors.textPrimary,
         secondary: InzxColors.accentSecondary,
@@ -306,7 +306,9 @@ class InzxTheme {
           }
           return Colors.transparent;
         }),
-        checkColor: WidgetStateProperty.all(Colors.white),
+        checkColor: WidgetStateProperty.all(
+          InzxColors.contrastTextOn(accentColor),
+        ),
         side: const BorderSide(color: InzxColors.border, width: 1.5),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),
@@ -390,7 +392,7 @@ class InzxTheme {
       // Colors
       colorScheme: ColorScheme.dark(
         primary: accentColor,
-        onPrimary: Colors.white,
+        onPrimary: InzxColors.contrastTextOn(accentColor),
         primaryContainer: InzxColors.darkSurfaceVariant,
         onPrimaryContainer: InzxColors.darkTextPrimary,
         secondary: InzxColors.accentSecondary,
@@ -688,7 +690,9 @@ class InzxTheme {
           }
           return Colors.transparent;
         }),
-        checkColor: WidgetStateProperty.all(Colors.white),
+        checkColor: WidgetStateProperty.all(
+          InzxColors.contrastTextOn(accentColor),
+        ),
         side: const BorderSide(color: InzxColors.darkBorder, width: 1.5),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),

@@ -9,7 +9,7 @@ import '../../services/lyrics/lyrics_models.dart';
 class LyricsProviderSheet {
   static void show(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final albumColors = ref.read(albumColorsProvider);
+    final albumColors = ref.read(playerAlbumColorsProvider);
     final accentColor = isDark ? albumColors.accentLight : albumColors.accent;
 
     showModalBottomSheet(

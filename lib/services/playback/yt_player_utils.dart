@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'dart:async';
 import 'dart:math';
+import 'package:http/http.dart' as http;
 
 import 'package:inzx/core/services/cache/hive_service.dart';
 import 'package:inzx/data/entities/stream_cache_entity.dart';
@@ -86,8 +87,76 @@ class YTPlayerUtils {
   /// Maximum backoff delay (ms)
   static const int _maxBackoffMs = 30000;
 
+  /// Visitor id read from music.youtube.com, used when the PoToken generator
+  /// has none. Refreshed every few hours.
+  String? _pageVisitorData;
+  DateTime? _pageVisitorDataAt;
+  Future<String?>? _pageVisitorDataInFlight;
+
+  Future<String?> _fallbackVisitorData() {
+    final at = _pageVisitorDataAt;
+    if (_pageVisitorData != null &&
+        at != null &&
+        DateTime.now().difference(at) < const Duration(hours: 6)) {
+      return Future.value(_pageVisitorData);
+    }
+    return _pageVisitorDataInFlight ??= _fetchPageVisitorData().whenComplete(
+      () => _pageVisitorDataInFlight = null,
+    );
+  }
+
+  Future<String?> _fetchPageVisitorData() async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse('https://music.youtube.com/'),
+            headers: {
+              'User-Agent': InnerTubeClient.webRemix.userAgent,
+              'Accept-Language': 'en-US,en;q=0.9',
+            },
+          )
+          .timeout(const Duration(seconds: 10));
+      final match = RegExp(
+        r'"VISITOR_DATA"\s*:\s*"([^"]+)"',
+      ).firstMatch(response.body);
+      final value = match?.group(1);
+      if (value != null && value.isNotEmpty) {
+        _pageVisitorData = value;
+        _pageVisitorDataAt = DateTime.now();
+      }
+    } catch (e) {
+      if (kDebugMode) print('YTPlayerUtils: visitor id fetch failed: $e');
+    }
+    return _pageVisitorData;
+  }
+
   /// Maximum consecutive failures before skipping client
   static const int _maxConsecutiveFailures = 3;
+
+  /// How long a client that hit [_maxConsecutiveFailures] is skipped. It used
+  /// to be skipped for the rest of the session, so one bad spell (or the
+  /// background prefetch burning through strikes) disabled every client.
+  static const Duration _clientCooldown = Duration(seconds: 90);
+  final Map<String, DateTime> _clientCooldownUntil = {};
+
+  /// Whether [clientName] is sitting out a cooldown. An expired cooldown
+  /// clears its strikes so the client gets a fresh start.
+  bool _isCoolingDown(String clientName) {
+    final until = _clientCooldownUntil[clientName];
+    if (until == null) return false;
+    if (DateTime.now().isBefore(until)) return true;
+    _clientCooldownUntil.remove(clientName);
+    _clientFailures[clientName] = 0;
+    return false;
+  }
+
+  void _recordClientFailure(String clientName, int previousFailures) {
+    final failures = previousFailures + 1;
+    _clientFailures[clientName] = failures;
+    if (failures >= _maxConsecutiveFailures) {
+      _clientCooldownUntil[clientName] = DateTime.now().add(_clientCooldown);
+    }
+  }
 
   /// Load playback data from persistent cache (Hive)
   PlaybackData? _loadFromPersistentCache(String videoId) {
@@ -270,24 +339,38 @@ class YTPlayerUtils {
       visitorData = _poToken.visitorData;
     }
 
+    // Every client is bot-checked ("Sign in to confirm you're not a bot")
+    // without a visitor id. The PoToken WebView is the usual source of one;
+    // when it fails, take one from the YT Music page itself rather than send
+    // every request bare.
+    if (visitorData == null || visitorData.isEmpty) {
+      visitorData = await _fallbackVisitorData();
+    }
+
     // Content-aware fallback:
     // Start with default clients, detect content type on first failure,
     // then switch to content-specific client list
-    List<InnerTubeClient> playbackClients = InnerTubeClient.defaultClients;
+    // A copy: the content-aware switch below appends to it.
+    final List<InnerTubeClient> playbackClients = [
+      ...InnerTubeClient.defaultClients,
+    ];
+    // If every client is cooling down, try them all anyway rather than fail
+    // a song without asking anyone.
+    final allCoolingDown = playbackClients.every(
+      (c) => _isCoolingDown(c.name),
+    );
     bool contentAwareSwitchDone = false;
     PlaybackResult? lastError;
 
     for (final client in playbackClients) {
       // Check if client should be skipped due to too many failures
-      final failures = _clientFailures[client.name] ?? 0;
-      if (failures >= _maxConsecutiveFailures) {
+      if (!allCoolingDown && _isCoolingDown(client.name)) {
         if (kDebugMode) {
-          print(
-            'YTPlayerUtils: Skipping ${client.name} due to $failures consecutive failures',
-          );
+          print('YTPlayerUtils: Skipping ${client.name} (cooling down)');
         }
         continue;
       }
+      final failures = _clientFailures[client.name] ?? 0;
 
       // Apply throttling between requests
       await _applyThrottle(client.name);
@@ -327,8 +410,8 @@ class YTPlayerUtils {
         return result;
       }
 
-      // Increment failure count
-      _clientFailures[client.name] = failures + 1;
+      // Increment failure count (cools the client down at the limit)
+      _recordClientFailure(client.name, failures);
       lastError = result;
 
       // Detect content type from failure and switch client list
@@ -418,6 +501,9 @@ class YTPlayerUtils {
     if (_poToken.hasValidTokens) {
       streamingPoToken = _poToken.streamingPoToken;
       visitorData = _poToken.visitorData;
+    }
+    if (visitorData == null || visitorData.isEmpty) {
+      visitorData = await _fallbackVisitorData();
     }
 
     final playbackClients = InnerTubeClient.defaultClients;
@@ -1104,6 +1190,7 @@ class YTPlayerUtils {
   /// Reset client failure counters (call after successful playback)
   void resetClientFailures() {
     _clientFailures.clear();
+    _clientCooldownUntil.clear();
     _clientLastRequest.clear();
     if (kDebugMode) {
       print('YTPlayerUtils: Client failures reset');
@@ -1226,6 +1313,7 @@ class YTPlayerUtils {
     _api.dispose();
     _cache.clear();
     _clientFailures.clear();
+    _clientCooldownUntil.clear();
     _clientLastRequest.clear();
   }
 }

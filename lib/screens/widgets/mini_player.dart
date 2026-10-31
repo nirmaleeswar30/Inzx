@@ -452,6 +452,7 @@ class _MusicMiniPlayerState extends ConsumerState<MusicMiniPlayer> {
         final Widget capsule;
         if (isLiquidGlass) {
           capsule = LiquidGlassContainer(
+            pressable: false,
             borderRadius: 32,
             blurSigma: 2.0,
             refractionScale: 1.05,

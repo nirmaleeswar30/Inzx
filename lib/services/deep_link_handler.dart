@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:app_links/app_links.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../main.dart';
 import '../models/track.dart';
@@ -12,6 +13,9 @@ import '../screens/widgets/podcast_screen.dart';
 import '../screens/widgets/artist_screen.dart';
 import '../screens/widgets/album_screen.dart';
 import '../screens/widgets/now_playing_screen.dart';
+import '../screens/jams_screen.dart';
+import '../screens/ytmusic_login_screen.dart';
+import '../providers/jams_provider.dart';
 
 class DeepLinkHandler {
   static final DeepLinkHandler instance = DeepLinkHandler._();
@@ -63,8 +67,19 @@ class DeepLinkHandler {
       return;
     }
 
-    // 2. GitHub Pages redirect URL: https://nirmaleeswar30.github.io/Inzx/redirect.html?url=...
-    if (uri.host.contains('github.io') && uri.queryParameters.containsKey('url')) {
+    // 2. Short links: https://inzx.nirmaleeswar.dev/<s|a|p|ar|pod|jam>/<id>
+    if (uri.host == shareHost && uri.pathSegments.length >= 2) {
+      final type = _shortPathTypes[uri.pathSegments[0]];
+      final id = uri.pathSegments[1];
+      if (type != null && id.isNotEmpty) {
+        _navigateToItem(type, id, ref);
+        return;
+      }
+    }
+
+    // 3. Legacy long links: .../redirect.html?url=<base64 deep link>
+    if ((uri.host.contains('github.io') || uri.host == shareHost) &&
+        uri.queryParameters.containsKey('url')) {
       final rawUrlParam = uri.queryParameters['url']!;
       final decodedString = _decodeBase64Url(rawUrlParam);
       if (decodedString != null) {
@@ -108,8 +123,46 @@ class DeepLinkHandler {
       case 'video':
         _handleSongDeepLink(id, ref);
         break;
+      case 'jam':
+        _handleJamDeepLink(id, ref);
+        break;
       default:
         debugPrint('Unknown deep link type: $type');
+    }
+  }
+
+  Future<void> _handleJamDeepLink(String code, WidgetRef ref) async {
+    final upperCode = code.toUpperCase();
+    final messenger = rootScaffoldMessengerKey.currentState;
+    if (ref.read(appAccountProvider) == null) {
+      messenger?.showSnackBar(
+        const SnackBar(content: Text('Sign in to join this Jam')),
+      );
+      final context = rootNavigatorKey.currentContext;
+      if (context == null || !context.mounted) return;
+      final signedIn = await openSignIn(context);
+      if (!signedIn) return;
+      // Give the Jams service a moment to come up for the new account.
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+    }
+    messenger?.showSnackBar(
+      SnackBar(
+        content: Text('Joining Jam $upperCode...'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+    final joined = await ref
+        .read(jamsNotifierProvider.notifier)
+        .joinSession(upperCode);
+    final navContext = rootNavigatorKey.currentContext;
+    if (joined && navContext != null && navContext.mounted) {
+      Navigator.of(navContext).push(
+        MaterialPageRoute(builder: (_) => const JamsScreen()),
+      );
+    } else if (!joined) {
+      messenger?.showSnackBar(
+        const SnackBar(content: Text('Could not join that Jam')),
+      );
     }
   }
 
@@ -199,23 +252,63 @@ class DeepLinkHandler {
     return null;
   }
 
+  /// Domain that hosts the landing page, share previews and the redirect.
+  static const String shareHost = 'inzx.nirmaleeswar.dev';
+
+  static const Map<String, String> _shortPathTypes = {
+    's': 'song',
+    'a': 'album',
+    'p': 'playlist',
+    'ar': 'artist',
+    'pod': 'podcast',
+    'jam': 'jam',
+  };
+
+  static const Map<String, String> _shortPathForType = {
+    'song': 's',
+    'track': 's',
+    'video': 's',
+    'album': 'a',
+    'playlist': 'p',
+    'artist': 'ar',
+    'podcast': 'pod',
+    'jam': 'jam',
+  };
+
   /// Creates a share URL for the given item.
-  /// [type] should be 'playlist', 'album', 'artist', or 'song'.
+  /// [type] should be 'playlist', 'album', 'artist', 'podcast' or 'song'.
   ///
   /// Returns a native YouTube Music link when the user has opted out of Inzx
-  /// deep links; otherwise a base64 redirect that opens the item in Inzx.
+  /// deep links; otherwise a short link (`https://inzx.nirmaleeswar.dev/s/<id>`)
+  /// whose preview card shows the artwork and which opens the item in Inzx.
   static String createShareUrl(String type, String id) {
     if (useNativeYtMusicLinks) {
       final native = nativeYtMusicUrl(type, id);
       if (native != null) return native;
     }
-
-    final deepLink = 'inzx://open/$type?id=$id';
-    final bytes = utf8.encode(deepLink);
-    final base64DeepLink = base64.encode(bytes);
-
-    // Fallback to github pages redirect url
-    final baseUrl = 'https://nirmaleeswar30.github.io/Inzx/redirect.html';
-    return '$baseUrl?url=$base64DeepLink';
+    final path = _shortPathForType[type] ?? type;
+    return 'https://$shareHost/$path/${Uri.encodeComponent(id)}';
   }
+
+  /// Invite link for a Jam. [videoId] (what's playing) lets the preview card
+  /// show that song's artwork.
+  static String createJamInviteUrl(String code, {String? videoId}) {
+    final base = 'https://$shareHost/jam/${code.toUpperCase()}';
+    if (videoId == null || !RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(videoId)) {
+      return base;
+    }
+    return '$base?v=$videoId';
+  }
+}
+
+/// Opens the share sheet with a Jam invite link (its preview shows what's
+/// playing, and opening it joins the Jam in Inzx).
+Future<void> shareJamInvite(String code, {String? videoId}) async {
+  final link = DeepLinkHandler.createJamInviteUrl(code, videoId: videoId);
+  await SharePlus.instance.share(
+    ShareParams(
+      text: 'Join my Jam on Inzx and listen along with me 🎧\n$link',
+      subject: 'Join my Jam',
+    ),
+  );
 }

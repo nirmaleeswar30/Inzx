@@ -276,9 +276,10 @@ class _PodcastScreenState extends ConsumerState<PodcastScreen> {
                       podcast.saved;
               final currentTrack = ref.watch(currentTrackProvider);
 
-              return Column(
+              // A Stack so the mini player floats over the list.
+              return Stack(
                 children: [
-                  Expanded(
+                  Positioned.fill(
                     child: CustomScrollView(
                       controller: _scrollController,
                       physics: const BouncingScrollPhysics(),
@@ -481,7 +482,14 @@ class _PodcastScreenState extends ConsumerState<PodcastScreen> {
           ),
         ),
         if (currentTrack != null)
-          MusicMiniPlayer(onTap: () => NowPlayingScreen.show(context)),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: MusicMiniPlayer(
+              onTap: () => NowPlayingScreen.show(context),
+            ),
+          ),
       ],
     );
         },
@@ -552,9 +560,22 @@ class _PodcastScreenState extends ConsumerState<PodcastScreen> {
               onPressed: () => Navigator.pop(context),
             ),
           ),
-          Expanded(child: child),
-          if (currentTrack != null)
-            MusicMiniPlayer(onTap: () => NowPlayingScreen.show(context)),
+          Expanded(
+            child: Stack(
+              children: [
+                Positioned.fill(child: child),
+                if (currentTrack != null)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: MusicMiniPlayer(
+                      onTap: () => NowPlayingScreen.show(context),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );

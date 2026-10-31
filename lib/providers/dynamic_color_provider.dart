@@ -285,7 +285,9 @@ class DynamicColorsNotifier extends StateNotifier<DynamicColors?> {
 }
 
 /// Provider to check if dynamic theming is enabled
-final dynamicThemingEnabledProvider = StateProvider<bool>((ref) => true);
+final dynamicThemingEnabledProvider = Provider<bool>(
+  (ref) => ref.watch(dynamicColorsEnabledProvider),
+);
 
 /// Provider for the effective accent color (dynamic or user-selected)
 final effectiveAccentColorProvider = Provider<Color>((ref) {
@@ -296,8 +298,19 @@ final effectiveAccentColorProvider = Provider<Color>((ref) {
     return dynamicColors.primary;
   }
 
-  // Fall back to the app's configured accent color (defaults to purple #6B46C1)
-  final accentEnum = ref.watch(accentColorProvider);
-  final customColor = ref.watch(customAccentColorProvider);
-  return getAccentColor(accentEnum, isDark: true, customColor: customColor);
+  // Fall back to the app's configured accent (red by default), in the variant
+  // that reads on the current theme (black is near-white on dark).
+  final themeMode = ref.watch(themeModeProvider);
+  final isDark = switch (themeMode) {
+    InzxThemeMode.dark => true,
+    InzxThemeMode.light => false,
+    InzxThemeMode.system =>
+      WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+          Brightness.dark,
+  };
+  return getAccentColor(
+    ref.watch(accentColorProvider),
+    isDark: isDark,
+    customColor: ref.watch(customAccentColorProvider),
+  );
 });

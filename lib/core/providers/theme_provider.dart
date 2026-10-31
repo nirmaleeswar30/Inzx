@@ -9,9 +9,11 @@ import '../../services/audio_player_service.dart';
 enum InzxThemeMode { system, light, dark }
 
 /// Available accent color options
+///
+/// Stored by index, so new values go at the end.
 enum InzxAccentColor {
-  purple, // Purple/Violet/Lilac #6B46C1 - default
-  red, // AMOLED red
+  purple, // Purple/Violet/Lilac #6B46C1
+  red, // AMOLED red - default
   sage, // Sage green
   lavender, // Soft lavender
   peach, // Warm peach
@@ -21,11 +23,53 @@ enum InzxAccentColor {
   mint, // Fresh mint
   coral, // Soft coral
   custom, // Custom user chosen color
+  black, // Monochrome: black on light, near-white on dark
+}
+
+/// The presets offered in the picker (in order); the hex picker follows them.
+const List<InzxAccentColor> pickerAccentColors = [
+  InzxAccentColor.red,
+  InzxAccentColor.black,
+  InzxAccentColor.purple,
+  InzxAccentColor.ocean,
+];
+
+/// The swatch drawn for an accent in the picker (black shows as black even
+/// though, on a dark theme, it is used as near-white).
+Color accentSwatchColor(InzxAccentColor accent, {required bool isDark}) {
+  if (accent == InzxAccentColor.black) return const Color(0xFF0A0A0A);
+  return getAccentColor(accent, isDark: isDark);
+}
+
+/// An accent that stays visible on the theme's background. A near-black
+/// accent on a dark theme (or near-white on a light one) would make active
+/// icons, sliders and text disappear, so it is flipped to the readable end of
+/// the same hue — black becomes near-white on dark, white near-black on light.
+Color readableAccent(Color color, {required bool isDark}) {
+  final luminance = color.computeLuminance();
+  final hsl = HSLColor.fromColor(color);
+  final greyish = hsl.saturation < 0.18;
+  if (isDark && luminance < 0.05) {
+    return hsl.withLightness(greyish ? 0.93 : 0.62).toColor();
+  }
+  if (!isDark && luminance > 0.8) {
+    return hsl.withLightness(greyish ? 0.1 : 0.38).toColor();
+  }
+  return color;
 }
 
 /// Get the Color value for an accent color option
 Color getAccentColor(InzxAccentColor accent, {bool isDark = false, Color? customColor}) {
+  return readableAccent(
+    _rawAccentColor(accent, isDark: isDark, customColor: customColor),
+    isDark: isDark,
+  );
+}
+
+Color _rawAccentColor(InzxAccentColor accent, {bool isDark = false, Color? customColor}) {
   switch (accent) {
+    case InzxAccentColor.black:
+      return isDark ? const Color(0xFFEDEDED) : const Color(0xFF111111);
     case InzxAccentColor.purple:
       return isDark ? const Color(0xFF9F7AEA) : const Color(0xFF6B46C1);
     case InzxAccentColor.red:
@@ -76,6 +120,8 @@ String getAccentColorName(InzxAccentColor accent) {
       return 'Coral';
     case InzxAccentColor.custom:
       return 'Custom';
+    case InzxAccentColor.black:
+      return 'Black';
   }
 }
 
@@ -122,7 +168,7 @@ final accentColorProvider =
 class AccentColorNotifier extends StateNotifier<InzxAccentColor> {
   static const String accentColorPrefKey = 'inzx_accent_color_enum';
 
-  AccentColorNotifier() : super(InzxAccentColor.purple) {
+  AccentColorNotifier() : super(InzxAccentColor.red) {
     _loadAccentColor();
   }
 
@@ -670,3 +716,42 @@ class DynamicAmbientBackgroundForAnimatedArtNotifier extends StateNotifier<bool>
     } catch (_) {}
   }
 }
+/// Whether the app takes its colours from the playing song's artwork
+/// ("dynamic colours"). Off, everything uses the chosen accent colour.
+final dynamicColorsEnabledProvider =
+    StateNotifierProvider<DynamicColorsEnabledNotifier, bool>((ref) {
+      return DynamicColorsEnabledNotifier();
+    });
+
+class DynamicColorsEnabledNotifier extends StateNotifier<bool> {
+  static const String prefKey = 'inzx_dynamic_colors_enabled';
+
+  DynamicColorsEnabledNotifier() : super(true) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      state = prefs.getBool(prefKey) ?? true;
+    } catch (_) {}
+  }
+
+  Future<void> setEnabled(bool enabled) async {
+    state = enabled;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(prefKey, enabled);
+    } catch (_) {}
+  }
+}
+
+/// The user's accent colour as used on a dark surface (the player and other
+/// always-dark screens).
+final staticAccentColorProvider = Provider<Color>((ref) {
+  return getAccentColor(
+    ref.watch(accentColorProvider),
+    isDark: true,
+    customColor: ref.watch(customAccentColorProvider),
+  );
+});

@@ -74,6 +74,22 @@
                 <data android:scheme="https" android:host="nirmaleeswar30.github.io" android:pathPrefix="/Inzx/redirect.html" />
             </intent-filter>
 
+            <!-- Short share links: https://inzx.nirmaleeswar.dev/s/<id>, /a/, /p/,
+                 /ar/, /pod/ and Jam invites /jam/<code>. Verified through
+                 /.well-known/assetlinks.json on the site. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="inzx.nirmaleeswar.dev" />
+                <data android:pathPrefix="/s/" />
+                <data android:pathPrefix="/a/" />
+                <data android:pathPrefix="/p/" />
+                <data android:pathPrefix="/ar/" />
+                <data android:pathPrefix="/pod/" />
+                <data android:pathPrefix="/jam/" />
+            </intent-filter>
+
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -113,8 +129,9 @@
             </intent-filter>
         </receiver>
 
+        <!-- Home screen widgets: 2×2 cover, 4×2 cover and the 4×1 capsule. -->
         <receiver
-            android:name=".widget.MusicWidgetProvider"
+            android:name=".widget.InzxWidgetSquare"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -122,11 +139,11 @@
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/music_widget_info" />
+                android:resource="@xml/widget_inzx_square_info" />
         </receiver>
 
         <receiver
-            android:name=".widget.MusicWidgetLargeProvider"
+            android:name=".widget.InzxWidgetWide"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -134,7 +151,19 @@
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/music_widget_info_large" />
+                android:resource="@xml/widget_inzx_wide_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.InzxWidgetPill"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.nirmal.inzx.widget.REFRESH" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_inzx_pill_info" />
         </receiver>
 
         <receiver

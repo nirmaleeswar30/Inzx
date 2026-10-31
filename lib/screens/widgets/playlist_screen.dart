@@ -1693,11 +1693,18 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
               ),
             ),
 
-            // Mini Player at the bottom of the content column (above nav/safe area)
-            if (currentTrack != null && context != null)
-              MusicMiniPlayer(onTap: () => NowPlayingScreen.show(context)),
           ],
         ),
+        // Floats over the list (which scrolls behind it), like on Home.
+        if (currentTrack != null && context != null)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: MusicMiniPlayer(
+              onTap: () => NowPlayingScreen.show(context),
+            ),
+          ),
       ],
     );
   }

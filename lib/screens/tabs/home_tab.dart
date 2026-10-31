@@ -332,28 +332,15 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
     );
   }
 
-  /// Build profile avatar - shows Google pfp first, then YT Music, then initials
+  /// Build profile avatar - account photo, then initials
   Widget _buildProfileAvatar(
     bool isDark,
     ColorScheme colorScheme, {
     double size = 44,
   }) {
-    final googleAuthState = ref.watch(googleAuthStateProvider);
-    final ytAuthState = ref.watch(ytMusicAuthStateProvider);
-
-    // Priority: Google Auth > YT Music Auth > Default
-    String? avatarUrl;
-    String initials = 'U';
-
-    if (googleAuthState.isSignedIn && googleAuthState.user != null) {
-      avatarUrl = googleAuthState.user!.photoUrl;
-      initials = googleAuthState.user!.initials;
-    } else if (ytAuthState.isLoggedIn && ytAuthState.account != null) {
-      avatarUrl = ytAuthState.account!.avatarUrl;
-      initials = (ytAuthState.account!.name?.isNotEmpty == true)
-          ? ytAuthState.account!.name!.substring(0, 1).toUpperCase()
-          : 'U';
-    }
+    final account = ref.watch(appAccountProvider);
+    final String? avatarUrl = account?.avatarUrl;
+    final String initials = account?.initials ?? 'U';
 
     final accentColor = ref.watch(effectiveAccentColorProvider);
     final hsl = HSLColor.fromColor(accentColor);
@@ -429,6 +416,15 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Row(
         children: [
+          // Inzx logo — same size as the profile picture on the right
+          Image.asset(
+            'assets/logo_transparent.png',
+            width: 44,
+            height: 44,
+            cacheWidth: 132,
+            filterQuality: FilterQuality.medium,
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: GestureDetector(
               onTap: () {
@@ -439,7 +435,7 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
               },
               child: Container(
                 height: 48,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
                 decoration: BoxDecoration(
                   color: isDark
                       ? Colors.white.withValues(alpha: 0.08)
@@ -461,15 +457,19 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
                           ? Colors.white.withValues(alpha: 0.70)
                           : _textColors.secondary,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         l10n.searchMusicHint,
+                        // Narrower now the logo sits beside it: keep the hint
+                        // on one line instead of wrapping inside the pill.
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: isDark
                               ? Colors.white.withValues(alpha: 0.62)
                               : Colors.black.withValues(alpha: 0.48),
-                          fontSize: 15,
+                          fontSize: 14,
                         ),
                       ),
                     ),
@@ -1211,17 +1211,10 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
     ColorScheme colorScheme,
   ) {
     final l10n = context.l10n;
-    final ytAuthState = ref.watch(ytMusicAuthStateProvider);
-    final googleAuthState = ref.watch(googleAuthStateProvider);
-
-    // Try to get name from Google Auth first, then YT Music, then fallback
-    String userName = l10n.welcomeFallbackName;
-    if (googleAuthState.isSignedIn &&
-        googleAuthState.user?.displayName != null) {
-      userName = googleAuthState.user!.displayName!.split(' ').first;
-    } else if (ytAuthState.account?.name != null) {
-      userName = ytAuthState.account!.name!.split(' ').first;
-    }
+    final accountName = ref.watch(appAccountProvider)?.name?.trim();
+    final String userName = accountName?.isNotEmpty == true
+        ? accountName!.split(' ').first
+        : l10n.welcomeFallbackName;
 
     // Quick Picks works best as a personalized welcome header. If the API
     // gives us an explicit welcome shelf, keep its title.

@@ -37,7 +37,7 @@ const int kMaxStreamCacheSizeLimitMb = 4096;
 const int kDefaultStreamCacheMaxConcurrent = 2;
 const int kMinStreamCacheMaxConcurrent = 1;
 const int kMaxStreamCacheMaxConcurrent = 4;
-const int kDefaultCrossfadeDurationMs = 0;
+const int kDefaultCrossfadeDurationMs = 8000;
 const int kMinCrossfadeDurationMs = 0;
 const int kMaxCrossfadeDurationMs = 12000;
 const int kPrecacheAheadTrackCount = 3;
@@ -417,7 +417,7 @@ class AudioPlayerService {
   Timer? _youtubeWatchtimeTimer;
   String? _youtubeTrackingVideoId;
   String? _youtubeTrackingCpn;
-  DateTime? _youtubeTrackingStartedAt;
+  bool _youtubeAtrSent = false;
   Duration _youtubeTrackingLastPosition = Duration.zero;
   bool _youtubePlaybackStartSent = false;
   final Set<String> _youtubeTrackingResolveInProgress = <String>{};
@@ -487,6 +487,13 @@ class AudioPlayerService {
         kMinCrossfadeDurationMs,
         kMaxCrossfadeDurationMs,
       );
+      // 1–3s options were removed; move anyone on them to the new default.
+      if (_crossfadeDurationMs > 0 && _crossfadeDurationMs < 5000) {
+        _crossfadeDurationMs = kDefaultCrossfadeDurationMs;
+        unawaited(
+          prefs.setInt(kCrossfadeDurationMsKey, _crossfadeDurationMs),
+        );
+      }
 
       _updateState(
         streamCacheWifiOnly: _streamCacheWifiOnly,
@@ -1179,10 +1186,16 @@ class AudioPlayerService {
 
   void _applyPrecacheRequestHeaders(HttpClientRequest request) {
     request.headers.set(HttpHeaders.acceptEncodingHeader, 'identity');
+    // Same identity as the client that issued the URL (see streamHeadersFor).
+    final clientHeaders = InnerTubeClient.streamHeadersFor(request.uri);
     request.headers.set(
       HttpHeaders.userAgentHeader,
-      'com.google.android.apps.youtube.music/7.16.53 (Linux; U; Android 14; Pixel 8) gzip',
+      clientHeaders['User-Agent'] ??
+          InnerTubeClient.androidVr165.userAgent,
     );
+    clientHeaders.forEach((key, value) {
+      if (key != 'User-Agent') request.headers.set(key, value);
+    });
     request.headers.set(HttpHeaders.acceptHeader, '*/*');
   }
 
@@ -1600,8 +1613,11 @@ class AudioPlayerService {
     bool preferDirectStreamWithBackgroundPrecache = false,
   }) async {
     final streamUri = Uri.parse(playbackData.streamUrl);
+    // The user agent (and origin) of the client that produced this URL.
+    final streamHeaders = InnerTubeClient.streamHeadersFor(streamUri);
+    final headers = streamHeaders.isEmpty ? null : streamHeaders;
     if (kIsWeb) {
-      return AudioSource.uri(streamUri, tag: track);
+      return AudioSource.uri(streamUri, headers: headers, tag: track);
     }
 
     // Live streams are an endless HLS/DASH manifest — hand the manifest URL
@@ -1613,7 +1629,7 @@ class AudioPlayerService {
           'AudioPlayerService: Live/manifest stream for ${track.id} → direct manifest source (no cache)',
         );
       }
-      return AudioSource.uri(streamUri, tag: track);
+      return AudioSource.uri(streamUri, headers: headers, tag: track);
     }
 
     final cacheFile = await _cacheFileForTrack(track, playbackData);
@@ -1651,7 +1667,7 @@ class AudioPlayerService {
           'AudioPlayerService: Pre-cache in progress for ${track.id}, using direct stream',
         );
       }
-      return AudioSource.uri(streamUri, tag: track);
+      return AudioSource.uri(streamUri, headers: headers, tag: track);
     }
 
     if (!_allowProxyCachingSource) {
@@ -1670,7 +1686,7 @@ class AudioPlayerService {
           'AudioPlayerService: Proxy caching disabled, using direct stream for ${track.id}',
         );
       }
-      return AudioSource.uri(streamUri, tag: track);
+      return AudioSource.uri(streamUri, headers: headers, tag: track);
     }
 
     if (preferDirectStreamWithBackgroundPrecache) {
@@ -1687,7 +1703,7 @@ class AudioPlayerService {
           'AudioPlayerService: Skipping aggressive background cache for ${track.id} (Wi-Fi only)',
         );
       }
-      return AudioSource.uri(streamUri, tag: track);
+      return AudioSource.uri(streamUri, headers: headers, tag: track);
     }
 
     if (kDebugMode) {
@@ -1701,7 +1717,12 @@ class AudioPlayerService {
       expectedBytes: playbackData.format.contentLength,
     );
     // ignore: experimental_member_use
-    return LockCachingAudioSource(streamUri, cacheFile: cacheFile, tag: track);
+    return LockCachingAudioSource(
+      streamUri,
+      cacheFile: cacheFile,
+      headers: headers,
+      tag: track,
+    );
   }
 
   ({
@@ -2504,12 +2525,11 @@ class AudioPlayerService {
     }
   }
 
+  /// Only session-bound tracking (authenticated WEB_REMIX) writes history.
   PlaybackTracking? get _activePlaybackTracking =>
       (_authenticatedPlaybackTracking?.hasStatsUrls == true)
           ? _authenticatedPlaybackTracking
-          : ((_currentPlaybackData?.playbackTracking?.hasStatsUrls == true)
-              ? _currentPlaybackData!.playbackTracking
-              : null);
+          : null;
 
   Future<void> _ensureInnerTubeAuth() async {
     debugPrint('[YTM-Tracking] AudioPlayerService._ensureInnerTubeAuth: currently isAuth=${_innerTubeService?.isAuthenticated}');
@@ -2535,7 +2555,7 @@ class AudioPlayerService {
         debugPrint(
           '[YTM-Tracking] Flushing watchtime before track change for ${_currentTrack?.id} (pos: ${position.inSeconds}s, lastPos: ${_youtubeTrackingLastPosition.inSeconds}s)',
         );
-        unawaited(_sendYoutubeWatchtime(state: 'paused', force: true));
+        unawaited(_sendYoutubeWatchtime(state: 'ended', force: true));
       }
     }
     _stopYoutubeWatchtimeTimer();
@@ -2550,7 +2570,7 @@ class AudioPlayerService {
     _stopYoutubeWatchtimeTimer();
     _youtubeTrackingVideoId = videoId;
     _youtubeTrackingCpn = _generateYoutubeCpn();
-    _youtubeTrackingStartedAt = DateTime.now();
+    _youtubeAtrSent = false;
     _youtubeTrackingLastPosition = Duration.zero;
     _youtubePlaybackStartSent = false;
     _authenticatedPlaybackTracking = null;
@@ -2561,22 +2581,20 @@ class AudioPlayerService {
 
   void _startYoutubePlaybackTracking() {
     final track = _currentTrack;
-    debugPrint('[YTM-Tracking] _startYoutubePlaybackTracking called for: ${track?.id} ("${track?.title}")');
-    if (track == null) {
-      debugPrint('[YTM-Tracking] Skipped: _currentTrack is null');
-      return;
-    }
-    // Only skip genuinely local device storage files (id starting with local_)
-    if (track.id.startsWith('local_')) {
-      debugPrint('[YTM-Tracking] Skipped: local device track (${track.id})');
+    if (track == null) return;
+    // Only real YouTube video ids can be registered against YT Music history
+    // (local files, podcasts from other sources etc. cannot).
+    if (!_youtubeVideoIdPattern.hasMatch(track.id)) {
+      debugPrint('[YTM-Tracking] Skipped: not a YouTube video id (${track.id})');
       return;
     }
 
     if (_innerTubeService?.isAuthenticated != true) {
-      debugPrint('[YTM-Tracking] InnerTube not authenticated yet. Initiating _ensureInnerTubeAuth()...');
+      debugPrint('[YTM-Tracking] InnerTube not authenticated yet, restoring auth...');
       unawaited(_ensureInnerTubeAuth().then((_) {
-        debugPrint('[YTM-Tracking] _ensureInnerTubeAuth finished. isAuth=${_innerTubeService?.isAuthenticated}, isPlaying=${_player.playing}');
-        if (_player.playing && _currentTrack?.id == track.id) {
+        if (_innerTubeService?.isAuthenticated == true &&
+            _player.playing &&
+            _currentTrack?.id == track.id) {
           _startYoutubePlaybackTracking();
         }
       }));
@@ -2586,22 +2604,14 @@ class AudioPlayerService {
     // Ensure tracking state is initialized for the current track.
     _resetYoutubePlaybackTrackingForCurrentTrack();
 
-    // If authenticated, we REQUIRE authenticated WEB_REMIX tracking so history records correctly.
-    // Fallback unauthenticated URLs from Android/iOS/VisionOS do NOT write to user history.
-    if (_innerTubeService?.isAuthenticated == true &&
-        _authenticatedPlaybackTracking == null &&
-        !_youtubeTrackingResolveFailed.contains(track.id)) {
-      debugPrint('[YTM-Tracking] Awaiting authenticated WEB_REMIX tracking before sending PLAYBACK ping for ${track.id}...');
-      unawaited(_resolveYoutubeTrackingForCurrentTrack(track.id));
-      return;
-    }
-
+    // History is only written by the session-bound tracking URLs from an
+    // authenticated WEB_REMIX player request. Those from the stream clients
+    // (ANDROID_VR / IOS) never reach the user's history.
     final tracking = _activePlaybackTracking;
-    debugPrint('[YTM-Tracking] Active tracking URLs: hasStatsUrls=${tracking?.hasStatsUrls}, hasPlaybackUrl=${tracking?.videostatsPlaybackUrl != null}, hasWatchtimeUrl=${tracking?.videostatsWatchtimeUrl != null}');
-
-    if (tracking == null || !tracking.hasStatsUrls) {
-      debugPrint('[YTM-Tracking] No tracking URLs available yet. Triggering _resolveYoutubeTrackingForCurrentTrack(${track.id})...');
-      unawaited(_resolveYoutubeTrackingForCurrentTrack(track.id));
+    if (tracking == null) {
+      if (!_youtubeTrackingResolveFailed.contains(track.id)) {
+        unawaited(_resolveYoutubeTrackingForCurrentTrack(track.id));
+      }
       return;
     }
 
@@ -2609,104 +2619,77 @@ class AudioPlayerService {
       _youtubePlaybackStartSent = true;
       final playbackUrl = tracking.videostatsPlaybackUrl;
       if (playbackUrl != null && playbackUrl.isNotEmpty) {
-        final url = _appendYoutubeStatsParams(
-          playbackUrl,
-          state: 'playing',
-          start: Duration.zero,
-          end: _player.position,
-          isWatchtime: false,
+        debugPrint('[YTM-Tracking] Registering play for ${track.id}');
+        unawaited(
+          _innerTubeService!.sendPlaybackStatsPing(
+            playbackUrl,
+            cpn: _youtubeTrackingCpn ??= _generateYoutubeCpn(),
+          ),
         );
-        debugPrint('[YTM-Tracking] Sending initial PLAYBACK ping for ${track.id}');
-        unawaited(_innerTubeService!.sendPlaybackStatsUrl(url));
-      } else {
-        debugPrint('[YTM-Tracking] videostatsPlaybackUrl is empty or null');
       }
     }
 
-    if (_youtubeWatchtimeTimer == null) {
-      debugPrint('[YTM-Tracking] Starting 10s periodic watchtime heartbeat timer');
-      _youtubeWatchtimeTimer = Timer.periodic(_youtubeWatchtimeInterval, (_) {
-        unawaited(_sendYoutubeWatchtime(state: 'playing'));
-      });
-    } else {
-      debugPrint('[YTM-Tracking] Watchtime heartbeat timer is already active');
-    }
+    // One cheap timer drives both the atr ping and periodic watchtime; the
+    // network is only touched every [_youtubeWatchtimeReportSeconds] of audio.
+    _youtubeWatchtimeTimer ??= Timer.periodic(_youtubeWatchtimeInterval, (_) {
+      _maybeSendYoutubeAtr();
+      unawaited(_sendYoutubeWatchtime(state: 'playing'));
+    });
+  }
+
+  void _maybeSendYoutubeAtr() {
+    if (_youtubeAtrSent) return;
+    final tracking = _activePlaybackTracking;
+    final atrUrl = tracking?.atrUrl;
+    if (tracking == null || atrUrl == null || atrUrl.isEmpty) return;
+    if (_player.position.inSeconds < tracking.atrAfterSeconds) return;
+    _youtubeAtrSent = true;
+    unawaited(
+      _innerTubeService?.sendPlaybackStatsPing(
+        atrUrl,
+        cpn: _youtubeTrackingCpn ??= _generateYoutubeCpn(),
+        isAtr: true,
+      ),
+    );
   }
 
   Future<void> _resolveYoutubeTrackingForCurrentTrack(String trackId) async {
-    if (_innerTubeService?.isAuthenticated != true) {
-      debugPrint('[YTM-Tracking] _resolveYoutubeTrackingForCurrentTrack: aborted because not authenticated');
-      return;
-    }
-    if (_youtubeTrackingResolveInProgress.contains(trackId)) {
-      debugPrint('[YTM-Tracking] _resolveYoutubeTrackingForCurrentTrack: already in progress for $trackId');
-      return;
-    }
-    _youtubeTrackingResolveInProgress.add(trackId);
+    final innerTube = _innerTubeService;
+    if (innerTube?.isAuthenticated != true) return;
+    if (!_youtubeTrackingResolveInProgress.add(trackId)) return;
 
     try {
-      debugPrint('[YTM-Tracking] Resolving tracking URLs for trackId=$trackId...');
-
-      // 1. Try authenticated WEB_REMIX player request
+      // Retry a couple of times: a track starting is exactly when the network
+      // is busiest (stream resolve, wifi/cellular hand-over), and one blip
+      // should not lose the play.
       PlaybackTracking? tracking;
-      try {
-        final trackingJson =
-            await _innerTubeService!.getAuthenticatedPlaybackTracking(trackId);
-        if (trackingJson != null) {
-          final t = PlaybackTracking.fromJson(trackingJson);
-          if (t.hasStatsUrls) {
-            tracking = t;
-            debugPrint('[YTM-Tracking] Resolved tracking URLs via authenticated WEB_REMIX');
+      for (var attempt = 0; attempt < 3 && tracking == null; attempt++) {
+        if (_currentTrack?.id != trackId) return;
+        if (attempt > 0) await Future.delayed(const Duration(seconds: 2));
+        try {
+          int? fallbackSts;
+          if (attempt > 0) {
+            fallbackSts = await InnerTubeApi().getSignatureTimestamp(trackId);
           }
-        }
-      } catch (e) {
-        debugPrint('[YTM-Tracking] Authenticated WEB_REMIX tracking attempt failed: $e');
-      }
-
-      // 2. Fallback: Query InnerTubeApi directly (VisionOS / iOS)
-      if (tracking == null || !tracking.hasStatsUrls) {
-        debugPrint('[YTM-Tracking] Trying InnerTubeApi fallback clients (VISIONOS / IOS) for $trackId...');
-        final api = InnerTubeApi();
-        for (final client in [InnerTubeClient.visionOs, InnerTubeClient.ios]) {
-          try {
-            final res = await api.player(trackId, client: client);
-            if (res?.playbackTracking != null) {
-              final t = PlaybackTracking.fromJson(res!.playbackTracking);
-              if (t.hasStatsUrls) {
-                tracking = t;
-                debugPrint('[YTM-Tracking] Successfully got tracking URLs via ${client.name} fallback!');
-                break;
-              }
-            }
-          } catch (e) {
-            debugPrint('[YTM-Tracking] ${client.name} tracking attempt failed: $e');
-          }
+          final json = await innerTube!.getAuthenticatedPlaybackTracking(
+            trackId,
+            signatureTimestamp: fallbackSts,
+          );
+          final t = PlaybackTracking.fromJson(json);
+          if (t.hasStatsUrls) tracking = t;
+        } catch (e) {
+          debugPrint('[YTM-Tracking] Resolve attempt ${attempt + 1} failed: $e');
         }
       }
 
-      if (tracking != null && tracking.hasStatsUrls) {
-        if (_currentTrack?.id != trackId) {
-          debugPrint('[YTM-Tracking] Track changed while resolving ($trackId != ${_currentTrack?.id}), discarding');
-          return;
-        }
-        _authenticatedPlaybackTracking = tracking;
-        debugPrint('[YTM-Tracking] Successfully resolved and set tracking URLs for $trackId!');
-        if (_player.playing) {
-          _startYoutubePlaybackTracking();
-        }
-      } else {
-        debugPrint('[YTM-Tracking] WARNING: Failed to resolve tracking URLs for $trackId');
+      if (_currentTrack?.id != trackId) return;
+      if (tracking == null) {
+        debugPrint('[YTM-Tracking] WARNING: no tracking URLs for $trackId; play not registered');
         _youtubeTrackingResolveFailed.add(trackId);
-        if (_player.playing) {
-          _startYoutubePlaybackTracking();
-        }
+        return;
       }
-    } catch (e) {
-      debugPrint('[YTM-Tracking] Tracking resolve failed for $trackId: $e');
-      _youtubeTrackingResolveFailed.add(trackId);
-      if (_player.playing) {
-        _startYoutubePlaybackTracking();
-      }
+      _authenticatedPlaybackTracking = tracking;
+      if (_player.playing) _startYoutubePlaybackTracking();
     } finally {
       _youtubeTrackingResolveInProgress.remove(trackId);
     }
@@ -2717,102 +2700,40 @@ class AudioPlayerService {
     bool force = false,
   }) async {
     final innerTube = _innerTubeService;
-    final track = _currentTrack;
     final watchtimeUrl = _activePlaybackTracking?.videostatsWatchtimeUrl;
+    if (innerTube == null || !innerTube.isAuthenticated) return;
+    if (_currentTrack == null || !_youtubePlaybackStartSent) return;
+    if (watchtimeUrl == null || watchtimeUrl.isEmpty) return;
 
-    if (innerTube == null || !innerTube.isAuthenticated) {
-      debugPrint('[YTM-Tracking] _sendYoutubeWatchtime: aborted because innerTube is not authenticated');
+    final seconds = _player.position.inSeconds;
+    final lastReported = _youtubeTrackingLastPosition.inSeconds;
+    if (!force && seconds - lastReported < _youtubeWatchtimeReportSeconds) {
       return;
     }
-    if (track == null || track.id.startsWith('local_')) {
-      debugPrint('[YTM-Tracking] _sendYoutubeWatchtime: aborted because track is null or local');
-      return;
-    }
-    if (watchtimeUrl == null || watchtimeUrl.isEmpty) {
-      debugPrint('[YTM-Tracking] _sendYoutubeWatchtime: aborted because watchtimeUrl is null/empty');
-      return;
-    }
+    if (force && seconds <= 0) return;
+    final isFinal = state != 'playing';
 
-    final position = _player.position;
-    if (position < _youtubeTrackingLastPosition) {
-      debugPrint('[YTM-Tracking] _sendYoutubeWatchtime: position (${position.inSeconds}s) < lastPos (${_youtubeTrackingLastPosition.inSeconds}s), ignoring backwards watchtime');
-      return;
-    }
-    if (!force && position <= _youtubeTrackingLastPosition) {
-      debugPrint('[YTM-Tracking] _sendYoutubeWatchtime: position (${position.inSeconds}s) <= lastPos (${_youtubeTrackingLastPosition.inSeconds}s), skipping');
-      return;
-    }
-
-    debugPrint('[YTM-Tracking] Sending WATCHTIME heartbeat: pos=${position.inSeconds}s, lastPos=${_youtubeTrackingLastPosition.inSeconds}s, state=$state, force=$force');
-
-    final url = _appendYoutubeStatsParams(
+    _youtubeTrackingLastPosition = Duration(seconds: seconds);
+    await innerTube.sendPlaybackStatsPing(
       watchtimeUrl,
-      state: state,
-      start: _youtubeTrackingLastPosition,
-      end: position,
-      isWatchtime: true,
+      cpn: _youtubeTrackingCpn ??= _generateYoutubeCpn(),
+      extraParams: {
+        'st': '0',
+        'et': '$seconds',
+        'cmt': '$seconds',
+        'state': isFinal ? 'paused' : 'playing',
+        if (state == 'ended') 'final': '1',
+      },
     );
-
-    _youtubeTrackingLastPosition = position;
-    await innerTube.sendPlaybackStatsUrl(url);
   }
 
   void _stopYoutubeWatchtimeTimer() {
-    if (_youtubeWatchtimeTimer != null) {
-      debugPrint('[YTM-Tracking] Watchtime periodic timer stopped');
-      _youtubeWatchtimeTimer?.cancel();
-      _youtubeWatchtimeTimer = null;
-    }
+    _youtubeWatchtimeTimer?.cancel();
+    _youtubeWatchtimeTimer = null;
   }
 
-  String _appendYoutubeStatsParams(
-    String baseUrl, {
-    required String state,
-    required Duration start,
-    required Duration end,
-    bool isWatchtime = true,
-  }) {
-    final uri = Uri.parse(baseUrl);
-    final params = <String, List<String>>{
-      for (final entry in uri.queryParametersAll.entries)
-        entry.key: List<String>.from(entry.value),
-    };
-
-    void setParam(String key, String value) {
-      params[key] = <String>[value];
-    }
-
-    final cpn = _youtubeTrackingCpn ??= _generateYoutubeCpn();
-    final elapsed = _youtubeTrackingStartedAt == null
-        ? Duration.zero
-        : DateTime.now().difference(_youtubeTrackingStartedAt!);
-
-    setParam('cpn', cpn);
-    setParam('ver', params['ver']?.firstOrNull ?? '2');
-    setParam('c', 'WEB_REMIX');
-    setParam('cver', '1.20231204.01.00');
-    setParam('state', state);
-    setParam('cmt', _statsSeconds(end));
-    if (isWatchtime) {
-      setParam('st', _statsSeconds(start));
-      setParam('et', _statsSeconds(end));
-      setParam('rt', _statsSeconds(elapsed));
-    }
-    setParam('volume', '100');
-
-    return uri
-        .replace(
-          queryParameters: {
-            for (final entry in params.entries) entry.key: entry.value.last,
-          },
-        )
-        .toString();
-  }
-
-  String _statsSeconds(Duration duration) {
-    final seconds = max(0, duration.inMilliseconds) / 1000;
-    return seconds.toStringAsFixed(3);
-  }
+  static final RegExp _youtubeVideoIdPattern = RegExp(r'^[A-Za-z0-9_-]{11}$');
+  static const int _youtubeWatchtimeReportSeconds = 30;
 
   String _generateYoutubeCpn() {
     const chars =

@@ -17,6 +17,31 @@ import 'lyrics_menu_sheet.dart';
 const _lyricsPreviewTimeMs = 8000;
 const _lyricsAnchorRatio = 0.35; // 35% from the top of the viewport
 
+// ── Line-to-line handover (after BitChord) ───────────────────────────────
+// One curve for everything that moves when a line hands over — the scroll,
+// the dim, the scale — so it reads as a single movement: away quickly, in
+// slowly and softly.
+const Cubic _lyricEase = Cubic(0.41, 0.0, 0.12, 0.99);
+const Duration _lyricSettle = Duration(milliseconds: 400);
+// The scroll runs over the silence before the next line, bounded so it is
+// neither a snap nor a drift.
+const int _scrollLeadMinMs = 350;
+const int _scrollLeadMaxMs = 500;
+// Rows below the line being scrolled to set off slightly later than the one
+// above them (up to 3 rows), so the spacing opens and closes as the list moves
+// instead of the whole block sliding rigidly.
+const int _staggerSteps = 3;
+const double _staggerFraction = 0.06;
+// Every line is set in the same type and shown at the same size: the playing
+// line is picked out by colour and opacity only, never by zooming it (a zoom
+// pushed the line wider than its row and read as the words jumping).
+const double _inactiveLineScale = 1.0;
+const List<double> _lineFalloffAlpha = [1.0, 0.74, 0.6, 0.48, 0.4, 0.34];
+const double _syncedFontSize = 26.0;
+
+double _falloffAlpha(int dist) =>
+    _lineFalloffAlpha[dist.clamp(0, _lineFalloffAlpha.length - 1)];
+
 /// Lyrics view widget for Now Playing screen with synced animations
 class LyricsView extends ConsumerStatefulWidget {
   final Duration currentPosition;
@@ -33,9 +58,20 @@ class LyricsView extends ConsumerStatefulWidget {
 }
 
 class _LyricsViewState extends ConsumerState<LyricsView>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   int _currentLineIndex = -1;
+
+  /// The line the panel is moving to — runs a few hundred ms ahead of
+  /// [_currentLineIndex] so the scroll lands as the line starts.
+  int _focusLineIndex = -1;
+
+  // The current handover, read by each row to work out how far behind the
+  // list it should trail.
+  late final AnimationController _handover;
+  double _runDelta = 0;
+  int _runDurationMs = _scrollLeadMinMs;
+  int _runFocus = -1;
   List<GlobalKey> _lineKeys = [];
 
   // High-frequency frame ticker for 60/120fps smooth karaoke sweep without rebuilding the full widget tree
@@ -57,6 +93,8 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     _lastSyncEpochMs = DateTime.now().millisecondsSinceEpoch;
     _smoothPositionNotifier.value = _lastAudioMs;
 
+    _handover = AnimationController(vsync: this);
+
     _ticker = createTicker((_) {
       final isPlaying = ref.read(isPlayingProvider);
       if (isPlaying) {
@@ -72,7 +110,22 @@ class _LyricsViewState extends ConsumerState<LyricsView>
         _checkLineIndexChange(_lastAudioMs);
       }
     });
-    _ticker.start();
+    // Only run the per-frame clock while the lyrics are on screen and the
+    // song is playing; otherwise it would tick (and wake the CPU) for nothing.
+    ref.listenManual(isPlayingProvider, (_, _) => _syncTicker());
+    _syncTicker();
+  }
+
+  void _syncTicker() {
+    final shouldRun = widget.isActive && ref.read(isPlayingProvider);
+    if (shouldRun && !_ticker.isActive) {
+      _lastSyncEpochMs = DateTime.now().millisecondsSinceEpoch;
+      _ticker.start();
+    } else if (!shouldRun && _ticker.isActive) {
+      _ticker.stop();
+      _smoothPositionNotifier.value = _lastAudioMs;
+      _checkLineIndexChange(_lastAudioMs);
+    }
   }
 
   void _checkLineIndexChange(int currentPositionMs) {
@@ -89,10 +142,24 @@ class _LyricsViewState extends ConsumerState<LyricsView>
       }
     }
 
+    // The panel starts moving to the next line a run-up ahead of it, so the
+    // scroll lands as the line does instead of chasing it.
+    var focusIdx = newIdx;
+    final nextIdx = newIdx + 1;
+    if (nextIdx < lines.length &&
+        lines[nextIdx].timeInMs - currentPositionMs <=
+            _scrollLeadMs(lines, nextIdx)) {
+      focusIdx = nextIdx;
+    }
+
     if (newIdx != _currentLineIndex && newIdx >= 0) {
       setState(() {
         _currentLineIndex = newIdx;
       });
+    }
+
+    if (focusIdx != _focusLineIndex && focusIdx >= 0) {
+      _focusLineIndex = focusIdx;
       if (_isAutoScrollEnabled && widget.isActive) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && _isAutoScrollEnabled && widget.isActive) {
@@ -103,9 +170,41 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     }
   }
 
+  /// The silence before line [index] (bounded): how far ahead the panel
+  /// starts moving to it, and how long the move takes.
+  int _scrollLeadMs(List<LyricLine> lines, int index) {
+    if (index <= 0 || index >= lines.length) return _scrollLeadMinMs;
+    final previous = lines[index - 1];
+    final previousEnd = previous.hasKnownEnd
+        ? previous.endMs
+        : lines[index].timeInMs - _scrollLeadMaxMs;
+    return (lines[index].timeInMs - previousEnd)
+        .clamp(_scrollLeadMinMs, _scrollLeadMaxMs)
+        .toInt();
+  }
+
+  /// How far row [index] trails the list during the current handover. Rows
+  /// below the focus line set off up to [_staggerSteps] steps later; with one
+  /// curve for both, a row with no delay sits exactly still against the list.
+  double _staggerOffset(int index) {
+    if (_runDelta == 0 || !_handover.isAnimating) return 0;
+    final behind =
+        (_runDelta >= 0 ? index - _runFocus : _runFocus - index)
+            .clamp(0, _staggerSteps);
+    if (behind <= 0) return 0;
+    final duration = _runDurationMs.toDouble();
+    final delay = behind * _staggerFraction * duration;
+    final elapsed = _handover.value * duration * (1 + _staggerFraction * _staggerSteps);
+    return _runDelta *
+        (_lyricEase.transform((elapsed / duration).clamp(0.0, 1.0)) -
+            _lyricEase.transform(((elapsed - delay) / duration).clamp(0.0, 1.0)));
+  }
+
   @override
   void didUpdateWidget(covariant LyricsView oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.isActive != widget.isActive) _syncTicker();
 
     if (!oldWidget.isActive && widget.isActive) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -135,6 +234,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
   @override
   void dispose() {
     _ticker.dispose();
+    _handover.dispose();
     _smoothPositionNotifier.dispose();
     _autoScrollResumeTimer?.cancel();
     _scrollController.dispose();
@@ -172,45 +272,44 @@ class _LyricsViewState extends ConsumerState<LyricsView>
 
   void _scrollToCurrentLine({bool immediate = false}) {
     if (!widget.isActive) return;
+    final target = _focusLineIndex >= 0 ? _focusLineIndex : _currentLineIndex;
     if (!_scrollController.hasClients ||
-        _currentLineIndex < 0 ||
-        _currentLineIndex >= _lineKeys.length) {
+        target < 0 ||
+        target >= _lineKeys.length) {
       return;
     }
 
-    final keyContext = _lineKeys[_currentLineIndex].currentContext;
+    final keyContext = _lineKeys[target].currentContext;
     if (keyContext != null) {
-      _ensureLineVisible(keyContext, immediate: immediate);
+      _ensureLineVisible(keyContext, target, immediate: immediate);
     } else {
-      final approxOffset = (_currentLineIndex * 60.0).clamp(
+      // Far off screen (a seek): get close first, then settle precisely once
+      // the row has been laid out.
+      final approxOffset = (target * 60.0).clamp(
         0.0,
         _scrollController.position.maxScrollExtent,
       );
-      if (immediate) {
-        _scrollController.jumpTo(approxOffset);
-      } else {
-        _scrollController.animateTo(
-          approxOffset,
-          duration: const Duration(milliseconds: 1200),
-          curve: Curves.easeOutExpo,
-        );
-      }
+      _scrollController.jumpTo(approxOffset);
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted &&
             widget.isActive &&
             _scrollController.hasClients &&
-            _currentLineIndex < _lineKeys.length) {
-          final newContext = _lineKeys[_currentLineIndex].currentContext;
+            target < _lineKeys.length) {
+          final newContext = _lineKeys[target].currentContext;
           if (newContext != null) {
-            _ensureLineVisible(newContext, immediate: false);
+            _ensureLineVisible(newContext, target, immediate: immediate);
           }
         }
       });
     }
   }
 
-  void _ensureLineVisible(BuildContext keyContext, {bool immediate = false}) {
+  void _ensureLineVisible(
+    BuildContext keyContext,
+    int lineIndex, {
+    bool immediate = false,
+  }) {
     if (!widget.isActive) return;
     final renderObject = keyContext.findRenderObject();
     if (renderObject == null || !renderObject.attached) return;
@@ -224,11 +323,37 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     // Never call Scrollable.ensureVisible(keyContext) because that bubbles up all
     // ancestor Scrollables including the parent horizontal PageView in NowPlayingScreen,
     // halting PageView transitions and forcefully switching tabs.
-    _scrollController.position.ensureVisible(
-      renderObject,
-      alignment: _lyricsAnchorRatio,
-      duration: Duration(milliseconds: immediate ? 0 : 1200),
-      curve: Curves.easeOutExpo,
+    final position = _scrollController.position;
+    final viewport = RenderAbstractViewport.maybeOf(renderObject);
+    if (viewport == null) return;
+    final targetOffset = viewport
+        .getOffsetToReveal(renderObject, _lyricsAnchorRatio)
+        .offset
+        .clamp(position.minScrollExtent, position.maxScrollExtent);
+    final delta = targetOffset - position.pixels;
+
+    if (immediate || delta.abs() < 0.5) {
+      position.jumpTo(targetOffset);
+      return;
+    }
+
+    final lines = ref.read(lyricsProvider).currentLyrics?.lines ?? const [];
+    final durationMs = _scrollLeadMs(lines, lineIndex);
+
+    // Publish this handover so rows can trail it (see _staggerOffset).
+    _runDelta = delta;
+    _runDurationMs = durationMs;
+    _runFocus = lineIndex;
+    _handover.duration = Duration(
+      milliseconds:
+          (durationMs * (1 + _staggerFraction * _staggerSteps)).round(),
+    );
+    _handover.forward(from: 0);
+
+    _scrollController.animateTo(
+      targetOffset,
+      duration: Duration(milliseconds: durationMs),
+      curve: _lyricEase,
     );
   }
 
@@ -241,7 +366,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
   @override
   Widget build(BuildContext context) {
     final lyricsState = ref.watch(lyricsProvider);
-    final albumColors = ref.watch(albumColorsProvider);
+    final albumColors = ref.watch(playerAlbumColorsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colors = isDark ? albumColors : albumColors.toLightMode();
     final textColor = colors.onBackground;
@@ -254,6 +379,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
       if (previous?.id != next?.id && mounted) {
         setState(() {
           _currentLineIndex = -1;
+          _focusLineIndex = -1;
           _lineKeys = [];
           _isAutoScrollEnabled = true;
         });
@@ -272,6 +398,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
         if (prevData?.title != nextData?.title || prevData?.source != nextData?.source) {
           setState(() {
             _currentLineIndex = -1;
+            _focusLineIndex = -1;
             _lineKeys = [];
             _isAutoScrollEnabled = true;
           });
@@ -463,6 +590,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     if (_lineKeys.length != lines.length) {
       _lineKeys = List.generate(lines.length, (_) => GlobalKey());
       _currentLineIndex = -1;
+      _focusLineIndex = -1;
       if (_scrollController.hasClients) {
         _scrollController.jumpTo(0);
       }
@@ -539,7 +667,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
                     : (line.timeInMs + 1000000);
 
                 if (line.isGap) {
-                  return RepaintBoundary(
+                  return _followHandover(index, RepaintBoundary(
                     child: _buildInstrumentalGapItem(
                       line: line,
                       index: index,
@@ -549,11 +677,11 @@ class _LyricsViewState extends ConsumerState<LyricsView>
                       accentColor: accentColor,
                       nextStart: nextStart,
                     ),
-                  );
+                  ));
                 }
 
                 if (line.hasWordSync) {
-                  return RepaintBoundary(
+                  return _followHandover(index, RepaintBoundary(
                     child: _buildWordSyncLine(
                       line: line,
                       index: index,
@@ -563,11 +691,11 @@ class _LyricsViewState extends ConsumerState<LyricsView>
                       accentColor: accentColor,
                       nextStart: nextStart,
                     ),
-                  );
+                  ));
                 }
 
                 // Standard line-level animation (distance-based scaling)
-                return RepaintBoundary(
+                return _followHandover(index, RepaintBoundary(
                   child: _buildLineSyncRow(
                     line: line,
                     index: index,
@@ -577,7 +705,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
                     accentColor: accentColor,
                     nextStart: nextStart,
                   ),
-                );
+                ));
               },
             ),
           ),
@@ -666,6 +794,20 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     );
   }
 
+  /// Lets a row trail the list during a handover (see [_staggerOffset]).
+  /// Only rows that actually fan out read the animation each frame.
+  Widget _followHandover(int index, Widget row) {
+    return AnimatedBuilder(
+      animation: _handover,
+      builder: (context, child) {
+        final dy = _staggerOffset(index);
+        if (dy == 0) return child!;
+        return Transform.translate(offset: Offset(0, dy), child: child);
+      },
+      child: row,
+    );
+  }
+
   /// Instrumental gap line (musical pause) with animated glowing note icon, playful gap text, and seek-on-tap
   Widget _buildInstrumentalGapItem({
     required LyricLine line,
@@ -684,16 +826,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
             : InstrumentalGapTexts.getBreakText(line.timeInMs));
 
     final double iconSize = isCurrentLine ? 24.0 : 18.0;
-    double opacity;
-    if (isCurrentLine) {
-      opacity = 1.0;
-    } else if (dist == 1) {
-      opacity = 0.50;
-    } else if (dist == 2) {
-      opacity = 0.28;
-    } else {
-      opacity = 0.12;
-    }
+    final opacity = isCurrentLine ? 1.0 : _falloffAlpha(dist);
 
     final noteColor = isCurrentLine
         ? accentColor
@@ -701,17 +834,17 @@ class _LyricsViewState extends ConsumerState<LyricsView>
 
     Widget content = AnimatedContainer(
       key: _lineKeys[index],
-      duration: const Duration(milliseconds: 650),
-      curve: Curves.easeOutQuart,
+      duration: _lyricSettle,
+      curve: _lyricEase,
       alignment: Alignment.centerLeft,
       padding: EdgeInsets.symmetric(
         horizontal: 16,
         vertical: isCurrentLine ? 14 : 8,
       ),
       child: AnimatedScale(
-        scale: isCurrentLine ? 1.08 : 1.0,
-        duration: const Duration(milliseconds: 650),
-        curve: Curves.easeOutBack,
+        scale: isCurrentLine ? 1.0 : _inactiveLineScale,
+        duration: _lyricSettle,
+        curve: _lyricEase,
         alignment: Alignment.centerLeft,
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -780,8 +913,8 @@ class _LyricsViewState extends ConsumerState<LyricsView>
       onTap: () => _seekToLyric(line.timeInMs),
       child: AnimatedOpacity(
         opacity: isCurrentLine ? 1.0 : opacity,
-        duration: const Duration(milliseconds: 650),
-        curve: Curves.easeOutQuart,
+        duration: _lyricSettle,
+        curve: _lyricEase,
         child: content,
       ),
     );
@@ -798,49 +931,36 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     required int nextStart,
   }) {
     final isBg = line.isBackground;
-    final fontSize = isBg
-        ? 18.0
-        : (isCurrentLine ? 28.0 : 22.0);
-    final fontWeight = isCurrentLine
-        ? FontWeight.bold
-        : (dist == 1 ? FontWeight.w500 : FontWeight.w400);
+    // Every line shares one size and weight: the handover is carried by
+    // scale and opacity only, so neighbouring rows never reflow.
+    final fontSize = isBg ? 18.0 : _syncedFontSize;
+    const fontWeight = FontWeight.w800;
 
-    // Distance-based opacity curve
-    double opacity;
-    if (isCurrentLine) {
-      opacity = 1.0;
-    } else if (dist == 1) {
-      opacity = 0.40;
-    } else if (dist == 2) {
-      opacity = 0.22;
-    } else {
-      opacity = 0.10;
-    }
+    // Distance-based falloff (symmetric around the playing line)
+    final opacity = isCurrentLine ? 1.0 : _falloffAlpha(dist);
 
     final targetOpacity = isBg ? 0.35 : opacity;
-    final lyricColor = isCurrentLine
-        ? accentColor
-        : textColor.withValues(alpha: targetOpacity);
+    final lyricColor = isCurrentLine ? accentColor : textColor;
 
     Widget content = AnimatedContainer(
       key: _lineKeys[index],
-      duration: const Duration(milliseconds: 650),
-      curve: Curves.easeOutQuart,
+      duration: _lyricSettle,
+      curve: _lyricEase,
       alignment: isBg ? Alignment.center : Alignment.centerLeft,
       padding: EdgeInsets.symmetric(
         horizontal: 16,
-        vertical: isBg ? 4 : (isCurrentLine ? 10 : 8),
+        vertical: isBg ? 4 : 8,
       ),
       child: AnimatedDefaultTextStyle(
-        duration: const Duration(milliseconds: 650),
-        curve: Curves.easeOutQuart,
+        duration: _lyricSettle,
+        curve: _lyricEase,
         style: TextStyle(
           fontSize: fontSize,
           fontWeight: fontWeight,
           fontStyle: isBg ? FontStyle.italic : FontStyle.normal,
           color: lyricColor,
           height: 1.3,
-          letterSpacing: isCurrentLine ? -0.4 : 0.0,
+          letterSpacing: -0.4,
           shadows: isCurrentLine
               ? [
                   Shadow(
@@ -862,12 +982,12 @@ class _LyricsViewState extends ConsumerState<LyricsView>
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 650),
-                  curve: Curves.easeOutQuart,
+                  duration: _lyricSettle,
+                  curve: _lyricEase,
                   style: TextStyle(
                     fontSize: fontSize * 0.75, // Smaller font for translation
                     fontWeight: FontWeight.w400,
-                    color: textColor.withValues(alpha: targetOpacity * 0.9), // Muted color
+                    color: textColor.withValues(alpha: 0.8), // Muted color
                     height: 1.2,
                   ),
                   child: Text(
@@ -920,14 +1040,14 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     return GestureDetector(
       onTap: () => _seekToLyric(line.timeInMs),
       child: AnimatedScale(
-        scale: isCurrentLine ? 1.04 : 1.0,
-        duration: const Duration(milliseconds: 650),
-        curve: Curves.easeOutQuart,
+        scale: isCurrentLine ? 1.0 : _inactiveLineScale,
+        duration: _lyricSettle,
+        curve: _lyricEase,
         alignment: isBg ? Alignment.center : Alignment.centerLeft,
         child: AnimatedOpacity(
           opacity: isCurrentLine ? 1.0 : targetOpacity,
-          duration: const Duration(milliseconds: 650),
-          curve: Curves.easeOutQuart,
+          duration: _lyricSettle,
+          curve: _lyricEase,
           child: content,
         ),
       ),
@@ -945,33 +1065,23 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     required int nextStart,
   }) {
     final isBg = line.isBackground;
-    final fontSize = isBg
-        ? 18.0
-        : (isCurrentLine ? 28.0 : 22.0);
+    // Same type for every line; the handover is scale + opacity only.
+    final fontSize = isBg ? 18.0 : _syncedFontSize;
 
-    // Distance attenuation for inactive lines
-    double lineAlpha;
-    if (isCurrentLine) {
-      lineAlpha = 1.0;
-    } else if (dist == 1) {
-      lineAlpha = 0.50;
-    } else if (dist == 2) {
-      lineAlpha = 0.30;
-    } else {
-      lineAlpha = 0.15;
-    }
+    // Distance attenuation for inactive lines (applied once, on the layer)
+    final lineAlpha = isCurrentLine ? 1.0 : _falloffAlpha(dist);
 
     final targetOpacity = isBg ? 0.35 : lineAlpha;
-    final dimColor = textColor.withValues(alpha: isBg ? 0.35 : lineAlpha);
+    final dimColor = isBg ? textColor.withValues(alpha: 0.35) : textColor;
 
     Widget content = AnimatedContainer(
       key: _lineKeys[index],
-      duration: const Duration(milliseconds: 650),
-      curve: Curves.easeOutQuart,
+      duration: _lyricSettle,
+      curve: _lyricEase,
       alignment: isBg ? Alignment.center : Alignment.centerLeft,
       padding: EdgeInsets.symmetric(
         horizontal: 16,
-        vertical: isBg ? 4 : (isCurrentLine ? 10 : 8),
+        vertical: isBg ? 4 : 8,
       ),
       child: Column(
         crossAxisAlignment: isBg ? CrossAxisAlignment.center : CrossAxisAlignment.start,
@@ -1008,7 +1118,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
                   fontWeight: FontWeight.w400,
                   color: isCurrentLine
                       ? accentColor.withValues(alpha: 0.75)
-                      : textColor.withValues(alpha: targetOpacity * 0.7),
+                      : textColor.withValues(alpha: 0.75),
                   height: 1.2,
                 ),
               ),
@@ -1056,14 +1166,14 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     return GestureDetector(
       onTap: () => _seekToLyric(line.timeInMs),
       child: AnimatedScale(
-        scale: isCurrentLine ? 1.04 : 1.0,
-        duration: const Duration(milliseconds: 650),
-        curve: Curves.easeOutQuart,
+        scale: isCurrentLine ? 1.0 : _inactiveLineScale,
+        duration: _lyricSettle,
+        curve: _lyricEase,
         alignment: isBg ? Alignment.center : Alignment.centerLeft,
         child: AnimatedOpacity(
           opacity: isCurrentLine ? 1.0 : targetOpacity,
-          duration: const Duration(milliseconds: 650),
-          curve: Curves.easeOutQuart,
+          duration: _lyricSettle,
+          curve: _lyricEase,
           child: content,
         ),
       ),
@@ -1168,7 +1278,7 @@ class LyricsLine extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lyricsState = ref.watch(lyricsProvider);
-    final albumColors = ref.watch(albumColorsProvider);
+    final albumColors = ref.watch(playerAlbumColorsProvider);
     final textColor = albumColors.onBackground;
 
     if (!lyricsState.hasLyrics) {

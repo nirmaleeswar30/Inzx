@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'dart:ui';
+import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marquee/marquee.dart';
@@ -14,7 +14,6 @@ import 'artist_screen.dart';
 import 'podcast_screen.dart' show PodcastScreen;
 import 'jam_indicator_badge.dart';
 import 'explicit_badge.dart';
-import 'audio_routing_pill.dart';
 
 /// The 'Cinematic' Now Playing screen layout.
 /// Features a full-width uncropped album artwork spanning the top half of the screen
@@ -115,16 +114,32 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
           child: Stack(
             children: [
               // --- AMBIENT REFLECTION BACKGROUND ---
+              // An inverted mirror: the artwork flipped upside down and laid
+              // directly under the art at the same size, so the art's bottom
+              // edge meets its own reflection, fading out downwards.
               if (widget.ambientArt != null)
-                Positioned.fill(
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: artHeight,
+                  height: artHeight,
                   child: AnimatedOpacity(
                     duration: const Duration(milliseconds: 400),
                     opacity: widget.forceFallbackGradient ? 0.0 : 0.85,
-                    child: Transform.scale(
-                      scale: 1.5, // Scale it up normally to fill and bleed
+                    child: ShaderMask(
+                      blendMode: BlendMode.dstIn,
+                      shaderCallback: (rect) => const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.white, Color(0x55FFFFFF)],
+                      ).createShader(rect),
+                      // A light blur, so it reads as a reflection.
                       child: ImageFiltered(
-                        imageFilter: ImageFilter.blur(sigmaX: 80, sigmaY: 80), // Massive blur
-                        child: widget.ambientArt!,
+                        imageFilter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                        child: Transform.flip(
+                          flipY: true,
+                          child: widget.ambientArt!,
+                        ),
                       ),
                     ),
                   ),
@@ -265,21 +280,10 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
                     if (widget.controlsWidget != null)
                       widget.controlsWidget!,
 
-                    if (ref.watch(showSmartAudioRoutingProvider)) ...[
-                      const SizedBox(height: 32),
-                      AudioRoutingPill(
-                        textColor: widget.textColor,
-                        accentColor: widget.accentColor,
-                      ),
-                    ],
-
                     const Spacer(flex: 2),
 
-                    // Drawer tabs (UP NEXT | LYRICS | RELATED)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: widget.tabsWidget,
-                    ),
+                    // Bottom bar (output device), pinned to the very bottom
+                    widget.tabsWidget,
 
                     SizedBox(height: max(10.0, bottomPadding + 2)),
                   ],
@@ -449,16 +453,42 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
 
         const SizedBox(width: 12),
 
-        // Three-dot Options Button (horizontal with frosted glass background)
+        // Like button, right beside the options menu
+        BouncyTouch(
+          style: BouncyStyle.button,
+          customScale: 0.88,
+          onTap: widget.onToggleLike,
+          child: _circleButton(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              transitionBuilder: (child, anim) =>
+                  ScaleTransition(scale: anim, child: child),
+              child: Icon(
+                widget.isLiked
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
+                key: ValueKey(widget.isLiked),
+                color: widget.isLiked
+                    ? widget.accentColor
+                    : widget.textColor.withValues(alpha: 0.85),
+                size: 20,
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(width: 10),
+
+        // Three-dot Options Button. Plain translucent fill instead of a
+        // BackdropFilter: a blur over animated/video art re-renders every frame.
         BouncyTouch(
           style: BouncyStyle.button,
           customScale: 0.88,
           onTap: widget.onOpenOptions,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Container(
+            child: Builder(
+              builder: (context) => Container(
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
@@ -481,6 +511,22 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _circleButton({required Widget child}) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: widget.textColor.withValues(alpha: 0.10),
+        border: Border.all(
+          color: widget.textColor.withValues(alpha: 0.15),
+          width: 1.0,
+        ),
+      ),
+      child: Center(child: child),
     );
   }
 

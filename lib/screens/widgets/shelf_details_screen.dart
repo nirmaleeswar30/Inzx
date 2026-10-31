@@ -163,7 +163,11 @@ class _ShelfDetailsScreenState extends ConsumerState<ShelfDetailsScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Column(
+      // A Stack so the mini player floats over the content.
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Column(
         children: [
           // Shelf description/strapline
           if (widget.shelf.strapline != null)
@@ -187,9 +191,18 @@ class _ShelfDetailsScreenState extends ConsumerState<ShelfDetailsScreen> {
             ),
           ),
 
-          // Mini player
+        ],
+            ),
+          ),
           if (currentTrack != null)
-            MusicMiniPlayer(onTap: () => NowPlayingScreen.show(context)),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: MusicMiniPlayer(
+                onTap: () => NowPlayingScreen.show(context),
+              ),
+            ),
         ],
       ),
     );
@@ -372,7 +385,7 @@ class _ShelfDetailsScreenState extends ConsumerState<ShelfDetailsScreen> {
   Widget _buildItemGrid(bool isDark, ColorScheme colorScheme, bool isArtists) {
     return GridView.builder(
       controller: _scrollController,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         childAspectRatio: isArtists ? 0.85 : 0.8,

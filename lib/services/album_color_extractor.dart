@@ -326,9 +326,9 @@ class AlbumColors {
 
   /// Default fallback colors (dark indigo theme)
   factory AlbumColors.defaultColors() => const AlbumColors(
-    accent: Color(0xFF6366F1),
-    accentLight: Color(0xFF818CF8),
-    accentDark: Color(0xFF4F46E5),
+    accent: Color(0xFFE53935),
+    accentLight: Color(0xFFFF6F60),
+    accentDark: Color(0xFFB71C1C),
     backgroundPrimary: Color(0xFF0D0D14),
     backgroundSecondary: Color(0xFF050508),
     surface: Color(0xFF16161F),
@@ -336,6 +336,28 @@ class AlbumColors {
     onSurface: Colors.white,
     isDefault: true,
   );
+
+  /// Neutral dark palette tinted only by [accent], used when dynamic colours
+  /// are off. Flagged default so ordinary screens fall back to the theme's
+  /// accent (right for light and dark); Now Playing adopts it explicitly.
+  factory AlbumColors.fromAccent(Color accent) {
+    final hsl = HSLColor.fromColor(accent);
+    return AlbumColors(
+      accent: accent,
+      accentLight: hsl
+          .withLightness((hsl.lightness + 0.12).clamp(0.0, 1.0))
+          .toColor(),
+      accentDark: hsl
+          .withLightness((hsl.lightness - 0.15).clamp(0.0, 1.0))
+          .toColor(),
+      backgroundPrimary: const Color(0xFF0B0B0D),
+      backgroundSecondary: const Color(0xFF050506),
+      surface: const Color(0xFF161619),
+      onBackground: Colors.white,
+      onSurface: Colors.white,
+      isDefault: true,
+    );
+  }
 
   /// Lerp between two AlbumColors for smooth animation
   static AlbumColors lerp(AlbumColors a, AlbumColors b, double t) {

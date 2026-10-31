@@ -184,7 +184,29 @@ class AudioSettingsScreen extends ConsumerWidget {
               await playerService.setJioSaavnEnabled(enabled);
             },
           ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(
+                Iconsax.timer_1,
+                size: 16,
+                color: isDark ? Colors.white38 : InzxColors.textTertiary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'More high quality sources coming soon',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontStyle: FontStyle.italic,
+                    color: isDark ? Colors.white38 : InzxColors.textTertiary,
+                  ),
+                ),
+              ),
+            ],
+          ),
 
+          const SizedBox(height: 32),
           Text(
             l10n.crossfadeTransition,
             style: TextStyle(
@@ -870,7 +892,7 @@ class AudioSettingsScreen extends ConsumerWidget {
     required int currentDurationMs,
     required Future<void> Function(int value) onChanged,
   }) {
-    const optionsMs = [0, 1000, 2000, 3000, 5000, 8000];
+    const optionsMs = [0, 5000, 8000, 10000, 12000];
 
     String labelFor(int ms) {
       if (ms == 0) return context.l10n.off;

@@ -1400,10 +1400,18 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
               ),
             ),
 
-            if (hasCurrentTrack)
-              MusicMiniPlayer(onTap: () => NowPlayingScreen.show(this.context)),
           ],
         ),
+        // Floats over the list (which scrolls behind it), like on Home.
+        if (hasCurrentTrack)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: MusicMiniPlayer(
+              onTap: () => NowPlayingScreen.show(this.context),
+            ),
+          ),
       ],
     );
   }

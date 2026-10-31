@@ -20,11 +20,17 @@ class JamsSyncController {
 
   // Flag to prevent broadcast loops when applying received state
   bool _isApplyingRemoteState = false;
+  // Bumped per remote apply so an older apply's cool-down can't clear the
+  // flag while a newer one is still in progress.
+  int _applyGeneration = 0;
 
   // Track when we last broadcasted - if recent, we're the "active controller"
   // and should ignore incoming broadcasts from others
   DateTime? _lastBroadcastTimestamp;
-  static const _activeControllerWindowMs = 2000; // 2 seconds
+  // Only set by user-initiated changes (track / play-pause / seek), never by
+  // the periodic heartbeat — otherwise every client spent 2 of every 3
+  // seconds ignoring everyone else's commands.
+  static const _activeControllerWindowMs = 1200;
 
   // Drift correction
   static const _maxDriftMs = 1000; // 1 second max drift before correction
@@ -452,7 +458,7 @@ class JamsSyncController {
 
     // Always broadcast if track changed
     if (_lastBroadcastTrackId != track.id) {
-      _doBroadcast(state, 'track changed');
+      _doBroadcast(state, 'track changed', userAction: true);
 
       // If jam queue is empty and host starts playing, populate it from player queue
       _populateJamQueueIfEmpty();
@@ -461,7 +467,7 @@ class JamsSyncController {
 
     // Always broadcast if play/pause state changed
     if (_lastBroadcastIsPlaying != state.isPlaying) {
-      _doBroadcast(state, 'play/pause changed');
+      _doBroadcast(state, 'play/pause changed', userAction: true);
       return;
     }
 
@@ -474,7 +480,11 @@ class JamsSyncController {
       final drift = (currentPositionMs - expectedPosition).abs();
 
       if (drift > _maxDriftMs) {
-        _doBroadcast(state, 'seek detected (drift: ${drift}ms)');
+        _doBroadcast(
+          state,
+          'seek detected (drift: ${drift}ms)',
+          userAction: true,
+        );
         return;
       }
     }
@@ -482,14 +492,22 @@ class JamsSyncController {
     // Otherwise, throttle - rely on periodic sync
   }
 
-  void _doBroadcast(PlaybackState state, String reason) async {
+  void _doBroadcast(
+    PlaybackState state,
+    String reason, {
+    bool userAction = false,
+  }) async {
     final track = state.currentTrack;
     if (track == null) return;
 
     // Use currentPosition for real-time accuracy
     final positionMs = _audioPlayer.currentPosition.inMilliseconds;
     _lastBroadcastTime = DateTime.now();
-    _lastBroadcastTimestamp = DateTime.now(); // Track when we last broadcasted
+    if (userAction) {
+      // We just changed something: briefly prefer our state over in-flight
+      // broadcasts that were sent before ours arrived.
+      _lastBroadcastTimestamp = DateTime.now();
+    }
     _lastBroadcastPositionMs = positionMs;
     _lastBroadcastIsPlaying = state.isPlaying;
     _lastBroadcastTrackId = track.id;
@@ -511,6 +529,7 @@ class JamsSyncController {
         positionMs:
             positionMs, // Use the real-time position we already calculated
         isPlaying: state.isPlaying,
+        isChange: userAction,
       );
     } catch (e) {
       if (kDebugMode) {
@@ -576,14 +595,9 @@ class JamsSyncController {
       _throttledBroadcast(state);
     });
 
-    // Periodic sync for drift correction
-    _syncTimer = Timer.periodic(const Duration(milliseconds: _syncIntervalMs), (
-      _,
-    ) {
-      if (!_isApplyingRemoteState) {
-        _periodicSync();
-      }
-    });
+    // No periodic heartbeat here: the host's is authoritative. Controllers
+    // broadcasting their own (slightly drifted) position every few seconds
+    // fought the host and each other with seeks.
   }
 
   Future<void> _applyPlaybackState(JamPlaybackState playback) async {
@@ -611,6 +625,7 @@ class JamsSyncController {
 
     // Set flag to prevent broadcast loops while applying remote state
     _isApplyingRemoteState = true;
+    final generation = ++_applyGeneration;
 
     try {
       await _doApplyPlaybackState(playback);
@@ -624,9 +639,23 @@ class JamsSyncController {
         _lastBroadcastTime = DateTime.now();
       }
     } finally {
-      // Longer delay before allowing broadcasts again to prevent immediate re-broadcast
+      // Short cool-down so the player's own state events from applying this
+      // don't echo back out as a new command.
       Future.delayed(const Duration(milliseconds: 500), () {
+        if (generation != _applyGeneration) return;
         _isApplyingRemoteState = false;
+        if (!_jamsService.isInSession) return;
+        if (_jamsService.isHost) {
+          // The host is authoritative: confirm the state it ended up in so
+          // every client (including the controller that sent the command)
+          // converges, even if two commands crossed in flight.
+          final state = _audioPlayer.state;
+          if (state.currentTrack != null) _doBroadcast(state, 'host confirm');
+        } else if (_jamsService.canControlPlayback) {
+          // A user action made during the cool-down was swallowed by the
+          // flag; re-check so it still goes out.
+          _throttledBroadcast(_audioPlayer.state);
+        }
       });
     }
   }

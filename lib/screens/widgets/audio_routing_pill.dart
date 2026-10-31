@@ -18,7 +18,8 @@ class AudioRoutingPill extends StatefulWidget {
   State<AudioRoutingPill> createState() => _AudioRoutingPillState();
 }
 
-class _AudioRoutingPillState extends State<AudioRoutingPill> with WidgetsBindingObserver {
+class _AudioRoutingPillState extends State<AudioRoutingPill>
+    with WidgetsBindingObserver {
   String _deviceName = '';
 
   @override
@@ -61,18 +62,49 @@ class _AudioRoutingPillState extends State<AudioRoutingPill> with WidgetsBinding
         // Refetch in case they changed it in the sheet
         _fetchDeviceName();
       },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        child: Text(
-          _deviceName,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: widget.textColor.withValues(alpha: 0.7),
-            letterSpacing: 0.3,
+      // A plain bubble (never glass), matching the lyrics / queue buttons.
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 200),
+        child: Container(
+                height: 40,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: widget.textColor.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: widget.textColor.withValues(alpha: 0.12),
+                  ),
+                ),
+                child: _content(),
+              ),
+      ),
+    );
+  }
+
+  Widget _content() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.speaker_group_rounded,
+          size: 16,
+          color: widget.textColor.withValues(alpha: 0.8),
+        ),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            _deviceName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: widget.textColor.withValues(alpha: 0.85),
+              letterSpacing: 0.3,
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 }

@@ -900,6 +900,10 @@ class JamsService {
     required int durationMs,
     required int positionMs,
     required bool isPlaying,
+    // Heartbeats re-state the current state under the current version; only
+    // real changes take a new one. A heartbeat that bumped the version could
+    // make a controller's command, crossing it in flight, look stale.
+    bool isChange = true,
   }) async {
     if (!canControlPlayback || _channel == null) {
       if (kDebugMode) {
@@ -909,7 +913,9 @@ class JamsService {
     }
 
     final syncedAt = DateTime.now();
-    final stateVersion = _nextStateVersion();
+    final stateVersion = isChange
+        ? _nextStateVersion()
+        : _lastAppliedStateVersion;
     final track = JamTrack(
       videoId: videoId,
       title: title,

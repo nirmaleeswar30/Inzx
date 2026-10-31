@@ -88,6 +88,7 @@ class YTMusicAuthNotifier extends StateNotifier<YTMusicAuthState> {
         if (kDebugMode) {
           print('✅ Auth restored from cache');
         }
+        _refreshAccountInBackground();
         return;
       }
     } catch (e) {
@@ -103,6 +104,19 @@ class YTMusicAuthNotifier extends StateNotifier<YTMusicAuthState> {
       isLoading: false,
       account: _authService.account,
     );
+    if (state.isLoggedIn) _refreshAccountInBackground();
+  }
+
+  /// Fills in name / email / photo / stable id from the account menu. Older
+  /// logins only stored whatever the WebView scrape found, so this also
+  /// upgrades them without a re-login.
+  void _refreshAccountInBackground() {
+    unawaited(
+      _authService.refreshAccountInfo().then((account) {
+        if (!mounted || !state.isLoggedIn || account == null) return;
+        state = state.copyWith(account: account);
+      }),
+    );
   }
 
   Future<bool> login(
@@ -116,10 +130,17 @@ class YTMusicAuthNotifier extends StateNotifier<YTMusicAuthState> {
       account: account,
     );
 
+    YTMusicAccount? resolved = success
+        ? (account ?? _authService.account)
+        : null;
+    if (success) {
+      resolved = await _authService.refreshAccountInfo() ?? resolved;
+    }
+
     state = YTMusicAuthState(
       isLoggedIn: success,
       isLoading: false,
-      account: success ? (account ?? _authService.account) : null,
+      account: resolved,
       error: success ? null : 'Login failed. Please try again.',
     );
 
@@ -138,6 +159,13 @@ class YTMusicAuthNotifier extends StateNotifier<YTMusicAuthState> {
     state = const YTMusicAuthState(isLoggedIn: false, isLoading: false);
   }
 }
+
+/// The signed-in user (from the single YouTube Music login), or null.
+final appAccountProvider = Provider<YTMusicAccount?>((ref) {
+  final auth = ref.watch(ytMusicAuthStateProvider);
+  if (!auth.isLoggedIn) return null;
+  return auth.account ?? YTMusicAccount();
+});
 
 /// Provider for whether the "Connect YouTube Music" banner on Home tab has been permanently dismissed
 final hideConnectYTMusicBannerProvider =

@@ -63,7 +63,6 @@ dependencies:
   image: ^4.7.2
   
   # Google Sign-In (standalone, no Firebase Auth)
-  google_sign_in: ^6.2.1
   
   # Supabase for Jams (Realtime)
   supabase_flutter: ^2.8.0
@@ -99,12 +98,18 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
-  
+
+  # Liquid glass lens + highlight (lib/core/liquid_glass)
+  shaders:
+    - shaders/glass_lens.frag
+    - shaders/glass_highlight.frag
+
   # Assets
   assets:
     - assets/icon/
     - assets/splash/
     - assets/upi.jpeg
+    - assets/logo_transparent.png
     - .env
     - shorebird.yaml
 

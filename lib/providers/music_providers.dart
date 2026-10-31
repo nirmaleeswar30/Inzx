@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/models.dart';
 import '../services/services.dart';
 import '../services/audio_player_service.dart' as player;
+import '../core/providers/theme_provider.dart'
+    show dynamicColorsEnabledProvider, staticAccentColorProvider;
 import '../services/album_color_extractor.dart';
 export '../services/album_color_extractor.dart' show AlbumColors;
 import 'repository_providers.dart';
@@ -141,9 +143,9 @@ final jioSaavnEnabledProvider = Provider<bool>((ref) {
   return state.whenOrNull(data: (s) => s.jioSaavnEnabled) ?? true;
 });
 
-/// Provider for dynamic album colors - updates when track changes
-/// Used across the app for dynamic theming (mini player, now playing, etc.)
-final albumColorsProvider =
+/// Colours from the playing song's artwork, always — what Now Playing (and
+/// the lyrics sheet) are painted with, whatever the Dynamic colours setting.
+final playerAlbumColorsProvider =
     StateNotifierProvider<AlbumColorsNotifier, AlbumColors>((ref) {
       final notifier = AlbumColorsNotifier();
 
@@ -169,6 +171,16 @@ final albumColorsProvider =
       return notifier;
     });
 
+/// Colours for the rest of the app (home, mini player, settings...): the
+/// artwork's when Dynamic colours is on, otherwise a neutral palette tinted
+/// by the user's accent.
+final albumColorsProvider = Provider<AlbumColors>((ref) {
+  if (!ref.watch(dynamicColorsEnabledProvider)) {
+    return AlbumColors.fromAccent(ref.watch(staticAccentColorProvider));
+  }
+  return ref.watch(playerAlbumColorsProvider);
+});
+
 /// Notifier for album colors extraction
 class AlbumColorsNotifier extends StateNotifier<AlbumColors> {
   AlbumColorsNotifier() : super(AlbumColors.defaultColors());
@@ -191,7 +203,7 @@ class AlbumColorsNotifier extends StateNotifier<AlbumColors> {
           artBytes,
           cacheKey: localPath,
         );
-        state = colors;
+        _apply(colors);
         return;
       }
     }
@@ -211,6 +223,13 @@ class AlbumColorsNotifier extends StateNotifier<AlbumColors> {
 
     // 3. Async extraction fallback (cache miss)
     final colors = await AlbumColorExtractor.extractFromUrl(url);
+    _apply(colors);
+  }
+
+  /// For results that arrive after an await: the notifier may have been
+  /// disposed in the meantime.
+  void _apply(AlbumColors colors) {
+    if (!mounted) return;
     state = colors;
   }
 

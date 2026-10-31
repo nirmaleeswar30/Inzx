@@ -106,12 +106,7 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
         _updateQueue(state.queue);
       }
 
-      unawaited(
-        WidgetSyncService.syncPlaybackState(
-          state,
-          statusLabel: _playerService.isJamsModeEnabled ? 'INZX JAM' : null,
-        ),
-      );
+      _syncWidget(state);
 
       DiscordRpcService.instance.updatePlayback(
         track: state.currentTrack,
@@ -146,16 +141,6 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
             ),
           );
         }
-
-        unawaited(
-          WidgetSyncService.syncProgress(
-            track: state.currentTrack,
-            isPlaying: state.isPlaying,
-            hasTrack: state.currentTrack != null,
-            position: position,
-            duration: state.duration,
-          ),
-        );
 
         if (state.isPlaying) {
           DiscordRpcService.instance.updatePlayback(
@@ -231,8 +216,8 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
     }
 
     Uri? artUri;
-    if (track.bestThumbnail != null && track.bestThumbnail!.trim().isNotEmpty) {
-      artUri = Uri.tryParse(track.bestThumbnail!);
+    if (track.systemArtworkUrl != null && track.systemArtworkUrl!.trim().isNotEmpty) {
+      artUri = Uri.tryParse(track.systemArtworkUrl!);
     } else if (track.localFilePath != null && track.localFilePath!.trim().isNotEmpty) {
       final cachedFile = LocalArtworkService.getCachedFile(track.localFilePath!);
       if (cachedFile != null) {
@@ -286,8 +271,8 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
           .map(
             (track) {
               Uri? artUri;
-              if (track.bestThumbnail != null && track.bestThumbnail!.trim().isNotEmpty) {
-                artUri = Uri.tryParse(track.bestThumbnail!);
+              if (track.systemArtworkUrl != null && track.systemArtworkUrl!.trim().isNotEmpty) {
+                artUri = Uri.tryParse(track.systemArtworkUrl!);
               } else if (track.localFilePath != null && track.localFilePath!.trim().isNotEmpty) {
                 final cachedFile = LocalArtworkService.getCachedFile(track.localFilePath!);
                 if (cachedFile != null) {
@@ -398,12 +383,25 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
     }
     if (_playerService.state.currentTrack?.id == trackId) {
       _updatePlaybackState(_playerService.state);
+      _syncWidget(_playerService.state);
     }
   }
 
   /// Manually trigger a refresh of the notification playback controls
   void refreshPlaybackControls() {
     _updatePlaybackState(_playerService.state);
+  }
+
+  /// Home screen widgets: track, play state, liked and shuffle.
+  void _syncWidget(player.PlaybackState state) {
+    final track = state.currentTrack;
+    unawaited(
+      WidgetSyncService.syncPlaybackState(
+        state,
+        statusLabel: _playerService.isJamsModeEnabled ? 'INZX JAM' : null,
+        isLiked: track != null && _isCurrentTrackLiked(track.id),
+      ),
+    );
   }
 
   bool _isCurrentTrackLiked(String trackId) {
@@ -581,7 +579,9 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
             id: p.id,
             title: p.title,
             artist: p.author ?? '',
-            artUri: p.thumbnailUrl != null ? Uri.parse(p.thumbnailUrl!) : null,
+            artUri: p.thumbnailUrl != null
+                ? Uri.parse(Track.upgradeArtworkUrl(p.thumbnailUrl!))
+                : null,
             playable: false,
             extras: <String, dynamic>{
               AndroidContentStyle.playableHintKey: AndroidContentStyle.listItemHintValue,
@@ -598,7 +598,9 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
             id: a.id,
             title: a.title,
             artist: a.artist,
-            artUri: a.bestThumbnail != null ? Uri.parse(a.bestThumbnail!) : null,
+            artUri: a.bestThumbnail != null
+                ? Uri.parse(Track.upgradeArtworkUrl(a.bestThumbnail!))
+                : null,
             playable: false,
             extras: <String, dynamic>{
               AndroidContentStyle.playableHintKey: AndroidContentStyle.listItemHintValue,
@@ -934,8 +936,8 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
 
   MediaItem _trackToMediaItem(Track track) {
     Uri? artUri;
-    if (track.bestThumbnail != null && track.bestThumbnail!.trim().isNotEmpty) {
-      artUri = Uri.tryParse(track.bestThumbnail!);
+    if (track.systemArtworkUrl != null && track.systemArtworkUrl!.trim().isNotEmpty) {
+      artUri = Uri.tryParse(track.systemArtworkUrl!);
     } else if (track.localFilePath != null && track.localFilePath!.trim().isNotEmpty) {
       final cachedFile = LocalArtworkService.getCachedFile(track.localFilePath!);
       if (cachedFile != null) {
@@ -960,7 +962,9 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
       id: item.videoId ?? item.playlistId ?? item.navigationId ?? item.id,
       title: item.title,
       artist: item.subtitle,
-      artUri: item.thumbnailUrl != null ? Uri.parse(item.thumbnailUrl!) : null,
+      artUri: item.thumbnailUrl != null
+          ? Uri.parse(Track.upgradeArtworkUrl(item.thumbnailUrl!))
+          : null,
       playable: isPlayable,
     );
   }

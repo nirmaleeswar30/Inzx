@@ -5,22 +5,23 @@ import '../services/jams/jams_models.dart';
 import '../services/jams/jams_sync_controller.dart';
 import '../services/audio_player_service.dart';
 import '../services/supabase_config.dart';
-import 'google_auth_provider.dart';
+import 'ytmusic_providers.dart';
 
 /// Check if Jams feature is available (Supabase configured + user signed in)
 final isJamsAvailableProvider = Provider<bool>((ref) {
-  final googleAuth = ref.watch(googleAuthStateProvider);
-  return SupabaseConfig.isAvailable && googleAuth.isSignedIn;
+  return SupabaseConfig.isAvailable && ref.watch(appAccountProvider) != null;
 });
 
 /// Jams service provider - requires Google auth and Supabase
 /// Uses keepAlive to maintain the same instance across screens
 final jamsServiceProvider = Provider<JamsService?>((ref) {
-  final googleAuth = ref.watch(googleAuthStateProvider);
-
-  if (!googleAuth.isSignedIn || googleAuth.user == null) {
-    return null; // Can't use Jams without Google sign-in
+  // Keyed on the account id only: the profile (name/photo) refreshing in the
+  // background must not tear down a live Jam service.
+  final accountId = ref.watch(appAccountProvider.select((a) => a?.stableId));
+  if (accountId == null) {
+    return null; // Jams needs the (single) YouTube Music sign-in
   }
+  final account = ref.read(appAccountProvider)!;
 
   if (!SupabaseConfig.isAvailable) {
     return null; // Supabase not configured
@@ -30,11 +31,10 @@ final jamsServiceProvider = Provider<JamsService?>((ref) {
   // This ensures the Realtime channel and session state persist across screens
   ref.keepAlive();
 
-  final user = googleAuth.user!;
   final service = JamsService(
-    oderId: user.id,
-    userName: user.displayName ?? 'Anonymous',
-    userPhotoUrl: user.photoUrl,
+    oderId: account.stableId,
+    userName: account.name ?? account.handle ?? 'Anonymous',
+    userPhotoUrl: account.avatarUrl,
   );
 
   // Dispose the service when the provider is disposed (e.g., on logout)

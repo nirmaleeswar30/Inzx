@@ -373,3 +373,12 @@ class _YTMusicLoginScreenState extends ConsumerState<YTMusicLoginScreen> {
     );
   }
 }
+
+/// Opens the app's single sign-in (Google account via YouTube Music).
+/// Returns true when the user signed in.
+Future<bool> openSignIn(BuildContext context) async {
+  final result = await Navigator.of(context).push<bool>(
+    MaterialPageRoute(builder: (_) => const YTMusicLoginScreen()),
+  );
+  return result == true;
+}

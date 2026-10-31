@@ -46,6 +46,7 @@ class YTMDrawer extends StatefulWidget {
   /// Whether vertical drag gestures are enabled
   final bool enableDrag;
 
+
   const YTMDrawer({
     super.key,
     required this.nowPlayingContent,
@@ -160,7 +161,10 @@ class YTMDrawerState extends State<YTMDrawer>
       return; // Don't process as drawer expansion
     } else if (_dismissDragOffset > 0 && delta < 0) {
       // Swiping back up while in dismiss state
-      _dismissDragOffset = (_dismissDragOffset + delta).clamp(0.0, double.infinity);
+      _dismissDragOffset = (_dismissDragOffset + delta).clamp(
+        0.0,
+        double.infinity,
+      );
       widget.onDismissDragUpdate?.call(_dismissDragOffset);
       setState(() {});
       return;
@@ -212,14 +216,8 @@ class YTMDrawerState extends State<YTMDrawer>
       final screenWidth = MediaQuery.of(context).size.width;
       final thirdWidth = screenWidth / 3;
 
-      int tabIndex;
-      if (_dragStartX < thirdWidth) {
-        tabIndex = 0; // Left third → UP NEXT
-      } else if (_dragStartX < thirdWidth * 2) {
-        tabIndex = 1; // Center third → LYRICS
-      } else {
-        tabIndex = 2; // Right third → RELATED
-      }
+      // Left third → LYRICS (where the lyrics button sits), rest → UP NEXT
+      final tabIndex = _dragStartX < thirdWidth ? 1 : 0;
 
       widget.onTabFromPosition?.call(tabIndex);
     }
@@ -251,10 +249,15 @@ class YTMDrawerState extends State<YTMDrawer>
             // Now Playing content (bottom layer)
             Opacity(
               opacity: nowPlayingOpacity.clamp(0.0, 1.0),
-              child: Transform.scale(
-                scale: albumScale,
-                alignment: Alignment.topCenter,
-                child: widget.nowPlayingContent,
+              // Fully covered by the sheet: stop its animations (marquees,
+              // waveform, equalizers) instead of ticking them unseen.
+              child: TickerMode(
+                enabled: _dragProgress < 1.0,
+                child: Transform.scale(
+                  scale: albumScale,
+                  alignment: Alignment.topCenter,
+                  child: widget.nowPlayingContent,
+                ),
               ),
             ),
 
@@ -268,58 +271,73 @@ class YTMDrawerState extends State<YTMDrawer>
               right: 0,
               top: drawerTopOffset,
               height: screenHeight,
-              child: Opacity(
-                opacity: upNextOpacity,
-                child: Container(
-                  // Background for Up Next panel (gradient or solid)
-                  decoration: widget.surfaceDecoration ??
-                      BoxDecoration(
-                        color: widget.surfaceColor,
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(16),
-                        ),
-                      ),
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(16),
-                    ),
-                    child: SafeArea(
-                      top: true,
-                      bottom: false,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Drag handle
-                          GestureDetector(
-                            onTap: collapse,
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              child: Center(
-                                child: Container(
-                                  width: 40,
-                                  height: 4,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white30,
-                                    borderRadius: BorderRadius.circular(2),
+              // Collapsed: keep the sheet's state but don't lay it out, paint
+              // it or tick its animations (lyrics clock, queue equalizer).
+              child: Offstage(
+                offstage: _dragProgress == 0.0,
+                child: TickerMode(
+                  enabled: _dragProgress > 0.0,
+                  child: Opacity(
+                    opacity: upNextOpacity,
+                    child: KeyedSubtree(
+                      child: Container(
+                        // Background for Up Next panel (gradient or solid)
+                        decoration: widget.surfaceDecoration ??
+                                  BoxDecoration(
+                                    color: widget.surfaceColor,
+                                    borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(16),
+                                    ),
+                                  ),
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(16),
+                          ),
+                          child: SafeArea(
+                            top: true,
+                            bottom: false,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Drag handle
+                                GestureDetector(
+                                  onTap: collapse,
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                    child: Center(
+                                      child: Container(
+                                        width: 40,
+                                        height: 4,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white30,
+                                          borderRadius: BorderRadius.circular(
+                                            2,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
+
+                                // Expanded header (mini player style)
+                                if (widget.expandedHeader != null)
+                                  widget.expandedHeader!,
+
+                                // Tabs bar (UP NEXT | LYRICS | RELATED)
+                                if (widget.tabsWidget != null)
+                                  widget.tabsWidget!,
+
+                                // Tab content - takes remaining space
+                                Expanded(
+                                  child: ClipRect(child: widget.upNextContent),
+                                ),
+                              ],
                             ),
                           ),
-
-                          // Expanded header (mini player style)
-                          if (widget.expandedHeader != null)
-                            widget.expandedHeader!,
-
-                          // Tabs bar (UP NEXT | LYRICS | RELATED)
-                          if (widget.tabsWidget != null) widget.tabsWidget!,
-
-                          // Tab content - takes remaining space
-                          Expanded(
-                            child: ClipRect(child: widget.upNextContent),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -339,3 +357,4 @@ extension YTMDrawerControllerX on GlobalKey<YTMDrawerState> {
   void collapse() => currentState?.collapse();
   void toggle() => currentState?.toggle();
 }
+
