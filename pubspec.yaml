@@ -90,6 +90,12 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.1
   flutter_native_splash: ^2.4.2
 
+dependency_overrides:
+  # just_audio 0.9.46 plus one hook for the app's ExoPlayer renderers
+  # (hi-res output, FFmpeg decoder, bit-perfect USB). See its README.
+  just_audio:
+    path: packages/just_audio
+
 # The following section is specific to Flutter packages.
 flutter:
   generate: true

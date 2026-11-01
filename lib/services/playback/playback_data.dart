@@ -24,6 +24,9 @@ class AudioFormat {
   final int? averageBitrate;
   final bool isAudioOnly;
 
+  /// Bit depth for lossless streams (16, 24…); null for lossy ones.
+  final int? bitsPerSample;
+
   const AudioFormat({
     required this.mimeType,
     required this.bitrate,
@@ -33,7 +36,33 @@ class AudioFormat {
     this.contentLength,
     this.averageBitrate,
     this.isAudioOnly = true,
+    this.bitsPerSample,
   });
+
+  bool get isLossless {
+    final c = '${codecs ?? ''} $mimeType'.toLowerCase();
+    return c.contains('flac') || c.contains('alac');
+  }
+
+  /// "Hi-Res Lossless" above CD quality (more than 16-bit or 48 kHz),
+  /// "Lossless" at it; null for lossy formats.
+  String? get losslessTier {
+    if (!isLossless) return null;
+    final hiRes =
+        (bitsPerSample ?? 16) > 16 || (sampleRate ?? 44100) > 48000;
+    return hiRes ? 'Hi-Res Lossless' : 'Lossless';
+  }
+
+  /// "24-bit / 96 kHz", "44.1 kHz", or null when the rate isn't known.
+  String? get resolutionLabel {
+    final rate = sampleRate;
+    if (rate == null) return null;
+    final k = rate / 1000;
+    final khz =
+        k == k.roundToDouble() ? k.toStringAsFixed(0) : k.toStringAsFixed(1);
+    final depth = bitsPerSample;
+    return depth != null ? '$depth-bit / $khz kHz' : '$khz kHz';
+  }
 
   /// Check if this is an Opus format (preferred)
   bool get isOpus =>
@@ -253,7 +282,20 @@ class PlaybackData {
   int get bitrateKbps => (format.bitrate / 1000).round();
 
   /// Formatted stats for nerds summary (e.g. "AAC • 320 kbps • JioSaavn")
-  String get statsSummary => '$codecName • $bitrateKbps kbps • $audioSource';
+  /// Lossless streams show their exact format instead ("FLAC • 24-bit /
+  /// 96 kHz • LastWave"): a bitrate says little about a FLAC.
+  ///
+  /// For lossless the last part is the tier ("Lossless" / "Hi-Res
+  /// Lossless") rather than who served it; the provider is in the Signal
+  /// path sheet.
+  String get statsSummary {
+    final resolution = format.resolutionLabel;
+    final tier = format.losslessTier;
+    if (tier != null && resolution != null) {
+      return '$codecName • $resolution • $tier';
+    }
+    return '$codecName • $bitrateKbps kbps • $audioSource';
+  }
 
   PlaybackData copyWith({
     AudioConfig? audioConfig,

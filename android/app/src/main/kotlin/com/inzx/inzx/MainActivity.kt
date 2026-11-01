@@ -11,6 +11,8 @@ import android.media.AudioManager
 import android.media.AudioDeviceInfo
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
+import com.nirmal.inzx.audio.InzxAudioOutput
+import com.nirmal.inzx.automix.AutomixBridge
 import com.nirmal.inzx.jams.JamsForegroundService
 import com.nirmal.inzx.widget.InzxWidgets
 import com.ryanheise.audioservice.AudioServiceFragmentActivity
@@ -34,6 +36,19 @@ class MainActivity : AudioServiceFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        // Automix analysis (BitChord's engine) <-> Dart.
+        AutomixBridge.attach(this, flutterEngine.dartExecutor.binaryMessenger)
+        com.nirmal.inzx.audio.AutoEqBridge.attach(this, flutterEngine.dartExecutor.binaryMessenger)
+
+        // Audio output (hi-res / bit-perfect) status for the Signal path sheet.
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "inzx/audio_output")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "describe" -> result.success(InzxAudioOutput.describe())
+                    else -> result.notImplemented()
+                }
+            }
 
         val ROUTING_CHANNEL = "inzx/audio_routing"
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ROUTING_CHANNEL).setMethodCallHandler { call, result ->
@@ -143,6 +158,31 @@ class MainActivity : AudioServiceFragmentActivity() {
                         result.success(true)
                     } catch (e: Exception) {
                         result.error("INTENT_ERROR", e.message, null)
+                    }
+                }
+                "getOutputInfo" -> {
+                    // What the shared Android mixer runs at: a stream at any
+                    // other rate is resampled to this before the device.
+                    try {
+                        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                        val rate = audioManager
+                            .getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE)
+                            ?.toIntOrNull()
+                        val frames = audioManager
+                            .getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER)
+                            ?.toIntOrNull()
+                        val music = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                        val musicMax = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                        result.success(
+                            mapOf(
+                                "mixerSampleRate" to rate,
+                                "framesPerBuffer" to frames,
+                                "systemVolume" to music,
+                                "systemVolumeMax" to musicMax,
+                            )
+                        )
+                    } catch (e: Exception) {
+                        result.success(null)
                     }
                 }
                 "getVolume" -> {

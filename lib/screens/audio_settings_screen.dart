@@ -6,6 +6,13 @@ import '../core/l10n/app_localizations_x.dart';
 import '../../core/providers/theme_provider.dart';
 import '../providers/providers.dart';
 import '../services/playback/playback_data.dart';
+import 'widgets/addon_source_card.dart';
+import 'widgets/audio_output_card.dart';
+import 'widgets/automix_settings_card.dart';
+import '../services/automix/automix_service.dart';
+import 'equalizer_screen.dart';
+import 'auto_eq_screen.dart';
+import '../services/addons/addon_service.dart';
 
 /// Audio settings screen with quality selection
 class AudioSettingsScreen extends ConsumerWidget {
@@ -84,75 +91,92 @@ class AudioSettingsScreen extends ConsumerWidget {
 
           const SizedBox(height: 16),
 
-          // Quality options
-          _buildQualityOption(
-            context,
-            ref: ref,
-            isDark: isDark,
-            accentColor: accentColor,
-            quality: AudioQuality.auto,
-            currentQuality: currentQuality,
-            title: l10n.qualityAutoChip,
-            subtitle: 'Adapts automatically to network connection',
-            icon: Iconsax.autobrightness,
-            onTap: () => playerService.setAudioQuality(AudioQuality.auto),
-          ),
-
-          _buildQualityOption(
-            context,
-            ref: ref,
-            isDark: isDark,
-            accentColor: accentColor,
-            quality: AudioQuality.low,
-            currentQuality: currentQuality,
-            title: l10n.qualityLowChip,
-            subtitle: '~48–64 kbps • Data saver',
-            icon: Iconsax.volume_low,
-            onTap: () => playerService.setAudioQuality(AudioQuality.low),
-          ),
-
-          _buildQualityOption(
-            context,
-            ref: ref,
-            isDark: isDark,
-            accentColor: accentColor,
-            quality: AudioQuality.medium,
-            currentQuality: currentQuality,
-            title: l10n.qualityMediumChip,
-            subtitle: '~70–128 kbps • Balanced',
-            icon: Iconsax.volume_high,
-            onTap: () => playerService.setAudioQuality(AudioQuality.medium),
-          ),
-
-          _buildQualityOption(
-            context,
-            ref: ref,
-            isDark: isDark,
-            accentColor: accentColor,
-            quality: AudioQuality.high,
-            currentQuality: currentQuality,
-            title: l10n.qualityHighChip,
-            subtitle: jioSaavnEnabled
-                ? '~160 kbps YouTube • Up to 320 kbps with JioSaavn'
-                : '~160 kbps Opus • Best for most',
-            icon: Iconsax.headphones,
-            recommended: true,
-            onTap: () => playerService.setAudioQuality(AudioQuality.high),
-          ),
-
-          _buildQualityOption(
-            context,
-            ref: ref,
-            isDark: isDark,
-            accentColor: accentColor,
-            quality: AudioQuality.max,
-            currentQuality: currentQuality,
-            title: l10n.qualityMaxChip,
-            subtitle: jioSaavnEnabled
-                ? 'Highest available (320 kbps JioSaavn / 160 kbps YouTube)'
-                : 'Highest available (~160 kbps Opus)',
-            icon: Iconsax.sound,
-            onTap: () => playerService.setAudioQuality(AudioQuality.max),
+          // Quality options. What each one does (see the player's
+          // _qualityAllowsLossless): Low/Medium are YouTube only, High is
+          // the best lossy copy, Max adds lossless, Auto is Max on Wi-Fi
+          // and lighter on mobile data.
+          ListenableBuilder(
+            listenable: AddonService.instance,
+            builder: (context, _) {
+              final hasLossless = AddonService.instance.isEnabled;
+              final bestLossy = jioSaavnEnabled
+                  ? 'up to 320 kbps (JioSaavn) or ~160 kbps Opus'
+                  : '~160 kbps Opus';
+              return Column(
+                children: [
+                  _buildQualityOption(
+                    context,
+                    ref: ref,
+                    isDark: isDark,
+                    accentColor: accentColor,
+                    quality: AudioQuality.auto,
+                    currentQuality: currentQuality,
+                    title: l10n.qualityAutoChip,
+                    subtitle: hasLossless
+                        ? 'Wi-Fi: lossless FLAC • Mobile data: lossy, lighter'
+                        : 'Wi-Fi: best quality • Mobile data: lighter',
+                    icon: Iconsax.autobrightness,
+                    onTap: () =>
+                        playerService.setAudioQuality(AudioQuality.auto),
+                  ),
+                  _buildQualityOption(
+                    context,
+                    ref: ref,
+                    isDark: isDark,
+                    accentColor: accentColor,
+                    quality: AudioQuality.low,
+                    currentQuality: currentQuality,
+                    title: l10n.qualityLowChip,
+                    subtitle: '~48–64 kbps • Data saver, YouTube only',
+                    icon: Iconsax.volume_low,
+                    onTap: () =>
+                        playerService.setAudioQuality(AudioQuality.low),
+                  ),
+                  _buildQualityOption(
+                    context,
+                    ref: ref,
+                    isDark: isDark,
+                    accentColor: accentColor,
+                    quality: AudioQuality.medium,
+                    currentQuality: currentQuality,
+                    title: l10n.qualityMediumChip,
+                    subtitle: '~70–128 kbps • Balanced, YouTube only',
+                    icon: Iconsax.volume_high,
+                    onTap: () =>
+                        playerService.setAudioQuality(AudioQuality.medium),
+                  ),
+                  _buildQualityOption(
+                    context,
+                    ref: ref,
+                    isDark: isDark,
+                    accentColor: accentColor,
+                    quality: AudioQuality.high,
+                    currentQuality: currentQuality,
+                    title: l10n.qualityHighChip,
+                    subtitle: 'Best lossy: $bestLossy',
+                    icon: Iconsax.headphones,
+                    onTap: () =>
+                        playerService.setAudioQuality(AudioQuality.high),
+                  ),
+                  _buildQualityOption(
+                    context,
+                    ref: ref,
+                    isDark: isDark,
+                    accentColor: accentColor,
+                    quality: AudioQuality.max,
+                    currentQuality: currentQuality,
+                    title: l10n.qualityMaxChip,
+                    subtitle: hasLossless
+                        ? 'Lossless / Hi-Res FLAC when found, else best lossy'
+                        : 'Best lossy ($bestLossy) • Lossless with an addon',
+                    icon: Iconsax.sound,
+                    recommended: true,
+                    onTap: () =>
+                        playerService.setAudioQuality(AudioQuality.max),
+                  ),
+                ],
+              );
+            },
           ),
 
           const SizedBox(height: 32),
@@ -185,25 +209,15 @@ class AudioSettingsScreen extends ConsumerWidget {
             },
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Icon(
-                Iconsax.timer_1,
-                size: 16,
-                color: isDark ? Colors.white38 : InzxColors.textTertiary,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'More high quality sources coming soon',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontStyle: FontStyle.italic,
-                    color: isDark ? Colors.white38 : InzxColors.textTertiary,
-                  ),
-                ),
-              ),
-            ],
+          AddonSourceCard(
+            isDark: isDark,
+            accentColor: accentColor,
+            switchBuilder: (value, onChanged) => _buildCustomSwitch(
+              value: value,
+              accentColor: accentColor,
+              isDark: isDark,
+              onChanged: onChanged,
+            ),
           ),
 
           const SizedBox(height: 32),
@@ -224,14 +238,87 @@ class AudioSettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
-          _buildCrossfadeSection(
-            context: context,
+          // Automix decides its own length from each pair of tracks, so the
+          // slider only shows while Automix is off (as in BitChord).
+          ListenableBuilder(
+            listenable: AutomixService.instance,
+            builder: (context, _) => AutomixService.instance.enabled
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _buildCrossfadeSection(
+                      context: context,
+                      isDark: isDark,
+                      accentColor: accentColor,
+                      currentDurationMs: crossfadeDurationMs,
+                      onChanged: (value) async {
+                        await playerService.setCrossfadeDurationMs(value);
+                      },
+                    ),
+                  ),
+          ),
+          AutomixSettingsCard(
             isDark: isDark,
             accentColor: accentColor,
-            currentDurationMs: crossfadeDurationMs,
-            onChanged: (value) async {
-              await playerService.setCrossfadeDurationMs(value);
-            },
+            switchBuilder: (value, onChanged) => _buildCustomSwitch(
+              value: value,
+              accentColor: accentColor,
+              isDark: isDark,
+              onChanged: onChanged,
+            ),
+          ),
+
+          const SizedBox(height: 32),
+
+          // Output: hi-res and bit-perfect USB DAC
+          Text(
+            'Output',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : InzxColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'How lossless audio leaves the app',
+            style: TextStyle(
+              fontSize: 14,
+              color: isDark ? Colors.white54 : InzxColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          AudioOutputCard(
+            isDark: isDark,
+            accentColor: accentColor,
+            switchBuilder: (value, onChanged) => _buildCustomSwitch(
+              value: value,
+              accentColor: accentColor,
+              isDark: isDark,
+              onChanged: onChanged,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildNavCard(
+            isDark: isDark,
+            accentColor: accentColor,
+            icon: Iconsax.setting_4,
+            title: 'Equalizer',
+            subtitle: '7 bands with presets',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const EqualizerScreen()),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildNavCard(
+            isDark: isDark,
+            accentColor: accentColor,
+            icon: Iconsax.headphone,
+            title: 'AutoEQ',
+            subtitle: 'Correct your headphones with the AutoEQ database',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const AutoEqScreen()),
+            ),
           ),
 
           const SizedBox(height: 32),
@@ -397,11 +484,80 @@ class AudioSettingsScreen extends ConsumerWidget {
     );
   }
 
+  /// A card that opens another screen, styled like the switch cards.
+  Widget _buildNavCard({
+    required bool isDark,
+    required Color accentColor,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade100,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isDark ? Colors.white12 : accentColor.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: accentColor, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : InzxColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark ? Colors.white54 : InzxColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: isDark ? Colors.white38 : InzxColors.textTertiary,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildCustomSwitch({
     required bool value,
     required Color accentColor,
     required bool isDark,
-    required ValueChanged<bool> onChanged,
+    // Null shows the switch disabled.
+    required ValueChanged<bool>? onChanged,
   }) {
     return Switch(
       value: value,

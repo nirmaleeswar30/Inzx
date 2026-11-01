@@ -39,6 +39,10 @@ import 'jam_indicator_badge.dart';
 import 'jams_panel.dart';
 import 'package:share_plus/share_plus.dart';
 import 'audio_routing_pill.dart';
+import 'signal_path_sheet.dart';
+import 'lossless_badge.dart';
+import 'automix_mix_pulse.dart';
+import 'automix_stats_line.dart';
 import 'now_playing_bottom_bar.dart';
 import 'canvas_ambient_glow.dart';
 import '../../services/deep_link_handler.dart';
@@ -74,6 +78,8 @@ class _NowPlayingProgressBar extends ConsumerStatefulWidget {
 
 class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
     with TickerProviderStateMixin {
+  /// Automix's beat clock: the planned window, the blend's fill and pulse.
+  late final AutomixMixPulse _mixPulse;
   late final AnimationController _scaleController;
   late final Animation<double> _trackHeightAnim;
   late final Animation<double> _thumbRadiusAnim;
@@ -89,6 +95,7 @@ class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
   @override
   void initState() {
     super.initState();
+    _mixPulse = AutomixMixPulse(this);
     _scaleController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 200),
@@ -131,6 +138,7 @@ class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
 
   @override
   void dispose() {
+    _mixPulse.dispose();
     _spectrumZoomAnim.dispose();
     _scaleController.dispose();
     _wavePhaseController.dispose();
@@ -422,18 +430,37 @@ class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
               )
             else
               AnimatedBuilder(
-                animation: _scaleController,
+                animation: Listenable.merge([_scaleController, _mixPulse]),
                 builder: (context, child) {
+                  // Automix (BitChord's ThinSlider): during a blend the fill
+                  // glides out to the full bar and pulses on the beat; the
+                  // planned window shows as a feathered band. A drag shows
+                  // the plain position.
+                  final cover = _isSeeking
+                      ? 0.0
+                      : AutomixMixPulse.eased(_mixPulse.cover);
+                  final shownMs = (displayMs + (maxMs - displayMs) * cover)
+                      .clamp(0.0, maxMs);
+                  final accent = widget.accentColor;
+                  final fillAlpha = _isSeeking
+                      ? accent.a
+                      : _mixPulse.alpha(accent.a);
                   return SliderTheme(
                     data: SliderThemeData(
                       trackHeight: _trackHeightAnim.value,
                       thumbShape: RoundSliderThumbShape(
-                        enabledThumbRadius: _thumbRadiusAnim.value,
+                        enabledThumbRadius: _thumbRadiusAnim.value * (1 - cover),
                       ),
                       overlayShape: RoundSliderOverlayShape(
                         overlayRadius: widget.isCompact ? 10 : 14,
                       ),
-                      activeTrackColor: widget.accentColor,
+                      trackShape: AutomixWindowTrackShape(
+                        windowStart: _mixPulse.windowStart,
+                        windowEnd: _mixPulse.windowEnd,
+                        windowAlpha: _mixPulse.windowAlpha,
+                        markerColor: accent.withValues(alpha: 0.5),
+                      ),
+                      activeTrackColor: accent.withValues(alpha: fillAlpha),
                       inactiveTrackColor: widget.textColor.withValues(
                         alpha: 0.2,
                       ),
@@ -441,7 +468,7 @@ class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
                       overlayColor: widget.accentColor.withValues(alpha: 0.2),
                     ),
                     child: Slider(
-                      value: displayMs.clamp(0.0, maxMs),
+                      value: shownMs,
                       min: 0,
                       max: maxMs,
                       onChangeStart: _onSeekStart,
@@ -466,6 +493,30 @@ class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
                     style: TextStyle(
                       fontSize: 12,
                       color: widget.secondaryColor,
+                    ),
+                  ),
+                  // Lossless / Hi-Res Lossless, only while one plays; during
+                  // an Automix blend "Mixing" takes its place (BitChord).
+                  Flexible(
+                    child: AnimatedBuilder(
+                      animation: _mixPulse,
+                      builder: (context, _) {
+                        final cover = AutomixMixPulse.eased(_mixPulse.cover);
+                        return Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Opacity(
+                              opacity: 1 - cover,
+                              child: LosslessBadge(color: widget.secondaryColor),
+                            ),
+                            if (cover > 0)
+                              AutomixMixingLabel(
+                                pulse: _mixPulse,
+                                color: widget.secondaryColor,
+                              ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                   Text(
@@ -4500,7 +4551,16 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                 ),
                 if (hasSubtext) ...[
                   const SizedBox(height: 2),
-                  SizedBox(
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    // Stats line → the full signal path.
+                    onTap: isDisplayingStats
+                        ? () => SignalPathSheet.show(
+                            context,
+                            accentColor: ref.read(playerAlbumColorsProvider).accent,
+                          )
+                        : null,
+                    child: SizedBox(
                     height: 18,
                     width: (isInJam && showJamIndicator) ? 150 : 220,
                     child: AnimatedSwitcher(
@@ -4563,7 +4623,15 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                       ),
                     ),
                   ),
+                  ),
                 ],
+                // Automix's line, under the stream stats.
+                if (hasStats)
+                  AutomixStatsLine(
+                    color: secondaryColor.withValues(alpha: 0.75),
+                    fontSize: 9.5,
+                    width: (isInJam && showJamIndicator) ? 150 : 220,
+                  ),
               ],
             ),
           ),

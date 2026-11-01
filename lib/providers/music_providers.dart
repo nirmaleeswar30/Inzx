@@ -798,7 +798,7 @@ final loopModeProvider = Provider<LoopMode>((ref) {
 /// Provider for audio quality setting
 final audioQualityProvider = Provider<AudioQuality>((ref) {
   final state = ref.watch(playbackStateProvider);
-  return state.whenOrNull(data: (s) => s.audioQuality) ?? AudioQuality.auto;
+  return state.whenOrNull(data: (s) => s.audioQuality) ?? AudioQuality.max;
 });
 
 /// Provider for "pre-cache on Wi-Fi only" setting

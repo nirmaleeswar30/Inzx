@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -28,6 +29,7 @@ import 'services/deep_link_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'screens/widgets/whats_new_dialog.dart';
+import 'services/scrobbling/scrobble_service.dart';
 
 InzxAudioHandler? audioHandler;
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
@@ -129,6 +131,10 @@ void main() async {
   // Liquid glass lens + highlight shaders (glass falls back to blur + tint
   // without a lens if they can't load).
   await GlassShaders.ensureLoaded();
+
+  // Last.fm / ListenBrainz: follows the player from here on (no-op until an
+  // account is connected).
+  unawaited(ScrobbleService.instance.start());
 
   // Set preferred orientations & enable edge-to-edge
   SystemChrome.setPreferredOrientations([

@@ -1204,6 +1204,12 @@ class YTPlayerUtils {
   int getClientFailures(String clientName) => _clientFailures[clientName] ?? 0;
 
   /// Check if playback data is cached for a video
+  /// YouTube's loudness figure for [videoId] (how far above its reference
+  /// level the track sits), if a player response for it is cached. Loudness
+  /// normalization levels each song by minus this.
+  double? loudnessDbFor(String videoId) =>
+      _cache[videoId]?.audioConfig?.loudnessDb;
+
   bool hasCachedData(String videoId) {
     final cached = _cache[videoId];
     if (cached != null && cached.isValid) return true;

@@ -18,6 +18,10 @@ import 'ripple_circular_progress_scrubber.dart';
 import 'ripple_flower_clipper.dart';
 import 'jam_indicator_badge.dart';
 import 'explicit_badge.dart';
+import 'signal_path_sheet.dart';
+import 'lossless_badge.dart';
+import 'automix_mix_pulse.dart';
+import 'automix_stats_line.dart';
 
 /// The 'Ripple' minimalist Now Playing screen layout.
 /// Features an 8-petal wavy album art mask, concentric waveform seek ring,
@@ -406,6 +410,14 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
                     height: 16,
                     child: GestureDetector(
                       onTap: () {
+                        if (isDisplayingStats) {
+                          SignalPathSheet.show(
+                            context,
+                            accentColor:
+                                ref.read(playerAlbumColorsProvider).accent,
+                          );
+                          return;
+                        }
                         if (hasQueueTitle && hasStats) {
                            setState(() {
                              _showStatsInsteadOfTitle = !_showStatsInsteadOfTitle;
@@ -429,6 +441,13 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
                     ),
                   ),
                 ],
+                // Automix's line, under the stream stats.
+                if (hasStats)
+                  AutomixStatsLine(
+                    color: widget.secondaryTextColor.withValues(alpha: 0.75),
+                    fontSize: 9.5,
+                    width: 220,
+                  ),
               ],
             ),
           ),
@@ -727,7 +746,7 @@ class _RippleTimeReadoutState extends ConsumerState<_RippleTimeReadout>
       current = streamPos;
     }
 
-    return Text.rich(
+    final times = Text.rich(
       TextSpan(
         style: const TextStyle(
           fontSize: 16,
@@ -753,6 +772,17 @@ class _RippleTimeReadoutState extends ConsumerState<_RippleTimeReadout>
           ),
         ],
       ),
+    );
+    // Lossless / Hi-Res Lossless under the times, only while one plays.
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        times,
+        LosslessOrMixingBadge(
+          badge: LosslessBadge(color: widget.secondaryTextColor, fontSize: 11.5),
+          color: widget.secondaryTextColor,
+        ),
+      ],
     );
   }
 }

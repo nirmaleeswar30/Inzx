@@ -14,6 +14,8 @@ import 'artist_screen.dart';
 import 'podcast_screen.dart' show PodcastScreen;
 import 'jam_indicator_badge.dart';
 import 'explicit_badge.dart';
+import 'signal_path_sheet.dart';
+import 'automix_stats_line.dart';
 
 /// The 'Cinematic' Now Playing screen layout.
 /// Features a full-width uncropped album artwork spanning the top half of the screen
@@ -202,10 +204,30 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
                           left: 24,
                           right: 24,
                           bottom: 10,
-                          child: IgnorePointer(
-                            child: Center(
-                              child: _buildNerdStatsText(statsSummary),
-                            ),
+                          // Only the text takes taps (→ signal path); the
+                          // art around it keeps its swipes.
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GestureDetector(
+                                onTap: () => SignalPathSheet.show(
+                                  context,
+                                  accentColor: ref
+                                      .read(playerAlbumColorsProvider)
+                                      .accent,
+                                ),
+                                child: _buildNerdStatsText(statsSummary),
+                              ),
+                              // Automix's line, under the stream stats.
+                              IgnorePointer(
+                                child: AutomixStatsLine(
+                                  color: widget.textColor.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
 

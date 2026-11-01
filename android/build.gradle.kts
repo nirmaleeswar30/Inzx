@@ -3,6 +3,15 @@ allprojects {
         google()
         mavenCentral()
     }
+    // Every Media3 module at one version, for the app and every plugin
+    // (just_audio, video_player…): Automix's audio sink, ported from
+    // BitChord, is written against Media3 1.11's AudioSink API, and mixed
+    // Media3 versions on one classpath break at runtime.
+    configurations.all {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "androidx.media3") useVersion("1.11.0")
+        }
+    }
 }
 
 val newBuildDir: Directory =

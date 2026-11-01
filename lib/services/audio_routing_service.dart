@@ -36,6 +36,16 @@ class AudioRoutingService {
     }
   }
 
+  /// The Android mixer's output rate and buffer size, and the music volume
+  /// step. Null fields when the platform won't say.
+  static Future<Map<String, dynamic>?> getOutputInfo() async {
+    try {
+      return await _channel.invokeMapMethod<String, dynamic>('getOutputInfo');
+    } catch (e) {
+      return null;
+    }
+  }
+
   static Future<double> getVolume() async {
     try {
       final vol = await _channel.invokeMethod<double>('getVolume');

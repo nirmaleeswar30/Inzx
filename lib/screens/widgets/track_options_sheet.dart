@@ -18,6 +18,8 @@ import 'podcast_screen.dart' show PodcastScreen;
 import 'playlist_picker_sheet.dart';
 import 'track_artwork_view.dart';
 import 'jams_panel.dart';
+import 'sleep_timer_sheet.dart';
+import '../../services/sleep_timer_service.dart';
 
 /// Track options bottom sheet
 /// Displays categorized, uniform options in glass section cards
@@ -271,6 +273,33 @@ class _TrackOptionsSheetState extends ConsumerState<TrackOptionsSheet> {
                               Navigator.pop(context);
                             },
                           ),
+
+                          // Sleep timer (only from the song that's playing)
+                          if (ref.watch(currentTrackProvider)?.id == track.id)
+                            ListenableBuilder(
+                              listenable: SleepTimerService.instance,
+                              builder: (context, _) {
+                                final left =
+                                    SleepTimerService.instance.remaining;
+                                return _buildOptionTile(
+                                  icon: Iconsax.timer_1,
+                                  iconColor: accentColor,
+                                  title: left == null
+                                      ? 'Sleep timer'
+                                      : 'Sleep timer · ${SleepTimerService.format(left, precise: true)} left',
+                                  textColor: textColor,
+                                  onTap: () {
+                                    final navigator = Navigator.of(context);
+                                    final sheetContext = navigator.context;
+                                    navigator.pop();
+                                    SleepTimerSheet.show(
+                                      sheetContext,
+                                      accentColor: accentColor,
+                                    );
+                                  },
+                                );
+                              },
+                            ),
 
                           // Play Next in Jam (Conditional)
                           Consumer(

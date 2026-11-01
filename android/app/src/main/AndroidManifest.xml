@@ -30,7 +30,7 @@
     
     <application
         android:label="Inzx"
-        android:name="${applicationName}"
+        android:name=".InzxApplication"
         android:icon="@mipmap/ic_launcher"
         android:largeHeap="true"
         android:requestLegacyExternalStorage="true"

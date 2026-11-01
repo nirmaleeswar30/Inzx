@@ -30,6 +30,9 @@ import '../services/discord/discord_rpc_service.dart';
 import 'discord_rich_presence_screen.dart';
 import 'widgets/discord_logo.dart';
 import 'widgets/ai_lyrics_settings_sheet.dart';
+import 'scrobbling_screen.dart';
+import 'equalizer_screen.dart';
+import '../services/scrobbling/scrobble_service.dart';
 
 /// Provider for sync service
 final ytMusicSyncServiceProvider = Provider<YTMusicSyncService>((ref) {
@@ -453,6 +456,24 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
         subtitle: 'Show your listening activity on Discord',
         icon: Iconsax.game,
         screen: const DiscordRichPresenceScreen(),
+      ),
+
+      // ── Scrobbling ────────────────────────────────────────────────────
+      _SearchableItem(
+        tags: ['scrobble', 'scrobbling', 'last.fm', 'lastfm', 'listenbrainz', 'libre.fm'],
+        title: 'Scrobbling',
+        subtitle: 'Last.fm and ListenBrainz',
+        icon: Iconsax.radar,
+        screen: const ScrobblingScreen(),
+      ),
+
+      // ── Equalizer ─────────────────────────────────────────────────────
+      _SearchableItem(
+        tags: ['equalizer', 'equaliser', 'eq', 'bass', 'treble', 'preset'],
+        title: 'Equalizer',
+        subtitle: '7 bands with presets',
+        icon: Iconsax.setting_4,
+        screen: const EqualizerScreen(),
       ),
 
       // ── App Logs & Diagnostics Screen ─────────────────────────────────
@@ -1684,6 +1705,28 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                 MaterialPageRoute(
                   builder: (_) => const DiscordRichPresenceScreen(),
                 ),
+              ),
+            );
+          },
+        ),
+        ListenableBuilder(
+          listenable: ScrobbleService.instance,
+          builder: (context, _) {
+            final svc = ScrobbleService.instance;
+            final connected = [
+              if (svc.lastFmSignedIn) 'Last.fm',
+              if (svc.listenBrainzSignedIn) 'ListenBrainz',
+            ];
+            return _settingsTile(
+              icon: Iconsax.radar,
+              iconBg: _accentColor,
+              title: 'Scrobbling',
+              subtitle: connected.isEmpty
+                  ? 'Last.fm and ListenBrainz'
+                  : 'Connected: ${connected.join(' & ')}',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ScrobblingScreen()),
               ),
             );
           },

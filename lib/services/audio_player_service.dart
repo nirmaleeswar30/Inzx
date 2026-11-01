@@ -11,6 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/models.dart';
 import 'playback/playback.dart';
 import 'jiosaavn/jiosaavn_service.dart';
+import 'addons/addon_service.dart';
+import 'automix/automix_service.dart';
 import 'ytmusic_api_service.dart';
 import 'ytmusic_auth_service.dart';
 import 'queue_persistence_service.dart';
@@ -93,7 +95,7 @@ class PlaybackState {
     this.loopMode = LoopMode.off,
     this.shuffleEnabled = false,
     this.error,
-    this.audioQuality = AudioQuality.auto,
+    this.audioQuality = AudioQuality.max,
     this.currentPlaybackData,
     this.queueRevision = 0,
     this.queueSourceId,
@@ -288,6 +290,11 @@ class AudioPlayerService {
     _loadNerdStatsSetting();
     _loadPreferAudioVersionsSetting();
     _loadJioSaavnSetting();
+    unawaited(AddonService.instance.load());
+    unawaited(AutomixService.instance.load());
+    AutomixService.instance.fetchAudio = fetchAnalysisAudio;
+    _wireAutomixEngine();
+    unawaited(_watchNetworkType());
     // Load persisted queue from previous session
     _loadPersistedQueue();
     // Eagerly restore InnerTube auth in background
@@ -374,7 +381,11 @@ class AudioPlayerService {
   LoopMode _loopMode = LoopMode.off;
   Track? _currentTrack;
   PlaybackData? _currentPlaybackData;
-  AudioQuality _audioQuality = AudioQuality.auto;
+  AudioQuality _audioQuality = AudioQuality.max;
+
+  /// Wi-Fi or ethernet right now, kept current by a connectivity listener
+  /// so quality checks don't have to wait on the platform.
+  bool _onUnmeteredNetwork = true;
   bool _streamCacheWifiOnly = false;
   int _streamCacheSizeLimitMb = kDefaultStreamCacheSizeLimitMb;
   int _streamCacheMaxConcurrent = kDefaultStreamCacheMaxConcurrent;
@@ -385,6 +396,7 @@ class AudioPlayerService {
   bool _jioSaavnEnabled = true;
   bool get jioSaavnEnabled => _jioSaavnEnabled;
   int _upgradeSessionId = 0;
+  int _losslessUpgradeId = 0;
   String?
   _queueSourceId; // Track which playlist/album/artist started this queue
   String?
@@ -923,6 +935,21 @@ class AudioPlayerService {
       }
     }
 
+    // Crossfading into a track whose lossless copy was resolved ahead of
+    // time: fade straight into the FLAC.
+    if (_qualityAllowsLossless) {
+      final lossless = AddonService.instance.cachedFor(track);
+      if (lossless != null) {
+        _logLossless('Crossfading straight into ${lossless.stream.formatLabel}');
+        return (
+          source: _addonAudioSource(lossless, track),
+          // This track isn't current yet; its history tracking is resolved
+          // once it is, so don't carry the outgoing track's over.
+          playbackData: _addonPlaybackData(lossless, forCurrentTrack: false),
+        );
+      }
+    }
+
     final result = await _ytPlayerUtils.playerResponseForPlayback(
       track.id,
       quality: _audioQuality,
@@ -968,6 +995,7 @@ class AudioPlayerService {
     }
 
     _isCrossfading = true;
+    var crossfadeSucceeded = false;
     final outgoingPlayer = _player;
     final incomingPlayer = _inactivePlayer;
     final targetTrack = _queue[targetIndex];
@@ -1088,6 +1116,7 @@ class AudioPlayerService {
           'AudioPlayerService: Crossfade completed on ${targetTrack.id}, incomingVolume=${incomingPlayer.volume.toStringAsFixed(2)}',
         );
       }
+      crossfadeSucceeded = true;
     } catch (e) {
       if (kDebugMode) {
         print(
@@ -1097,14 +1126,26 @@ class AudioPlayerService {
       _player = outgoingPlayer;
       _currentIndex = targetIndex;
       _currentTrack = _queue[targetIndex];
+      // (The hard switch goes through the normal load, which upgrades.)
       await _loadAndPlayCurrent();
     } finally {
       _isCrossfading = false;
+    }
+    // Most tracks start here (crossfade is on by default), so this is where
+    // the second look for a lossless copy matters most.
+    final arrived = _currentTrack;
+    if (crossfadeSucceeded &&
+        arrived != null &&
+        arrived.id == targetTrack.id &&
+        _currentPlaybackData?.isLive != true) {
+      unawaited(_upgradeToLosslessIfPossible(arrived));
     }
   }
 
   void _maybeTriggerAutoCrossfade(Duration currentPosition) {
     if (_jamsModeEnabled) return;
+    // With Automix on, the engine plans and runs every transition.
+    if (_automixOn) return;
     if (_crossfadeDurationMs <= 0) return;
     if (_isCrossfading) return;
     if (_crossfadeTriggeredForTrack) return;
@@ -1851,6 +1892,20 @@ class AudioPlayerService {
           continue;
         }
 
+        // A track that will play lossless never uses its YouTube file, so
+        // don't spend data downloading one. (The lossless copy itself isn't
+        // pre-downloaded: a FLAC is ~10x the size, so it streams instead.)
+        if (_qualityAllowsLossless && AddonService.instance.isEnabled) {
+          final lossless = await AddonService.instance.matchFor(track);
+          if (lossless != null) {
+            _logLossless(
+              'Skipping YouTube pre-cache for ${track.id}: will play '
+              '${lossless.stream.formatLabel}',
+            );
+            continue;
+          }
+        }
+
         if (kDebugMode) {
           print('AudioPlayerService: Pre-cache candidate ${track.id}');
         }
@@ -1946,6 +2001,7 @@ class AudioPlayerService {
           }
         }
         await _touchCacheFile(cacheFile);
+        _offerToAutomix(track, cacheFile.path);
         return;
       }
       await _deleteAudioCacheArtifact(cacheFile);
@@ -2084,6 +2140,8 @@ class AudioPlayerService {
       }
       await tempFile.rename(cacheFile.path);
       await _touchCacheFile(cacheFile);
+      // A whole YouTube file is what Automix analyses this track from.
+      _offerToAutomix(track, cacheFile.path);
       _stopLiveCacheProgressLogger(cacheFile.path);
       if (kDebugMode) {
         if (expectedBytes != null && expectedBytes > 0) {
@@ -2196,6 +2254,8 @@ class AudioPlayerService {
   /// Enable/disable Jams mode (external controller handles track completion)
   void setJamsMode(bool enabled) {
     _jamsModeEnabled = enabled;
+    // Jams never automix (every member would mix at a different moment).
+    unawaited(AutomixService.instance.setInJam(enabled));
     if (kDebugMode) {
       print(
         'AudioPlayerService: Jams mode ${enabled ? "enabled" : "disabled"}',
@@ -2265,6 +2325,26 @@ class AudioPlayerService {
 
   /// Current track
   Track? get currentTrack => _currentTrack;
+
+  // Read-outs for the Signal path sheet.
+  double get currentSpeed => _player.speed;
+  double get currentVolume => _player.volume;
+  bool get isUpgradingStream => _isUpgradingStream;
+  bool get isOnUnmeteredNetwork => _onUnmeteredNetwork;
+
+  /// How much audio is downloaded past the playhead right now.
+  Duration get bufferedAhead {
+    final ahead = _player.bufferedPosition - _player.position;
+    return ahead.isNegative ? Duration.zero : ahead;
+  }
+
+  Future<void> _watchNetworkType() async {
+    _onUnmeteredNetwork = await _isConnectedToWifi();
+    _connectivity.onConnectivityChanged.listen((connections) {
+      _onUnmeteredNetwork = connections.contains(ConnectivityResult.wifi) ||
+          connections.contains(ConnectivityResult.ethernet);
+    });
+  }
 
   /// Current queue
   List<Track> get queue => List.unmodifiable(_queue);
@@ -2946,6 +3026,16 @@ class AudioPlayerService {
     if (newState != _stateController.value) {
       _stateController.add(newState);
     }
+
+    // The Automix engine follows the song, the queue and the loop mode.
+    if (currentTrack != null ||
+        queue != null ||
+        currentIndex != null ||
+        queueRevision != null ||
+        loopMode != null ||
+        speed != null) {
+      _scheduleAutomixSync();
+    }
   }
 
   /// Start radio mode based on a track.
@@ -3530,6 +3620,27 @@ class AudioPlayerService {
         }
       }
 
+      // 0. A lossless copy already resolved (prefetched while the previous
+      // track played) starts straight away; otherwise the track starts on
+      // whatever answers first and is upgraded once lossless turns up.
+      if (_qualityAllowsLossless) {
+        final cachedLossless = AddonService.instance.cachedFor(_currentTrack!);
+        if (cachedLossless != null) {
+          try {
+            await _playAddonStream(
+              cachedLossless,
+              _currentTrack!,
+              resolveTimeMs: stopwatch.elapsedMilliseconds,
+            );
+            return;
+          } catch (e) {
+            if (kDebugMode) {
+              print('AudioPlayerService: Lossless start failed, falling back: $e');
+            }
+          }
+        }
+      }
+
       // 1. Check if JioSaavn stream is requested.
       final qualityAllowsSaavn = _jioSaavnEnabled &&
           (_audioQuality == AudioQuality.high ||
@@ -3645,6 +3756,23 @@ class AudioPlayerService {
             if (fallbackSaavn != null && fallbackSaavn.bitrateKbps >= 320) {
               await _playJioSaavnStream(
                 fallbackSaavn,
+                _currentTrack!,
+                resolveTimeMs: stopwatch.elapsedMilliseconds,
+              );
+              return;
+            }
+          } catch (_) {}
+        }
+        // Last resort: the lossless addon may still have this song.
+        if (_qualityAllowsLossless && AddonService.instance.isEnabled) {
+          try {
+            final lossless = await AddonService.instance
+                .matchFor(_currentTrack!)
+                .timeout(const Duration(seconds: 8));
+            if (lossless != null && _currentTrack?.id == trackId) {
+              _logLossless('YouTube failed; playing the lossless copy instead');
+              await _playAddonStream(
+                lossless,
                 _currentTrack!,
                 resolveTimeMs: stopwatch.elapsedMilliseconds,
               );
@@ -3788,8 +3916,9 @@ class AudioPlayerService {
         print('AudioPlayerService: Buffer setup took ${bufferTime}ms');
       }
 
-      // Start playback immediately
-      await _player.play();
+      // Start playback immediately (without waiting on it — see
+      // _startPlayback; awaiting held the lossless upgrade back until pause)
+      _startPlayback();
 
       _updateState(isLoading: false, currentPlaybackData: playbackData);
 
@@ -3811,6 +3940,9 @@ class AudioPlayerService {
             inFlightStream: saavnFuture,
           ),
         );
+      }
+      if (_currentTrack != null && !playbackData.isLive) {
+        unawaited(_upgradeToLosslessIfPossible(_currentTrack!));
       }
     } catch (e) {
       unawaited(_player.setVolume(1.0));
@@ -3861,12 +3993,14 @@ class AudioPlayerService {
       _pendingSeekPosition = null;
       _pendingSeekTrackId = null;
     }
-    await _player.play();
+    _startPlayback();
     _updateState(isLoading: false, currentPlaybackData: saavnPlaybackData);
     if (_activePlaybackTracking == null && !track.id.startsWith('local_')) {
       debugPrint('[YTM-Tracking] JioSaavn stream playing, resolving YouTube tracking for ${track.id}...');
       unawaited(_resolveYoutubeTrackingForCurrentTrack(track.id));
     }
+    // 320 kbps is the interim copy; lossless still replaces it when found.
+    unawaited(_upgradeToLosslessIfPossible(track));
     if (kDebugMode) {
       if (resolveTimeMs != null) {
         print(
@@ -3878,9 +4012,555 @@ class AudioPlayerService {
     unawaited(_enforceAudioCacheLimit());
   }
 
+  /// Lossless (a FLAC is ~10x a lossy stream) on Max always, and on Auto
+  /// while on Wi-Fi. High stays on the best lossy copy.
+  bool get _qualityAllowsLossless =>
+      _audioQuality == AudioQuality.max ||
+      (_audioQuality == AudioQuality.auto && _onUnmeteredNetwork);
+
+  void _logLossless(String message) {
+    if (kDebugMode) debugPrint('[Lossless] $message');
+  }
+
+  // ---- Automix analysis feed ------------------------------------------
+
+  /// A complete audio file for [track] exists: let Automix analyse from it.
+  void _offerToAutomix(Track track, String path) {
+    final automix = AutomixService.instance;
+    if (!automix.enabled) return;
+    unawaited(automix.audioCached(track.id, path));
+    unawaited(automix.request(track.id, track.duration));
+  }
+
+  /// Queues Automix analysis for [track]. A local file is its own analysis
+  /// copy; a streamed track waits for (or asks for) its YouTube file.
+  void _requestAutomixAnalysis(Track track) {
+    final automix = AutomixService.instance;
+    if (!automix.enabled || _jamsModeEnabled) return;
+    final local = track.localFilePath;
+    if (local != null) unawaited(automix.audioCached(track.id, local));
+    unawaited(automix.request(track.id, track.duration));
+  }
+
+  // ---- Automix transition engine (BitChord's controller, native) ----------
+  //
+  // With Automix on, the engine decides when and how each song blends into
+  // the next and drives both players' volume, tempo and filters itself. This
+  // side does what only it can: load the next song onto the spare player,
+  // take over at the blend's midpoint, and stop the outgoing player after.
+
+  /// The engine has the spare player (armed or blending).
+  bool _automixMixing = false;
+  PlaybackData? _automixIncomingData;
+  int _automixIncomingIndex = -1;
+  bool _automixSyncScheduled = false;
+
+  bool get _automixOn => AutomixService.instance.enabled && !_jamsModeEnabled;
+
+  AudioPlayer _playerById(String id) =>
+      _primaryPlayer.playerId == id ? _primaryPlayer : _secondaryPlayer;
+
+  void _wireAutomixEngine() {
+    final automix = AutomixService.instance
+      ..onLoad = _automixLoad
+      ..onHandoff = _automixHandoff
+      ..onRetire = _automixRetire
+      ..onPlayState = _automixPlayState;
+    // Turning Automix on gives the engine its first picture of the queue.
+    automix.addListener(_scheduleAutomixSync);
+  }
+
+  /// Coalesces the many state changes of one track change into one sync.
+  void _scheduleAutomixSync() {
+    if (_automixSyncScheduled) return;
+    _automixSyncScheduled = true;
+    scheduleMicrotask(() {
+      _automixSyncScheduled = false;
+      _syncAutomix();
+    });
+  }
+
+  /// Sent whether or not Automix is on: the same picture drives loudness
+  /// normalization, which levels every song (BitChord does it always). With
+  /// Automix off the engine is told there's no crossfade, so it never
+  /// transitions and Inzx's own crossfade carries on.
+  void _syncAutomix() {
+    final loudness = <String, double>{};
+    for (final t in _queue) {
+      final db = _ytPlayerUtils.loudnessDbFor(t.id);
+      if (db != null) loudness[t.id] = db;
+    }
+    unawaited(
+      AutomixService.instance.sync(
+        primary: _primaryPlayer.playerId,
+        secondary: _secondaryPlayer.playerId,
+        active: _player.playerId,
+        index: _currentIndex,
+        queue: [
+          for (final t in _queue)
+            {
+              'id': t.id,
+              'title': t.title,
+              'artist': t.artist,
+              'durationMs': t.duration.inMilliseconds,
+              'artwork': t.thumbnailUrl,
+              // Podcasts and local files without an id aren't mixed.
+              'video': t.podcastId != null,
+            },
+        ],
+        repeat: switch (_loopMode) {
+          LoopMode.one => 'one',
+          LoopMode.all => 'all',
+          LoopMode.off => 'off',
+        },
+        speed: _player.speed,
+        crossfadeSeconds: _automixOn
+            ? (_crossfadeDurationMs / 1000).round()
+            : 0,
+        loudness: loudness,
+      ),
+    );
+  }
+
+  /// The arm: queue entry [index] onto the spare player at [cueMs], silent
+  /// and paused; the engine starts it at the blend.
+  Future<void> _automixLoad(String playerId, int index, int cueMs) async {
+    if (index < 0 || index >= _queue.length) return;
+    final player = _playerById(playerId);
+    if (identical(player, _player)) return; // never load over the song
+    _automixMixing = true;
+    final track = _queue[index];
+    try {
+      final built = await _buildSourceForTrack(track);
+      await player.setLoopMode(_nativeLoopModeFor(_loopMode));
+      await _setVolumeSafely(player, 0.0, context: 'automix-arm');
+      await player.setAudioSource(
+        built.source,
+        initialPosition: Duration(milliseconds: cueMs),
+        preload: true,
+      );
+      _automixIncomingData = built.playbackData;
+      _automixIncomingIndex = index;
+      await AutomixService.instance.loaded(playerId, index);
+      if (kDebugMode) {
+        print('AudioPlayerService: Automix armed ${track.id} at ${cueMs}ms');
+      }
+    } catch (e) {
+      // The engine's arm deadline lapses and it carries on with no blend.
+      if (kDebugMode) print('AudioPlayerService: Automix arm failed: $e');
+    }
+  }
+
+  /// The blend's midpoint: the incoming player is the song now.
+  void _automixHandoff(String from, String to, int index) {
+    if (index < 0 || index >= _queue.length) return;
+    _flushWatchtimeForCurrentTrackBeforeSwitch();
+    final incoming = _playerById(to);
+    _player = incoming;
+    _currentIndex = index;
+    _currentTrack = _queue[index];
+    final data = _automixIncomingIndex == index ? _automixIncomingData : null;
+    if (data != null) _currentPlaybackData = data;
+    _activeSourceQueueIndices = <int>[index];
+    _activeSourcePlaybackDataByQueueIndex = data == null
+        ? const <int, PlaybackData>{}
+        : <int, PlaybackData>{index: data};
+    _crossfadeTriggeredForTrack = false;
+    final duration = incoming.duration;
+    if (duration != null) _applyDurationToCurrentTrack(duration);
+    _updateState(
+      currentTrack: _currentTrack,
+      currentIndex: _currentIndex,
+      currentPlaybackData: _currentPlaybackData,
+      queue: _queue,
+      queueRevision: _queueRevision,
+      duration: duration,
+      resetDuration: duration == null,
+      isLoading: false,
+      isPlaying: true,
+    );
+    _resetYoutubePlaybackTrackingForCurrentTrack();
+    _startYoutubePlaybackTracking();
+    _saveQueueDebounced();
+    _prefetchNextTrack();
+    _scheduleLyricsPrefetchAroundCurrent();
+    AudioRoutingService.reapplyAudioRoute();
+    _syncAutomix();
+    if (kDebugMode) {
+      print('AudioPlayerService: Automix handoff -> ${_currentTrack?.id}');
+    }
+  }
+
+  /// The engine is done with a player: stop it (after a blend, the old
+  /// song; after an abandoned arm, the never-heard incoming one).
+  Future<void> _automixRetire(String playerId) async {
+    _automixMixing = false;
+    final player = _playerById(playerId);
+    if (identical(player, _player)) return;
+    await player.stop();
+    await _setVolumeSafely(player, 1.0, context: 'automix-retire');
+    // The blend is over, so the spare player is free for the song's
+    // lossless hand-over now.
+    final track = _currentTrack;
+    if (track != null && _currentPlaybackData?.format.isLossless != true) {
+      unawaited(_upgradeToLosslessIfPossible(track));
+    }
+  }
+
+  /// The engine started/paused a player itself; keep just_audio's own
+  /// idea of it in step.
+  void _automixPlayState(String playerId, bool playing) {
+    final player = _playerById(playerId);
+    if (playing && !player.playing) {
+      unawaited(player.play().catchError((Object _) {}));
+    } else if (!playing && player.playing) {
+      unawaited(player.pause());
+    }
+  }
+
+  /// Downloads [videoId]'s YouTube audio into the stream cache for Automix
+  /// to analyse, whatever source is audible for it (lossless, JioSaavn) —
+  /// the canonical copy BitChord analyses too.
+  Future<void> fetchAnalysisAudio(String videoId) async {
+    final track = _currentTrack?.id == videoId
+        ? _currentTrack
+        : _queue.where((t) => t.id == videoId).firstOrNull;
+    if (track == null || _isLocalTrack(track)) return;
+    try {
+      final result = await _ytPlayerUtils.playerResponseForPlayback(
+        videoId,
+        quality: _audioQuality,
+        isMetered: false,
+      );
+      final data = result.data;
+      if (!result.isSuccess || data == null) return;
+      await _precacheTrackAudioBytes(track, data);
+    } catch (e) {
+      if (kDebugMode) print('AudioPlayerService: Automix audio fetch failed: $e');
+    }
+  }
+
+  /// Starts the current player without waiting on it.
+  ///
+  /// just_audio's `play()` future only completes when playback is paused,
+  /// stopped or finished (it returns at once only if already playing). So
+  /// `await _player.play()` on a fresh start held back everything after it
+  /// — the next-track prefetch and the mid-song lossless upgrade — until
+  /// the listener paused. That is why a song tapped from Home stayed on
+  /// Opus while the ones after it (already playing → instant return)
+  /// upgraded.
+  void _startPlayback() {
+    unawaited(
+      _player.play().catchError((Object e) {
+        if (kDebugMode) print('AudioPlayerService: play() failed: $e');
+      }),
+    );
+  }
+
+  PlaybackData _addonPlaybackData(
+    AddonMatch match, {
+    bool forCurrentTrack = true,
+  }) {
+    final stream = match.stream;
+    return PlaybackData(
+      streamUrl: stream.url,
+      format: AudioFormat(
+        mimeType: stream.isDash ? 'application/dash+xml' : 'audio/flac',
+        bitrate: stream.bitrate ?? 1411200,
+        sampleRate: stream.sampleRate ?? 44100,
+        bitsPerSample: stream.bitDepth ?? 16,
+        codecs: stream.codec.toLowerCase(),
+      ),
+      playbackTracking: forCurrentTrack
+          ? _authenticatedPlaybackTracking ??
+                _currentPlaybackData?.playbackTracking
+          : null,
+      // Addon stream URLs are pre-signed and short-lived.
+      streamExpiresInSeconds: 20 * 60,
+      fetchedAt: DateTime.now(),
+      audioSource: match.addonName,
+    );
+  }
+
+  AudioSource _addonAudioSource(AddonMatch match, Track track) {
+    final uri = Uri.parse(match.stream.url);
+    return match.stream.isDash
+        ? DashAudioSource(uri, tag: track)
+        : AudioSource.uri(uri, tag: track);
+  }
+
+  /// Starts [track] directly on its lossless copy.
+  Future<void> _playAddonStream(
+    AddonMatch match,
+    Track track, {
+    int? resolveTimeMs,
+  }) async {
+    if (kDebugMode) {
+      print(
+        'AudioPlayerService: Playing ${match.stream.formatLabel} from ${match.addonName}',
+      );
+    }
+    final playbackData = _addonPlaybackData(match);
+    await _player.setAudioSource(_addonAudioSource(match, track), preload: true);
+    _currentPlaybackData = playbackData;
+    _activeSourceQueueIndices = <int>[_currentIndex];
+    _activeSourcePlaybackDataByQueueIndex = <int, PlaybackData>{
+      _currentIndex: playbackData,
+    };
+    if (_pendingSeekPosition != null && _pendingSeekTrackId == track.id) {
+      await _player.seek(_pendingSeekPosition);
+      _positionController.add(_pendingSeekPosition!);
+      _updateState(position: _pendingSeekPosition);
+      _pendingSeekPosition = null;
+      _pendingSeekTrackId = null;
+    }
+    _startPlayback();
+    _updateState(isLoading: false, currentPlaybackData: playbackData);
+    if (_activePlaybackTracking == null && !track.id.startsWith('local_')) {
+      unawaited(_resolveYoutubeTrackingForCurrentTrack(track.id));
+    }
+    if (kDebugMode && resolveTimeMs != null) {
+      debugPrint('AudioPlayerService: Lossless playing in ${resolveTimeMs}ms');
+    }
+    _prefetchNextTrack();
+    unawaited(_enforceAudioCacheLimit());
+  }
+
+  /// The second look: a track that started on a lossy copy asks the addon
+  /// for its lossless one while it plays, and moves onto it mid-song if
+  /// it's the same recording ([AddonService.pickBest] decides that).
+  ///
+  /// Every guard here errs towards not swapping — a missed upgrade is
+  /// silent, an interrupted song isn't.
+  Future<void> _upgradeToLosslessIfPossible(Track track) async {
+    final upgradeId = ++_losslessUpgradeId;
+    final addons = AddonService.instance;
+    if (!_qualityAllowsLossless) {
+      _logLossless('Off: lossless needs Max quality, or Auto on Wi-Fi');
+      return;
+    }
+    if (!addons.isEnabled) return;
+    if (track.localFilePath != null || track.id.startsWith('local_')) return;
+    if (_currentPlaybackData?.format.isLossless == true) return;
+
+    _logLossless('Looking for a lossless copy of "${track.title}"');
+    final match = await addons.matchFor(track);
+    bool stillWanted() =>
+        upgradeId == _losslessUpgradeId &&
+        _currentTrack?.id == track.id &&
+        _currentPlaybackData?.format.isLossless != true;
+    if (match == null) {
+      _logLossless('No matching lossless copy for "${track.title}"');
+      return;
+    }
+    if (!stillWanted()) return;
+    _logLossless(
+      'Found ${match.stream.formatLabel} for "${track.title}"; handing over',
+    );
+
+    // Two tries: the first can lose to a crossfade or JioSaavn hand-over
+    // starting at the same moment, or to a slow network.
+    for (var attempt = 1; attempt <= 2; attempt++) {
+      // Let a crossfade or another hand-over already under way finish
+      // (a crossfade alone is 8 s by default).
+      // An Automix blend (up to ~30 s) holds the spare player too.
+      for (var i = 0;
+          i < 400 && (_isUpgradingStream || _isCrossfading || _automixMixing);
+          i++) {
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+      if (!stillWanted()) return;
+      if (_isUpgradingStream || _isCrossfading || _automixMixing) {
+        _logLossless('Gave up waiting for another hand-over to finish');
+        return;
+      }
+
+      final swapped = await _seamlessSwap(
+        track: track,
+        source: _addonAudioSource(match, track),
+        playbackData: _addonPlaybackData(match),
+        stillWanted: stillWanted,
+      );
+      if (swapped) {
+        _logLossless(
+          'Upgraded "${track.title}" to ${match.stream.formatLabel} '
+          'at ${_player.position.inSeconds}s',
+        );
+        return;
+      }
+      if (!stillWanted()) return;
+      if (attempt == 1) await Future.delayed(const Duration(seconds: 3));
+    }
+    _logLossless('Upgrade for "${track.title}" didn\'t happen');
+  }
+
+  /// Moves the playing track onto [source] mid-song without a gap.
+  ///
+  /// A single player can't change source mid-track without a break while
+  /// the new stream buffers. With two players it can: the new copy loads
+  /// silently on the idle player, parked a little ahead of where the song
+  /// is; once the playing copy reaches that point the new one starts, and a
+  /// short equal-power overlap (inaudible between two copies of the same
+  /// recording) hands over. Returns false, leaving playback untouched,
+  /// whenever that can't be done cleanly.
+  Future<bool> _seamlessSwap({
+    required Track track,
+    required AudioSource source,
+    required PlaybackData playbackData,
+    required bool Function() stillWanted,
+  }) async {
+    if (_jamsModeEnabled) {
+      _logLossless('Hand-over skipped: in a Jam (playback is synced)');
+      return false;
+    }
+    if (_isCrossfading) return false;
+    if (_automixMixing) {
+      _logLossless('Hand-over skipped: an Automix blend holds the spare player');
+      return false;
+    }
+    final outgoing = _player;
+    final incoming = _inactivePlayer;
+    final previousData = _currentPlaybackData;
+    final previousByIndex = _activeSourcePlaybackDataByQueueIndex;
+    const lead = Duration(milliseconds: 2500);
+    const overlap = Duration(milliseconds: 400);
+
+    Future<bool> abandon(String why) async {
+      _logLossless('Hand-over abandoned: $why');
+      if (!identical(_player, incoming)) {
+        await incoming.stop();
+        await _setVolumeSafely(incoming, 1.0, context: 'upgrade-abandon');
+      }
+      return false;
+    }
+
+    void commit() {
+      _player = incoming;
+      _currentPlaybackData = playbackData;
+      _activeSourcePlaybackDataByQueueIndex = <int, PlaybackData>{
+        _currentIndex: playbackData,
+      };
+      _updateState(
+        currentPlaybackData: playbackData,
+        duration: incoming.duration,
+        isLoading: false,
+      );
+      AudioRoutingService.reapplyAudioRoute();
+      // The song is on the other player now: tell the Automix engine.
+      _syncAutomix();
+    }
+
+    _isUpgradingStream = true;
+    // The Automix engine waits out the hand-over (it shares the spare).
+    unawaited(AutomixService.instance.setBusy(true));
+    try {
+      final total = outgoing.duration ?? track.duration;
+      var startAt = outgoing.position + lead;
+      // Too close to the end to be worth it; the next track starts soon.
+      if (total > Duration.zero &&
+          startAt > total - const Duration(seconds: 8)) {
+        _logLossless('Hand-over skipped: too close to the end of the song');
+        return false;
+      }
+
+      await incoming.stop();
+      await incoming.setLoopMode(_nativeLoopModeFor(_loopMode));
+      await incoming.setSpeed(outgoing.speed);
+      await _setVolumeSafely(incoming, 0.0, context: 'upgrade-bootstrap');
+      await incoming.setAudioSource(
+        source,
+        initialPosition: startAt,
+        preload: true,
+      );
+      _logLossless(
+        'Lossless copy buffered, parked at ${startAt.inMilliseconds} ms '
+        '(playing at ${outgoing.position.inMilliseconds} ms)',
+      );
+      if (!stillWanted() || _isCrossfading) {
+        return await abandon('track changed or a crossfade started');
+      }
+
+      if (!outgoing.playing) {
+        // Paused: nothing audible to blend. Line up and hand over.
+        await incoming.seek(outgoing.position);
+        commit();
+        await outgoing.stop();
+        await _setVolumeSafely(outgoing, 1.0, context: 'upgrade-paused-out');
+        await _setVolumeSafely(incoming, 1.0, context: 'upgrade-paused-in');
+        return true;
+      }
+
+      // Buffering took longer than the lead: park once more, a little ahead.
+      if (outgoing.position >= startAt - const Duration(milliseconds: 100)) {
+        startAt = outgoing.position + const Duration(milliseconds: 1500);
+        await incoming.seek(startAt);
+        if (!stillWanted() || outgoing.position >= startAt) {
+          return await abandon('the new copy couldn\'t keep up');
+        }
+      }
+
+      // Wait for the playing copy to reach the parked position.
+      final deadline = DateTime.now().add(lead * 2);
+      while (outgoing.position < startAt - const Duration(milliseconds: 12)) {
+        if (!stillWanted() ||
+            !outgoing.playing ||
+            _isCrossfading ||
+            DateTime.now().isAfter(deadline)) {
+          return await abandon(
+            !outgoing.playing
+                ? 'paused while lining up'
+                : 'track changed, crossfade, or timed out lining up',
+          );
+        }
+        final remaining = startAt - outgoing.position;
+        await Future.delayed(
+          remaining > const Duration(milliseconds: 80)
+              ? const Duration(milliseconds: 25)
+              : const Duration(milliseconds: 3),
+        );
+      }
+
+      commit();
+      unawaited(incoming.play());
+      await _runOverlapFade(
+        outgoing: outgoing,
+        incoming: incoming,
+        duration: overlap,
+      );
+      await outgoing.stop();
+      await _setVolumeSafely(outgoing, 1.0, context: 'upgrade-reset-out');
+      await _stabilizeIncomingAfterCrossfade(incoming);
+      return true;
+    } catch (e) {
+      _logLossless('Hand-over failed: $e');
+      if (identical(_player, incoming)) {
+        // Failed after handing over: put the old copy back in charge.
+        _player = outgoing;
+        _currentPlaybackData = previousData;
+        _activeSourcePlaybackDataByQueueIndex = previousByIndex;
+        _updateState(currentPlaybackData: previousData);
+        await _setVolumeSafely(outgoing, 1.0, context: 'upgrade-restore');
+        if (!outgoing.playing) unawaited(outgoing.play());
+      }
+      await incoming.stop();
+      await _setVolumeSafely(incoming, 1.0, context: 'upgrade-failed-in');
+      return false;
+    } finally {
+      _isUpgradingStream = false;
+      unawaited(AutomixService.instance.setBusy(false));
+    }
+  }
+
   /// Prefetch next track in background (OuterTune approach)
   /// This is called after current track starts playing
   void _prefetchNextTrack() {
+    // Automix reads both sides of the coming transition: the playing
+    // track's ending and the next one's opening.
+    final playing = _currentTrack;
+    if (playing != null) _requestAutomixAnalysis(playing);
+    if (_currentIndex < _queue.length - 1) {
+      _requestAutomixAnalysis(_queue[_currentIndex + 1]);
+    }
     if (_currentIndex < _queue.length - 1) {
       final nextTrack = _queue[_currentIndex + 1];
       if (!_isLocalTrack(nextTrack)) {
@@ -3901,6 +4581,11 @@ class AudioPlayerService {
           durationSeconds: nextTrack.duration.inSeconds,
         ),
       );
+
+      // Resolve the next track's lossless copy now, so it can start on it.
+      if (_qualityAllowsLossless && AddonService.instance.isEnabled) {
+        unawaited(AddonService.instance.matchFor(nextTrack));
+      }
 
       // Prefetch JioSaavn 320kbps stream in background if enabled
       if (_jioSaavnEnabled &&
@@ -3941,6 +4626,20 @@ class AudioPlayerService {
 
     // Do not attempt upgrade for local files
     if (track.localFilePath != null) return;
+
+    // Lossless already: 320 kbps would be a downgrade.
+    if (_currentPlaybackData?.format.isLossless == true) return;
+
+    // The lossless upgrade looks this track up at the same moment (the
+    // lookup is shared, not repeated). If it finds a FLAC, step aside rather
+    // than race it with a 320 kbps hand-over of our own.
+    if (_qualityAllowsLossless && AddonService.instance.isEnabled) {
+      final lossless = await AddonService.instance.matchFor(track);
+      if (lossless != null) return;
+      if (sessionId != _upgradeSessionId || _currentTrack?.id != track.id) {
+        return;
+      }
+    }
 
     // Already playing JioSaavn at 320kbps
     if (_currentPlaybackData?.audioSource == 'JioSaavn' &&
@@ -4009,7 +4708,26 @@ class AudioPlayerService {
         tag: track,
       );
 
-      // Hot-swap player audio source at current position without interrupting tracking
+      // A lossless swap may have landed while JioSaavn was resolving.
+      if (_currentPlaybackData?.format.isLossless == true) return;
+
+      bool stillWanted() =>
+          sessionId == _upgradeSessionId &&
+          _currentTrack?.id == track.id &&
+          _currentPlaybackData?.format.isLossless != true;
+      if (!_isUpgradingStream &&
+          !_isCrossfading &&
+          await _seamlessSwap(
+            track: track,
+            source: newSource,
+            playbackData: upgradedPlaybackData,
+            stillWanted: stillWanted,
+          )) {
+        return;
+      }
+      if (!stillWanted() || _isUpgradingStream) return;
+
+      // Fallback: hot-swap the one player in place (brief break).
       _isUpgradingStream = true;
       try {
         await _player.setAudioSource(
@@ -4023,7 +4741,7 @@ class AudioPlayerService {
         }
 
         if (wasPlaying && !_player.playing) {
-          await _player.play();
+          _startPlayback();
         }
       } finally {
         _isUpgradingStream = false;
@@ -4301,6 +5019,40 @@ class AudioPlayerService {
     }
   }
 
+  /// Fades the music down over [duration], pauses, and puts the volume back
+  /// so the next play starts at full level. Used by the sleep timer.
+  Future<void> fadeOutAndPause({
+    Duration duration = const Duration(seconds: 10),
+  }) async {
+    if (!_player.playing) return;
+    // A crossfade or quality hand-over is already driving the volumes.
+    if (_isCrossfading || _isUpgradingStream) {
+      await pause();
+      return;
+    }
+    final player = _player;
+    const steps = 40;
+    final stepDelay = Duration(
+      milliseconds: (duration.inMilliseconds / steps).round(),
+    );
+    final start = player.volume;
+    for (var i = 1; i <= steps; i++) {
+      // Stop early if the user paused, skipped or a crossfade took over.
+      if (!identical(player, _player) || !player.playing || _isCrossfading) {
+        break;
+      }
+      final t = i / steps;
+      await _setVolumeSafely(
+        player,
+        start * cos(t * pi * 0.5),
+        context: 'sleep-fade-$i',
+      );
+      await Future.delayed(stepDelay);
+    }
+    await pause();
+    await _setVolumeSafely(player, 1.0, context: 'sleep-fade-restore');
+  }
+
   /// Pause
   Future<void> pause() async {
     await _player.pause();
@@ -4351,6 +5103,8 @@ class AudioPlayerService {
   /// Skip to next track
   /// Uses pre-built playlist for instant skip if available (OuterTune approach)
   Future<void> skipToNext() async {
+    // A skip is never blended: drop any Automix blend in flight first.
+    unawaited(AutomixService.instance.skip());
     // In Jams mode, emit track complete event and let sync controller handle it
     if (_jamsModeEnabled) {
       if (kDebugMode) {
@@ -4382,6 +5136,7 @@ class AudioPlayerService {
 
   /// Skip to previous track
   Future<void> skipToPrevious() async {
+    unawaited(AutomixService.instance.skip());
     if (_queue.isEmpty) return;
 
     // If more than 3 seconds in, restart current track
