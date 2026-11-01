@@ -200,8 +200,16 @@ class DynamicColorsNotifier extends StateNotifier<DynamicColors?> {
   Timer? _debounceTimer;
   static const _debounceDelay = Duration(milliseconds: 300);
 
-  DynamicColorsNotifier(Ref ref) : super(null) {
+  final Ref _ref;
+
+  DynamicColorsNotifier(this._ref) : super(null) {
     _init();
+    // Light and dark themes take different shades of the same artwork, so a
+    // theme switch re-extracts the playing track's colours.
+    _ref.listen(themeModeProvider, (_, _) {
+      final track = player.AudioPlayerService.instance.currentTrack;
+      if (track != null && mounted) _extractColors(track);
+    });
   }
 
   void _init() {
@@ -240,8 +248,7 @@ class DynamicColorsNotifier extends StateNotifier<DynamicColors?> {
       return;
     }
 
-    // TODO: Get actual theme brightness from context
-    final isDark = false;
+    final isDark = _isDarkTheme(_ref.read(themeModeProvider));
 
     final colors = await _colorService.extractColorsFromUrl(
       imageUrl,
@@ -300,17 +307,18 @@ final effectiveAccentColorProvider = Provider<Color>((ref) {
 
   // Fall back to the app's configured accent (red by default), in the variant
   // that reads on the current theme (black is near-white on dark).
-  final themeMode = ref.watch(themeModeProvider);
-  final isDark = switch (themeMode) {
-    InzxThemeMode.dark => true,
-    InzxThemeMode.light => false,
-    InzxThemeMode.system =>
-      WidgetsBinding.instance.platformDispatcher.platformBrightness ==
-          Brightness.dark,
-  };
+  final isDark = _isDarkTheme(ref.watch(themeModeProvider));
   return getAccentColor(
     ref.watch(accentColorProvider),
     isDark: isDark,
     customColor: ref.watch(customAccentColorProvider),
   );
 });
+
+bool _isDarkTheme(InzxThemeMode mode) => switch (mode) {
+  InzxThemeMode.dark => true,
+  InzxThemeMode.light => false,
+  InzxThemeMode.system =>
+    WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+        Brightness.dark,
+};

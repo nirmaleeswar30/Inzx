@@ -542,9 +542,14 @@
       if (activeIdx !== currentIndex) {
         currentIndex = activeIdx;
         for (var i = 0; i < count; i++) {
+          var slideVid = showcaseSlides[i].querySelector('video');
           if (i === activeIdx) {
             showcaseSlides[i].classList.add('active');
             if (showcaseDots[i]) showcaseDots[i].classList.add('active');
+            if (slideVid) {
+              slideVid.muted = true;
+              if (slideVid.paused) slideVid.play().catch(function () {});
+            }
           } else {
             showcaseSlides[i].classList.remove('active');
             if (showcaseDots[i]) showcaseDots[i].classList.remove('active');
@@ -634,6 +639,32 @@
     applyProgress(currentProgress);
   }
 
+  /* ───────── autoplay videos helper (hero & showcase) ───────── */
+  var bgVideos = $$('video[autoplay]');
+  bgVideos.forEach(function (v) {
+    v.muted = true;
+    v.defaultMuted = true;
+    var tryPlay = function () {
+      if (v.paused) v.play().catch(function () {});
+    };
+    tryPlay();
+    ['click', 'touchstart', 'scroll', 'pointerdown'].forEach(function (evt) {
+      window.addEventListener(evt, tryPlay, { once: true, passive: true });
+    });
+  });
+
+  if ('IntersectionObserver' in window) {
+    var vidObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        var v = e.target;
+        if (e.isIntersecting) {
+          if (v.paused) v.play().catch(function () {});
+        }
+      });
+    }, { threshold: 0.1 });
+    bgVideos.forEach(function (v) { vidObs.observe(v); });
+  }
+
   /* ───────── tabs ───────── */
   var tabs = $$('.tab');
   if (tabs.length) {
@@ -675,46 +706,11 @@
     });
   });
 
-  /* ───────── live repo & release info (public GitHub API) ───────── */
+  /* ───────── live repo & release info (public GitHub API & resilient mirrors) ───────── */
   (function repoInfo() {
-    if (!window.fetch) return;
-
     var starEl = $('#ghStars');
     var supportStarEl = $('#supportGhStars');
-
-    async function getStarCount(owner, repo) {
-      // 1. Check cached count in localStorage
-      var cached = localStorage.getItem('inzx_gh_stars');
-      if (cached) {
-        if (starEl) starEl.textContent = cached;
-        if (supportStarEl) supportStarEl.textContent = cached;
-      }
-
-      // 2. Try primary GitHub API
-      try {
-        var res = await fetch('https://api.github.com/repos/' + owner + '/' + repo);
-        if (res.ok) {
-          var data = await res.json();
-          if (typeof data.stargazers_count === 'number') {
-            return data.stargazers_count;
-          }
-        }
-      } catch (e) {}
-
-      // 3. Fallback: Shields.io JSON endpoint (never hits GitHub client rate limit)
-      try {
-        var sRes = await fetch('https://img.shields.io/github/stars/' + owner + '/' + repo + '.json');
-        if (sRes.ok) {
-          var sData = await sRes.json();
-          if (sData && sData.value) {
-            // value is formatted like "120" or "1.2k"
-            return sData.value;
-          }
-        }
-      } catch (e) {}
-
-      return cached || null;
-    }
+    var DEFAULT_STARS = 80;
 
     function formatCount(num) {
       if (typeof num === 'string') {
@@ -732,43 +728,382 @@
       return String(num);
     }
 
-    getStarCount('nirmaleeswar30', 'Inzx').then(function (stars) {
-      if (stars == null) return;
-      var formatted = formatCount(stars);
+    function applyStars(count) {
+      if (!count) return;
+      var formatted = formatCount(count);
+      if (!formatted || formatted === 'NaN' || formatted === 'null' || formatted === '—' || formatted === '-') return;
       if (starEl) starEl.textContent = formatted;
       if (supportStarEl) supportStarEl.textContent = formatted;
-      try { localStorage.setItem('inzx_gh_stars', formatted); } catch (e) {}
-    });
+      try {
+        localStorage.setItem('inzx_gh_stars', formatted);
+      } catch (e) {}
+    }
 
+    // 1. Immediately hydrate from valid cache or default count (prevents flashing "-")
+    try {
+      var cached = localStorage.getItem('inzx_gh_stars');
+      if (cached && cached !== '—' && cached !== '-' && cached !== 'null' && cached !== 'undefined') {
+        applyStars(cached);
+      } else {
+        applyStars(DEFAULT_STARS);
+      }
+    } catch (e) {
+      applyStars(DEFAULT_STARS);
+    }
+
+    // 2. Fetch live star count using resilient multi-tier fallback (immune to GitHub 60 req/hr IP limits)
+    async function fetchLiveStars(owner, repo) {
+      if (!window.fetch) return;
+
+      // Tier 1: ungh.cc (Cloudflare edge proxy for GitHub API - no client rate limit)
+      try {
+        var uRes = await fetch('https://ungh.cc/repos/' + owner + '/' + repo);
+        if (uRes.ok) {
+          var uData = await uRes.json();
+          if (uData && uData.repo && typeof uData.repo.stars === 'number') {
+            applyStars(uData.repo.stars);
+            return;
+          }
+        }
+      } catch (e) {}
+
+      // Tier 2: Official GitHub API
+      try {
+        var res = await fetch('https://api.github.com/repos/' + owner + '/' + repo, {
+          headers: { Accept: 'application/vnd.github+json' }
+        });
+        if (res.ok) {
+          var data = await res.json();
+          if (typeof data.stargazers_count === 'number') {
+            applyStars(data.stargazers_count);
+            return;
+          }
+        }
+      } catch (e) {}
+
+      // Tier 3: Shields.io JSON endpoint
+      try {
+        var sRes = await fetch('https://img.shields.io/github/stars/' + owner + '/' + repo + '.json');
+        if (sRes.ok) {
+          var sData = await sRes.json();
+          var rawVal = sData.value || sData.message;
+          if (rawVal && rawVal !== '—' && rawVal !== '-') {
+            applyStars(rawVal);
+            return;
+          }
+        }
+      } catch (e) {}
+    }
+
+    fetchLiveStars('nirmaleeswar30', 'Inzx');
+
+    /* ───── Nivio-style Dynamic GitHub Releases & Changelog Engine ───── */
+    function escapeHtml(str) {
+      return (str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function formatReleaseDate(isoString) {
+      if (!isoString) return '';
+      var d = new Date(isoString);
+      if (isNaN(d.getTime())) return '';
+      var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return months[d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear();
+    }
+
+    function parseMarkdown(md) {
+      return escapeHtml(md)
+        .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+        .replace(/(^|[^&\w])#(\d+)\b/g, '$1<a href="https://github.com/nirmaleeswar30/Inzx/issues/$2" target="_blank" rel="noopener">#$2</a>');
+    }
+
+    function parseReleaseBody(rel) {
+      var body = rel.body || '';
+      var lines = body.split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean);
+      var headline = '';
+      var summary = '';
+      var notes = [];
+
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        if (/^#+\s+(.+)/.test(line)) {
+          var h = line.replace(/^#+\s+/, '').replace(/\*\*/g, '').trim();
+          if (!/^what'?s new/i.test(h) && !headline) {
+            headline = h;
+          }
+          continue;
+        }
+        if (/^[-*•]\s+(.+)/.test(line)) {
+          var item = line.replace(/^[-*•]\s+/, '').trim();
+          if (item && notes.length < 5) {
+            notes.push(parseMarkdown(item));
+          }
+          continue;
+        }
+        if (!summary && line.length > 25 && !headline) {
+          summary = parseMarkdown(line);
+        } else if (notes.length < 5) {
+          notes.push(parseMarkdown(line));
+        }
+      }
+
+      if (!headline) {
+        headline = rel.name || ('Release ' + rel.tag_name);
+      }
+      if (!notes.length && summary) {
+        notes.push(summary);
+      }
+
+      return { headline: headline, summary: summary, notes: notes };
+    }
+
+    function updateDownloadLinks(latest) {
+      if (!latest || !latest.assets) return null;
+
+      var assets = latest.assets || [];
+      var mainAsset = assets.find(function (a) {
+        var n = (a.name || '').toLowerCase();
+        return n.endsWith('.apk') && !n.includes('universal');
+      }) || assets.find(function (a) {
+        return (a.name || '').toLowerCase().endsWith('.apk');
+      });
+
+      var universalAsset = assets.find(function (a) {
+        var n = (a.name || '').toLowerCase();
+        return n.endsWith('.apk') && n.includes('universal');
+      });
+
+      var mainApkUrl = (mainAsset && mainAsset.browser_download_url)
+        ? mainAsset.browser_download_url
+        : 'https://github.com/nirmaleeswar30/Inzx/releases/latest/download/inzx.apk';
+
+      var universalApkUrl = (universalAsset && universalAsset.browser_download_url)
+        ? universalAsset.browser_download_url
+        : 'https://github.com/nirmaleeswar30/Inzx/releases/latest/download/inzx-universal.apk';
+
+      var heroBtn = $('#heroDownloadBtn');
+      var mainBtn = $('#mainDownloadBtn');
+      var uniBtn = $('#universalDownloadBtn');
+
+      if (heroBtn) heroBtn.href = mainApkUrl;
+      if (mainBtn) mainBtn.href = mainApkUrl;
+      if (uniBtn) uniBtn.href = universalApkUrl;
+
+      return {
+        mainApkUrl: mainApkUrl,
+        mainApkName: mainAsset ? mainAsset.name : 'inzx.apk',
+        universalApkUrl: universalApkUrl
+      };
+    }
+
+    function renderReleasesTimeline(releases) {
+      var timeline = $('#releasesTimeline');
+      if (!timeline || !Array.isArray(releases) || !releases.length) return;
+
+      var validReleases = releases.filter(function (r) {
+        return !r.draft && !r.prerelease;
+      });
+      if (!validReleases.length) validReleases = releases;
+
+      var latest = validReleases[0];
+      var dlInfo = updateDownloadLinks(latest);
+      var apkUrl = dlInfo ? dlInfo.mainApkUrl : 'https://github.com/nirmaleeswar30/Inzx/releases/latest/download/inzx.apk';
+      var apkName = dlInfo ? dlInfo.mainApkName : 'inzx.apk';
+
+      var displayReleases = validReleases.slice(0, 3);
+      var cardsHtml = [];
+
+      displayReleases.forEach(function (rel, idx) {
+        var isLatest = (idx === 0);
+        var parsed = parseReleaseBody(rel);
+        var dateStr = formatReleaseDate(rel.published_at);
+        var tagStyle = isLatest ? 'latest' : (idx === 1 ? 'sync' : 'core');
+
+        var notesHtml = '';
+        if (parsed.notes && parsed.notes.length) {
+          notesHtml = '<ul class="rel-notes">' +
+            parsed.notes.map(function (n) { return '<li>' + n + '</li>'; }).join('') +
+            '</ul>';
+        }
+
+        var actionsHtml = '';
+        if (isLatest) {
+          actionsHtml =
+            '<div class="rel-actions">' +
+              '<a class="rel-dl-btn" href="' + apkUrl + '" target="_blank" rel="noopener noreferrer">' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l4-4m-4 4l-4-4M4 19h16"/></svg>' +
+                '<span>Download ' + escapeHtml(apkName) + '</span>' +
+              '</a>' +
+              '<a class="rel-sub-btn" href="' + escapeHtml(rel.html_url) + '" target="_blank" rel="noopener noreferrer">Release Notes ↗</a>' +
+            '</div>';
+        } else {
+          actionsHtml =
+            '<div class="rel-actions">' +
+              '<a class="rel-sub-btn" href="' + escapeHtml(rel.html_url) + '" target="_blank" rel="noopener noreferrer">Release Details ↗</a>' +
+            '</div>';
+        }
+
+        var cardItem =
+          '<div class="rel-item ' + (isLatest ? 'current ' : '') + 'reveal in">' +
+            '<div class="rel-spine">' +
+              '<div class="rel-dot"></div>' +
+              '<div class="rel-line"></div>' +
+            '</div>' +
+            '<div class="rel-card">' +
+              '<div class="rel-card-header">' +
+                '<div class="rel-badge-group">' +
+                  '<span class="rel-tag ' + tagStyle + '">' + escapeHtml(rel.tag_name) + '</span>' +
+                  (isLatest ? '<span class="rel-status-pill">Latest Release</span>' : '') +
+                  '<span class="rel-plat-pill">Android · Android Auto</span>' +
+                '</div>' +
+                '<div class="rel-date">' +
+                  (dateStr ? dateStr + ' · ' : '') +
+                  '<a href="' + escapeHtml(rel.html_url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(rel.tag_name) + '</a>' +
+                '</div>' +
+              '</div>' +
+              '<h4>' + escapeHtml(parsed.headline) + '</h4>' +
+              (parsed.summary ? '<p>' + parsed.summary + '</p>' : '') +
+              notesHtml +
+              actionsHtml +
+            '</div>' +
+          '</div>';
+
+        cardsHtml.push(cardItem);
+      });
+
+      // Up Next Roadmap Card preserved at end
+      var upNextHtml =
+        '<div class="rel-item reveal in">' +
+          '<div class="rel-spine">' +
+            '<div class="rel-dot"></div>' +
+          '</div>' +
+          '<div class="rel-card">' +
+            '<div class="rel-card-header">' +
+              '<div class="rel-badge-group">' +
+                '<span class="rel-tag desktop">Up Next</span>' +
+                '<span class="rel-status-pill desktop">In Development</span>' +
+                '<span class="rel-plat-pill">Multi-Platform</span>' +
+              '</div>' +
+              '<div class="rel-date">Upcoming · Roadmap</div>' +
+            '</div>' +
+            '<h4>Desktop Client &amp; Google Cast Audio Streaming</h4>' +
+            '<p>Expanding the Inzx listening experience to large desktop workstations and networked smart home speakers.</p>' +
+            '<ul class="rel-notes">' +
+              '<li><b>Desktop Client (Windows · macOS · Linux):</b> Native desktop packaging with global media hotkeys and system media integration.</li>' +
+              '<li><b>Google Cast &amp; DLNA:</b> Direct stream casting to Nest Audio, smart TVs, and network receivers.</li>' +
+              '<li><b>Advanced Scrobbling:</b> Built-in Last.fm and ListenBrainz history scrobbling.</li>' +
+            '</ul>' +
+            '<div class="rel-actions">' +
+              '<a class="rel-sub-btn" href="https://github.com/nirmaleeswar30/Inzx/issues" target="_blank" rel="noopener noreferrer">Join Discussion ↗</a>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+      cardsHtml.push(upNextHtml);
+      timeline.innerHTML = cardsHtml.join('\n');
+    }
+
+    function processReleases(releases) {
+      if (!Array.isArray(releases) || !releases.length) return;
+
+      var latest = releases.find(function (r) { return !r.draft && !r.prerelease; }) || releases[0];
+      var total = releases.reduce(function (sum, rel) {
+        return sum + (rel.assets || []).reduce(function (s, a) { return s + (a.download_count || 0); }, 0);
+      }, 0);
+
+      var ver = $('#dlVersion');
+      var cnt = $('#dlCount');
+      var tag = $('#releaseTag');
+      var eyeVer = $('#eyebrowVersion');
+
+      if (latest && latest.tag_name) {
+        if (ver) ver.textContent = latest.tag_name;
+        if (eyeVer) eyeVer.textContent = latest.tag_name;
+        else if (tag) tag.textContent = latest.tag_name + ' now available';
+      }
+      if (cnt && total > 0) {
+        cnt.textContent = total >= 1000
+          ? (total / 1000).toFixed(total >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k'
+          : String(total);
+      }
+
+      updateDownloadLinks(latest);
+      renderReleasesTimeline(releases);
+    }
+
+    // 1. Immediate render from cached releases if present
+    try {
+      var cachedReleases = localStorage.getItem('inzx_releases_cache');
+      if (cachedReleases) {
+        var parsedCache = JSON.parse(cachedReleases);
+        if (Array.isArray(parsedCache)) {
+          processReleases(parsedCache);
+        } else if (parsedCache && Array.isArray(parsedCache.releases)) {
+          processReleases(parsedCache.releases);
+        }
+      }
+    } catch (e) {}
+
+    function fetchUnghReleases() {
+      fetch('https://ungh.cc/repos/nirmaleeswar30/Inzx/releases')
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+        .then(function (d) {
+          if (!d || !Array.isArray(d.releases) || !d.releases.length) return;
+          var normalized = d.releases.map(function (rel) {
+            return {
+              tag_name: rel.tag,
+              name: rel.name,
+              published_at: rel.publishedAt,
+              body: rel.markdown || '',
+              html_url: 'https://github.com/nirmaleeswar30/Inzx/releases/tag/' + (rel.tag || ''),
+              assets: (rel.assets || []).map(function (a) {
+                var filename = a.downloadUrl ? a.downloadUrl.split('/').pop() : 'inzx.apk';
+                return {
+                  name: filename,
+                  download_count: a.downloadCount || 0,
+                  browser_download_url: a.downloadUrl || ''
+                };
+              })
+            };
+          });
+          processReleases(normalized);
+          try {
+            localStorage.setItem('inzx_releases_cache', JSON.stringify({
+              releases: normalized,
+              timestamp: Date.now()
+            }));
+          } catch (e) {}
+        })
+        .catch(function () {
+          /* offline: static pre-rendered cards stay intact */
+        });
+    }
+
+    // 2. Fresh fetch from GitHub API with resilient ungh.cc fallback
     fetch('https://api.github.com/repos/nirmaleeswar30/Inzx/releases', {
       headers: { Accept: 'application/vnd.github+json' }
     })
       .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
       .then(function (releases) {
-        if (!Array.isArray(releases) || !releases.length) return;
-
-        var latest = releases.find(function (r) { return !r.draft && !r.prerelease; }) || releases[0];
-        var total = releases.reduce(function (sum, rel) {
-          return sum + (rel.assets || []).reduce(function (s, a) { return s + (a.download_count || 0); }, 0);
-        }, 0);
-
-        var ver = $('#dlVersion');
-        var cnt = $('#dlCount');
-        var tag = $('#releaseTag');
-        var eyeVer = $('#eyebrowVersion');
-
-        if (latest.tag_name) {
-          if (ver) ver.textContent = latest.tag_name;
-          if (eyeVer) eyeVer.textContent = latest.tag_name;
-          else if (tag) tag.textContent = latest.tag_name + ' now available';
+        if (!Array.isArray(releases) || !releases.length) {
+          fetchUnghReleases();
+          return;
         }
-        if (cnt && total > 0) {
-          cnt.textContent = total >= 1000
-            ? (total / 1000).toFixed(total >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k'
-            : String(total);
-        }
+        processReleases(releases);
+        try {
+          localStorage.setItem('inzx_releases_cache', JSON.stringify({
+            releases: releases,
+            timestamp: Date.now()
+          }));
+        } catch (e) {}
       })
-      .catch(function () { /* offline or rate-limited — the static fallbacks stay */ });
+      .catch(function () {
+        fetchUnghReleases();
+      });
   })();
 
   /* ───────── Dynamic Theming card live palette extractor ───────── */

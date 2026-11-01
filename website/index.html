@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Inzx — A beautiful YouTube Music client for Android</title>
+<title>Inzx</title>
 <meta name="description" content="Inzx is a free, open-source YouTube Music client for Android with word-level karaoke lyrics, AI lyric translation, 320 kbps audio, dynamic theming and real-time listening sessions." />
 <meta name="theme-color" content="#050506" />
 <meta name="color-scheme" content="dark" />
 
 <meta property="og:type" content="website" />
-<meta property="og:title" content="Inzx — A beautiful YouTube Music client for Android" />
+<meta property="og:title" content="Inzx" />
 <meta property="og:description" content="Word-level karaoke lyrics · AI translation · 320 kbps · Dynamic theming · Jams. Free and open source." />
 <meta property="og:url" content="https://inzx.nirmaleeswar.dev/" />
 <meta property="og:image" content="https://inzx.nirmaleeswar.dev/assets/img/brand.png" />
@@ -36,20 +36,24 @@
     <a class="brand" href="#top" aria-label="Inzx home">
       <img src="assets/img/logo_transparent.png" alt="Inzx Mascot" class="brand-mark" />
       <img src="assets/img/text.png" alt="INZX" class="brand-text-img" />
+      <img src="assets/img/brand_transparent.png" alt="Inzx" class="brand-combined" />
     </a>
 
     <div class="nav-actions">
-      <a class="ghost-link docs-link" href="docs/">Docs</a>
+      <a class="ghost-link docs-link" href="docs/index.html">Docs</a>
       <a class="ghost-link gh-btn" href="https://github.com/nirmaleeswar30/Inzx" target="_blank" rel="noopener" aria-label="Star Inzx on GitHub">
         <svg class="gh-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.73.5.9 5.4.9 11.66c0 4.9 3.16 9.06 7.55 10.53.55.1.75-.24.75-.53v-2.06c-3.07.67-3.72-1.3-3.72-1.3-.5-1.29-1.23-1.63-1.23-1.63-1-.69.08-.68.08-.68 1.1.08 1.69 1.15 1.69 1.15.99 1.7 2.6 1.21 3.23.93.1-.73.39-1.22.7-1.5-2.45-.28-5.03-1.24-5.03-5.54 0-1.22.43-2.22 1.14-3.01-.11-.28-.5-1.42.11-2.96 0 0 .93-.3 3.05 1.15a10.4 10.4 0 0 1 5.56 0c2.12-1.45 3.05-1.15 3.05-1.15.61 1.54.22 2.68.11 2.96.71.79 1.14 1.79 1.14 3.01 0 4.31-2.58 5.25-5.04 5.53.4.35.75 1.03.75 2.08v3.08c0 .3.2.64.76.53 4.38-1.48 7.53-5.63 7.53-10.53C23.1 5.4 18.27.5 12 .5Z"/></svg>
         <span class="gh-label">GitHub</span>
         <span class="gh-stars">
           <svg class="star-icon" viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path fill="currentColor" d="m12 17.27 6.18 3.73-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-          <span id="ghStars">—</span>
+          <span id="ghStars">80</span>
         </span>
       </a>
-      <a class="btn btn-primary btn-sm btn-blob" href="#download">
-        <span class="btn-text">Download</span>
+      <a class="btn btn-primary btn-sm btn-blob nav-download-btn" href="#download" aria-label="Download Inzx">
+        <span class="btn-text">
+          <svg class="nav-dl-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          <span class="nav-dl-text">Download</span>
+        </span>
         <span class="blob-btn__inner" aria-hidden="true">
           <span class="blob-btn__blobs">
             <span class="blob-btn__blob"></span>
@@ -89,11 +93,11 @@
       </h1>
 
       <p class="hero-sub reveal" data-delay="2">
-        A better way to experience <strong>YouTube&nbsp;Music on Android</strong>. Completely free and open source, with <strong>320&nbsp;kbps</strong> audio streaming, and <strong>dynamic color themes</strong> that adapt to your music.
+        A better way to experience <strong>music on Android</strong>. Completely free and open source, with <strong>Lossless and 24-bit Hi-Res audio</strong>, and <strong>dynamic color themes</strong> that adapt to your music.
       </p>
 
       <div class="hero-cta reveal" data-delay="3">
-        <a class="btn btn-primary btn-lg btn-blob" href="https://github.com/nirmaleeswar30/Inzx/releases/latest" target="_blank" rel="noopener">
+        <a class="btn btn-primary btn-lg btn-blob" id="heroDownloadBtn" href="https://github.com/nirmaleeswar30/Inzx/releases/latest/download/inzx.apk" target="_blank" rel="noopener">
           <span class="btn-text">
             <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
             Download APK
@@ -132,12 +136,12 @@
       <div class="phone phone-hero tilt">
         <div class="phone-glow"></div>
         <div class="phone-screen">
-          <video src="assets/now_playing.mp4" autoplay loop muted playsinline poster="assets/shots/nowplaying.jpg"></video>
+          <video src="assets/now_playing.mp4" autoplay loop muted playsinline></video>
         </div>
       </div>
       <div class="float-chip chip-1"><span class="pulse"></span> Dynamic album theming</div>
       <div class="float-chip chip-2">Karaoke-grade lyrics</div>
-      <div class="float-chip chip-3">320 kbps High Quality Audio</div>
+      <div class="float-chip chip-3">24-bit Hi-Res Lossless</div>
     </div>
   </div>
 </section>
@@ -146,13 +150,13 @@
 <section class="ticker" id="ticker" aria-hidden="true">
   <div class="ticker-track">
     <div class="ticker-row">
-      <span>Karaoke lyrics</span><i></i><span>AI translation</span><i></i><span>Gapless playback</span><i></i>
+      <span>24-bit Hi-Res Lossless</span><i></i><span>Karaoke lyrics</span><i></i><span>AI translation</span><i></i><span>Gapless playback</span><i></i>
       <span>Crossfade</span><i></i><span>Android Auto</span><i></i><span>Home-screen widgets</span><i></i>
       <span>Jams</span><i></i><span>Canvas album art</span><i></i><span>Material 3</span><i></i>
       <span>Offline-first</span><i></i><span>OTA updates</span><i></i><span>No tracking</span><i></i>
     </div>
     <div class="ticker-row">
-      <span>Karaoke lyrics</span><i></i><span>AI translation</span><i></i><span>Gapless playback</span><i></i>
+      <span>24-bit Hi-Res Lossless</span><i></i><span>Karaoke lyrics</span><i></i><span>AI translation</span><i></i><span>Gapless playback</span><i></i>
       <span>Crossfade</span><i></i><span>Android Auto</span><i></i><span>Home-screen widgets</span><i></i>
       <span>Jams</span><i></i><span>Canvas album art</span><i></i><span>Material 3</span><i></i>
       <span>Offline-first</span><i></i><span>OTA updates</span><i></i><span>No tracking</span><i></i>
@@ -453,22 +457,44 @@
       </article>
 
       <article class="card card-audio reveal spot">
-        <span class="badge">Audio</span>
-        <h3>Studio-quality sound</h3>
-        <p>A native InnerTube engine streams YouTube Music directly, with an optional JioSaavn source for DES-decrypted <strong>320 kbps</strong> audio. Gapless playback, prefetching and crossfade keep the silence out.</p>
+        <span class="badge">Lossless &amp; Hi-Res</span>
+        <h3>Studio-grade Lossless</h3>
+        <p>Stream pristine <strong>Lossless</strong> and studio-master <strong>24-bit / 192&nbsp;kHz Hi-Res</strong> audio with bit-perfect fidelity. Intelligent gapless prefetching and crossfade preserve every acoustic nuance.</p>
 
         <div class="eq-mirrored" aria-hidden="true">
           <div class="eq-meta">
-            <span class="eq-meta-tag"><span class="eq-dot"></span> 320 KBPS</span>
-            <span class="eq-meta-hz">48 kHz Lossless</span>
+            <span class="eq-meta-tag"><span class="eq-dot"></span> 24-BIT HI-RES</span>
+            <span class="eq-meta-hz">192 kHz Lossless</span>
           </div>
           <div class="eq-wave-bars">
-            <i></i><i></i><i></i><i></i><i></i><i></i>
-            <i></i><i></i><i></i><i></i><i></i><i></i>
-            <i></i><i></i><i></i><i></i><i></i><i></i>
-            <i></i><i></i><i></i><i></i><i></i><i></i>
-            <i></i><i></i><i></i><i></i><i></i><i></i>
-            <i></i><i></i><i></i><i></i><i></i><i></i>
+            <i></i><i></i><i></i><i></i><i></i>
+            <i></i><i></i><i></i><i></i><i></i>
+            <i></i><i></i><i></i><i></i><i></i>
+            <i></i><i></i><i></i><i></i><i></i>
+          </div>
+        </div>
+      </article>
+
+      <article class="card card-automix reveal spot" id="automixCard">
+        <div class="automix-ambient" aria-hidden="true"></div>
+
+        <div class="automix-top">
+          <span class="badge badge-automix">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>
+            </svg>
+            Automix
+          </span>
+        </div>
+
+        <h3>DJ-grade <span class="automix-accent-text">seamless mixes</span></h3>
+        <p>Neural beat and harmonic key analysis calculates exact BPM and cue points on the fly. Automix times and blends transitions automatically with zero dead air.</p>
+
+        <!-- Automix Preview Showcase Frame -->
+        <div class="automix-stage" aria-label="Inzx Automix intelligent transition settings preview">
+          <div class="automix-card-frame">
+            <img src="assets/shots/automix.jpg" alt="Inzx Automix smart transitions and beat matching settings" loading="lazy" />
+            <div class="automix-frame-shine"></div>
           </div>
         </div>
       </article>
@@ -490,7 +516,7 @@
         </div>
 
         <h3>Discord <span class="discord-accent-text">Rich Presence</span></h3>
-        <p>Broadcast what you're listening to directly to your Discord profile in real time over a local <strong>IPC socket</strong> — featuring <strong>live timers</strong>, album artwork, and song details with <strong>zero bots</strong>.</p>
+        <p>Broadcast what you're listening to directly to your Discord profile in real time over a local <strong>IPC socket</strong>, featuring <strong>live timers</strong>, album artwork, and song details with <strong>zero bots</strong>.</p>
 
         <!-- Discord Preview Showcase Frame -->
         <div class="discord-stage" aria-label="Discord Rich Presence status preview">
@@ -607,7 +633,7 @@
           <div class="phone showcase-phone">
             <div class="phone-glow"></div>
             <div class="phone-screen">
-              <img src="assets/shots/nowplaying.jpg" alt="Inzx now playing screen" loading="lazy" />
+              <video src="assets/shots/nowplaying.mp4" autoplay loop muted playsinline preload="auto"></video>
             </div>
           </div>
           <figcaption class="showcase-caption">
@@ -765,12 +791,62 @@
           Dart
         </span>
         <span class="pill">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#FF0000"/><circle cx="12" cy="12" r="7" fill="none" stroke="#FFFFFF" stroke-width="2"/><polygon points="10,8.5 16,12 10,15.5" fill="#FFFFFF"/></svg>
-          YouTube Music
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9.5" stroke="url(#metro_g)" stroke-width="2"/>
+            <path d="M12 2.5v19M2.5 12h19" stroke="url(#metro_g)" stroke-width="1.6" stroke-linecap="round" opacity="0.4"/>
+            <circle cx="12" cy="12" r="5" fill="#7C3AED" fill-opacity="0.25" stroke="#A855F7" stroke-width="1.8"/>
+            <circle cx="12" cy="12" r="2" fill="#E9D5FF"/>
+            <defs>
+              <linearGradient id="metro_g" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#C084FC"/>
+                <stop offset="1" stop-color="#7C3AED"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          MetroList
         </span>
         <span class="pill">
-          <img src="assets/img/JioSaavn.png" alt="JioSaavn" />
-          JioSaavn 320k
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect x="2.5" y="3.5" width="19" height="17" rx="5" stroke="url(#bitchord_g)" stroke-width="2"/>
+            <path d="M6 12.5h2.5l2-6.5 3 12 2-7.5 2 4 2.5-2" stroke="url(#bitchord_g)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="13.5" cy="6" r="1.5" fill="#FF7A00"/>
+            <defs>
+              <linearGradient id="bitchord_g" x1="2" y1="3" x2="22" y2="21" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#FF9E40"/>
+                <stop offset="1" stop-color="#FF5500"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          BitChord
+        </span>
+        <span class="pill">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M2.5 13.5c2.8-4.5 5.5-6.5 8.5-6.5s4.5 5 7 5 3.5-3 4.5-3" stroke="url(#lastwave_g)" stroke-width="2.2" stroke-linecap="round"/>
+            <path d="M2.5 17.5c2.8-4.5 5.5-6.5 8.5-6.5s4.5 5 7 5 3.5-3 4.5-3" stroke="url(#lastwave_g)" stroke-width="2.2" stroke-linecap="round" opacity="0.45"/>
+            <circle cx="17" cy="12" r="1.8" fill="#00E5FF"/>
+            <defs>
+              <linearGradient id="lastwave_g" x1="2" y1="7" x2="22" y2="17" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#00E5FF"/>
+                <stop offset="1" stop-color="#0077FE"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          LastWave
+        </span>
+        <span class="pill">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M3 16V10a9 9 0 0 1 18 0v6" stroke="url(#autoeq_g)" stroke-width="2" stroke-linecap="round"/>
+            <rect x="2" y="14" width="3.5" height="6" rx="1.75" fill="#10B981"/>
+            <rect x="18.5" y="14" width="3.5" height="6" rx="1.75" fill="#10B981"/>
+            <path d="M8 12c1.4-1.8 2.6-1.8 3.5 0s2.4 1.8 4.5 0" stroke="url(#autoeq_g)" stroke-width="1.8" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="autoeq_g" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#34D399"/>
+                <stop offset="1" stop-color="#059669"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          AutoEQ
         </span>
         <span class="pill">
           <svg viewBox="0 0 24 24" fill="none" stroke="#ff385c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3" fill="#ff385c"/><circle cx="18" cy="16" r="3" fill="#ff385c"/><path d="M9 9l12-2"/></svg>
@@ -800,20 +876,16 @@
           Supabase
         </span>
         <span class="pill">
-          <svg viewBox="0 0 24 24" fill="#003B57"><path d="M12 2C6.48 2 2 4.02 2 6.5s4.48 4.5 10 4.5 10-2.02 10-4.5S17.52 2 12 2zm0 6.5C7.58 8.5 4 7.16 4 6.5S7.58 4.5 12 4.5s8 1.34 8 2-3.58 2-8 2zm10 2.5c0 2.48-4.48 4.5-10 4.5S2 13.48 2 11v4c0 2.48 4.48 4.5 10 4.5s10-2.02 10-4.5v-4zm0 6.5c0 2.48-4.48 4.5-10 4.5S2 19.98 2 17.5v4c0 2.48 4.48 4.5 10 4.5s10-2.02 10-4.5v-4z"/></svg>
-          SQLite / Drift
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 2.5l7.8 4.5v9L12 20.5l-7.8-4.5V7L12 2.5z" stroke="#F59E0B" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M12 6.5l4.3 2.5v5L12 16.5l-4.3-2.5V9L12 6.5z" fill="#F59E0B" fill-opacity="0.3" stroke="#FBBF24" stroke-width="1.4" stroke-linejoin="round"/>
+            <circle cx="12" cy="11.5" r="1.6" fill="#FDE68A"/>
+          </svg>
+          Hive
         </span>
         <span class="pill">
           <svg viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M8 7h8"/><path d="M8 11h8"/><path d="M8 15h5"/></svg>
           LRCLib
-        </span>
-        <span class="pill">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M12 2C12 7.523 7.523 12 2 12C7.523 12 12 16.477 12 22C12 16.477 16.477 12 22 12C16.477 12 12 7.523 12 2Z" fill="url(#gemini_grad)"/><defs><linearGradient id="gemini_grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#4E82EE"/><stop offset="0.5" stop-color="#9B72CB"/><stop offset="1" stop-color="#D96570"/></linearGradient></defs></svg>
-          Gemini &amp; AI
-        </span>
-        <span class="pill">
-          <svg viewBox="0 0 24 24" fill="#3DDC84"><path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.551 0 .9993.4482.9993.9993.0001.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 0 0-.1521-.5676.416.416 0 0 0-.5676.1521l-2.0223 3.503C15.5902 8.4115 13.8533 8.082 12 8.082s-3.5902.3295-5.1368.8677L4.8409 5.4467a.4161.4161 0 0 0-.5677-.1521.4157.4157 0 0 0-.1521.5676l1.9973 3.4592C2.6889 11.1867.3432 14.6589 0 18.761h24c-.3432-4.1021-2.6889-7.5743-6.1185-9.4396"/></svg>
-          Android &amp; Auto
         </span>
       </div>
     </div>
@@ -832,7 +904,7 @@
     <div class="releases-meta-bar reveal">
       <div class="rmb-badges">
         <span class="rmb-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Active Development</span>
-        <span class="rmb-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> MIT Open Source</span>
+        <span class="rmb-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> GPL-3.0 Open Source</span>
         <span class="rmb-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg> Android APK</span>
         <span class="rmb-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Shorebird OTA</span>
       </div>
@@ -843,7 +915,7 @@
       </a>
     </div>
 
-    <div class="releases-timeline">
+    <div class="releases-timeline" id="releasesTimeline">
       <!-- Item 1: Latest Release -->
       <div class="rel-item current reveal">
         <div class="rel-spine">
@@ -853,31 +925,31 @@
         <div class="rel-card">
           <div class="rel-card-header">
             <div class="rel-badge-group">
-              <span class="rel-tag latest">v2.4.0</span>
+              <span class="rel-tag latest">v1.5.4</span>
               <span class="rel-status-pill">Latest Release</span>
               <span class="rel-plat-pill">Android · Android Auto</span>
             </div>
-            <div class="rel-date">Shipped · <a href="https://github.com/nirmaleeswar30/Inzx/releases/latest" target="_blank" rel="noopener noreferrer">v2.4.0</a></div>
+            <div class="rel-date">Shipped · <a href="https://github.com/nirmaleeswar30/Inzx/releases/tag/v1.5.4" target="_blank" rel="noopener noreferrer">v1.5.4</a></div>
           </div>
-          <h4>Syllable Karaoke Lyrics, JioSaavn 320k &amp; Real-Time Jams</h4>
-          <p>A major feature drop delivering word-level syllable synchronized lyrics via the BetterLyrics TTML engine, native 320 kbps stream matching, and multiplayer synchronized listening rooms.</p>
+          <h4>Lossless &amp; Hi-Res Audio, DJ Automix &amp; AutoEQ Calibration</h4>
+          <p>Flagship audio overhaul featuring studio-master 24-bit / 192 kHz lossless playback, intelligent DJ beat-matched automix transitions, and AutoEQ parametric headphone calibration ported from LastWave.</p>
           <ul class="rel-notes">
-            <li><b>BetterLyrics TTML Engine:</b> Word-by-word karaoke synchronization with vocal ad-lib separation and timing offsets.</li>
-            <li><b>JioSaavn HQ 320 kbps:</b> Automated song matching and DES-decrypted high-bitrate streaming alongside YouTube Music.</li>
-            <li><b>Real-Time Jams:</b> Listen synchronously with friends with shared queues and sub-second drift correction over WebSockets.</li>
-            <li><b>Android Auto Console:</b> Distraction-free vehicle dashboard display with full steering wheel media key bindings.</li>
+            <li><b>Lossless &amp; Hi-Res FLAC:</b> Custom ExoPlayer renderers delivering 24-bit / 192 kHz playback with bit-perfect DAC passthrough.</li>
+            <li><b>DJ-Grade Automix:</b> Neural tempo and harmonic key analysis for automatic, seamless transitions with zero dead air.</li>
+            <li><b>AutoEQ Headphone Correction:</b> 5,000+ headphone calibration profiles ported from LastWave and Jaakko Pasanen's database.</li>
+            <li><b>Core Modernization:</b> Build optimizations, Android launcher widget polish, and playback stability improvements.</li>
           </ul>
           <div class="rel-actions">
-            <a class="rel-dl-btn" href="https://github.com/nirmaleeswar30/Inzx/releases/latest" target="_blank" rel="noopener noreferrer">
+            <a class="rel-dl-btn" href="https://github.com/nirmaleeswar30/Inzx/releases/latest/download/inzx.apk" target="_blank" rel="noopener noreferrer">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l4-4m-4 4l-4-4M4 19h16"/></svg>
-              <span>Download Latest APK</span>
+              <span>Download inzx.apk</span>
             </a>
-            <a class="rel-sub-btn" href="https://github.com/nirmaleeswar30/Inzx/releases" target="_blank" rel="noopener noreferrer">Release Notes ↗</a>
+            <a class="rel-sub-btn" href="https://github.com/nirmaleeswar30/Inzx/releases/tag/v1.5.4" target="_blank" rel="noopener noreferrer">Release Notes ↗</a>
           </div>
         </div>
       </div>
 
-      <!-- Item 2: AI Translations & Discord RPC -->
+      <!-- Item 2: v1.5.3 -->
       <div class="rel-item reveal">
         <div class="rel-spine">
           <div class="rel-dot"></div>
@@ -886,25 +958,25 @@
         <div class="rel-card">
           <div class="rel-card-header">
             <div class="rel-badge-group">
-              <span class="rel-tag sync">v2.2.0</span>
-              <span class="rel-plat-pill">AI &amp; Social</span>
+              <span class="rel-tag sync">v1.5.3</span>
+              <span class="rel-plat-pill">UI &amp; Theming</span>
             </div>
-            <div class="rel-date">Milestone · <a href="https://github.com/nirmaleeswar30/Inzx/releases" target="_blank" rel="noopener noreferrer">#ai-lyrics</a></div>
+            <div class="rel-date">Shipped · <a href="https://github.com/nirmaleeswar30/Inzx/releases/tag/v1.5.3" target="_blank" rel="noopener noreferrer">v1.5.3</a></div>
           </div>
-          <h4>AI Lyric Translation &amp; Discord Rich Presence</h4>
-          <p>Integrated native LLM translation providers for multi-language lyric translation and seamless Discord gaming status broadcast.</p>
+          <h4>Purple Brand Accent, Dynamic Theming &amp; Ambient Lyrics</h4>
+          <p>Modernized brand aesthetic with signature deep purple accent, upgraded Material 3 album color extraction, and introduced full-screen ambient lyrics.</p>
           <ul class="rel-notes">
-            <li><b>Multi-Provider AI Lyrics:</b> Bring-your-own-key translation using Google Gemini, DeepL, and OpenRouter stored in device keystore.</li>
-            <li><b>Discord Rich Presence:</b> Live "Listening to Inzx" profile activity with album artwork, title, and elapsed track time.</li>
-            <li><b>Smart Audio Routing:</b> Live device status showing active headphones, Bluetooth codec, and speaker switching.</li>
+            <li><b>Ambient Lyrics View:</b> Immersive full-screen synced lyrics with dynamic glowing album art background.</li>
+            <li><b>Refined Dynamic Theming:</b> Fluid Material 3 palette extraction adapting seamlessly to song artwork.</li>
+            <li><b>Purple Brand Accent:</b> Refreshed signature accent color across launcher widgets, buttons, and players.</li>
           </ul>
           <div class="rel-actions">
-            <a class="rel-sub-btn" href="https://github.com/nirmaleeswar30/Inzx/releases" target="_blank" rel="noopener noreferrer">Release Details ↗</a>
+            <a class="rel-sub-btn" href="https://github.com/nirmaleeswar30/Inzx/releases/tag/v1.5.3" target="_blank" rel="noopener noreferrer">Release Details ↗</a>
           </div>
         </div>
       </div>
 
-      <!-- Item 3: Widgets & Liquid Glass -->
+      <!-- Item 3: v1.5.0 -->
       <div class="rel-item reveal">
         <div class="rel-spine">
           <div class="rel-dot"></div>
@@ -913,20 +985,20 @@
         <div class="rel-card">
           <div class="rel-card-header">
             <div class="rel-badge-group">
-              <span class="rel-tag core">v2.0.0</span>
-              <span class="rel-plat-pill">UI Overhaul</span>
+              <span class="rel-tag core">v1.5.0</span>
+              <span class="rel-plat-pill">Jams &amp; RPC</span>
             </div>
-            <div class="rel-date">Milestone · <a href="https://github.com/nirmaleeswar30/Inzx/releases" target="_blank" rel="noopener noreferrer">#ui-widgets</a></div>
+            <div class="rel-date">Shipped · <a href="https://github.com/nirmaleeswar30/Inzx/releases/tag/v1.5.0" target="_blank" rel="noopener noreferrer">v1.5.0</a></div>
           </div>
-          <h4>Liquid Glass Theming &amp; Dynamic Home Widgets</h4>
-          <p>Complete interface redesign featuring frosted glass navigation, 4 distinct Now Playing styles, and 3 home screen widgets.</p>
+          <h4>Real-Time Jams, Discord Rich Presence &amp; Home Screen Widgets</h4>
+          <p>Multiplayer collaborative listening rooms powered by Supabase, desktop Discord Rich Presence via IPC, and three dynamic launcher widgets.</p>
           <ul class="rel-notes">
+            <li><b>Real-Time Jams:</b> Collaborative listening rooms with shared queue management and sub-second sync.</li>
+            <li><b>Discord Rich Presence:</b> Live "Listening to Inzx" status on Discord with song title, artist, and elapsed timer.</li>
             <li><b>3 Home Screen Widgets:</b> 2×2 square, 4×1 pill, and 4×4 wide widgets adapting to launcher themes.</li>
-            <li><b>Liquid Glass Navigation:</b> Rotating vinyl mini-player artwork and real-time lyric snippets right above the nav bar.</li>
-            <li><b>Shorebird Code Push:</b> Instant background over-the-air hotfixes delivered directly without reinstalling APKs.</li>
           </ul>
           <div class="rel-actions">
-            <a class="rel-sub-btn" href="https://github.com/nirmaleeswar30/Inzx/releases" target="_blank" rel="noopener noreferrer">Release Details ↗</a>
+            <a class="rel-sub-btn" href="https://github.com/nirmaleeswar30/Inzx/releases/tag/v1.5.0" target="_blank" rel="noopener noreferrer">Release Details ↗</a>
           </div>
         </div>
       </div>
@@ -943,14 +1015,14 @@
               <span class="rel-status-pill desktop">In Development</span>
               <span class="rel-plat-pill">Multi-Platform</span>
             </div>
-            <div class="rel-date">Upcoming · 2026 Roadmap</div>
+            <div class="rel-date">Upcoming · Roadmap</div>
           </div>
-          <h4>Desktop Editions &amp; Chromecast Audio Cast</h4>
-          <p>Expanding the Inzx listening experience to large desktop workstations and smart home speakers.</p>
+          <h4>Desktop Client &amp; Google Cast Audio Streaming</h4>
+          <p>Expanding the Inzx listening experience to large desktop workstations and networked smart home speakers.</p>
           <ul class="rel-notes">
-            <li><b>Desktop Client (Windows · macOS · Linux):</b> Dedicated desktop builds with global media hotkeys and Discord RPC.</li>
-            <li><b>Google Cast &amp; DLNA:</b> Direct streaming to Nest Audio, smart TVs, and hi-fi network receivers.</li>
-            <li><b>Equalizer &amp; ReplayGain:</b> 10-band parametric EQ and volume normalization across varied audio sources.</li>
+            <li><b>Desktop Client (Windows · macOS · Linux):</b> Native desktop packaging with global media hotkeys and system media integration.</li>
+            <li><b>Google Cast &amp; DLNA:</b> Direct stream casting to Nest Audio, smart TVs, and network receivers.</li>
+            <li><b>Advanced Scrobbling:</b> Built-in Last.fm and ListenBrainz history scrobbling.</li>
           </ul>
           <div class="rel-actions">
             <a class="rel-sub-btn" href="https://github.com/nirmaleeswar30/Inzx/issues" target="_blank" rel="noopener noreferrer">Join Discussion ↗</a>
@@ -971,22 +1043,31 @@
       <p class="lead">Android, and Android only (for now ;-))</p>
 
       <div class="dl-action-cards">
-        <a class="dl-btn-card dl-btn-card-primary" href="https://github.com/nirmaleeswar30/Inzx/releases/latest" target="_blank" rel="noopener">
+        <a class="dl-btn-card dl-btn-card-primary" id="mainDownloadBtn" href="https://github.com/nirmaleeswar30/Inzx/releases/latest/download/inzx.apk" target="_blank" rel="noopener">
           <div class="dl-btn-icon">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0l4-4m-4 4l-4-4M4 19h16"/></svg>
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l4-4m-4 4l-4-4M4 19h16"/></svg>
           </div>
           <div class="dl-btn-text">
             <span class="dl-btn-title">Download APK</span>
-            <span class="dl-btn-sub">Latest stable build · Free &amp; Open Source</span>
+            <span class="dl-btn-sub">ARM64-v8a · Recommended for modern phones</span>
           </div>
         </a>
-        <a class="dl-btn-card dl-btn-card-secondary" href="https://github.com/nirmaleeswar30/Inzx" target="_blank" rel="noopener">
+        <a class="dl-btn-card dl-btn-card-universal" id="universalDownloadBtn" href="https://github.com/nirmaleeswar30/Inzx/releases/latest/download/inzx-universal.apk" target="_blank" rel="noopener">
+          <div class="dl-btn-icon">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+          </div>
+          <div class="dl-btn-text">
+            <span class="dl-btn-title">Universal APK</span>
+            <span class="dl-btn-sub">All architectures · Compatible with all devices</span>
+          </div>
+        </a>
+        <a class="dl-btn-card dl-btn-card-secondary" href="https://github.com/nirmaleeswar30/Inzx/releases/latest" target="_blank" rel="noopener">
           <div class="dl-btn-icon">
             <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M12 .5C5.73.5.9 5.4.9 11.66c0 4.9 3.16 9.06 7.55 10.53.55.1.75-.24.75-.53v-2.06c-3.07.67-3.72-1.3-3.72-1.3-.5-1.29-1.23-1.63-1.23-1.63-1-.69.08-.68.08-.68 1.1.08 1.69 1.15 1.69 1.15.99 1.7 2.6 1.21 3.23.93.1-.73.39-1.22.7-1.5-2.45-.28-5.03-1.24-5.03-5.54 0-1.22.43-2.22 1.14-3.01-.11-.28-.5-1.42.11-2.96 0 0 .93-.3 3.05 1.15a10.4 10.4 0 0 1 5.56 0c2.12-1.45 3.05-1.15 3.05-1.15.61 1.54.22 2.68.11 2.96.71.79 1.14 1.79 1.14 3.01 0 4.31-2.58 5.25-5.04 5.53.4.35.75 1.03.75 2.08v3.08c0 .3.2.64.76.53 4.38-1.48 7.53-5.63 7.53-10.53C23.1 5.4 18.27.5 12 .5Z"/></svg>
           </div>
           <div class="dl-btn-text">
             <span class="dl-btn-title">View on GitHub</span>
-            <span class="dl-btn-sub">Source code, changelog &amp; issues</span>
+            <span class="dl-btn-sub">Release notes, changelogs &amp; checksums</span>
           </div>
         </a>
       </div>
@@ -1025,7 +1106,7 @@
           <a class="btn btn-ghost btn-star-repo" href="https://github.com/nirmaleeswar30/Inzx" target="_blank" rel="noopener">
             <svg class="star-icon" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="m12 17.27 6.18 3.73-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
             <span>Star the repo</span>
-            <span class="gh-stars-pill"><span id="supportGhStars">—</span> stars</span>
+            <span class="gh-stars-pill"><span id="supportGhStars">80</span> stars</span>
           </a>
         </div>
         <p class="muted small">Or scan the QR to pay via UPI →</p>
@@ -1065,29 +1146,29 @@
 
         <div class="docs-quick-links">
           <a class="docs-quick-card" href="docs/install.html">
-            <span class="dqc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l4-4m-4 4l-4-4M4 19h16"/></svg></span>
+            <span class="dqc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l4-4m-4 4l-4-4M4 19h16"/></svg></span>
             <b>Install &amp; Updates</b>
             <span>APKs, Shorebird OTA and auto-updates</span>
           </a>
           <a class="docs-quick-card" href="docs/sign-in.html">
-            <span class="dqc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+            <span class="dqc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
             <b>Google Sign-In</b>
             <span>Library sync, history, and guest mode</span>
           </a>
           <a class="docs-quick-card" href="docs/lyrics.html">
-            <span class="dqc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
+            <span class="dqc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
             <b>Lyrics &amp; AI</b>
             <span>Word-by-word karaoke, AI translation &amp; offsets</span>
           </a>
           <a class="docs-quick-card" href="docs/widgets.html">
-            <span class="dqc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></span>
+            <span class="dqc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></span>
             <b>Home Widgets</b>
             <span>2×2, 4×1, and 4×4 dynamic launcher widgets</span>
           </a>
         </div>
 
         <div class="docs-cta-wrap">
-          <a class="btn btn-primary btn-lg btn-blob" href="docs/">
+          <a class="btn btn-primary btn-lg btn-blob" href="docs/index.html">
             <span class="btn-text">
               Browse Full Documentation
               <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
@@ -1141,7 +1222,7 @@
           <a href="docs/install.html">Installation Guide</a>
         </div>
         <div><h5>Documentation</h5>
-          <a href="docs/">Overview</a>
+          <a href="docs/index.html">Overview</a>
           <a href="docs/widgets.html">Home Screen Widgets</a>
           <a href="docs/lyrics.html">Lyrics &amp; AI</a>
           <a href="docs/audio.html">Audio Quality</a>
@@ -1150,7 +1231,7 @@
         <div><h5>Project</h5>
           <a href="https://github.com/nirmaleeswar30/Inzx" target="_blank" rel="noopener">Source code</a>
           <a href="https://github.com/nirmaleeswar30/Inzx/issues" target="_blank" rel="noopener">Issues</a>
-          <a href="https://github.com/nirmaleeswar30/Inzx/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+          <a href="https://github.com/nirmaleeswar30/Inzx/blob/main/LICENSE" target="_blank" rel="noopener">GPL-3.0 License</a>
           <a href="#support">Sponsor</a>
         </div>
       </div>
@@ -1173,8 +1254,8 @@
     </div>
 
     <div class="footer-bottom">
-      <span>© <span id="year">2026</span> Inzx — Released under the MIT License.</span>
-      <span>Not affiliated with Google, YouTube Music or JioSaavn.</span>
+      <span>© <span id="year">2026</span> Inzx — Released under the GNU GPL v3.0 License.</span>
+      <span>Not affiliated with Google or YouTube Music.</span>
     </div>
   </div>
 </footer>

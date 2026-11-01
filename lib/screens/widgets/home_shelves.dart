@@ -901,7 +901,7 @@ class ChartsShelf extends ConsumerWidget {
               if (shelf.browseId != null)
                 TextButton(
                   onPressed: () {
-                    // TODO: Navigate to chart details
+                    ShelfDetailsScreen.open(context, shelf);
                   },
                   child: Text(
                     l10n.seeAll,

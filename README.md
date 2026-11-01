@@ -1,13 +1,13 @@
 <div align="center">
 	<img src="assets/brand_transparent.png" alt="Inzx Logo" width=""/>
 
-**A beautiful, open-source YouTube Music client for Android** — dynamic theming, word-level synced lyrics, AI lyric translation, high-quality streaming, and real-time listening sessions.
+**A beautiful, open-source YouTube Music client for Android** — dynamic theming, word-level synced lyrics, AI lyric translation, DJ Automix, AutoEQ studio calibration, high-quality audio streaming, and real-time listening sessions.
 
 [![Latest Release](https://img.shields.io/github/v/release/nirmaleeswar30/Inzx?label=release&logo=github)](https://github.com/nirmaleeswar30/Inzx/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/nirmaleeswar30/Inzx/total?logo=github&color=success)](https://github.com/nirmaleeswar30/Inzx/releases)
 [![Flutter](https://img.shields.io/badge/Flutter-3-02569B?logo=flutter)](https://flutter.dev)
 [![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white)](#installation)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 [Features](#-features) • [Screenshots](#-screenshots) • [Installation](#-installation) • [Build from Source](#-building-from-source) • [Contributing](#-contributing)
 
@@ -35,16 +35,18 @@ Inzx is an independent, open-source project. It is **not affiliated with, endors
 
 A quick look at what makes Inzx stand out:
 
-
-- 🎤 **Word-level karaoke lyrics** — synced to the syllable, from 15+ providers
-- 🌐 **AI lyric translation** — translate & transliterate live (OpenRouter · DeepL · Gemini)
-- 🔊 **Studio-quality audio** — optional JioSaavn source, up to 320 kbps
-- 🎨 **Instant dynamic theming** — 0 ms album-art colors, 10+ accents, custom wheel
-- 🖼️ **Multiple Now Playing styles** — Default, Cinematic, Ripple & OG + waveform / spectrum scrubbers
-- 🎞️ **Animated album art (Canvas)** — with ambient glow reflection backgrounds
-- 👥 **Jams** — real-time synchronized listening with friends
-- 🚗 **Android Auto & widgets** — plus home-screen widgets and instant OTA updates
-
+- 🎤 **Word-level karaoke lyrics** — syllable-accurate sync from 15+ providers (BetterLyrics, LRCLib, Genius…)
+- 🌐 **AI lyric translation** — translate & romanize any script live (OpenRouter · DeepL · Google Gemini)
+- 🎚️ **DJ Automix** — smart beatmatching, tempo & transition cues for seamless continuous mixes
+- 🎧 **AutoEQ & Studio Calibration** — 4,000+ headphone & IEM compensation profiles + parametric EQ
+- 🔊 **Studio-grade audio** — optional JioSaavn source up to 320 kbps with gapless playback & prefetching
+- 🎨 **Instant dynamic theming** — 0 ms isolate-extracted album colors, AMOLED black, and liquid-glass UI
+- 🖼️ **4 Now Playing styles** — Default, Cinematic, Ripple & OG + waveform / spectrum scrubbers
+- 🎞️ **Animated album art (Canvas)** — fullscreen video canvas loops with ambient reflection glow
+- 👥 **Jams** — real-time collaborative listening rooms with synchronized queues via Supabase
+- 🎮 **Discord Rich Presence** — share your live playback status & album art to Discord
+- 📊 **Scrobbling & listening stats** — Last.fm & ListenBrainz support + personalized listening analytics
+- 🚗 **Android Auto & widgets** — 3 dynamic home-screen widgets (2×2, 4×1, 4×2) + instant OTA updates
 
 ## ❤️ Support Inzx
 
@@ -58,85 +60,86 @@ Inzx is free and open source. If it makes your day a little better, consider sup
 
 <img src="assets/upi.jpeg" alt="UPI QR code" width="220"/>
 
-
-
 </div>
-
 
 ## 🎯 Features
 
-### 🎧 Playback & Audio
+### 🎧 Playback, Audio & Studio Calibration
 
-- **YouTube Music engine** via native InnerTube API
-- **JioSaavn HQ source** — up to 320 kbps
-- **Prefer Audio Versions** — auto-skip music videos
-- **Gapless playback & stream prefetching** for near-zero latency
-- **Crossfade** with adjustable duration
-- **Background playback** — notification, lock-screen & media session
-- **Smart audio routing** — shows the active output device
-- **Robust audio session** — focus, calls & Bluetooth handled
+- **Dual catalog engines** — YouTube Music via native InnerTube API + optional JioSaavn Lossless/HQ source (up to 320 kbps)
+- **DJ Automix** — BitChord beat & vocal analysis engine, BPM & musical key detection, transition cue planning, and seamless beatmatched crossfade
+- **AutoEQ calibration** — 4,000+ headphone & IEM compensation profiles (Jaakkopasanen/AutoEq), automatic per-device switching (wired / Bluetooth), bass & tilt dB controls
+- **Built-in Equalizer** — multi-band equalizer with bass boost and custom acoustic presets
+- **Gapless playback & cache warming** — intelligent stream prefetching for instant zero-buffer track transitions
+- **Configurable crossfade** — customizable crossfade duration (Off, 5s, 8s, 10s, 12s)
+- **Smart audio routing** — shows active output device (speaker, wired, Bluetooth) with quick-switch controls
+- **Prefer audio versions** — automatically skips music video intros and silence
+- **Sleep timer** — gentle volume fade-out over customizable durations
+- **Robust audio session** — handles phone calls, interruptions, and Bluetooth disconnects cleanly
 
 &nbsp;
 
-### 🎤 Lyrics
+### 🎤 Karaoke Lyrics & AI Translation
 
-- **Word-level synced (karaoke) lyrics** via BetterLyrics TTML
-- **15+ providers with smart fallback** — LRCLib, Genius, KuGou, Musixmatch, Megalobiz, YouTube captions, embedded & local…
-- **AI translation & transliteration** — OpenRouter, DeepL, Gemini (BYO key)
-- **Line & word offset tuning**
-- **Instrumental gaps & background vocals**
+- **Word-level synced (karaoke) lyrics** — syllable-accurate highlighting powered by BetterLyrics TTML engine
+- **15+ providers with smart fallback** — BetterLyrics, LRCLib, Genius, KuGou, Musixmatch, Megalobiz, YouTube captions, embedded ID3 tags, and local files
+- **Live AI translation & transliteration** — translate and romanize foreign scripts in real-time via OpenRouter, DeepL, or Google Gemini
+- **Fine offset calibration** — adjust line and word timing offsets with persistent per-track calibration
+- **Vocals & instrumental detection** — background vocal separation, lead singer markers, and instrumental gap indicators
 
 &nbsp;
 
 ### 🎨 Interface & Now Playing
 
-- **Instant dynamic colors** — 0 ms isolate palette + caching
-- **Material 3** with 10+ accents & custom color wheel
-- **Now Playing styles** — Default, Cinematic, Ripple, OG
-- **Progress bar styles** — linear, waveform, spectrum
-- **Animated album art (Canvas)** with ambient reflections
-- **Liquid-glass nav, rotating mini-player art & lyric preview**
-- **Skeletonizer** shimmer loading everywhere
+- **Instant dynamic colors** — isolate-based `AlbumColorExtractor` generates 0 ms palettes from album covers with zero UI stutter
+- **Shader-powered liquid-glass UI** — translucent navigation bar with real-time blur and specular highlight shaders
+- **4 distinct Now Playing styles** — Default, Cinematic, Ripple, and classic OG layouts
+- **Audio visualizer progress bars** — linear, dynamic waveform, and live frequency spectrum scrubbers
+- **Animated album art (Canvas)** — fullscreen video canvas loops with ambient reflection glow
+- **Material 3 personalization** — 10+ brand accent colors (including new Inzx Purple), custom color wheel, and pure AMOLED dark mode
+- **Skeletonizer shimmer** — fluid loading placeholders across all views
 - **Localized UI** in 20+ languages with catalog-region control
 
 &nbsp;
 
-### 👥 Jams — Collaborative Listening
+### 👥 Jams, Discord & Social Presence
 
-- **Real-time sync** via Supabase WebSockets
-- **Host & participant roles** with granular permissions
-- **Shared queue** — collaborative edit & drag-to-reorder
-- **Live playback sync** with drift correction
-- **"Last controller wins"** conflict resolution
-
-&nbsp;
-
-### 📚 Library, Search & Downloads
-
-- **YouTube Music sync** — playlists, likes, albums, artists
-- **Local files** organized by folders
-- **Custom playlists**
-- **Download manager** with background progress
-- **Podcasts** — browse & play episodes
-- **Dynamic search** — suggestions, history & filters
+- **Real-time Jams** — collaborative listening rooms powered by Supabase WebSockets with millisecond drift correction
+- **Collaborative queue** — shared queue where friends can add, reorder, or vote on tracks in real time
+- **Host & participant permissions** — fine-grained control with "last controller wins" conflict resolution
+- **Discord Rich Presence** — live Discord activity showing track title, artist, album art, elapsed time, and "Listen on Inzx"
+- **Scrobbling support** — native Last.fm and ListenBrainz integration with standard scrobble thresholds (50% or 3 min)
+- **Personal listening statistics** — in-depth stats tracking top tracks, most played artists, and total listening time
 
 &nbsp;
 
-### 📱 Platform & System
+### 📚 Library, Discovery & Offline
 
-- **Android Auto** dashboard integration
-- **Home-screen widgets** — compact (4×1) & expanded (4×2)
-- **Instant OTA updates** via Shorebird code push
-- **Backup & restore** app data
-- **Deep links & sharing** for tracks, albums & playlists
+- **YouTube Music account sync** — Google Sign-In with bidirectional sync for playlists, liked tracks, saved albums, subscribed artists, and history
+- **Guest / Private mode** — full streaming and discovery without altering your Google account history
+- **Playlist importer** — import external playlists from YouTube Music with one tap
+- **Download manager** — multi-threaded background downloader for offline listening
+- **Local file player & tag editor** — browse local folders and edit ID3, MP4, and WebM tags directly
+- **Moods & Genres browsing** — curated mood feeds, genre charts, artist radios, and related track discovery
 
 &nbsp;
 
-### 🔒 Privacy
+### 📱 Platform, Widgets & Updates
 
-- **Offline-first** — usable without a connection
-- **Encrypted credentials** via secure storage
-- **No third-party tracking** — no analytics telemetry
+- **Android Auto integration** — driving-optimized dashboard interface for safe on-road playback
+- **Dynamic home-screen widgets** — 3 launcher widget formats (2×2, 4×1 compact, 4×2 expanded) updating live via Android AppWidgetProvider
+- **Instant OTA updates** — Shorebird code push delivers patches instantly without reinstalling APKs
+- **In-app GitHub release notifications** — checks for major releases with direct APK downloads
+- **Backup & restore** — export and restore your entire app state, playlists, favorites, and settings to a single file
+- **Deep links & sharing** — native sharing for tracks, albums, and playlists
+
+&nbsp;
+
+### 🔒 Privacy & Open Source
+
+- **Offline-first architecture** — core features work entirely without an internet connection or login
+- **Encrypted credentials** — auth tokens and API keys stored securely via Android Keystore
+- **Zero tracking or analytics** — completely free, no telemetry, no third-party tracking, no ads
 
 ---
 
@@ -146,7 +149,7 @@ Inzx is free and open source. If it makes your day a little better, consider sup
 
 | **Home** | **Now Playing** | **Library** | **Jams** |
 |:---:|:---:|:---:|:---:|
-| ![Home](./.github/screenshots/home.png) | ![Now Playing](./.github/screenshots/nowplaying.png) | ![Library](./.github/screenshots/library.png) | ![Jams](./.github/screenshots/jam.png) |
+| ![Home](./.github/screenshots/home.png) | <video src="./.github/screenshots/nowplaying.mp4" controls autoplay loop muted playsinline width="100%"><a href="./.github/screenshots/nowplaying.mp4">▶ **Play Video**</a></video> | ![Library](./.github/screenshots/library.png) | ![Jams](./.github/screenshots/jam.png) |
 | **Search** | **Playlist** | **Folders** | **Lyrics** |
 | ![Search](./.github/screenshots/search.png) | ![Playlist](./.github/screenshots/playlist.png) | ![Folders](./.github/screenshots/folders.png) | ![Lyrics](./.github/screenshots/lyrics.png) |
 
@@ -159,9 +162,9 @@ Inzx is free and open source. If it makes your day a little better, consider sup
 
 <div align="center">
 
-| **Widget 4×1** | **Widget 4×2** |
-|:---:|:---:|
-| ![Widget 4x1](./.github/screenshots/widget-4x1.png) | ![Widget 4x2](./.github/screenshots/widget-4x2.png) |
+| **Home Screen Widgets** |
+|:---:|
+| <img src="./.github/screenshots/widgets.jpg" alt="Home Screen Widgets" width="360" style="max-width:100%" /> |
 
 | **Android Auto** | **Android Auto — Now Playing** |
 |:---:|:---:|
@@ -254,9 +257,11 @@ flutter build apk --split-per-abi --release
 
 **Data & storage** — [Hive](https://pub.dev/packages/hive) (fast local cache for tracks, playlists & colors) · Flutter Secure Storage (encrypted credentials) · Shared Preferences (settings) · [Supabase](https://supabase.com) (real-time Jams backend)
 
-**Audio & catalog** — Custom **InnerTube API** engine · [just_audio](https://pub.dev/packages/just_audio) · [audio_service](https://pub.dev/packages/audio_service) (background/media controls) · [audio_session](https://pub.dev/packages/audio_session) · JioSaavn HQ source (DES-decrypted stream URLs)
+**Audio & catalog** — Custom **InnerTube API** engine · [just_audio](https://pub.dev/packages/just_audio) · [audio_service](https://pub.dev/packages/audio_service) · [audio_session](https://pub.dev/packages/audio_session) · JioSaavn HQ source · [BitChord](https://github.com/kushagrasinghx/BitChord) Automix engine (BPM, key & beat transition analysis) · [AutoEQ](https://github.com/jaakkopasanen/AutoEq) database (4,000+ headphone calibration profiles)
 
-**UI & media** — [Skeletonizer](https://pub.dev/packages/skeletonizer) · isolate-based `AlbumColorExtractor` (0 ms palette) · [Iconsax](https://pub.dev/packages/iconsax) · Cached Network Image · `video_player` (Canvas art) · Marquee
+**Social & integrations** — Discord Rich Presence (RPC) · Last.fm & ListenBrainz scrobbling clients · BetterLyrics TTML parser
+
+**UI & media** — Custom liquid-glass shaders · [Skeletonizer](https://pub.dev/packages/skeletonizer) · isolate-based `AlbumColorExtractor` (0 ms palette) · [Iconsax](https://pub.dev/packages/iconsax) · Cached Network Image · `video_player` (Spotify Canvas art) · Marquee
 
 **Delivery** — [Shorebird](https://shorebird.dev) code push for OTA updates
 
@@ -275,14 +280,18 @@ Translations live in [`lib/l10n`](lib/l10n). Contributions and corrections are v
 ## 🗺️ Roadmap
 
 - [x] Word-level synced lyrics (BetterLyrics TTML engine)
-- [x] AI lyric translation & transliteration
-- [x] JioSaavn high-quality audio source
+- [x] AI lyric translation & transliteration (Gemini / DeepL / OpenRouter)
+- [x] JioSaavn high-quality 320 kbps audio source
+- [x] DJ Automix with beatmatching & transition analysis
+- [x] AutoEQ headphone calibration (4,000+ profiles) & Equalizer
+- [x] Discord Rich Presence & Last.fm / ListenBrainz scrobbling
+- [x] Real-time collaborative Jams
 - [x] Crossfade & gapless prefetching
-- [x] Android Auto
-- [x] Home-screen widgets
-- [x] Multiple Now Playing & progress-bar styles
+- [x] Android Auto dashboard integration
+- [x] Dynamic home-screen widgets (2×2, 4×1, 4×2)
+- [x] Multiple Now Playing & progress-bar styles (Waveform / Spectrum)
 - [x] Over-the-air updates (Shorebird)
-- [ ] Chromecast / cast to external speakers
+- [ ] Google Cast / Chromecast audio streaming
 - [ ] Desktop targets (Windows · macOS · Linux)
 
 ---
@@ -304,6 +313,7 @@ For larger features, please open an issue first so we can align on the approach.
 - [OuterTune](https://github.com/OuterTune/OuterTune) & [InnerTune](https://github.com/z-huang/InnerTune) — design and architecture inspiration
 - [BetterLyrics](https://github.com/boidushya/better-lyrics) — word-level synced lyrics
 - [LRCLib](https://lrclib.net) — open synced-lyrics database
+- [AutoEq](https://github.com/jaakkopasanen/AutoEq) — headphone & earphone compensation frequency response database
 - [Metrolist](https://github.com/metrolistgroup/metrolist) — Kotlin based ytm client
 - [Bitchord](https://github.com/kushagrasinghx/BitChord) — another kotlin ytm client built on top of metrolist
 - [just_audio](https://pub.dev/packages/just_audio) — audio playback engine
@@ -327,5 +337,5 @@ For larger features, please open an issue first so we can align on the approach.
 
 ## 📄 License
 
-Released under the [MIT License](LICENSE).
+Released under the [GNU General Public License v3.0](LICENSE).
 

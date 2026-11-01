@@ -4,6 +4,10 @@ analyzer:
   exclude:
     - build/**
     - android/**
+  errors:
+    # Upstream's own notes (ryanheise/just_audio), kept so the fork diffs
+    # cleanly against upstream; they aren't work for this app.
+    todo: ignore
   language:
     strict-casts: true
     strict-inference: true
