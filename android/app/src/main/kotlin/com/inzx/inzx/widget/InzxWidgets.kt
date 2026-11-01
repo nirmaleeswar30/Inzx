@@ -202,7 +202,9 @@ object InzxWidgets {
         setTextViewText(R.id.widget_title, title)
         if (artist != null) setTextViewText(R.id.widget_artist, artist)
         bindTransport(context, this, isPlaying)
-        setOnClickPendingIntent(R.id.widget_root, openAppIntent(context))
+        // The cover layouts' root is @android:id/background, which the
+        // launcher clips to its own widget corners on 12+.
+        setOnClickPendingIntent(android.R.id.background, openAppIntent(context))
 
         if (artwork != null && widthDp > 0 && heightDp > 0) {
             // Cap the bitmap so RemoteViews stays under the launcher's memory limit.
@@ -273,12 +275,15 @@ object InzxWidgets {
         views.setOnClickPendingIntent(R.id.widget_next, actionIntent(context, ACTION_NEXT, 203))
     }
 
+    /**
+     * Corners baked into the cover bitmap. On 12+ none: the whole widget is
+     * clipped to the launcher's outline instead, and a second, baked curve
+     * (stretched with the bitmap, never quite the launcher's) is what let the
+     * dark placeholder show at the corners. Older launchers don't clip, so
+     * there the bitmap matches the placeholder's 22dp.
+     */
     private fun widgetCornerRadius(context: Context): Float {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            runCatching {
-                return context.resources.getDimension(android.R.dimen.system_app_widget_background_radius)
-            }
-        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) return 0f
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 22f, context.resources.displayMetrics)
     }
 

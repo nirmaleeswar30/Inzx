@@ -7,8 +7,9 @@ import '../../providers/providers.dart';
 import 'signal_path_sheet.dart';
 
 /// "Lossless" / "Hi-Res Lossless" under the progress bar, shown only while
-/// a lossless stream plays, whatever the stats-for-nerds setting. Tapping
-/// it opens the signal path.
+/// a lossless stream plays, whatever the stats-for-nerds setting — and
+/// "Upgrading" in its place while the song is being moved onto its lossless
+/// copy mid-play. Tapping it opens the signal path.
 class LosslessBadge extends ConsumerWidget {
   const LosslessBadge({super.key, required this.color, this.fontSize = 11});
 
@@ -20,12 +21,21 @@ class LosslessBadge extends ConsumerWidget {
     final tier = ref.watch(
       currentPlaybackDataProvider.select((d) => d?.format.losslessTier),
     );
+    final upgrading =
+        tier == null && (ref.watch(losslessUpgradingProvider).valueOrNull ?? false);
+    final glyphSize = fontSize + 2;
+    final Widget? glyph = tier != null
+        ? _LosslessGlyph(color: color, size: glyphSize)
+        : upgrading
+        ? _UpgradingGlyph(color: color, size: glyphSize)
+        : null;
+    final label = tier ?? (upgrading ? 'Upgrading' : null);
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 300),
-      child: tier == null
+      child: label == null || glyph == null
           ? const SizedBox.shrink()
           : GestureDetector(
-              key: ValueKey(tier),
+              key: ValueKey(label),
               behavior: HitTestBehavior.opaque,
               onTap: () => SignalPathSheet.show(
                 context,
@@ -36,10 +46,10 @@ class LosslessBadge extends ConsumerWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _LosslessGlyph(color: color, size: fontSize + 2),
+                    glyph,
                     const SizedBox(width: 4),
                     Text(
-                      tier,
+                      label,
                       style: TextStyle(
                         fontSize: fontSize,
                         fontWeight: FontWeight.w600,
@@ -53,6 +63,93 @@ class LosslessBadge extends ConsumerWidget {
             ),
     );
   }
+}
+
+/// An arrow that keeps rising out of a baseline: the stream moving up to
+/// its lossless copy.
+class _UpgradingGlyph extends StatefulWidget {
+  const _UpgradingGlyph({required this.color, required this.size});
+  final Color color;
+  final double size;
+
+  @override
+  State<_UpgradingGlyph> createState() => _UpgradingGlyphState();
+}
+
+class _UpgradingGlyphState extends State<_UpgradingGlyph>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _rise = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _rise.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: widget.size,
+    height: widget.size,
+    child: RepaintBoundary(
+      child: CustomPaint(painter: _UpgradingPainter(widget.color, _rise)),
+    ),
+  );
+}
+
+class _UpgradingPainter extends CustomPainter {
+  _UpgradingPainter(this.color, this.rise) : super(repaint: rise);
+  final Color color;
+  final Animation<double> rise;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final stroke = w * 0.14;
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke;
+
+    // The baseline stays put.
+    final base = h * 0.9;
+    canvas.drawLine(Offset(w * 0.2, base), Offset(w * 0.8, base), paint);
+
+    // The arrow travels up from the baseline and fades as it leaves the
+    // top, while the next one follows it in.
+    canvas.save();
+    canvas.clipRect(Rect.fromLTRB(0, 0, w, base - stroke));
+    final t = Curves.easeInOut.transform(rise.value);
+    for (final lap in const [0.0, 1.0]) {
+      final dy = h * 0.75 * (lap - t);
+      final alpha = (1 - (t - lap).abs()).clamp(0.0, 1.0);
+      final arrow = Paint()
+        ..color = color.withValues(alpha: color.a * alpha)
+        ..strokeWidth = stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..style = PaintingStyle.stroke;
+      final tipY = h * 0.12 + dy;
+      final cx = w * 0.5;
+      canvas.drawLine(Offset(cx, tipY), Offset(cx, tipY + h * 0.62), arrow);
+      canvas.drawPath(
+        Path()
+          ..moveTo(cx - w * 0.26, tipY + h * 0.26)
+          ..lineTo(cx, tipY)
+          ..lineTo(cx + w * 0.26, tipY + h * 0.26),
+        arrow,
+      );
+    }
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _UpgradingPainter old) => old.color != color;
 }
 
 /// A small waveform mark: three bars, taller in the middle, that bounce out

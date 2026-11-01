@@ -4,10 +4,11 @@
   and artist alongside the transport.
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/widget_root"
+    android:id="@android:id/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/widget_inzx_art_placeholder">
+    android:background="@drawable/widget_inzx_art_placeholder"
+    android:clipToOutline="true">
 
     <ImageView
         android:id="@+id/widget_art"

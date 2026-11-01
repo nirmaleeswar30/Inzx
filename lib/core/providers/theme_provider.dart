@@ -434,7 +434,7 @@ final nowPlayingStyleProvider =
 class NowPlayingStyleNotifier extends StateNotifier<NowPlayingStyle> {
   static const String nowPlayingStylePrefKey = 'inzx_now_playing_style_v1';
 
-  NowPlayingStyleNotifier() : super(NowPlayingStyle.defaultStyle) {
+  NowPlayingStyleNotifier() : super(NowPlayingStyle.edge) {
     _loadPreference();
   }
 

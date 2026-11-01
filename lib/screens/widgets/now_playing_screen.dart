@@ -26,6 +26,7 @@ import 'album_screen.dart' show AlbumScreen;
 import 'playlist_screen.dart' show PlaylistScreen;
 import 'podcast_screen.dart' show PodcastScreen;
 import 'track_options_sheet.dart';
+import 'lyric_clock.dart';
 import 'lyrics_view.dart';
 import 'karaoke_word.dart';
 import 'ytm_drawer.dart';
@@ -932,8 +933,10 @@ class _SyncedLyricPreviewState extends ConsumerState<SyncedLyricPreview>
     with SingleTickerProviderStateMixin {
   late final Ticker _ticker;
   final ValueNotifier<int> _smoothPositionNotifier = ValueNotifier<int>(0);
-  int _lastAudioMs = 0;
-  int _lastSyncEpochMs = 0;
+  /// The lyric playhead, steered by the player's dated readings (BitChord's
+  /// LyricClock); a new one per track.
+  LyricClock? _clock;
+  String? _clockTrackId;
   int _currentLineIndex = -1;
   bool _inMidSongBreak = false;
   String? _lastVideoId;
@@ -943,32 +946,41 @@ class _SyncedLyricPreviewState extends ConsumerState<SyncedLyricPreview>
   @override
   void initState() {
     super.initState();
-    final initialPos =
-        ref.read(positionStreamProvider).valueOrNull ?? Duration.zero;
-    _lastAudioMs = initialPos.inMilliseconds;
-    _lastSyncEpochMs = DateTime.now().millisecondsSinceEpoch;
-    _smoothPositionNotifier.value = _lastAudioMs;
+    _smoothPositionNotifier.value = _heldPositionMs(
+      ref.read(positionStreamProvider).valueOrNull,
+    );
     _isPlaying = ref.read(isPlayingProvider);
     _latestLyricsState = ref.read(lyricsProvider);
 
     _ticker = createTicker((_) {
       if (!mounted) return;
-      if (_isPlaying) {
-        final now = DateTime.now().millisecondsSinceEpoch;
-        final elapsed = now - _lastSyncEpochMs;
-        final current = _lastAudioMs + elapsed;
-        if (_smoothPositionNotifier.value != current) {
-          _smoothPositionNotifier.value = current;
-          _checkLineIndexChange(current);
-        }
-      } else if (_smoothPositionNotifier.value != _lastAudioMs) {
-        _smoothPositionNotifier.value = _lastAudioMs;
-        _checkLineIndexChange(_lastAudioMs);
+      final current = _stepClock();
+      if (_smoothPositionNotifier.value != current) {
+        _smoothPositionNotifier.value = current;
+        _checkLineIndexChange(current);
       }
     });
     if (_isPlaying) {
       _ticker.start();
     }
+  }
+
+  int _heldPositionMs(Duration? position) =>
+      (position ?? Duration.zero).inMilliseconds +
+      ref.read(lyricsSyncOffsetProvider);
+
+  /// One frame of the lyric clock: holds while the song is loading or
+  /// buffering, and follows Automix's tempo changes (see LyricClock).
+  int _stepClock() {
+    final service = player.AudioPlayerService.instance;
+    final playhead = service.playhead;
+    final offset = ref.read(lyricsSyncOffsetProvider);
+    final trackId = service.currentTrack?.id;
+    if (_clock == null || trackId != _clockTrackId) {
+      _clockTrackId = trackId;
+      _clock = LyricClock(playhead.positionMs + offset);
+    }
+    return stepLyricClock(_clock!, playhead, offset);
   }
 
   void _checkLineIndexChange(int currentPositionMs) {
@@ -1071,7 +1083,8 @@ class _SyncedLyricPreviewState extends ConsumerState<SyncedLyricPreview>
       _isPlaying = isPlaying;
       if (!mounted) return;
       if (isPlaying) {
-        _lastSyncEpochMs = DateTime.now().millisecondsSinceEpoch;
+        // A fresh run from the latest reading, not one very long frame.
+        _clock?.restart();
         if (!_ticker.isActive) {
           _ticker.start();
         }
@@ -1082,18 +1095,14 @@ class _SyncedLyricPreviewState extends ConsumerState<SyncedLyricPreview>
       }
     });
 
-    // Synchronize audio stream ticks / seeks without rebuilding widget tree
+    // While the frame clock runs it reads the player itself; paused, each
+    // position is the truth, so a seek made while paused still moves it.
     ref.listen<AsyncValue<Duration>>(positionStreamProvider, (prev, next) {
-      if (!mounted) return;
-      final newMs = next.valueOrNull?.inMilliseconds;
-      if (newMs == null) return;
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final estimatedCurrent = _lastAudioMs + (now - _lastSyncEpochMs);
-      final drift = (newMs - estimatedCurrent).abs();
-
-      if (drift > 80 || newMs < _lastAudioMs || (newMs - _lastAudioMs) > 1000) {
-        _lastAudioMs = newMs;
-        _lastSyncEpochMs = now;
+      if (!mounted || _ticker.isActive) return;
+      final position = next.valueOrNull;
+      if (position == null) return;
+      final newMs = _heldPositionMs(position);
+      if (_smoothPositionNotifier.value != newMs) {
         _smoothPositionNotifier.value = newMs;
         _checkLineIndexChange(newMs);
       }
@@ -1103,9 +1112,9 @@ class _SyncedLyricPreviewState extends ConsumerState<SyncedLyricPreview>
       _lastVideoId = lyricsState.videoId;
       _currentLineIndex = -1;
       _inMidSongBreak = false;
-      _lastAudioMs = 0;
-      _lastSyncEpochMs = DateTime.now().millisecondsSinceEpoch;
-      _smoothPositionNotifier.value = 0;
+      _smoothPositionNotifier.value = _heldPositionMs(
+        ref.read(positionStreamProvider).valueOrNull,
+      );
     }
 
     final result = lyricsState.currentLyrics;
@@ -4775,8 +4784,19 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
       staticArt: staticArt,
       borderRadius: borderRadius,
       onCanvasLoaded: (hasCanvas) {
-        if (mounted && _hasAnimatedCanvas != hasCanvas) {
-          setState(() => _hasAnimatedCanvas = hasCanvas);
+        void apply() {
+          if (mounted && _hasAnimatedCanvas != hasCanvas) {
+            setState(() => _hasAnimatedCanvas = hasCanvas);
+          }
+        }
+
+        // The art reports from its own initState too, which runs mid-build;
+        // marking this screen dirty then throws.
+        if (SchedulerBinding.instance.schedulerPhase ==
+            SchedulerPhase.persistentCallbacks) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => apply());
+        } else {
+          apply();
         }
       },
     );

@@ -115,7 +115,15 @@ public class AudioPlayer implements MethodCallHandler, Player.Listener, Metadata
             }
 
             long newBufferedPosition = player.getBufferedPosition();
-            if (newBufferedPosition != bufferedPosition) {
+            if (player.getPlaybackState() == Player.STATE_READY && player.getPlayWhenReady()) {
+                // Inzx: a fresh, dated reading of the playhead twice a second
+                // while playing. Dart otherwise only hears the position on
+                // state changes and carries it forward at its own idea of the
+                // speed, which drifts when the speed is changed natively
+                // (Automix tempo matching) — and the lyrics drift with it.
+                updatePosition();
+                broadcastImmediatePlaybackEvent();
+            } else if (newBufferedPosition != bufferedPosition) {
                 // This method updates bufferedPosition.
                 broadcastImmediatePlaybackEvent();
             }
@@ -209,6 +217,14 @@ public class AudioPlayer implements MethodCallHandler, Player.Listener, Metadata
             }
         }
         enqueuePlaybackEvent();
+    }
+
+    @Override
+    public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
+        // Inzx: Automix changes the speed natively; re-date the playhead at
+        // the change so Dart doesn't carry the old rate past it.
+        updatePosition();
+        broadcastImmediatePlaybackEvent();
     }
 
     @Override

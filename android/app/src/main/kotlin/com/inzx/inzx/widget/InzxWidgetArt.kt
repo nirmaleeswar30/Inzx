@@ -49,7 +49,7 @@ object InzxWidgetArt {
             canvas.drawCentreCropped(source, widthPx, heightPx)
             canvas.blurFoot(out, blurPx, blurStrength)
             canvas.scrimFoot(widthPx, heightPx, blurPx)
-            out.roundedCorners(radiusPx)
+            if (radiusPx > 0f) out.roundedCorners(radiusPx) else out
         }
 
     fun circle(source: Bitmap, key: String, sizePx: Int): Bitmap =

@@ -34,6 +34,7 @@ class AddonManifest {
     required this.name,
     required this.version,
     required this.resources,
+    this.settings = const [],
   });
 
   final String id;
@@ -41,24 +42,134 @@ class AddonManifest {
   final String version;
   final List<String> resources;
 
+  /// The query parameters the addon declares, with their defaults and (for
+  /// a select) the values it accepts.
+  final List<AddonSetting> settings;
+
   factory AddonManifest.fromJson(Map<String, dynamic> json) => AddonManifest(
     id: json['id']?.toString() ?? '',
     name: json['name']?.toString() ?? '',
     version: json['version']?.toString() ?? '',
-    resources: (json['resources'] as List?)
-            ?.map((e) => e.toString().toLowerCase())
-            .toList() ??
-        const [],
+    resources: [
+      for (final r in (json['resources'] as List? ?? const []))
+        if (r is String)
+          r.toLowerCase().trim()
+        else if (r is Map)
+          (r['name'] ?? r['id'] ?? r['type'] ?? '')
+              .toString()
+              .toLowerCase()
+              .trim(),
+    ].where((r) => r.isNotEmpty).toList(),
+    settings: _parseSettings(json),
   );
+
+  static List<AddonSetting> _parseSettings(Map<String, dynamic> json) {
+    final list = <AddonSetting>[];
+    final rawSettings = json['settings'];
+    if (rawSettings is List) {
+      for (final s in rawSettings) {
+        if (s is Map<String, dynamic>) {
+          list.add(AddonSetting.fromJson(s));
+        }
+      }
+    } else if (rawSettings is Map) {
+      for (final entry in rawSettings.entries) {
+        final key = entry.key.toString();
+        final val = entry.value;
+        if (val is Map<String, dynamic>) {
+          list.add(AddonSetting.fromJson(val, key));
+        } else if (val is List) {
+          list.add(AddonSetting(
+            key: key,
+            options: [
+              for (final o in val) ?AddonSetting._queryValue(o is Map ? (o['value'] ?? o['id']) : o),
+            ],
+          ));
+        }
+      }
+    }
+
+    // If no 'quality' setting was declared, check root-level quality definitions
+    if (!list.any((s) => s.key == 'quality')) {
+      final rootQualities = json['qualities'] ??
+          json['supportedQualities'] ??
+          json['supported_qualities'] ??
+          json['quality'];
+      if (rootQualities is List) {
+        list.add(AddonSetting(
+          key: 'quality',
+          options: [
+            for (final q in rootQualities) ?AddonSetting._queryValue(q is Map ? (q['value'] ?? q['id']) : q),
+          ],
+        ));
+      }
+    }
+
+    return list.where((s) => s.key.isNotEmpty).toList();
+  }
 
   bool declares(String resource) => resources.contains(resource.toLowerCase());
 
-  /// Playable when it can both find tracks and resolve them. An addon that
-  /// lists no resources at all is given the benefit of the doubt.
-  bool get isPlayable =>
-      resources.isEmpty || (declares('search') && declares('stream'));
+  /// Playable when it can find tracks; every search-capable addon resolves
+  /// them through `/stream`, declared or not (BitChord reads the spec the
+  /// same way). An addon that lists no resources at all is given the
+  /// benefit of the doubt.
+  bool get isPlayable {
+    if (resources.isEmpty) return true;
+    return declares('search') ||
+        declares('tracks') ||
+        declares('track') ||
+        declares('stream') ||
+        declares('catalog') ||
+        declares('catalogue') ||
+        declares('music');
+  }
 
   String get displayName => name.isNotEmpty ? name : id;
+
+  AddonSetting? setting(String key) {
+    for (final s in settings) {
+      if (s.key == key) return s;
+    }
+    return null;
+  }
+}
+
+/// One query parameter an addon declares in its manifest.
+class AddonSetting {
+  const AddonSetting({required this.key, this.defaultValue, this.options = const []});
+
+  final String key;
+  final String? defaultValue;
+
+  /// The values a select accepts, as they go on the wire.
+  final List<String> options;
+
+  factory AddonSetting.fromJson(Map<String, dynamic> json, [String? keyOverride]) {
+    final key = keyOverride ??
+        json['key']?.toString() ??
+        json['id']?.toString() ??
+        json['name']?.toString() ??
+        '';
+    final rawOptions = json['options'] ?? json['values'] ?? json['choices'];
+    return AddonSetting(
+      key: key,
+      defaultValue: _queryValue(json['default'] ?? json['defaultValue']),
+      options: [
+        if (rawOptions is List)
+          for (final o in rawOptions)
+            ?_queryValue(o is Map ? (o['value'] ?? o['id'] ?? o['key']) : o)
+      ],
+    );
+  }
+
+  static String? _queryValue(Object? v) => switch (v) {
+    null => null,
+    String s => s.isEmpty ? null : s,
+    bool b => b.toString(),
+    num n => n == n.roundToDouble() ? n.toInt().toString() : n.toString(),
+    _ => null,
+  };
 }
 
 class AddonTrack {
@@ -70,6 +181,7 @@ class AddonTrack {
     required this.duration,
     required this.audioQuality,
     required this.isAtmos,
+    this.format = '',
     this.bitDepth,
     this.sampleRate,
     this.artworkUrl,
@@ -84,6 +196,10 @@ class AddonTrack {
   /// The catalogue's own tier name, upper-cased: LOSSLESS, HI_RES_LOSSLESS,
   /// HIGH, LOW…
   final String audioQuality;
+
+  /// What the audio is, as the addon describes it (`flac`, `mp3`…),
+  /// lower-cased; empty when it didn't say.
+  final String format;
   final bool isAtmos;
   final int? bitDepth;
   final int? sampleRate;
@@ -94,38 +210,89 @@ class AddonTrack {
       json['audioQuality'],
       json['audio_quality'],
       json['quality'],
+      json['tier'],
     ].whereType<String>().firstWhere((s) => s.isNotEmpty, orElse: () => '');
     final modes = (json['audioModes'] as List?)?.join(' ') ?? '';
-    final durationRaw = json['duration'];
+    final durationRaw = json['duration'] ??
+        json['durationMs'] ??
+        json['duration_ms'] ??
+        json['length'];
+    final durVal = durationRaw is num
+        ? durationRaw.toDouble()
+        : double.tryParse('$durationRaw') ?? 0;
+    // Distinguish seconds (< 10000) from milliseconds (>= 10000)
+    final durationMs = durVal >= 10000 ? durVal.round() : (durVal * 1000).round();
+
+    final artistVal = json['artist'] ??
+        json['artistName'] ??
+        json['artist_name'] ??
+        (json['artists'] is List
+            ? (json['artists'] as List)
+                .map((a) => a is Map ? (a['name'] ?? a['artist'] ?? '') : '$a')
+                .where((s) => s.isNotEmpty)
+                .join(', ')
+            : null);
+
+    final albumVal = json['album'] is Map
+        ? (json['album'] as Map)['name'] ?? (json['album'] as Map)['title']
+        : (json['album'] ?? json['albumName'] ?? json['album_name']);
+
     return AddonTrack(
-      id: json['id']?.toString() ?? '',
-      title: json['title']?.toString() ?? '',
-      artist: json['artist']?.toString() ?? '',
-      album: json['album']?.toString() ?? '',
-      duration: Duration(
-        milliseconds: ((durationRaw is num
-                    ? durationRaw.toDouble()
-                    : double.tryParse('$durationRaw') ?? 0) *
-                1000)
-            .round(),
-      ),
+      id: [json['id'], json['trackId'], json['track_id'], json['songId']]
+              .whereType<Object>()
+              .firstOrNull
+              ?.toString() ??
+          '',
+      title: [json['title'], json['name'], json['trackName'], json['track_name']]
+          .whereType<String>()
+          .firstWhere((s) => s.isNotEmpty, orElse: () => ''),
+      artist: artistVal?.toString() ?? '',
+      album: albumVal?.toString() ?? '',
+      duration: Duration(milliseconds: durationMs),
       audioQuality: quality.toUpperCase(),
       isAtmos: json['atmos'] == true ||
           _atmosHint.hasMatch('$quality $modes ${json['audioMode'] ?? ''}'),
+      format: [
+        json['format'],
+        json['codec'],
+        json['fileCodec'],
+        json['audioCodec'],
+        json['container'],
+        json['encoding'],
+      ]
+          .whereType<String>()
+          .join(' ')
+          .toLowerCase()
+          .trim(),
       bitDepth: findBitDepth(json),
       sampleRate: findSampleRate(json),
-      artworkUrl: (json['artworkURL'] ?? json['artworkUrl'])?.toString(),
+      artworkUrl: (json['artworkURL'] ??
+              json['artworkUrl'] ??
+              json['albumArtworkURL'] ??
+              json['albumArtworkUrl'] ??
+              json['cover'] ??
+              json['image'] ??
+              json['thumbnail'])
+          ?.toString(),
     );
   }
 
-  /// Whether the catalogue says this copy is actually lossless. Search
-  /// results report the tier the *file* has, which for some editions is
-  /// only HIGH or LOW even when lossless was asked for.
-  bool get isLossless =>
-      audioQuality.contains('LOSSLESS') ||
-      audioQuality.contains('HI_RES') ||
-      (bitDepth != null && bitDepth! >= 16 && audioQuality.isEmpty);
+  /// Whether the catalogue says this copy is actually lossless.
+  /// Addons that explicitly label the tier as LOSSLESS / HI_RES match, but
+  /// addons that label quality as "HIGH" or leave it blank while specifying
+  /// format: "flac" are also correctly recognised as lossless.
+  bool get isLossless {
+    if (losslessText.hasMatch(audioQuality)) return true;
+    if (losslessText.hasMatch(format)) return true;
+    return bitDepth != null && bitDepth! >= 16;
+  }
 }
+
+/// Words that mean a lossless copy, in any of the spellings addons use.
+final RegExp losslessText = RegExp(
+  r'lossless|hi[-_ ]?res|flac|alac|wav|aiff|24[-_ ]?bit',
+  caseSensitive: false,
+);
 
 /// A resolved, playable stream.
 class AddonStream {
@@ -146,12 +313,14 @@ class AddonStream {
   final int? sampleRate;
   final int? bitrate;
 
-  bool get isLossless =>
-      codec.toLowerCase() == 'flac' || codec.toLowerCase() == 'alac';
+  bool get isLossless {
+    final c = codec.toLowerCase();
+    return c == 'flac' || c == 'alac' || c == 'wav' || c == 'aiff';
+  }
 
   /// "FLAC 24-bit / 96 kHz", or as much of that as the addon told us.
   String get formatLabel {
-    final parts = <String>[codec.toUpperCase()];
+    final parts = <String>[codec.isEmpty ? 'Audio' : codec.toUpperCase()];
     final depth = bitDepth;
     final rate = sampleRate;
     if (depth != null && rate != null) {

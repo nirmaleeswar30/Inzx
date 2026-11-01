@@ -62,6 +62,18 @@ void main() {
     expect(AddonService.takeMarkers('Song - Lo-Fi Version'), {'lofi'});
   });
 
+  test('a take on the album completes the row (KALYANI on "KALYANI (Remix)")', () {
+    final hits = [
+      _hit('remix', 'KALYANI', 'KALYANI (Remix)'),
+      _hit('original', 'KALYANI', 'KALYANI'),
+    ];
+    expect(pick(hits, title: 'KALYANI (Remix)')?.id, 'remix');
+    // Only in that direction: the plain song doesn't take the remix album.
+    expect(pick(hits, title: 'KALYANI')?.id, 'original');
+    // And an album's other takes are release naming, not this row's take.
+    expect(pick([_hit('x', 'KALYANI', 'KALYANI (Live)')], title: 'KALYANI')?.id, 'x');
+  });
+
   test('a title normalisation empties matches nothing', () {
     expect(pick([_hit('x', 'பாடல்', 'Album')], title: 'பாடல்'), isNull);
   });

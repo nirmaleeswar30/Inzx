@@ -4,6 +4,7 @@ import 'dart:ui' show Color;
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart' show LoopMode;
+import 'package:rxdart/rxdart.dart' show Rx;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/models.dart';
 import '../services/services.dart';
@@ -854,6 +855,17 @@ final streamQualityInfoProvider = Provider<String>((ref) {
 final currentPlaybackDataProvider = Provider<PlaybackData?>((ref) {
   final state = ref.watch(playbackStateProvider);
   return state.whenOrNull(data: (s) => s.currentPlaybackData);
+});
+
+/// Whether the playing track is being moved onto its lossless copy right
+/// now (a copy was found and the mid-song hand-over is under way).
+final losslessUpgradingProvider = StreamProvider<bool>((ref) {
+  final playerService = ref.watch(audioPlayerServiceProvider);
+  return Rx.combineLatest2<String?, player.PlaybackState, bool>(
+    playerService.losslessUpgradingStream,
+    playerService.stateStream,
+    (id, state) => id != null && id == state.currentTrack?.id,
+  ).distinct();
 });
 
 /// Provider for prefetching tracks (OuterTune-style)

@@ -291,6 +291,7 @@ class AudioPlayerService {
     _loadPreferAudioVersionsSetting();
     _loadJioSaavnSetting();
     unawaited(AddonService.instance.load());
+    AddonService.instance.matches.listen(_onLosslessFound);
     unawaited(AutomixService.instance.load());
     AutomixService.instance.fetchAudio = fetchAnalysisAudio;
     _wireAutomixEngine();
@@ -2313,6 +2314,42 @@ class AudioPlayerService {
   /// Separate position stream for progress bar (high frequency, no full rebuild)
   Stream<Duration> get positionStream => _positionController.stream;
 
+  final _losslessUpgradingController = BehaviorSubject<String?>.seeded(null);
+
+  /// The id of the track being moved onto its lossless copy mid-song — a
+  /// copy was found and the hand-over is under way — or null.
+  Stream<String?> get losslessUpgradingStream =>
+      _losslessUpgradingController.stream.distinct();
+
+  int _seekCount = 0;
+
+  /// The active player's latest reading of the playhead, dated by when the
+  /// native player took it — what the lyrics clock steers by (see
+  /// LyricClock). Read every frame rather than streamed, so it follows the
+  /// active player through Automix hand-overs and lossless swaps.
+  ///
+  /// [advancing] is whether the audio is really moving: playing, and not
+  /// loading or buffering — just_audio's `playing` alone stays true through
+  /// both. [seeks] changes whenever the playhead jumps on purpose.
+  ({int positionMs, double sampledAtMs, bool advancing, int seeks}) get playhead {
+    final event = _player.playbackEvent;
+    final advancing =
+        _player.playing && event.processingState == ProcessingState.ready;
+    return advancing
+        ? (
+            positionMs: event.updatePosition.inMilliseconds,
+            sampledAtMs: event.updateTime.microsecondsSinceEpoch / 1000,
+            advancing: true,
+            seeks: _seekCount,
+          )
+        : (
+            positionMs: _player.position.inMilliseconds,
+            sampledAtMs: DateTime.now().microsecondsSinceEpoch / 1000,
+            advancing: false,
+            seeks: _seekCount,
+          );
+  }
+
   /// Buffered position stream
   Stream<Duration> get bufferedPositionStream =>
       _bufferedPositionController.stream;
@@ -2356,6 +2393,14 @@ class AudioPlayerService {
   AudioQuality get audioQuality => _audioQuality;
 
   void _bindPlayerEventStreams(AudioPlayer player) {
+    // Seeks made straight on the player (restart, repeat-one) jump too.
+    player.positionDiscontinuityStream.listen((d) {
+      if (identical(player, _player) &&
+          d.reason == PositionDiscontinuityReason.seek) {
+        _seekCount++;
+      }
+    });
+
     player.playerStateStream.listen((playerState) {
       if (!identical(player, _player)) return;
       _updateState(
@@ -2418,6 +2463,12 @@ class AudioPlayerService {
       _scheduleLyricsPrefetchAroundCurrent();
       if (_currentTrack != null) {
         unawaited(_upgradeTrackQualityIfPossible(_currentTrack!));
+        // Gapless auto-advance starts the next track on whatever the
+        // playlist was built with; it gets its second look too.
+        if (playbackData?.format.isLossless != true &&
+            _currentPlaybackData?.isLive != true) {
+          unawaited(_upgradeToLosslessIfPossible(_currentTrack!));
+        }
       }
     });
 
@@ -4018,6 +4069,13 @@ class AudioPlayerService {
       _audioQuality == AudioQuality.max ||
       (_audioQuality == AudioQuality.auto && _onUnmeteredNetwork);
 
+  /// Waits before looking again when the addon couldn't be reached.
+  static const _losslessLookRetries = [
+    Duration(seconds: 5),
+    Duration(seconds: 15),
+    Duration(seconds: 30),
+  ];
+
   void _logLossless(String message) {
     if (kDebugMode) debugPrint('[Lossless] $message');
   }
@@ -4333,7 +4391,6 @@ class AudioPlayerService {
   /// Every guard here errs towards not swapping — a missed upgrade is
   /// silent, an interrupted song isn't.
   Future<void> _upgradeToLosslessIfPossible(Track track) async {
-    final upgradeId = ++_losslessUpgradeId;
     final addons = AddonService.instance;
     if (!_qualityAllowsLossless) {
       _logLossless('Off: lossless needs Max quality, or Auto on Wi-Fi');
@@ -4342,22 +4399,96 @@ class AudioPlayerService {
     if (!addons.isEnabled) return;
     if (track.localFilePath != null || track.id.startsWith('local_')) return;
     if (_currentPlaybackData?.format.isLossless == true) return;
-
-    _logLossless('Looking for a lossless copy of "${track.title}"');
-    final match = await addons.matchFor(track);
-    bool stillWanted() =>
-        upgradeId == _losslessUpgradeId &&
-        _currentTrack?.id == track.id &&
-        _currentPlaybackData?.format.isLossless != true;
-    if (match == null) {
-      _logLossless('No matching lossless copy for "${track.title}"');
+    // Several start paths ask for the same song (playback start, crossfade
+    // arrival, gapless advance, the end of a blend). A second ask must not
+    // start a second search; it's the same question.
+    if (_losslessLookupTrackId == track.id) {
+      _logLossless('Already looking for "${track.title}"');
       return;
     }
-    if (!stillWanted()) return;
+    _losslessLookupTrackId = track.id;
+    try {
+      _logLossless('Looking for a lossless copy of "${track.title}"');
+      var match = await addons.matchFor(track);
+      // A slow or dropped connection isn't a verdict on the track: look
+      // again while the song plays, until the addon actually answers.
+      for (final wait in _losslessLookRetries) {
+        if (match != null || addons.isSettledMiss(track)) break;
+        _logLossless(
+          'Couldn\'t reach the addon for "${track.title}"; '
+          'trying again in ${wait.inSeconds}s',
+        );
+        await Future.delayed(wait);
+        if (_currentTrack?.id != track.id) {
+          _logLossless('Stopped looking for "${track.title}": the song changed');
+          return;
+        }
+        match = await addons.matchFor(track);
+      }
+      if (match == null) {
+        _logLossless('No matching lossless copy for "${track.title}"');
+        return;
+      }
+      // A fresh find was already announced (see _onLosslessFound); a cached
+      // one wasn't, so start the hand-over here. Starting twice is harmless.
+      unawaited(_beginLosslessHandOver(track, match));
+    } finally {
+      if (_losslessLookupTrackId == track.id) _losslessLookupTrackId = null;
+    }
+  }
+
+  String? _losslessLookupTrackId;
+  String? _losslessHandOverTrackId;
+
+  /// The addon found a lossless copy of some song. If it's the one playing
+  /// (on a lossy stream), move onto it now — whichever lookup asked, and
+  /// whatever became of that lookup since.
+  void _onLosslessFound(({String trackId, AddonMatch match}) found) {
+    final track = _currentTrack;
+    if (track == null || track.id != found.trackId) return;
+    if (!_qualityAllowsLossless) return;
+    unawaited(_beginLosslessHandOver(track, found.match));
+  }
+
+  /// Moves the playing [track] onto [match] mid-song. Only one hand-over
+  /// runs per song; a newer one for another song takes over.
+  Future<void> _beginLosslessHandOver(Track track, AddonMatch match) async {
+    if (_losslessHandOverTrackId == track.id) return; // already under way
+    if (_currentTrack?.id != track.id) {
+      _logLossless('Not upgrading "${track.title}": the song changed');
+      return;
+    }
+    if (_currentPlaybackData?.format.isLossless == true) return;
+    if (_currentPlaybackData?.isLive == true) return;
+
+    final handOverId = ++_losslessUpgradeId;
+    _losslessHandOverTrackId = track.id;
+    bool stillWanted() =>
+        handOverId == _losslessUpgradeId &&
+        _currentTrack?.id == track.id &&
+        _currentPlaybackData?.format.isLossless != true;
+
     _logLossless(
       'Found ${match.stream.formatLabel} for "${track.title}"; handing over',
     );
+    // A copy is known to exist from here, so the player can truthfully say
+    // it's upgrading until the hand-over lands or is given up on.
+    _losslessUpgradingController.add(track.id);
+    try {
+      await _handOverToLossless(track, match, stillWanted);
+    } finally {
+      if (_losslessUpgradingController.value == track.id) {
+        _losslessUpgradingController.add(null);
+      }
+      if (_losslessHandOverTrackId == track.id) _losslessHandOverTrackId = null;
+    }
+  }
 
+  Future<void> _handOverToLossless(
+    Track track,
+    AddonMatch match,
+    bool Function() stillWanted,
+  ) async {
     // Two tries: the first can lose to a crossfade or JioSaavn hand-over
     // starting at the same moment, or to a slow network.
     for (var attempt = 1; attempt <= 2; attempt++) {
@@ -4369,7 +4500,10 @@ class AudioPlayerService {
           i++) {
         await Future.delayed(const Duration(milliseconds: 100));
       }
-      if (!stillWanted()) return;
+      if (!stillWanted()) {
+        _logLossless('Hand-over for "${track.title}" dropped: the song changed or is already lossless');
+        return;
+      }
       if (_isUpgradingStream || _isCrossfading || _automixMixing) {
         _logLossless('Gave up waiting for another hand-over to finish');
         return;
@@ -4380,6 +4514,9 @@ class AudioPlayerService {
         source: _addonAudioSource(match, track),
         playbackData: _addonPlaybackData(match),
         stillWanted: stillWanted,
+        // The second try parks further ahead: the first usually lost to a
+        // slow network buffering the FLAC.
+        lead: Duration(milliseconds: attempt == 1 ? 2500 : 6000),
       );
       if (swapped) {
         _logLossless(
@@ -4388,7 +4525,10 @@ class AudioPlayerService {
         );
         return;
       }
-      if (!stillWanted()) return;
+      if (!stillWanted()) {
+        _logLossless('Hand-over for "${track.title}" dropped: the song changed or is already lossless');
+        return;
+      }
       if (attempt == 1) await Future.delayed(const Duration(seconds: 3));
     }
     _logLossless('Upgrade for "${track.title}" didn\'t happen');
@@ -4408,12 +4548,16 @@ class AudioPlayerService {
     required AudioSource source,
     required PlaybackData playbackData,
     required bool Function() stillWanted,
+    Duration lead = const Duration(milliseconds: 2500),
   }) async {
     if (_jamsModeEnabled) {
       _logLossless('Hand-over skipped: in a Jam (playback is synced)');
       return false;
     }
-    if (_isCrossfading) return false;
+    if (_isCrossfading) {
+      _logLossless('Hand-over skipped: a crossfade is running');
+      return false;
+    }
     if (_automixMixing) {
       _logLossless('Hand-over skipped: an Automix blend holds the spare player');
       return false;
@@ -4422,7 +4566,6 @@ class AudioPlayerService {
     final incoming = _inactivePlayer;
     final previousData = _currentPlaybackData;
     final previousByIndex = _activeSourcePlaybackDataByQueueIndex;
-    const lead = Duration(milliseconds: 2500);
     const overlap = Duration(milliseconds: 400);
 
     Future<bool> abandon(String why) async {
@@ -4467,11 +4610,15 @@ class AudioPlayerService {
       await incoming.setLoopMode(_nativeLoopModeFor(_loopMode));
       await incoming.setSpeed(outgoing.speed);
       await _setVolumeSafely(incoming, 0.0, context: 'upgrade-bootstrap');
+      final loading = Stopwatch()..start();
       await incoming.setAudioSource(
         source,
         initialPosition: startAt,
         preload: true,
       );
+      // How long this connection takes to get the new copy going: a re-park
+      // has to be at least that far ahead to be ready in time.
+      final loadTook = loading.elapsed;
       _logLossless(
         'Lossless copy buffered, parked at ${startAt.inMilliseconds} ms '
         '(playing at ${outgoing.position.inMilliseconds} ms)',
@@ -4490,9 +4637,19 @@ class AudioPlayerService {
         return true;
       }
 
-      // Buffering took longer than the lead: park once more, a little ahead.
+      // Buffering took longer than the lead: park once more, as far ahead as
+      // the load just took (a slow network needs the room).
       if (outgoing.position >= startAt - const Duration(milliseconds: 100)) {
-        startAt = outgoing.position + const Duration(milliseconds: 1500);
+        final repark = loadTook > const Duration(milliseconds: 1500)
+            ? loadTook + const Duration(milliseconds: 500)
+            : const Duration(milliseconds: 1500);
+        startAt = outgoing.position + repark;
+        if (total > Duration.zero &&
+            startAt > total - const Duration(seconds: 8)) {
+          return await abandon('too close to the end after re-parking');
+        }
+        _logLossless('Slow to buffer (${loadTook.inMilliseconds} ms); '
+            're-parking ${repark.inMilliseconds} ms ahead');
         await incoming.seek(startAt);
         if (!stillWanted() || outgoing.position >= startAt) {
           return await abandon('the new copy couldn\'t keep up');
@@ -4500,7 +4657,9 @@ class AudioPlayerService {
       }
 
       // Wait for the playing copy to reach the parked position.
-      final deadline = DateTime.now().add(lead * 2);
+      final deadline = DateTime.now().add(
+        startAt - outgoing.position + const Duration(seconds: 3),
+      );
       while (outgoing.position < startAt - const Duration(milliseconds: 12)) {
         if (!stillWanted() ||
             !outgoing.playing ||
@@ -4518,6 +4677,12 @@ class AudioPlayerService {
               ? const Duration(milliseconds: 25)
               : const Duration(milliseconds: 3),
         );
+      }
+
+      // Handing over to a copy that's still buffering is an audible gap —
+      // exactly what this exists to avoid. Leave the song where it is.
+      if (incoming.processingState != ProcessingState.ready) {
+        return await abandon('the new copy was still buffering at the hand-over');
       }
 
       commit();
@@ -5091,6 +5256,7 @@ class AudioPlayerService {
       unawaited(_sendYoutubeWatchtime(state: 'playing', force: true));
       _youtubeTrackingLastPosition = position;
     }
+    _seekCount++;
     await _player.seek(position);
   }
 
@@ -5383,6 +5549,7 @@ class AudioPlayerService {
     _secondaryPlayer.dispose();
     _stateController.close();
     _positionController.close();
+    _losslessUpgradingController.close();
     _bufferedPositionController.close();
     _ytPlayerUtils.dispose();
   }

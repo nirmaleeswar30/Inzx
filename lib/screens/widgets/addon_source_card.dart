@@ -105,108 +105,275 @@ class AddonSourceCard extends StatelessWidget {
   }
 
   Widget _installed(BuildContext context, AddonService service) {
-    final enabled = service.isEnabled;
+    final addons = service.addons;
+    final anyEnabled = service.isEnabled;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Header
         Row(
           children: [
-            _icon(enabled),
+            _icon(anyEnabled),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    service.name ?? 'Addon',
+                    'Lossless sources',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       color: _primary,
+                      fontSize: 15,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    service.host ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 13, color: _secondary),
+                    addons.length == 1
+                        ? '1 source installed'
+                        : '${addons.length} sources · Priority fallback',
+                    style: TextStyle(fontSize: 12.5, color: _secondary),
                   ),
                 ],
               ),
             ),
-            switchBuilder(enabled, service.setEnabled),
+            TextButton.icon(
+              onPressed: () => _showInstallSheet(context),
+              icon: const Icon(Iconsax.add, size: 16),
+              label: const Text(
+                'Add',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: accentColor,
+                visualDensity: VisualDensity.compact,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              ),
+            ),
           ],
         ),
-        if (!addonSigningConfigured) ...[
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Iconsax.warning_2, size: 16, color: Colors.orange.shade400),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'This build has no addon signing key, so the addon can '
-                  'search but won\'t give real streams.',
-                  style: TextStyle(fontSize: 12.5, color: _secondary),
-                ),
-              ),
-            ],
-          ),
+
+        const SizedBox(height: 12),
+
+        // List of Addon items
+        for (var i = 0; i < addons.length; i++) ...[
+          _addonCard(context, service, i, addons[i], addons.length),
+          if (i != addons.length - 1) const SizedBox(height: 10),
         ],
-        const SizedBox(height: 14),
-        // Equal heights: the longer description wraps, and both boxes
-        // stretch to match it.
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (final q in AddonQuality.values) ...[
-                Expanded(child: _qualityChip(service, q, enabled)),
-                if (q != AddonQuality.values.last) const SizedBox(width: 8),
-              ],
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
+
+        const SizedBox(height: 12),
         Text(
           'Songs start in normal quality and switch to lossless mid-song, '
-          'without a gap, as soon as a matching copy is found.',
-          style: TextStyle(fontSize: 12.5, color: _secondary, height: 1.35),
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: () => _confirmRemove(context, service),
-            style: TextButton.styleFrom(
-              foregroundColor: isDark ? Colors.white60 : InzxColors.textSecondary,
-            ),
-            child: const Text('Remove addon'),
-          ),
+          'without a gap, as soon as a matching copy is found. If a source doesn\'t have the song, Inzx queries the next source in priority order.',
+          style: TextStyle(fontSize: 12, color: _secondary, height: 1.35),
         ),
       ],
     );
   }
 
-  Widget _qualityChip(AddonService service, AddonQuality q, bool enabled) {
-    final selected = service.quality == q;
+  Widget _addonCard(
+    BuildContext context,
+    AddonService service,
+    int index,
+    AddonEntry entry,
+    int totalCount,
+  ) {
+    final enabled = entry.enabled;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.04)
+            : Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.grey.shade300,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: enabled
+                      ? accentColor.withValues(alpha: 0.2)
+                      : (isDark ? Colors.white10 : Colors.grey.shade200),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '#${index + 1}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: enabled ? accentColor : _secondary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: enabled ? _primary : _secondary,
+                        fontSize: 14,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      entry.host,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12, color: _secondary),
+                    ),
+                  ],
+                ),
+              ),
+              switchBuilder(
+                enabled,
+                (val) => service.setAddonEnabled(index, val),
+              ),
+            ],
+          ),
+          if (entry.client.isLastWave && !addonSigningConfigured) ...[
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Iconsax.warning_2,
+                  size: 15,
+                  color: Colors.orange.shade400,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'This build has no addon signing key, so this addon can search but won\'t give real streams.',
+                    style: TextStyle(fontSize: 11.5, color: _secondary),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 10),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final q in AddonQuality.values) ...[
+                  Expanded(
+                    child: _qualityChip(service, index, entry, q, enabled),
+                  ),
+                  if (q != AddonQuality.values.last) const SizedBox(width: 8),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              if (totalCount > 1) ...[
+                Text(
+                  'Priority',
+                  style: TextStyle(fontSize: 11.5, color: _secondary),
+                ),
+                const SizedBox(width: 4),
+                IconButton(
+                  icon: const Icon(Iconsax.arrow_up_2, size: 16),
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 28, minHeight: 28),
+                  color: _secondary,
+                  disabledColor: isDark ? Colors.white24 : Colors.black12,
+                  tooltip: 'Move up in priority',
+                  onPressed: index > 0
+                      ? () {
+                          HapticFeedback.selectionClick();
+                          service.reorder(index, index - 1);
+                        }
+                      : null,
+                ),
+                IconButton(
+                  icon: const Icon(Iconsax.arrow_down_1, size: 16),
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 28, minHeight: 28),
+                  color: _secondary,
+                  disabledColor: isDark ? Colors.white24 : Colors.black12,
+                  tooltip: 'Move down in priority',
+                  onPressed: index < totalCount - 1
+                      ? () {
+                          HapticFeedback.selectionClick();
+                          service.reorder(index, index + 1);
+                        }
+                      : null,
+                ),
+              ],
+              const Spacer(),
+              TextButton.icon(
+                onPressed: () => _confirmRemove(context, service, index, entry),
+                icon: Icon(
+                  Iconsax.trash,
+                  size: 14,
+                  color: isDark ? Colors.white54 : InzxColors.textSecondary,
+                ),
+                label: Text(
+                  'Remove',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.white54 : InzxColors.textSecondary,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _qualityChip(
+    AddonService service,
+    int index,
+    AddonEntry entry,
+    AddonQuality q,
+    bool enabled,
+  ) {
+    final selected = entry.quality == q;
     return GestureDetector(
       onTap: enabled
           ? () {
               HapticFeedback.selectionClick();
-              service.setQuality(q);
+              service.setAddonQuality(index, q);
             }
           : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
           color: selected
               ? accentColor.withValues(alpha: enabled ? 0.18 : 0.08)
               : (isDark
                     ? Colors.white.withValues(alpha: 0.04)
-                    : Colors.white),
-          borderRadius: BorderRadius.circular(10),
+                    : Colors.grey.shade50),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: selected
                 ? accentColor.withValues(alpha: enabled ? 0.6 : 0.25)
@@ -219,7 +386,7 @@ class AddonSourceCard extends StatelessWidget {
             Text(
               q.label,
               style: TextStyle(
-                fontSize: 13.5,
+                fontSize: 12.5,
                 fontWeight: FontWeight.w600,
                 color: selected && enabled ? accentColor : _primary,
               ),
@@ -227,7 +394,7 @@ class AddonSourceCard extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               q.description,
-              style: TextStyle(fontSize: 11.5, color: _secondary),
+              style: TextStyle(fontSize: 10.5, color: _secondary),
             ),
           ],
         ),
@@ -235,13 +402,18 @@ class AddonSourceCard extends StatelessWidget {
     );
   }
 
-  Future<void> _confirmRemove(BuildContext context, AddonService service) async {
+  Future<void> _confirmRemove(
+    BuildContext context,
+    AddonService service,
+    int index,
+    AddonEntry entry,
+  ) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Remove addon?'),
         content: Text(
-          'Inzx will forget ${service.name ?? 'this addon'} and its URL. '
+          'Inzx will forget "${entry.name}" (${entry.host}). '
           'You can add it again any time.',
         ),
         actions: [
@@ -251,12 +423,13 @@ class AddonSourceCard extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Remove'),
           ),
         ],
       ),
     );
-    if (ok == true) await service.remove();
+    if (ok == true) await service.removeAt(index);
   }
 
   void _showInstallSheet(BuildContext context) {

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -17,17 +18,60 @@ class AddonMatch {
     required this.addonName,
     required this.track,
     required this.stream,
+    this.addonId,
   });
 
   final String addonName;
+  final String? addonId;
   final AddonTrack track;
   final AddonStream stream;
 }
 
-/// The installed addon (one at a time, as the settings screen offers) and
+/// An installed addon source with its credentials, quality preference, and active state.
+class AddonEntry {
+  AddonEntry({
+    required this.id,
+    required this.name,
+    required this.baseUrl,
+    this.enabled = true,
+    this.quality = AddonQuality.lossless,
+    AddonClient? client,
+  }) : client = client ?? AddonClient(baseUrl);
+
+  final String id;
+  String name;
+  final String baseUrl;
+  bool enabled;
+  AddonQuality quality;
+  final AddonClient client;
+
+  String get host => Uri.tryParse(baseUrl)?.host ?? baseUrl;
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'baseUrl': baseUrl,
+    'enabled': enabled,
+    'quality': quality.wire,
+  };
+
+  factory AddonEntry.fromJson(Map<String, dynamic> json) => AddonEntry(
+    id: json['id'] as String? ?? json['baseUrl'] as String,
+    name: json['name'] as String? ?? 'Addon',
+    baseUrl: json['baseUrl'] as String,
+    enabled: json['enabled'] as bool? ?? true,
+    quality: AddonQuality.fromWire(json['quality'] as String?),
+  );
+
+  void close() {
+    client.close();
+  }
+}
+
+/// The installed addons (tried in priority order, like BitChord) and
 /// the lookups that turn a YouTube Music track into its lossless copy.
 ///
-/// The addon URL carries the user's personal token, so it is kept in secure
+/// Addon URLs carry user personal tokens, so they are kept in secure
 /// storage, never in plain preferences.
 class AddonService extends ChangeNotifier {
   AddonService._();
@@ -37,13 +81,11 @@ class AddonService extends ChangeNotifier {
   static const _enabledKey = 'addon_enabled';
   static const _qualityKey = 'addon_quality';
   static const _nameKey = 'addon_name';
+  static const _sourcesKey = 'addon_sources_list_v1';
 
   final FlutterSecureStorage _secure = const FlutterSecureStorage();
 
-  AddonClient? _client;
-  String? _name;
-  bool _enabled = true;
-  AddonQuality _quality = AddonQuality.lossless;
+  final List<AddonEntry> _addons = [];
   bool _loaded = false;
 
   /// Settled answers per track id, misses included, so a track with no
@@ -56,95 +98,253 @@ class AddonService extends ChangeNotifier {
   final Map<String, DateTime> _resolvedAt = {};
   static const _streamTtl = Duration(minutes: 20);
 
-  bool get isInstalled => _client != null;
-  bool get isEnabled => _enabled && _client != null;
-  String? get name => _name;
-  AddonQuality get quality => _quality;
+  bool get isInstalled => _addons.isNotEmpty;
+  bool get isEnabled => _addons.any((a) => a.enabled);
+  String? get name => _addons.firstOrNull?.name;
+  AddonQuality get quality =>
+      _addons.firstOrNull?.quality ?? AddonQuality.lossless;
 
   /// Host only — the token in the path stays out of the UI.
-  String? get host => _client == null ? null : Uri.parse(_client!.baseUrl).host;
+  String? get host => _addons.firstOrNull?.host;
+
+  /// All installed addon entries in priority order.
+  List<AddonEntry> get addons => List.unmodifiable(_addons);
 
   Future<void> load() async {
     if (_loaded) return;
     _loaded = true;
     try {
-      final url = await _secure.read(key: _urlKey);
-      final prefs = await SharedPreferences.getInstance();
-      _enabled = prefs.getBool(_enabledKey) ?? true;
-      _quality = AddonQuality.fromWire(prefs.getString(_qualityKey));
-      _name = prefs.getString(_nameKey);
-      if (url != null && url.isNotEmpty) _client = AddonClient(url);
+      final sourcesJson = await _secure.read(key: _sourcesKey);
+      if (sourcesJson != null && sourcesJson.isNotEmpty) {
+        final decoded = jsonDecode(sourcesJson);
+        if (decoded is List) {
+          _addons.clear();
+          for (final item in decoded) {
+            if (item is Map<String, dynamic>) {
+              _addons.add(AddonEntry.fromJson(item));
+            } else if (item is Map) {
+              _addons.add(AddonEntry.fromJson(item.cast<String, dynamic>()));
+            }
+          }
+        }
+      } else {
+        // Legacy single-addon migration
+        final legacyUrl = await _secure.read(key: _urlKey);
+        if (legacyUrl != null && legacyUrl.isNotEmpty) {
+          final prefs = await SharedPreferences.getInstance();
+          final enabled = prefs.getBool(_enabledKey) ?? true;
+          final quality = AddonQuality.fromWire(prefs.getString(_qualityKey));
+          final name = prefs.getString(_nameKey) ?? 'Addon';
+          _addons.add(AddonEntry(
+            id: 'legacy',
+            name: name,
+            baseUrl: legacyUrl,
+            enabled: enabled,
+            quality: quality,
+          ));
+          await _save();
+        }
+      }
     } catch (e) {
       debugPrint('AddonService: load failed: $e');
     }
     notifyListeners();
   }
 
-  /// Checks the URL serves a playable addon manifest, then keeps it.
+  Future<void> _save() async {
+    try {
+      final jsonList = jsonEncode([for (final a in _addons) a.toJson()]);
+      await _secure.write(key: _sourcesKey, value: jsonList);
+      final prefs = await SharedPreferences.getInstance();
+      if (_addons.isNotEmpty) {
+        final first = _addons.first;
+        await _secure.write(key: _urlKey, value: first.baseUrl);
+        await prefs.setString(_nameKey, first.name);
+        await prefs.setBool(_enabledKey, isEnabled);
+        await prefs.setString(_qualityKey, first.quality.wire);
+      } else {
+        await _secure.delete(key: _urlKey);
+        await prefs.remove(_nameKey);
+        await prefs.setBool(_enabledKey, false);
+      }
+    } catch (e) {
+      debugPrint('AddonService: save failed: $e');
+    }
+  }
+
+  /// Checks the URL serves a playable addon manifest, then adds it.
+  /// If the addon is already installed, refreshes its manifest and keeps its position.
   /// Throws [AddonException] with a message fit to show the user.
   Future<AddonManifest> install(String rawUrl) async {
     if (!AddonClient.looksValid(rawUrl)) {
       throw const AddonException('That doesn\'t look like an addon URL');
     }
     final client = AddonClient(rawUrl);
-    final AddonManifest manifest;
+    AddonManifest manifest;
     try {
       manifest = await client.manifest();
-    } on AddonException {
-      rethrow;
-    } on TimeoutException {
-      throw const AddonException('The addon didn\'t answer in time');
-    } catch (e) {
-      throw AddonException('Couldn\'t reach the addon ($e)');
+    } catch (manifestError) {
+      // Manifest probe fallback: if /manifest.json isn't served or fails,
+      // probe whether /search answers (BitChord accepts addons with no manifest).
+      final canSearch = await client.probeSearch();
+      if (canSearch) {
+        manifest = AddonManifest(
+          id: Uri.tryParse(client.baseUrl)?.host ?? 'addon',
+          name: Uri.tryParse(client.baseUrl)?.host ?? 'Addon',
+          version: '1.0.0',
+          resources: const ['search', 'stream'],
+        );
+      } else {
+        client.close();
+        if (manifestError is AddonException) rethrow;
+        if (manifestError is TimeoutException) {
+          throw const AddonException('The addon didn\'t answer in time');
+        }
+        throw AddonException('Couldn\'t reach the addon ($manifestError)');
+      }
     }
     if (!manifest.isPlayable) {
+      client.close();
       throw const AddonException('This addon can\'t search and stream tracks');
     }
 
-    await _secure.write(key: _urlKey, value: client.baseUrl);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_nameKey, manifest.displayName);
-    await prefs.setBool(_enabledKey, true);
-    _client?.close();
-    _client = client;
-    _name = manifest.displayName;
-    _enabled = true;
+    final existingIndex =
+        _addons.indexWhere((a) => a.baseUrl == client.baseUrl);
+    if (existingIndex != -1) {
+      _addons[existingIndex].close();
+      _addons[existingIndex] = AddonEntry(
+        id: _addons[existingIndex].id,
+        name: manifest.displayName,
+        baseUrl: client.baseUrl,
+        enabled: true,
+        quality: _addons[existingIndex].quality,
+        client: client,
+      );
+    } else {
+      _addons.add(AddonEntry(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: manifest.displayName,
+        baseUrl: client.baseUrl,
+        enabled: true,
+        quality: AddonQuality.lossless,
+        client: client,
+      ));
+    }
+
     _clearCache();
+    await _save();
     notifyListeners();
     return manifest;
   }
 
+  /// Removes an addon at [index].
+  Future<void> removeAt(int index) async {
+    if (index < 0 || index >= _addons.length) return;
+    final removed = _addons.removeAt(index);
+    removed.close();
+    _clearCache();
+    await _save();
+    notifyListeners();
+  }
+
+  /// Removes an addon by [id].
+  Future<void> removeAddon(String id) async {
+    final idx = _addons.indexWhere((a) => a.id == id);
+    if (idx != -1) {
+      await removeAt(idx);
+    }
+  }
+
+  /// Removes all installed addons.
   Future<void> remove() async {
-    await _secure.delete(key: _urlKey);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_nameKey);
-    _client?.close();
-    _client = null;
-    _name = null;
+    for (final a in _addons) {
+      a.close();
+    }
+    _addons.clear();
     _clearCache();
+    await _save();
     notifyListeners();
   }
 
+  /// Reorders an addon from [oldIndex] to [newIndex] to change priority.
+  Future<void> reorder(int oldIndex, int newIndex) async {
+    if (oldIndex < 0 || oldIndex >= _addons.length) return;
+    if (newIndex < 0 || newIndex >= _addons.length) return;
+    if (oldIndex == newIndex) return;
+    final item = _addons.removeAt(oldIndex);
+    _addons.insert(newIndex, item);
+    _clearCache();
+    await _save();
+    notifyListeners();
+  }
+
+  /// Sets whether all addons are enabled.
   Future<void> setEnabled(bool enabled) async {
-    _enabled = enabled;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_enabledKey, enabled);
+    for (final a in _addons) {
+      a.enabled = enabled;
+    }
+    await _save();
     notifyListeners();
   }
 
-  Future<void> setQuality(AddonQuality quality) async {
-    if (quality == _quality) return;
-    _quality = quality;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_qualityKey, quality.wire);
-    _clearCache();
+  /// Sets whether a specific addon is enabled.
+  Future<void> setAddonEnabled(int index, bool enabled) async {
+    if (index < 0 || index >= _addons.length) return;
+    _addons[index].enabled = enabled;
+    await _save();
     notifyListeners();
+  }
+
+  /// Sets the preferred quality tier for the primary addon.
+  Future<void> setQuality(AddonQuality quality) async {
+    if (_addons.isEmpty) return;
+    if (_addons.first.quality == quality) return;
+    _addons.first.quality = quality;
+    _clearCache();
+    await _save();
+    notifyListeners();
+  }
+
+  /// Sets the preferred quality tier for a specific addon.
+  Future<void> setAddonQuality(int index, AddonQuality quality) async {
+    if (index < 0 || index >= _addons.length) return;
+    if (_addons[index].quality == quality) return;
+    _addons[index].quality = quality;
+    _clearCache();
+    await _save();
+    notifyListeners();
+  }
+
+  @visibleForTesting
+  void resetForTesting({List<AddonEntry>? addons}) {
+    _clearCache();
+    for (final a in _addons) {
+      a.close();
+    }
+    _addons.clear();
+    if (addons != null) {
+      _addons.addAll(addons);
+    }
+    _loaded = true;
   }
 
   void _clearCache() {
     _cache.clear();
     _resolvedAt.clear();
   }
+
+  final _matchesController =
+      StreamController<({String trackId, AddonMatch match})>.broadcast();
+
+  /// Every lossless copy as it's found, whoever asked. The player listens,
+  /// so the song playing moves onto its copy the moment one turns up.
+  Stream<({String trackId, AddonMatch match})> get matches =>
+      _matchesController.stream;
+
+  /// Whether the addon has answered that it has no lossless copy of [track]
+  /// — as opposed to not having been reachable to ask.
+  bool isSettledMiss(Track track) =>
+      _cache.containsKey(track.id) && _cache[track.id] == null;
 
   /// An already-resolved, still-fresh match, without touching the network.
   AddonMatch? cachedFor(Track track) {
@@ -158,8 +358,8 @@ class AddonService extends ChangeNotifier {
     return match;
   }
 
-  /// The lossless copy of [track], or null when the addon hasn't one (or
-  /// isn't installed, enabled or reachable). Never throws.
+  /// The lossless copy of [track], or null when no addon has one (or
+  /// none are installed, enabled or reachable). Never throws.
   Future<AddonMatch?> matchFor(Track track) async {
     if (!isEnabled) return null;
     if (track.localFilePath != null || track.id.startsWith('local_')) {
@@ -171,41 +371,101 @@ class AddonService extends ChangeNotifier {
       final fresh = cachedFor(track);
       if (fresh != null) return fresh;
       // Expired stream: re-resolve the same catalogue id, no new search.
-      return _inFlight[track.id] ??= _resolve(track, known: hit.track)
-          .whenComplete(() => _inFlight.remove(track.id));
+      return _inFlight[track.id] ??= _resolve(track, knownMatch: hit)
+          .whenComplete(() {
+            _inFlight.remove(track.id);
+          });
     }
-    return _inFlight[track.id] ??= _resolve(
-      track,
-    ).whenComplete(() => _inFlight.remove(track.id));
+    return _inFlight[track.id] ??= _resolve(track).whenComplete(() {
+      _inFlight.remove(track.id);
+    });
   }
 
-  Future<AddonMatch?> _resolve(Track track, {AddonTrack? known}) async {
-    final client = _client;
-    if (client == null) return null;
-    final quality = _quality;
-    try {
-      final candidate = known ?? await _findCandidate(client, track, quality);
-      if (candidate == null) {
-        _remember(track.id, null);
-        return null;
+  Future<AddonMatch?> _resolve(Track track, {AddonMatch? knownMatch}) async {
+    final active = _addons.where((a) => a.enabled).toList();
+    if (active.isEmpty) return null;
+
+    // Fast-path: if re-resolving an expired stream from a previously matched addon,
+    // try that addon directly first without a full search.
+    if (knownMatch != null) {
+      final knownEntry = active.where((a) =>
+          a.id == knownMatch.addonId || a.name == knownMatch.addonName).firstOrNull;
+      if (knownEntry != null) {
+        try {
+          final stream = await knownEntry.client.stream(
+            knownMatch.track.id,
+            quality: knownEntry.quality,
+          );
+          if (stream.isLossless) {
+            final match = AddonMatch(
+              addonName: knownEntry.name,
+              addonId: knownEntry.id,
+              track: knownMatch.track,
+              stream: stream,
+            );
+            _remember(track.id, match);
+            _matchesController.add((trackId: track.id, match: match));
+            return match;
+          }
+        } catch (_) {
+          // If expired stream refresh fails, fall through to full priority search.
+        }
       }
-      final stream = await client.stream(candidate.id, quality: quality);
-      if (!stream.isLossless) {
-        _remember(track.id, null);
-        return null;
-      }
-      final match = AddonMatch(
-        addonName: _name ?? 'Addon',
-        track: candidate,
-        stream: stream,
-      );
-      _remember(track.id, match);
-      return match;
-    } catch (e) {
-      // Network trouble isn't a verdict on the track: don't cache it.
-      debugPrint('AddonService: no lossless for "${track.title}": $e');
-      return null;
     }
+
+    var anyDefinitiveFailure = false;
+
+    for (var i = 0; i < active.length; i++) {
+      final entry = active[i];
+      final client = entry.client;
+      final quality = entry.quality;
+      try {
+        final watch = Stopwatch()..start();
+        final candidate = await _findCandidate(client, track, quality);
+        debugPrint(
+          '[Lossless] [${entry.name} (#${i + 1})] Search for "${track.title}" took ${watch.elapsedMilliseconds} ms: '
+          '${candidate == null ? 'no matching copy' : 'matched "${candidate.title}" (${candidate.album})'}',
+        );
+        if (candidate == null) {
+          anyDefinitiveFailure = true;
+          continue; // try next addon in priority
+        }
+        watch.reset();
+        final stream = await client.stream(candidate.id, quality: quality);
+        debugPrint(
+          '[Lossless] [${entry.name} (#${i + 1})] Stream for "${track.title}" took ${watch.elapsedMilliseconds} ms '
+          '(${stream.formatLabel})',
+        );
+        if (!stream.isLossless) {
+          anyDefinitiveFailure = true;
+          continue; // try next addon in priority
+        }
+        final match = AddonMatch(
+          addonName: entry.name,
+          addonId: entry.id,
+          track: candidate,
+          stream: stream,
+        );
+        _remember(track.id, match);
+        _matchesController.add((trackId: track.id, match: match));
+        return match;
+      } on AddonMiss catch (e) {
+        // 404, DRM-protected, or track not served by this addon: try next addon!
+        debugPrint('[Lossless] [${entry.name}] Miss for "${track.title}": $e');
+        anyDefinitiveFailure = true;
+        continue;
+      } catch (e) {
+        // Network or unexpected failure on this addon: log and try next addon!
+        debugPrint('[Lossless] [${entry.name}] Error for "${track.title}": $e');
+        continue;
+      }
+    }
+
+    // Only cache settled miss if at least one addon definitively answered.
+    if (anyDefinitiveFailure) {
+      _remember(track.id, null);
+    }
+    return null;
   }
 
   void _remember(String id, AddonMatch? match) {
@@ -248,7 +508,15 @@ class AddonService extends ChangeNotifier {
       final hit = pick(tagged);
       if (hit != null) return hit;
     }
-    return pick(await client.search('$primaryArtist $title', quality: quality));
+    final results = await client.search('$primaryArtist $title', quality: quality);
+    final hit = pick(results);
+    if (hit == null && results.isNotEmpty) {
+      debugPrint(
+        '[Lossless] None of ${results.length} results matched "${track.title}" '
+        'by ${track.artist}; top: ${results.take(3).map((r) => '"${r.title}" / ${r.artist} / ${r.album} / ${r.duration.inSeconds}s${r.isLossless ? '' : ' (lossy)'}').join('; ')}',
+      );
+    }
+    return hit;
   }
 
   /// The search hit that is the same recording as what's playing, or null.
@@ -287,7 +555,7 @@ class AddonService extends ChangeNotifier {
     for (final hit in results) {
       if (hit.isAtmos || !hit.isLossless) continue;
       if (CanvasArtwork.normalizeForMatch(hit.title) != wantTitle) continue;
-      if (!setEquals(takeMarkers(hit.title), wantTakes)) continue;
+      if (!setEquals(_effectiveTakes(hit, wantTakes), wantTakes)) continue;
       final languages = languageTags('${hit.title} ${hit.album}');
       if (wantLanguages.isEmpty
           ? languages.isNotEmpty
@@ -311,6 +579,10 @@ class AddonService extends ChangeNotifier {
         score += 6;
       }
       if (hit.audioQuality.contains('HI_RES')) score += 2;
+      // Not a veto (the release name may just be packaging), but between
+      // otherwise equal rows, one whose album names a take nobody asked for
+      // is the less likely copy.
+      if (takeMarkers(hit.album).any((t) => !wantTakes.contains(t))) score -= 3;
       if (score > bestScore) {
         bestScore = score;
         best = hit;
@@ -333,6 +605,24 @@ class AddonService extends ChangeNotifier {
     for (final m in _languageWord.allMatches(CanvasArtwork.foldDiacritics(text).toLowerCase()))
       m[1] == 'bangla' ? 'bengali' : m[1]!,
   };
+
+  /// The no-vocal takes: a row from an "Instrumental" release *is* the
+  /// instrumental even when its own title says nothing.
+  static const _noVocalTakes = {'instrumental', 'karaoke', 'acapella'};
+
+  /// A hit's take markers, completed from its album the way BitChord's
+  /// matcher does. Catalogues often keep the take on the release rather than
+  /// the row (Tidal's "KALYANI" on the album "KALYANI (Remix)"), so a marker
+  /// the request asked for counts when the album carries it. No-vocal takes
+  /// count from the album both ways. Anything else on an album ("Remixes",
+  /// "Live at…") describes the release and is ignored.
+  static Set<String> _effectiveTakes(AddonTrack hit, Set<String> wanted) {
+    final album = takeMarkers(hit.album);
+    return {
+      ...takeMarkers(hit.title),
+      ...album.where((t) => wanted.contains(t) || _noVocalTakes.contains(t)),
+    };
+  }
 
   static final _takeWord = RegExp(
     r'\b(remix|rmx|live|acoustic|unplugged|instrumental|karaoke|reprise|'

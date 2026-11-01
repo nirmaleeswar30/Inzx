@@ -7,10 +7,12 @@ import 'package:iconsax/iconsax.dart';
 import '../../core/l10n/app_localizations_x.dart';
 import '../../providers/music_providers.dart';
 import '../../providers/providers.dart';
+import '../../services/audio_player_service.dart' as player;
 import '../../services/lyrics/lyrics_service.dart';
 import '../../services/lyrics/lyrics_models.dart';
 import '../../services/lyrics/instrumental_gaps.dart';
 import 'karaoke_word.dart';
+import 'lyric_clock.dart';
 import 'lyrics_menu_sheet.dart';
 
 /// Preview duration before auto-scroll resumes after manual scrolling
@@ -77,8 +79,11 @@ class _LyricsViewState extends ConsumerState<LyricsView>
   // High-frequency frame ticker for 60/120fps smooth karaoke sweep without rebuilding the full widget tree
   late final Ticker _ticker;
   final ValueNotifier<int> _smoothPositionNotifier = ValueNotifier<int>(0);
-  int _lastAudioMs = 0;
-  int _lastSyncEpochMs = 0;
+
+  /// The lyric playhead, steered by the player's dated readings (BitChord's
+  /// LyricClock); a new one per track.
+  LyricClock? _clock;
+  String? _clockTrackId;
 
   // Auto-scroll management
   bool _isAutoScrollEnabled = true;
@@ -88,26 +93,15 @@ class _LyricsViewState extends ConsumerState<LyricsView>
   @override
   void initState() {
     super.initState();
-    final offset = ref.read(lyricsSyncOffsetProvider);
-    _lastAudioMs = widget.currentPosition.inMilliseconds + offset;
-    _lastSyncEpochMs = DateTime.now().millisecondsSinceEpoch;
-    _smoothPositionNotifier.value = _lastAudioMs;
+    _smoothPositionNotifier.value = _heldPositionMs;
 
     _handover = AnimationController(vsync: this);
 
     _ticker = createTicker((_) {
-      final isPlaying = ref.read(isPlayingProvider);
-      if (isPlaying) {
-        final now = DateTime.now().millisecondsSinceEpoch;
-        final elapsed = now - _lastSyncEpochMs;
-        final current = _lastAudioMs + elapsed;
-        if (_smoothPositionNotifier.value != current) {
-          _smoothPositionNotifier.value = current;
-          _checkLineIndexChange(current);
-        }
-      } else if (_smoothPositionNotifier.value != _lastAudioMs) {
-        _smoothPositionNotifier.value = _lastAudioMs;
-        _checkLineIndexChange(_lastAudioMs);
+      final current = _stepClock();
+      if (_smoothPositionNotifier.value != current) {
+        _smoothPositionNotifier.value = current;
+        _checkLineIndexChange(current);
       }
     });
     // Only run the per-frame clock while the lyrics are on screen and the
@@ -117,7 +111,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && widget.isActive) {
-        _checkLineIndexChange(_lastAudioMs);
+        _checkLineIndexChange(_smoothPositionNotifier.value);
         if (_isAutoScrollEnabled) {
           _scrollToCurrentLine(immediate: true);
         }
@@ -125,15 +119,39 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     });
   }
 
+  /// The position the widget was handed, with the lyrics offset: where the
+  /// lyrics sit while the frame clock isn't running.
+  int get _heldPositionMs =>
+      widget.currentPosition.inMilliseconds + ref.read(lyricsSyncOffsetProvider);
+
+  /// One frame of the lyric clock. Stalled (loading, buffering) it holds on
+  /// the player's reading rather than running on by itself, so lines never
+  /// get ahead of a song that hasn't started or has paused to buffer; and
+  /// it learns the real playback rate, so Automix tempo matching stays in
+  /// step.
+  int _stepClock() {
+    final service = player.AudioPlayerService.instance;
+    final playhead = service.playhead;
+    final offset = ref.read(lyricsSyncOffsetProvider);
+    final trackId = service.currentTrack?.id;
+    if (_clock == null || trackId != _clockTrackId) {
+      _clockTrackId = trackId;
+      _clock = LyricClock(playhead.positionMs + offset);
+    }
+    return stepLyricClock(_clock!, playhead, offset);
+  }
+
   void _syncTicker() {
     final shouldRun = widget.isActive && ref.read(isPlayingProvider);
     if (shouldRun && !_ticker.isActive) {
-      _lastSyncEpochMs = DateTime.now().millisecondsSinceEpoch;
+      // A fresh run from the latest reading: a pause or a spell off screen
+      // isn't mistaken for one very long frame.
+      _clock?.restart();
       _ticker.start();
     } else if (!shouldRun && _ticker.isActive) {
       _ticker.stop();
-      _smoothPositionNotifier.value = _lastAudioMs;
-      _checkLineIndexChange(_lastAudioMs);
+      _smoothPositionNotifier.value = _heldPositionMs;
+      _checkLineIndexChange(_heldPositionMs);
     }
   }
 
@@ -223,20 +241,15 @@ class _LyricsViewState extends ConsumerState<LyricsView>
       });
     }
 
-    final offset = ref.read(lyricsSyncOffsetProvider);
-    final newMs = widget.currentPosition.inMilliseconds + offset;
-    final now = DateTime.now().millisecondsSinceEpoch;
-
-    // Estimate where the clock would be now
-    final estimatedCurrent = _lastAudioMs + (now - _lastSyncEpochMs);
-    final drift = (newMs - estimatedCurrent).abs();
-
-    // Only update sync anchor if there's significant drift (> 80ms) or a seek event
-    if (drift > 80 || newMs < _lastAudioMs || newMs - _lastAudioMs > 1000) {
-      _lastAudioMs = newMs;
-      _lastSyncEpochMs = now;
-      _smoothPositionNotifier.value = newMs;
-      _checkLineIndexChange(newMs);
+    // While the frame clock runs it reads the player itself; otherwise each
+    // new position is the truth, which is how a seek made while paused (or
+    // with the lyrics off screen) still moves the words.
+    if (!_ticker.isActive) {
+      final newMs = _heldPositionMs;
+      if (_smoothPositionNotifier.value != newMs) {
+        _smoothPositionNotifier.value = newMs;
+        _checkLineIndexChange(newMs);
+      }
     }
   }
 
