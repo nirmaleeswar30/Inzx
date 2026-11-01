@@ -149,7 +149,7 @@ Inzx is free and open source. If it makes your day a little better, consider sup
 
 | **Home** | **Now Playing** | **Library** | **Jams** |
 |:---:|:---:|:---:|:---:|
-| ![Home](./.github/screenshots/home.png) | <video src="./.github/screenshots/nowplaying.mp4" controls autoplay loop muted playsinline width="100%"><a href="./.github/screenshots/nowplaying.mp4">▶ **Play Video**</a></video> | ![Library](./.github/screenshots/library.png) | ![Jams](./.github/screenshots/jam.png) |
+| ![Home](./.github/screenshots/home.jpg) | ![Now Playing](./.github/screenshots/nowplaying.jpg) | ![Library](./.github/screenshots/library.png) | ![Jams](./.github/screenshots/jam.png) |
 | **Search** | **Playlist** | **Folders** | **Lyrics** |
 | ![Search](./.github/screenshots/search.png) | ![Playlist](./.github/screenshots/playlist.png) | ![Folders](./.github/screenshots/folders.png) | ![Lyrics](./.github/screenshots/lyrics.png) |
 

@@ -639,31 +639,55 @@
     applyProgress(currentProgress);
   }
 
-  /* ───────── autoplay videos helper (hero & showcase) ───────── */
-  var bgVideos = $$('video[autoplay]');
-  bgVideos.forEach(function (v) {
+  /* ───────── autoplay videos helper (hero eager, offscreen lazy) ───────── */
+  var heroVideo = document.querySelector('.phone-hero video');
+  if (heroVideo) {
+    heroVideo.muted = true;
+    heroVideo.defaultMuted = true;
+    var tryPlayHero = function () {
+      if (heroVideo.paused) heroVideo.play().catch(function () {});
+    };
+    tryPlayHero();
+    ['click', 'touchstart', 'scroll', 'pointerdown'].forEach(function (evt) {
+      window.addEventListener(evt, tryPlayHero, { once: true, passive: true });
+    });
+  }
+
+  // Defer offscreen videos using IntersectionObserver with rootMargin
+  var offscreenVideos = $$('video[loading="lazy"]');
+  offscreenVideos.forEach(function (v) {
     v.muted = true;
     v.defaultMuted = true;
-    var tryPlay = function () {
-      if (v.paused) v.play().catch(function () {});
-    };
-    tryPlay();
-    ['click', 'touchstart', 'scroll', 'pointerdown'].forEach(function (evt) {
-      window.addEventListener(evt, tryPlay, { once: true, passive: true });
-    });
   });
 
-  if ('IntersectionObserver' in window) {
+  if ('IntersectionObserver' in window && offscreenVideos.length) {
     var vidObs = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
         var v = e.target;
         if (e.isIntersecting) {
           if (v.paused) v.play().catch(function () {});
+        } else {
+          if (!v.paused) v.pause();
         }
       });
-    }, { threshold: 0.1 });
-    bgVideos.forEach(function (v) { vidObs.observe(v); });
+    }, { rootMargin: '250px 0px', threshold: 0.05 });
+    offscreenVideos.forEach(function (v) { vidObs.observe(v); });
   }
+
+  // Pause autoplaying videos when user prefers reduced motion
+  try {
+    var reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var syncReducedMotion = function (e) {
+      var prefersReduced = e.matches !== undefined ? e.matches : reducedMotionQuery.matches;
+      if (prefersReduced) {
+        $$('video[autoplay]').forEach(function (v) {
+          if (!v.paused) v.pause();
+        });
+      }
+    };
+    syncReducedMotion(reducedMotionQuery);
+    reducedMotionQuery.addEventListener('change', syncReducedMotion);
+  } catch (_) {}
 
   /* ───────── tabs ───────── */
   var tabs = $$('.tab');
