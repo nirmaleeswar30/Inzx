@@ -1219,5 +1219,7 @@
   "smartAudioRouting": "توجيه صوتي ذكي",
   "smartAudioRoutingSubtitle": "أظهر مخرج الصوت النشط أسفل عناصر التحكّم بالتشغيل",
   "playback": "التشغيل",
-  "playbackSectionSubtitle": "تحكّم في كيفية الحصول على المقاطع وطريقة عرض المخرج"
+  "playbackSectionSubtitle": "تحكّم في كيفية الحصول على المقاطع وطريقة عرض المخرج",
+  "ambientReflectionTitle": "انعكاس محيطي",
+  "ambientReflectionSubtitle": "إظهار خلفية انعكاس متوهجة لغلاف الألبوم خلف المشغل."
 }

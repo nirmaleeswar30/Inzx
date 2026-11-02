@@ -1219,5 +1219,7 @@
   "smartAudioRouting": "Intelligentes Audio-Routing",
   "smartAudioRoutingSubtitle": "Aktive Audioausgabe unter den Wiedergabesteuerungen anzeigen",
   "playback": "Wiedergabe",
-  "playbackSectionSubtitle": "Steuern, woher Titel bezogen werden und wie die Ausgabe angezeigt wird"
+  "playbackSectionSubtitle": "Steuern, woher Titel bezogen werden und wie die Ausgabe angezeigt wird",
+  "ambientReflectionTitle": "Ambientes Spiegelbild",
+  "ambientReflectionSubtitle": "Zeigt einen weich leuchtenden Reflexionshintergrund des Albumcovers hinter dem Player an."
 }

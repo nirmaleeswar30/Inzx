@@ -556,6 +556,39 @@ class PreferAudioVersionsNotifier extends StateNotifier<bool> {
   Future<void> toggle() => setEnabled(!state);
 }
 
+/// Provider for whether ambient reflection is enabled behind the Now Playing screen.
+final ambientReflectionsEnabledProvider =
+    StateNotifierProvider<AmbientReflectionsEnabledNotifier, bool>((ref) {
+  return AmbientReflectionsEnabledNotifier();
+});
+
+class AmbientReflectionsEnabledNotifier extends StateNotifier<bool> {
+  static const String ambientReflectionsPrefKey = 'inzx_ambient_reflections_enabled';
+
+  AmbientReflectionsEnabledNotifier() : super(true) {
+    _loadPreference();
+  }
+
+  Future<void> _loadPreference() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      state = prefs.getBool(ambientReflectionsPrefKey) ?? true; // Default to true
+    } catch (_) {}
+  }
+
+  Future<void> setEnabled(bool value) async {
+    state = value;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(ambientReflectionsPrefKey, value);
+    } catch (_) {}
+  }
+
+  Future<void> toggle() async {
+    await setEnabled(!state);
+  }
+}
+
 /// Provider for whether the cinematic ambient reflection is only shown for animated artwork
 final cinematicAmbientOnlyForAnimatedArtProvider =
     StateNotifierProvider<CinematicAmbientOnlyForAnimatedArtNotifier, bool>((ref) {

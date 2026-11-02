@@ -1219,5 +1219,7 @@
   "smartAudioRouting": "Routage audio intelligent",
   "smartAudioRoutingSubtitle": "Afficher la sortie audio active sous les commandes de lecture",
   "playback": "Lecture",
-  "playbackSectionSubtitle": "Contrôlez la provenance des titres et l'affichage de la sortie"
+  "playbackSectionSubtitle": "Contrôlez la provenance des titres et l'affichage de la sortie",
+  "ambientReflectionTitle": "Reflet d'ambiance",
+  "ambientReflectionSubtitle": "Afficher un arrière-plan de reflet lumineux de la pochette derrière le lecteur."
 }

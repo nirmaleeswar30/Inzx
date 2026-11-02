@@ -1283,6 +1283,14 @@
   "@lyrics": {
     "description": "Header for the Lyrics group on the player appearance screen"
   },
+  "ambientReflectionTitle": "Ambient Reflection",
+  "@ambientReflectionTitle": {
+    "description": "Toggle title for enabling or disabling ambient reflection background"
+  },
+  "ambientReflectionSubtitle": "Show a glowing reflection of album artwork behind the player.",
+  "@ambientReflectionSubtitle": {
+    "description": "Toggle subtitle for enabling or disabling ambient reflection background"
+  },
   "ambientReflectionCanvasTitle": "Ambient Reflection Only for Canvas",
   "@ambientReflectionCanvasTitle": {
     "description": "Toggle title for the cinematic ambient reflection (Canvas only)"

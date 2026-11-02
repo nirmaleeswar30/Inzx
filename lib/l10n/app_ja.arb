@@ -1219,5 +1219,7 @@
   "smartAudioRouting": "スマートオーディオルーティング",
   "smartAudioRoutingSubtitle": "再生コントロールの下にアクティブな音声出力を表示します",
   "playback": "再生",
-  "playbackSectionSubtitle": "曲の取得元と出力の表示方法を管理します"
+  "playbackSectionSubtitle": "曲の取得元と出力の表示方法を管理します",
+  "ambientReflectionTitle": "アンビエントリフレクション",
+  "ambientReflectionSubtitle": "プレーヤーの背面にアルバムアートの光る反射背景を表示します。"
 }

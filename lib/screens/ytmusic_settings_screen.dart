@@ -594,6 +594,21 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       ),
       _SearchableItem(
         tags: [
+          'ambient reflection',
+          'reflection',
+          'glow',
+          'background glow',
+          'ambient',
+          'blur background',
+          'ambient light',
+        ],
+        title: l10n.ambientReflectionTitle,
+        subtitle: l10n.ambientReflectionSubtitle,
+        icon: Icons.blur_on_rounded,
+        screen: const PlayerAppearanceScreen(),
+      ),
+      _SearchableItem(
+        tags: [
           'ambient reflection canvas',
           'ambient reflection',
           'cinematic ambient',

@@ -1219,5 +1219,7 @@
   "smartAudioRouting": "스마트 오디오 라우팅",
   "smartAudioRoutingSubtitle": "재생 컨트롤 아래에 활성 오디오 출력을 표시합니다",
   "playback": "재생",
-  "playbackSectionSubtitle": "트랙 소스와 출력 표시 방식을 제어합니다"
+  "playbackSectionSubtitle": "트랙 소스와 출력 표시 방식을 제어합니다",
+  "ambientReflectionTitle": "앰비언트 리플렉션",
+  "ambientReflectionSubtitle": "플레이어 뒤에 앨범 커버의 은은하게 빛나는 반사 배경을 표시합니다."
 }

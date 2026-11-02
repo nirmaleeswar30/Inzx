@@ -1219,5 +1219,7 @@
   "smartAudioRouting": "Akıllı Ses Yönlendirme",
   "smartAudioRoutingSubtitle": "Etkin ses çıkışını oynatma denetimlerinin altında göster",
   "playback": "Oynatma",
-  "playbackSectionSubtitle": "Parçaların nereden alındığını ve çıkışın nasıl gösterildiğini denetleyin"
+  "playbackSectionSubtitle": "Parçaların nereden alındığını ve çıkışın nasıl gösterildiğini denetleyin",
+  "ambientReflectionTitle": "Ortam Yansıması",
+  "ambientReflectionSubtitle": "Oynatıcının arkasında albüm kapağının parlayan yansıma arka planını göster."
 }

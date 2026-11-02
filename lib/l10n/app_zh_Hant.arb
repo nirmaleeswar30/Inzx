@@ -1219,5 +1219,7 @@
   "smartAudioRouting": "智慧音訊路由",
   "smartAudioRoutingSubtitle": "在播放控制項下方顯示目前音訊輸出",
   "playback": "播放",
-  "playbackSectionSubtitle": "控制曲目來源以及輸出的顯示方式"
+  "playbackSectionSubtitle": "控制曲目來源以及輸出的顯示方式",
+  "ambientReflectionTitle": "氛圍倒影",
+  "ambientReflectionSubtitle": "在播放器背後顯示專輯封面的發光倒影背景。"
 }

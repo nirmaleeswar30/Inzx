@@ -1219,5 +1219,7 @@
   "smartAudioRouting": "स्मार्ट ऑडियो रूटिंग",
   "smartAudioRoutingSubtitle": "प्लेबैक कंट्रोल के नीचे सक्रिय ऑडियो आउटपुट दिखाएं",
   "playback": "प्लेबैक",
-  "playbackSectionSubtitle": "नियंत्रित करें कि ट्रैक कहां से लिए जाएं और आउटपुट कैसे दिखे"
+  "playbackSectionSubtitle": "नियंत्रित करें कि ट्रैक कहां से लिए जाएं और आउटपुट कैसे दिखे",
+  "ambientReflectionTitle": "एम्बिएंट रिफ्लेक्शन",
+  "ambientReflectionSubtitle": "प्लेयर के पीछे एल्बम कवर का चमकता हुआ बैकग्राउंड रिफ्लेक्शन दिखाएं।"
 }

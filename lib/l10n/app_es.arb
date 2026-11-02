@@ -1219,5 +1219,7 @@
   "smartAudioRouting": "Enrutamiento de audio inteligente",
   "smartAudioRoutingSubtitle": "Mostrar la salida de audio activa debajo de los controles de reproducción",
   "playback": "Reproducción",
-  "playbackSectionSubtitle": "Controla de dónde provienen las pistas y cómo se muestra la salida"
+  "playbackSectionSubtitle": "Controla de dónde provienen las pistas y cómo se muestra la salida",
+  "ambientReflectionTitle": "Reflejo ambiental",
+  "ambientReflectionSubtitle": "Muestra un fondo de reflejo brillante de la portada del álbum detrás del reproductor."
 }

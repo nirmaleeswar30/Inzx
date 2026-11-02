@@ -1975,6 +1975,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                     ),
                   ),
                   if (nowPlayingStyle != NowPlayingStyle.edge &&
+                      ref.watch(ambientReflectionsEnabledProvider) &&
                       _hasAnimatedCanvas &&
                       ref.watch(dynamicAmbientBackgroundForAnimatedArtProvider))
                     Positioned.fill(
@@ -2111,10 +2112,11 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                               // the view blurs this full-screen.
                               ambientArt: _buildAmbientArt(track),
                               forceFallbackGradient:
-                                  ref.watch(
-                                    cinematicAmbientOnlyForAnimatedArtProvider,
-                                  ) &&
-                                  !_hasAnimatedCanvas,
+                                  !ref.watch(ambientReflectionsEnabledProvider) ||
+                                  (ref.watch(
+                                        cinematicAmbientOnlyForAnimatedArtProvider,
+                                      ) &&
+                                      !_hasAnimatedCanvas),
                               lyricPreview: _buildSyncedLyricPreview(
                                 textColor,
                                 accentColor,

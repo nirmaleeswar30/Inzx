@@ -1219,5 +1219,7 @@
   "smartAudioRouting": "การกำหนดเส้นทางเสียงอัจฉริยะ",
   "smartAudioRoutingSubtitle": "แสดงเอาต์พุตเสียงที่ใช้งานอยู่ใต้ตัวควบคุมการเล่น",
   "playback": "การเล่น",
-  "playbackSectionSubtitle": "ควบคุมแหล่งที่มาของเพลงและวิธีแสดงเอาต์พุต"
+  "playbackSectionSubtitle": "ควบคุมแหล่งที่มาของเพลงและวิธีแสดงเอาต์พุต",
+  "ambientReflectionTitle": "การสะท้อนแวดล้อม",
+  "ambientReflectionSubtitle": "แสดงพื้นหลังการสะท้อนที่เรืองแสงของหน้าปกอัลบั้มด้านหลังเครื่องเล่น"
 }

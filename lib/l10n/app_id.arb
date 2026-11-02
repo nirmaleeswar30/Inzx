@@ -1219,5 +1219,7 @@
   "smartAudioRouting": "Perutean Audio Cerdas",
   "smartAudioRoutingSubtitle": "Tampilkan output audio aktif di bawah kontrol pemutaran",
   "playback": "Pemutaran",
-  "playbackSectionSubtitle": "Kontrol sumber trek dan cara output ditampilkan"
+  "playbackSectionSubtitle": "Kontrol sumber trek dan cara output ditampilkan",
+  "ambientReflectionTitle": "Refleksi Ambient",
+  "ambientReflectionSubtitle": "Tampilkan latar belakang pantulan bercahaya dari sampul album di belakang pemutar."
 }

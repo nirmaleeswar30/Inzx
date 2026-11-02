@@ -133,11 +133,23 @@ class _PlayerAppearanceScreenState
                 onChanged: (val) =>
                     ref.read(animatedAlbumArtProvider.notifier).setEnabled(val),
               ),
-              if (ref.watch(animatedAlbumArtProvider) &&
+              _divider,
+              _switchTile(
+                icon: Icons.blur_on_rounded,
+                iconBg: _accentColor,
+                title: l10n.ambientReflectionTitle,
+                subtitle: l10n.ambientReflectionSubtitle,
+                value: ref.watch(ambientReflectionsEnabledProvider),
+                onChanged: (val) => ref
+                    .read(ambientReflectionsEnabledProvider.notifier)
+                    .setEnabled(val),
+              ),
+              if (ref.watch(ambientReflectionsEnabledProvider) &&
+                  ref.watch(animatedAlbumArtProvider) &&
                   ref.watch(nowPlayingStyleProvider) == NowPlayingStyle.edge) ...[
                 _divider,
                 _switchTile(
-                  icon: Icons.blur_on_rounded,
+                  icon: Icons.auto_awesome_rounded,
                   iconBg: _accentColor,
                   title: l10n.ambientReflectionCanvasTitle,
                   subtitle: l10n.ambientReflectionCanvasSubtitle,
@@ -147,7 +159,8 @@ class _PlayerAppearanceScreenState
                       .toggle(),
                 ),
               ],
-              if (ref.watch(animatedAlbumArtProvider) &&
+              if (ref.watch(ambientReflectionsEnabledProvider) &&
+                  ref.watch(animatedAlbumArtProvider) &&
                   ref.watch(nowPlayingStyleProvider) != NowPlayingStyle.edge) ...[
                 _divider,
                 _switchTile(
