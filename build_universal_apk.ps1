@@ -200,13 +200,25 @@ if (-not $env:JAVA_HOME) {
 Write-Host ""
 Write-Host "Building Standalone arm64-v8a APK (Shorebird compatible)..." -ForegroundColor Yellow
 
-# Find Python (python3 or python)
+# Find Python (python3, python, or Windows registry/AppData fallback)
 $pythonExe = $null
 $py3 = Get-Command python3 -ErrorAction SilentlyContinue
 if ($py3) { $pythonExe = $py3.Source }
 if (-not $pythonExe) {
     $py = Get-Command python -ErrorAction SilentlyContinue
     if ($py) { $pythonExe = $py.Source }
+}
+if (-not $pythonExe) {
+    $regPaths = Get-ItemProperty "HKCU:\Software\Python\PythonCore\*\InstallPath", "HKLM:\Software\Python\PythonCore\*\InstallPath" -ErrorAction SilentlyContinue |
+        Select-Object -ExpandProperty ExecutablePath -ErrorAction SilentlyContinue
+    foreach ($p in $regPaths) {
+        if ($p -and (Test-Path $p)) { $pythonExe = $p; break }
+    }
+}
+if (-not $pythonExe) {
+    $common = Get-ChildItem "$env:LOCALAPPDATA\Python\pythoncore-*\python.exe", "$env:LOCALAPPDATA\Programs\Python\Python*\python.exe" -ErrorAction SilentlyContinue |
+        Select-Object -First 1 -ExpandProperty FullName
+    if ($common -and (Test-Path $common)) { $pythonExe = $common }
 }
 if (-not $pythonExe) {
     Write-Host "  ERROR: Python not found. Install Python 3 to build standalone APKs." -ForegroundColor Red

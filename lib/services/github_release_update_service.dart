@@ -47,7 +47,7 @@ class GithubReleaseUpdateService {
     return 'https://github.com/$_repo/releases/latest';
   }
 
-  Future<GithubReleaseInfo?> checkForNewRelease({bool ignoreReleaseMode = false}) async {
+  Future<GithubReleaseInfo?> checkForNewRelease({bool ignoreReleaseMode = true}) async {
     if (!kReleaseMode && !ignoreReleaseMode) return null;
 
     try {

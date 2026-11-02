@@ -25,6 +25,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../services/github_release_update_service.dart';
 import '../services/shorebird_update_service.dart';
 import 'widgets/whats_new_dialog.dart';
+import 'widgets/update_dialog.dart';
 import 'widgets/color_picker_dialog.dart';
 import '../services/discord/discord_rpc_service.dart';
 import 'discord_rich_presence_screen.dart';
@@ -3957,78 +3958,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
     if (releaseInfo != null) {
-      showDialog(
-        context: context,
-        builder: (dialogContext) => Dialog(
-          backgroundColor: Colors.transparent,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: _isDark
-                      ? const Color(0xFF1E1E1E).withValues(alpha: 0.92)
-                      : Colors.white.withValues(alpha: 0.95),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: _accentColor.withValues(alpha: 0.35),
-                    width: 1.2,
-                  ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Iconsax.arrow_circle_down, size: 48, color: _accentColor),
-                    const SizedBox(height: 16),
-                    Text(
-                      'New Update Available!',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: _textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Version ${releaseInfo.latestVersion} is now available on GitHub.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, color: _textSecondary),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextButton(
-                            onPressed: () => Navigator.pop(dialogContext),
-                            child: Text('Cancel', style: TextStyle(color: _textSecondary)),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: FilledButton.icon(
-                            style: FilledButton.styleFrom(backgroundColor: _accentColor),
-                            onPressed: () {
-                              Navigator.pop(dialogContext);
-                              launchUrl(
-                                Uri.parse(releaseInfo.downloadUrl),
-                                mode: LaunchMode.externalApplication,
-                              );
-                            },
-                            icon: const Icon(Icons.download_rounded, size: 18),
-                            label: const Text('Download & Update'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
+      await UpdateAvailableDialog.show(context, releaseInfo: releaseInfo);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

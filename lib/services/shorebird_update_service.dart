@@ -11,6 +11,9 @@ class ShorebirdUpdateService {
   final ShorebirdUpdater _updater = ShorebirdUpdater();
 
   Future<bool> checkForUpdates() async {
+    if (!_updater.isAvailable) {
+      return false;
+    }
     if (!kReleaseMode) {
       if (kDebugMode) {
         // Skip OTA in debug/profile builds to avoid confusion.

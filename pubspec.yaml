@@ -1,7 +1,7 @@
 name: inzx
-description: "Inzx - A beautiful music player with YouTube Music integration and Jams."
+description: "Inzx - A beautiful and sleek music player with YouTube Music integration and Jams."
 publish_to: 'none'
-version: 1.5.4
+version: 1.5.5
 
 environment:
   sdk: ^3.10.3

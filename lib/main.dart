@@ -5,7 +5,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'core/design_system/design_system.dart';
 import 'core/l10n/app_localizations_x.dart';
 import 'core/providers/locale_provider.dart';
@@ -29,6 +28,7 @@ import 'services/deep_link_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'screens/widgets/whats_new_dialog.dart';
+import 'screens/widgets/update_dialog.dart';
 import 'services/scrobbling/scrobble_service.dart';
 
 InzxAudioHandler? audioHandler;
@@ -249,7 +249,7 @@ class _InzxAppState extends ConsumerState<InzxApp> {
   }
 
   Future<void> _runUpdateChecks() async {
-    _checkFirstLaunchChangelog();
+    await _checkFirstLaunchChangelog();
 
     final didPatchUpdate = await ShorebirdUpdateService.instance
         .checkForUpdates();
@@ -261,10 +261,13 @@ class _InzxAppState extends ConsumerState<InzxApp> {
     }
 
     final releaseInfo = await GithubReleaseUpdateService.instance
-        .checkForNewRelease();
+        .checkForNewRelease(ignoreReleaseMode: true);
     if (!mounted || releaseInfo == null) return;
 
-    _showNewReleaseBanner(releaseInfo);
+    final navContext = rootNavigatorKey.currentContext ?? context;
+    if (!navContext.mounted) return;
+
+    await UpdateAvailableDialog.show(navContext, releaseInfo: releaseInfo);
   }
 
   Future<void> _checkFirstLaunchChangelog() async {
@@ -332,33 +335,7 @@ class _InzxAppState extends ConsumerState<InzxApp> {
     );
   }
 
-  void _showNewReleaseBanner(GithubReleaseInfo releaseInfo) {
-    final messenger = rootScaffoldMessengerKey.currentState;
-    if (messenger == null) return;
-    final l10n = context.l10n;
 
-    messenger.clearMaterialBanners();
-    messenger.showMaterialBanner(
-      MaterialBanner(
-        content: Text(
-          l10n.newVersionAvailableBanner(releaseInfo.latestVersion),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              final uri = Uri.parse(releaseInfo.downloadUrl);
-              await launchUrl(uri, mode: LaunchMode.externalApplication);
-            },
-            child: Text(l10n.download),
-          ),
-          TextButton(
-            onPressed: () => messenger.hideCurrentMaterialBanner(),
-            child: Text(l10n.later),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
