@@ -4,9 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:marquee/marquee.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../core/design_system/design_system.dart';
-import '../../services/deep_link_handler.dart';
 import '../../core/l10n/app_localizations_x.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
@@ -20,6 +18,7 @@ import 'track_artwork_view.dart';
 import 'jams_panel.dart';
 import 'sleep_timer_sheet.dart';
 import '../../services/sleep_timer_service.dart';
+import 'share_sheet.dart';
 
 /// Track options bottom sheet
 /// Displays categorized, uniform options in glass section cards
@@ -586,13 +585,13 @@ class _TrackOptionsSheetState extends ConsumerState<TrackOptionsSheet> {
                             title: l10n.share,
                             textColor: textColor,
                             onTap: () {
+                              // This sheet's context dies with the pop.
+                              final host = Navigator.of(
+                                context,
+                                rootNavigator: true,
+                              ).context;
                               Navigator.pop(context);
-                              final url = DeepLinkHandler.createShareUrl('song', track.id);
-                              SharePlus.instance.share(
-                                ShareParams(
-                                  text: l10n.shareTrackText(track.title, track.artist, url),
-                                ),
-                              );
+                              ShareSheet.show(host, track);
                             },
                           ),
 

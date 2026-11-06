@@ -60,14 +60,6 @@
   "@statsForNerdsSubtitle": {
     "description": "Subtitle for the stats for nerds toggle"
   },
-  "shareYoutubeMusicLinks": "Share YouTube Music links",
-  "@shareYoutubeMusicLinks": {
-    "description": "Title for the share-native-links toggle"
-  },
-  "shareYoutubeMusicLinksSubtitle": "Share plain music.youtube.com links instead of Inzx links",
-  "@shareYoutubeMusicLinksSubtitle": {
-    "description": "Subtitle for the share-native-links toggle"
-  },
   "newVersionAvailableBanner": "New version {version} is available on GitHub.",
   "@newVersionAvailableBanner": {
     "placeholders": {
@@ -1338,5 +1330,23 @@
   "playbackSectionSubtitle": "Control how tracks are sourced and how output is shown",
   "@playbackSectionSubtitle": {
     "description": "Subtitle for the Playback group in Audio settings"
-  }
+  },
+  "shareCardStyleDark": "Dark",
+  "shareCardStyleLiquid": "Liquid",
+  "shareCardStyleLight": "Light",
+  "shareCardSong": "Song card",
+  "shareCardLyrics": "Lyrics card",
+  "shareCardTheme": "Card theme",
+  "shareCardInstagram": "Instagram",
+  "shareCardSnapchat": "Snapchat story",
+  "shareCardSave": "Save card",
+  "shareCardYtMusicLink": "YT Music link",
+  "shareCardMore": "Share more",
+  "shareCardLinkCopied": "Link copied",
+  "shareCardSaved": "Saved to Pictures/Inzx",
+  "shareCardSaveFailed": "Couldn't save the card. Try Share more instead.",
+  "shareCardFailed": "Couldn't share the card. Try Share more instead.",
+  "shareCardNoLyrics": "No lyrics found for this song",
+  "shareCardPickLyrics": "Pick at least one line first",
+  "shareCardLyricsLimit": "A card fits 4 lines at most"
 }

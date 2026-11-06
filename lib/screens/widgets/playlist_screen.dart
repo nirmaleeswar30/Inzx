@@ -4,9 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marquee/marquee.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../core/design_system/design_system.dart';
-import '../../services/deep_link_handler.dart';
 import '../../core/l10n/app_localizations_x.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
@@ -21,6 +19,7 @@ import 'podcast_screen.dart' show PodcastScreen;
 import 'package:palette_generator/palette_generator.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'explicit_badge.dart';
+import 'share_sheet.dart';
 
 enum PlaylistTrackSort {
   defaultOrder,
@@ -1766,9 +1765,12 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
   }
 
   void _sharePlaylist(BuildContext context, Playlist playlist) {
-    final url = DeepLinkHandler.createShareUrl('playlist', playlist.id);
-    SharePlus.instance.share(
-      ShareParams(text: context.l10n.sharePlaylistText(playlist.title, url)),
+    ShareSheet.showLinks(
+      context,
+      type: 'playlist',
+      id: playlist.id,
+      title: playlist.title,
+      shareText: (url) => context.l10n.sharePlaylistText(playlist.title, url),
     );
   }
 

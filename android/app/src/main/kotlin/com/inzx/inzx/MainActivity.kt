@@ -14,6 +14,7 @@ import android.content.Context
 import com.nirmal.inzx.audio.InzxAudioOutput
 import com.nirmal.inzx.automix.AutomixBridge
 import com.nirmal.inzx.jams.JamsForegroundService
+import com.nirmal.inzx.share.ShareBridge
 import com.nirmal.inzx.widget.InzxWidgets
 import com.ryanheise.audioservice.AudioServiceFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -40,6 +41,9 @@ class MainActivity : AudioServiceFragmentActivity() {
         // Automix analysis (BitChord's engine) <-> Dart.
         AutomixBridge.attach(this, flutterEngine.dartExecutor.binaryMessenger)
         com.nirmal.inzx.audio.AutoEqBridge.attach(this, flutterEngine.dartExecutor.binaryMessenger)
+
+        // Share cards: send to Instagram / Snapchat, save to the gallery.
+        ShareBridge.attach(this, flutterEngine.dartExecutor.binaryMessenger)
 
         // Audio output (hi-res / bit-perfect) status for the Signal path sheet.
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "inzx/audio_output")

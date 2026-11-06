@@ -180,6 +180,16 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Hands share card images to Instagram, Snapchat and the share menu. -->
+        <provider
+            android:name=".share.ShareCardFileProvider"
+            android:authorities="${applicationId}.share_cards"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/share_card_paths" />
+        </provider>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
@@ -187,6 +197,9 @@
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
+        <!-- Which apps the share sheet can send a card straight to. -->
+        <package android:name="com.instagram.android"/>
+        <package android:name="com.snapchat.android"/>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>

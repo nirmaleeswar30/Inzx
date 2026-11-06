@@ -80,12 +80,8 @@ void main() async {
     debugPrint('⚠️ Hive initialization failed: $e');
   }
 
-  // Load the "share native YouTube Music links" preference so shares honor it
-  // even before the settings screen is opened.
   try {
     final prefs = await SharedPreferences.getInstance();
-    DeepLinkHandler.useNativeYtMusicLinks =
-        prefs.getBool(DeepLinkHandler.shareNativeLinksPrefKey) ?? false;
     // Existing installs (they have already seen a changelog) skip onboarding.
     showOnboarding =
         !(prefs.getBool(OnboardingScreen.completedPrefKey) ?? false) &&

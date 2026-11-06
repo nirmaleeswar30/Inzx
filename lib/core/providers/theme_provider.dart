@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../design_system/colors.dart';
-import '../../services/deep_link_handler.dart';
 import '../../services/audio_player_service.dart';
 
 /// Theme mode options for the app
@@ -618,49 +617,12 @@ class CinematicAmbientOnlyForAnimatedArtNotifier extends StateNotifier<bool> {
   }
 }
 
-/// Provider for whether shares use native YouTube Music links instead of Inzx
-/// deep links. Default: false (share Inzx links).
-final shareNativeLinksProvider =
-    StateNotifierProvider<ShareNativeLinksNotifier, bool>((ref) {
-  return ShareNativeLinksNotifier();
-});
-
-/// Notifier for the "share YouTube Music links" preference. Mirrors the value
-/// into [DeepLinkHandler.useNativeYtMusicLinks] so the static share-URL builder
-/// picks it up without threading the provider through every call site.
-class ShareNativeLinksNotifier extends StateNotifier<bool> {
-  ShareNativeLinksNotifier() : super(false) {
-    _loadPreference();
-  }
-
-  Future<void> _loadPreference() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final enabled = prefs.getBool(DeepLinkHandler.shareNativeLinksPrefKey);
-      if (enabled != null) {
-        state = enabled;
-        DeepLinkHandler.useNativeYtMusicLinks = enabled;
-      }
-    } catch (_) {}
-  }
-
-  Future<void> setEnabled(bool enabled) async {
-    state = enabled;
-    DeepLinkHandler.useNativeYtMusicLinks = enabled;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(DeepLinkHandler.shareNativeLinksPrefKey, enabled);
-    } catch (_) {}
-  }
-
-  Future<void> toggle() => setEnabled(!state);
-}
-
 /// Progress bar style options for the Now Playing screen
 enum ProgressBarStyle {
   defaultLinear, // Classic linear slider
   waveform, // Fluid oscillating wavy progress line (Android media style)
   spectrum, // Dynamic vertical audio spectrum bars with zoom seek
+  comet, // Light streaking along the bar to a glowing head
 }
 
 String getProgressBarStyleName(ProgressBarStyle style) {
@@ -671,6 +633,8 @@ String getProgressBarStyleName(ProgressBarStyle style) {
       return 'Waveform';
     case ProgressBarStyle.spectrum:
       return 'Spectrum';
+    case ProgressBarStyle.comet:
+      return 'Comet';
   }
 }
 
@@ -682,6 +646,8 @@ String getProgressBarStyleDescription(ProgressBarStyle style) {
       return 'Fluid oscillating wavy line with animated playback motion';
     case ProgressBarStyle.spectrum:
       return 'Dynamic vertical audio spectrum bars with zoom seek';
+    case ProgressBarStyle.comet:
+      return 'A streak of light with a glowing head';
   }
 }
 
@@ -695,7 +661,7 @@ final progressBarStyleProvider =
 class ProgressBarStyleNotifier extends StateNotifier<ProgressBarStyle> {
   static const String progressBarStylePrefKey = 'inzx_progress_bar_style_v1';
 
-  ProgressBarStyleNotifier() : super(ProgressBarStyle.defaultLinear) {
+  ProgressBarStyleNotifier() : super(ProgressBarStyle.comet) {
     _loadPreference();
   }
 

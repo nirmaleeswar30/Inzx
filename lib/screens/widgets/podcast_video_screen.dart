@@ -1,14 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/models.dart';
 import '../../providers/providers.dart';
-import '../../services/deep_link_handler.dart';
 import 'podcast_screen.dart' show RichDescription, PodcastScreen;
 import 'youtube_webview_player.dart';
+import 'share_sheet.dart';
 
 /// Plays a podcast episode using YouTube's embedded player in a dedicated screen.
 ///
@@ -83,11 +82,13 @@ class _PodcastVideoScreenState extends ConsumerState<PodcastVideoScreen>
   }
 
   void _shareEpisode() {
-    final shareUrl =
-        DeepLinkHandler.createShareUrl('song', widget.episode.videoId);
-    SharePlus.instance.share(ShareParams(
-      text: 'Check out "${widget.episode.title}" on Inzx: $shareUrl',
-    ));
+    ShareSheet.showLinks(
+      context,
+      type: 'song',
+      id: widget.episode.videoId,
+      title: widget.episode.title,
+      shareText: (url) => 'Check out "${widget.episode.title}" on Inzx: $url',
+    );
   }
 
   Future<void> _toggleLike() async {

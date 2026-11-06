@@ -6,12 +6,11 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/models.dart';
 import '../../providers/providers.dart';
-import '../../services/deep_link_handler.dart';
-import 'package:share_plus/share_plus.dart';
 import 'playlist_screen.dart' show playlistColorsProvider;
 import 'podcast_video_screen.dart';
 import 'mini_player.dart';
 import 'now_playing_screen.dart';
+import 'share_sheet.dart';
 
 /// Dedicated screen for a podcast show: header, save/subscribe, show
 /// description, and a list of episodes with rich (timestamp/link) descriptions.
@@ -156,18 +155,24 @@ class _PodcastScreenState extends ConsumerState<PodcastScreen> {
 
   void _sharePodcast(Podcast? podcast) {
     final id = podcast?.id ?? widget.podcastId;
-    final shareUrl = DeepLinkHandler.createShareUrl('podcast', id);
     final title = podcast?.title ?? widget.title ?? 'Podcast';
-    SharePlus.instance.share(ShareParams(
-      text: 'Listen to $title on Inzx: $shareUrl',
-    ));
+    ShareSheet.showLinks(
+      context,
+      type: 'podcast',
+      id: id,
+      title: title,
+      shareText: (url) => 'Listen to $title on Inzx: $url',
+    );
   }
 
   void _shareEpisode(Episode ep) {
-    final shareUrl = DeepLinkHandler.createShareUrl('song', ep.videoId);
-    SharePlus.instance.share(ShareParams(
-      text: 'Check out "${ep.title}" on Inzx: $shareUrl',
-    ));
+    ShareSheet.showLinks(
+      context,
+      type: 'song',
+      id: ep.videoId,
+      title: ep.title,
+      shareText: (url) => 'Check out "${ep.title}" on Inzx: $url',
+    );
   }
 
   void _openVideo(Episode ep) {

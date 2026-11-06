@@ -4,9 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marquee/marquee.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../core/design_system/design_system.dart';
-import '../../services/deep_link_handler.dart';
 import '../../core/l10n/app_localizations_x.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
@@ -19,6 +17,7 @@ import 'podcast_screen.dart' show PodcastScreen;
 import 'package:skeletonizer/skeletonizer.dart';
 import '../../services/album_color_extractor.dart';
 import 'explicit_badge.dart';
+import 'share_sheet.dart';
 
 // Provider for extracting album colors
 enum AlbumTrackSort {
@@ -1446,11 +1445,13 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
             album.artist.toLowerCase().trim() != 'album')
         ? album.artist
         : (widget.albumArtist ?? '');
-    final url = DeepLinkHandler.createShareUrl('album', album.id);
-    SharePlus.instance.share(
-      ShareParams(
-        text: context.l10n.shareAlbumText(album.title, cleanArtist, url),
-      ),
+    ShareSheet.showLinks(
+      context,
+      type: 'album',
+      id: album.id,
+      title: album.title,
+      shareText: (url) =>
+          context.l10n.shareAlbumText(album.title, cleanArtist, url),
     );
   }
 

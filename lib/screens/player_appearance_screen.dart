@@ -612,6 +612,9 @@ class _PlayerAppearanceScreenState
                       case ProgressBarStyle.spectrum:
                         styleIcon = Icons.graphic_eq_rounded;
                         break;
+                      case ProgressBarStyle.comet:
+                        styleIcon = Icons.flare_rounded;
+                        break;
                     }
 
                     return Padding(

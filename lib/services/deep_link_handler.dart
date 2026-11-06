@@ -224,14 +224,6 @@ class DeepLinkHandler {
     _linkSubscription?.cancel();
   }
 
-  /// When true, [createShareUrl] returns the native YouTube Music link instead
-  /// of an Inzx deep link. Kept in sync with the user's setting by
-  /// [ShareNativeLinksNotifier].
-  static bool useNativeYtMusicLinks = false;
-
-  static const String shareNativeLinksPrefKey =
-      'inzx_share_native_ytmusic_links';
-
   /// Build a plain YouTube Music URL for a shared item, or null for a type
   /// that has no direct equivalent.
   static String? nativeYtMusicUrl(String type, String id) {
@@ -278,14 +270,9 @@ class DeepLinkHandler {
   /// Creates a share URL for the given item.
   /// [type] should be 'playlist', 'album', 'artist', 'podcast' or 'song'.
   ///
-  /// Returns a native YouTube Music link when the user has opted out of Inzx
-  /// deep links; otherwise a short link (`https://inzx.nirmaleeswar.dev/s/<id>`)
+  /// A short link (`https://inzx.nirmaleeswar.dev/s/<id>`)
   /// whose preview card shows the artwork and which opens the item in Inzx.
   static String createShareUrl(String type, String id) {
-    if (useNativeYtMusicLinks) {
-      final native = nativeYtMusicUrl(type, id);
-      if (native != null) return native;
-    }
     final path = _shortPathForType[type] ?? type;
     return 'https://$shareHost/$path/${Uri.encodeComponent(id)}';
   }
