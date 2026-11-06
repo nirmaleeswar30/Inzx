@@ -858,7 +858,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
 
     Widget content = AnimatedContainer(
       key: _lineKeys[index],
-      duration: _lyricSettle,
+      duration: isCurrentLine ? _lyricSettle : Duration.zero,
       curve: _lyricEase,
       alignment: Alignment.centerLeft,
       padding: EdgeInsets.symmetric(
@@ -867,7 +867,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
       ),
       child: AnimatedScale(
         scale: isCurrentLine ? 1.0 : _inactiveLineScale,
-        duration: _lyricSettle,
+        duration: isCurrentLine ? _lyricSettle : Duration.zero,
         curve: _lyricEase,
         alignment: Alignment.centerLeft,
         child: Row(
@@ -937,7 +937,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
       onTap: () => _seekToLyric(line.timeInMs),
       child: AnimatedOpacity(
         opacity: isCurrentLine ? 1.0 : opacity,
-        duration: _lyricSettle,
+        duration: isCurrentLine ? _lyricSettle : Duration.zero,
         curve: _lyricEase,
         child: content,
       ),
@@ -976,7 +976,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
         vertical: isBg ? 4 : 8,
       ),
       child: AnimatedDefaultTextStyle(
-        duration: _lyricSettle,
+        duration: isCurrentLine ? _lyricSettle : Duration.zero,
         curve: _lyricEase,
         style: TextStyle(
           fontSize: fontSize,
@@ -1070,7 +1070,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
         alignment: isBg ? Alignment.center : Alignment.centerLeft,
         child: AnimatedOpacity(
           opacity: isCurrentLine ? 1.0 : targetOpacity,
-          duration: _lyricSettle,
+          duration: isCurrentLine ? _lyricSettle : Duration.zero,
           curve: _lyricEase,
           child: content,
         ),
@@ -1196,7 +1196,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
         alignment: isBg ? Alignment.center : Alignment.centerLeft,
         child: AnimatedOpacity(
           opacity: isCurrentLine ? 1.0 : targetOpacity,
-          duration: _lyricSettle,
+          duration: isCurrentLine ? _lyricSettle : Duration.zero,
           curve: _lyricEase,
           child: content,
         ),

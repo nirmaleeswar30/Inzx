@@ -73,9 +73,19 @@ class KaraokeWord extends StatelessWidget {
     final start = word.startTimeMs;
     final end = word.endTimeMs;
     final duration = math.max(1, end - start);
-    // Words the highlight hasn't reached yet: plain text colour, brighter than
-    // the grey inactive lines, so the playing line stands out before it's sung.
-    final unsung = textColor;
+    // Words the highlight hasn't reached yet:
+    // When the accent colour is white / monochrome (e.g. dark or B&W artwork),
+    // sung words and unsung words would both be pure white with zero contrast.
+    // In that scenario, dim unsung words to 55% so the karaoke wipe clearly
+    // lights them up from dim to bright white.
+    final hsl = HSLColor.fromColor(accentColor);
+    final isWhiteAccent = (hsl.saturation < 0.20 && hsl.lightness > 0.70) ||
+        (accentColor.computeLuminance() > 0.75 &&
+            textColor.computeLuminance() > 0.75 &&
+            hsl.saturation < 0.35);
+    final unsung = isWhiteAccent
+        ? textColor.withValues(alpha: isBg ? 0.40 : 0.55)
+        : textColor;
     final holdsNote = duration >= _glowMinDurationMs;
 
     return RepaintBoundary(
