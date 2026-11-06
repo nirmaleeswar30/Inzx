@@ -14,8 +14,14 @@ import '../data/entities/downloaded_playlist_entity.dart';
 import 'playback/yt_player_utils.dart';
 import 'playback/playback_data.dart';
 import 'notification_service.dart';
+import 'addons/addon_models.dart';
+import 'addons/addon_service.dart';
+import 'addons/dash_manifest.dart';
+import 'download_source_order.dart';
 import 'jiosaavn/jiosaavn_service.dart';
 import 'audio_player_service.dart' show kJioSaavnEnabledKey;
+import 'local_artwork_service.dart';
+import 'tagger/flac_remuxer.dart';
 import 'tagger/media_tagger.dart';
 import 'lyrics/lyrics_models.dart';
 import 'lyrics/lrclib_provider.dart';
@@ -503,6 +509,28 @@ class DownloadManagerState {
   }
 }
 
+/// Where a download's bytes come from, once its source is settled.
+class _DownloadSource {
+  const _DownloadSource({
+    required this.url,
+    required this.extension,
+    this.expectedBytes = 0,
+    this.lossless,
+  });
+
+  final String url;
+
+  /// The file extension to start from. A lossless copy's is checked against
+  /// what actually arrives (see [DownloadManagerNotifier._settleLosslessFile]).
+  final String extension;
+  final int expectedBytes;
+
+  /// The addon stream behind this source, when it's a lossless copy.
+  final AddonMatch? lossless;
+
+  bool get isDash => lossless?.stream.isDash ?? false;
+}
+
 /// Download manager notifier
 class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
   final YTPlayerUtils _playerUtils;
@@ -519,6 +547,10 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
       kDefaultParallelDownloadMinSizeMb * 1024 * 1024;
   Timer? _cleanupTimer;
   final Map<String, int> _transientRetryAttempts = <String, int>{};
+
+  /// Tracks whose lossless copy couldn't be downloaded, so that their next
+  /// attempt moves on to the next source instead of failing the download.
+  final Set<String> _losslessUnavailable = <String>{};
 
   DownloadManagerNotifier(this._playerUtils, this._ref)
     : super(const DownloadManagerState()) {
@@ -1034,17 +1066,17 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
     return null;
   }
 
-  /// Concurrently fetch cover art image bytes during download
-  Future<Uint8List?> _fetchCoverArtBytes(String? thumbnailUrl) async {
-    final rawUrl = thumbnailUrl?.trim();
-    if (rawUrl == null || rawUrl.isEmpty) return null;
-
-    final candidates = <String>[
-      rawUrl.replaceAll('w120-h120', 'w800-h800'),
-      rawUrl.replaceAll('w120-h120', 'w600-h600'),
-      rawUrl,
-    ];
-
+  /// Concurrently fetch cover art image bytes during download. Tries the
+  /// track's own art, sharpest first, then the lossless copy's, and finally a
+  /// catalogue search so a download isn't left with no art if it can be helped.
+  Future<Uint8List?> _fetchCoverArtBytes(
+    Track track, {
+    String? extraUrl,
+  }) async {
+    final candidates = LocalArtworkService.artworkUrlCandidates(
+      track,
+      extraUrl: extraUrl,
+    );
     for (final url in candidates) {
       try {
         final uri = Uri.tryParse(url);
@@ -1060,14 +1092,196 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
               builder.add(chunk);
             }
             final bytes = builder.takeBytes();
-            if (bytes.length >= 1024) return bytes;
+            if (MediaTagger.isImageBytes(bytes)) return bytes;
           }
         } finally {
           client.close(force: true);
         }
       } catch (_) {}
     }
-    return null;
+    try {
+      return await LocalArtworkService.searchArtworkBytes(track);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// The best source [track] has for the current download quality.
+  Future<_DownloadSource> _resolveDownloadSource(Track track) async {
+    final prefs = await SharedPreferences.getInstance();
+    final order = downloadSourceOrder(
+      _downloadQuality,
+      losslessAvailable:
+          AddonService.instance.isEnabled &&
+          !_losslessUnavailable.contains(track.id),
+      jioSaavnEnabled: prefs.getBool(kJioSaavnEnabledKey) ?? true,
+    );
+
+    for (final kind in order) {
+      switch (kind) {
+        case DownloadSourceKind.addonLossless:
+          final match = await AddonService.instance.matchForDownload(track);
+          if (match == null) continue;
+          if (kDebugMode) {
+            print(
+              'DownloadService: Downloading ${track.title} via ${match.addonName} '
+              '(${match.stream.formatLabel})',
+            );
+          }
+          return _DownloadSource(
+            url: match.stream.url,
+            extension: _extensionForLossless(match.stream),
+            lossless: match,
+          );
+        case DownloadSourceKind.jioSaavn:
+          JioSaavnStream? stream;
+          try {
+            stream = await JioSaavnService.instance.getBestStreamForTrack(track);
+          } catch (e) {
+            if (kDebugMode) {
+              print('DownloadService: JioSaavn lookup error: $e');
+            }
+          }
+          if (stream == null || stream.url.isEmpty) continue;
+          final extension = stream.format.toLowerCase().contains('mp3')
+              ? '.mp3'
+              : '.m4a';
+          if (kDebugMode) {
+            print(
+              'DownloadService: Downloading ${track.title} via JioSaavn ${stream.kbps ?? 320}kbps ($extension)',
+            );
+          }
+          return _DownloadSource(url: stream.url, extension: extension);
+        case DownloadSourceKind.youtube:
+          final result = await _playerUtils.playerResponseForDownload(
+            track.id,
+            quality: _downloadQuality,
+          );
+          if (result.isFailure || result.data == null) {
+            throw Exception(result.error ?? 'Failed to get stream URL');
+          }
+          final format = result.data!.format;
+          // Determine correct file extension based on actual format
+          final extension =
+              format.mimeType.contains('mp4') || format.mimeType.contains('m4a')
+              ? '.m4a'
+              : '.opus';
+          if (kDebugMode) {
+            print(
+              'DownloadService: Downloading ${format.mimeType} as $extension',
+            );
+          }
+          return _DownloadSource(
+            url: result.data!.streamUrl,
+            extension: extension,
+            expectedBytes: format.contentLength ?? 0,
+          );
+      }
+    }
+    throw Exception('No download source available');
+  }
+
+  static String _extensionForLossless(AddonStream stream) {
+    if (stream.isDash) return '.m4a';
+    return switch (stream.codec.toLowerCase()) {
+      'alac' => '.m4a',
+      'wav' => '.wav',
+      'aiff' => '.aiff',
+      _ => '.flac',
+    };
+  }
+
+  /// Downloads every segment of the DASH stream at [manifestUrl] into
+  /// [outputFile]. A few at a time, written in order.
+  Future<int> _downloadDashStream({
+    required String trackId,
+    required String manifestUrl,
+    required File outputFile,
+    required void Function(int bytes, double fraction) onProgress,
+  }) async {
+    const parallelSegments = 4;
+    const maxAttempts = 4;
+
+    final client = http.Client();
+    final sink = outputFile.openWrite(mode: FileMode.writeOnly);
+    try {
+      final segments = (await DashManifest.load(manifestUrl, client)).segments;
+      if (segments.isEmpty) {
+        throw const FormatException('Manifest lists no segments');
+      }
+
+      Future<Uint8List> fetch(Uri uri) async {
+        for (var attempt = 1; ; attempt++) {
+          if (_isTaskCancelled(trackId)) {
+            throw const _DownloadCancelledException();
+          }
+          try {
+            final response = await client
+                .get(uri)
+                .timeout(const Duration(seconds: 30));
+            if (response.statusCode == 200) return response.bodyBytes;
+            throw HttpException('Segment HTTP ${response.statusCode}');
+          } catch (_) {
+            if (attempt >= maxAttempts) rethrow;
+            await Future<void>.delayed(Duration(seconds: attempt));
+          }
+        }
+      }
+
+      var written = 0;
+      for (var i = 0; i < segments.length; i += parallelSegments) {
+        final batch = segments.skip(i).take(parallelSegments);
+        final parts = await Future.wait(batch.map(fetch));
+        for (final part in parts) {
+          sink.add(part);
+          written += part.length;
+        }
+        await sink.flush();
+        onProgress(
+          written,
+          (min(i + parallelSegments, segments.length) / segments.length),
+        );
+      }
+      return written;
+    } finally {
+      await sink.close();
+      client.close();
+    }
+  }
+
+  /// Makes a downloaded lossless copy a file that plays and seeks properly
+  /// under the right name, whatever container the addon sent it in, and
+  /// returns it. FLAC in fragmented MP4 (all DASH streams, some direct ones)
+  /// becomes plain `.flac`; other MP4 stays as it is, as `.m4a`.
+  Future<File> _settleLosslessFile(File file) async {
+    final raf = await file.open();
+    final List<int> head;
+    try {
+      head = await raf.read(12);
+    } finally {
+      await raf.close();
+    }
+    if (head.length < 8) return file;
+    final dot = file.path.lastIndexOf('.');
+    final base = file.path.substring(0, dot);
+
+    Future<File> renamedTo(String extension) async {
+      final target = '$base$extension';
+      return target == file.path ? file : file.rename(target);
+    }
+
+    final magic = String.fromCharCodes(head.sublist(0, 4));
+    if (magic == 'fLaC' || magic.startsWith('ID3')) {
+      return renamedTo('.flac');
+    }
+    if (String.fromCharCodes(head.sublist(4, 8)) != 'ftyp') return file;
+
+    final remuxed = File('${file.path}.remux');
+    if (await FlacRemuxer.remux(file, remuxed)) {
+      await file.delete();
+      return remuxed.rename('$base.flac');
+    }
+    return renamedTo('.m4a');
   }
 
   Future<int?> _downloadWithParallelRanges({
@@ -1243,79 +1457,28 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
       task.track.title,
     );
 
+    File? outputFile;
+    _DownloadSource? source;
     try {
-      String streamUrl;
-      String extension;
-      int expectedTotal = 0;
-
-      // Check JioSaavn for 320 kbps stream if enabled and high/max quality
-      final prefs = await SharedPreferences.getInstance();
-      final jioSaavnEnabled = prefs.getBool(kJioSaavnEnabledKey) ?? true;
-      JioSaavnStream? saavnStream;
-
-      if (jioSaavnEnabled &&
-          (_downloadQuality == AudioQuality.high ||
-              _downloadQuality == AudioQuality.max)) {
-        try {
-          saavnStream =
-              await JioSaavnService.instance.getBestStreamForTrack(task.track);
-        } catch (e) {
-          if (kDebugMode) {
-            print('DownloadService: JioSaavn lookup error: $e');
-          }
-        }
-      }
-
-      if (saavnStream != null && saavnStream.url.isNotEmpty) {
-        streamUrl = saavnStream.url;
-        extension = saavnStream.format.toLowerCase().contains('mp3')
-            ? '.mp3'
-            : '.m4a';
-        if (kDebugMode) {
-          print(
-            'DownloadService: Downloading ${task.track.title} via JioSaavn ${saavnStream.kbps ?? 320}kbps ($extension)',
-          );
-        }
-      } else {
-        // Fallback to YouTube
-        final result = await _playerUtils.playerResponseForDownload(
-          task.trackId,
-          quality: _downloadQuality,
-        );
-        if (result.isFailure || result.data == null) {
-          throw Exception(result.error ?? 'Failed to get stream URL');
-        }
-
-        streamUrl = result.data!.streamUrl;
-        final format = result.data!.format;
-        expectedTotal = format.contentLength ?? 0;
-
-        // Determine correct file extension based on actual format
-        extension = '.opus'; // Default - prefer Opus
-        if (format.mimeType.contains('mp4') ||
-            format.mimeType.contains('m4a')) {
-          extension = '.m4a';
-        } else if (format.mimeType.contains('webm') ||
-            format.mimeType.contains('opus')) {
-          extension = '.opus';
-        }
-
-        if (kDebugMode) {
-          print('DownloadService: Downloading ${format.mimeType} as $extension');
-        }
-      }
+      source = await _resolveDownloadSource(task.track);
+      final streamUrl = source.url;
+      var extension = source.extension;
+      int expectedTotal = source.expectedBytes;
 
       // Create file with proper naming: "Artist - Title.ext"
       final dir = await _downloadsDir;
       final sanitizedTitle = _sanitizeFileName(task.track.title);
       final sanitizedArtist = _sanitizeFileName(task.track.artist);
       final fileName = '$sanitizedArtist - $sanitizedTitle$extension';
-      final filePath = '${dir.path}/$fileName';
+      var filePath = '${dir.path}/$fileName';
       final file = File(filePath);
 
       // Duplicate prevention
       // Check if file already exists with this name (or any common audio extension)
-      final possibleExtensions = [extension, '.m4a', '.mp3', '.opus', '.webm'];
+      // A lossy copy left on disk doesn't satisfy a request for a lossless one.
+      final possibleExtensions = source.lossless != null
+          ? <String>{extension, '.flac'}
+          : <String>{extension, '.flac', '.m4a', '.mp3', '.opus', '.webm'};
       File? existingFile;
       for (final ext in possibleExtensions) {
         final candidate = File(
@@ -1343,6 +1506,7 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
         );
         _updateTask(task.trackId, completedTask);
         _transientRetryAttempts.remove(task.trackId);
+        _losslessUnavailable.remove(task.trackId);
         await _persistDownload(completedTask);
         _ref.read(downloadedTracksRefreshProvider.notifier).state++;
         await _notificationService.showDownloadCompleted(
@@ -1358,7 +1522,10 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
 
       // Launch parallel lyrics & cover art lookups
       final lyricsFuture = _fetchLyricsForTrack(task.track);
-      final coverArtFuture = _fetchCoverArtBytes(task.track.thumbnailUrl);
+      final coverArtFuture = _fetchCoverArtBytes(
+        task.track,
+        extraUrl: source.lossless?.track.artworkUrl,
+      );
 
       // === DOWNLOAD STRATEGY ===
       // 1) Try segmented parallel range download when content length is known.
@@ -1368,6 +1535,7 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
       const maxRetries = 5;
       const maxRangeAttempts = 10; // Max range continuation attempts
       bool downloadedWithParallel = false;
+      double? segmentedFraction;
       DateTime lastProgressUpdate = DateTime.now();
 
       void reportProgress({bool force = false}) {
@@ -1377,9 +1545,11 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
           return;
         }
         lastProgressUpdate = now;
-        final progress = expectedTotal > 0
-            ? (totalDownloaded / expectedTotal).clamp(0.0, 1.0)
-            : 0.0;
+        final progress =
+            segmentedFraction ??
+            (expectedTotal > 0
+                ? (totalDownloaded / expectedTotal).clamp(0.0, 1.0)
+                : 0.0);
         _updateTask(
           task.trackId,
           task.copyWith(
@@ -1404,6 +1574,21 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
       // Delete any existing partial file before trying either strategy.
       if (await file.exists()) {
         await file.delete();
+      }
+      outputFile = file;
+
+      if (source.isDash) {
+        totalDownloaded = await _downloadDashStream(
+          trackId: task.trackId,
+          manifestUrl: streamUrl,
+          outputFile: file,
+          onProgress: (bytes, fraction) {
+            totalDownloaded = bytes;
+            segmentedFraction = fraction;
+            reportProgress();
+          },
+        );
+        downloadedWithParallel = true;
       }
 
       if (expectedTotal >= _parallelDownloadMinBytes &&
@@ -1561,7 +1746,7 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
       // Don't fail on small size mismatches - YouTube is unreliable
       // Trust the file header and minimum size instead
 
-      final downloadedFile = File(filePath);
+      var downloadedFile = File(filePath);
       if (!await downloadedFile.exists()) {
         throw Exception('Download failed: File was not created');
       }
@@ -1609,6 +1794,13 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
         }
       }
 
+      if (source.lossless != null) {
+        downloadedFile = await _settleLosslessFile(downloadedFile);
+        outputFile = downloadedFile;
+        filePath = downloadedFile.path;
+        extension = filePath.substring(filePath.lastIndexOf('.'));
+      }
+
       // Verify file header - this is the most reliable check
       final isValidAudio = await _verifyAudioFileHeader(
         downloadedFile,
@@ -1642,6 +1834,14 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
         coverArtBytes: coverBytes,
       );
 
+      // Anything remembered about this path belongs to an earlier file; the
+      // art just fetched is right for this one whether or not it could be
+      // embedded.
+      LocalArtworkService.evict(filePath);
+      if (coverBytes != null) {
+        LocalArtworkService.setMemoryCache(filePath, coverBytes);
+      }
+
       final finalFileSize = await downloadedFile.length();
 
       // Mark as completed
@@ -1654,6 +1854,7 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
       );
       _updateTask(task.trackId, completedTask);
       _transientRetryAttempts.remove(task.trackId);
+      _losslessUnavailable.remove(task.trackId);
 
       // Persist to Hive for next app restart
       await _persistDownload(completedTask);
@@ -1684,7 +1885,17 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
         final dir = await _downloadsDir;
         final sanitizedTitle = _sanitizeFileName(task.track.title);
         final sanitizedArtist = _sanitizeFileName(task.track.artist);
-        final possibleExtensions = const <String>['.opus', '.m4a', '.webm'];
+        final possibleExtensions = const <String>[
+          '.flac',
+          '.flac.remux',
+          '.m4a',
+          '.m4a.remux',
+          '.mp3',
+          '.opus',
+          '.webm',
+          '.wav',
+          '.aiff',
+        ];
         for (final ext in possibleExtensions) {
           final candidate = File(
             '${dir.path}/$sanitizedArtist - $sanitizedTitle$ext',
@@ -1722,6 +1933,14 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
         print('Download error: $e');
       }
 
+      // Never leave a partial file behind: the next attempt would find it on
+      // disk and take it for a finished download.
+      try {
+        if (outputFile != null && await outputFile.exists()) {
+          await outputFile.delete();
+        }
+      } catch (_) {}
+
       final isTransient = _isTransientDownloadError(e);
       if (isTransient) {
         final attempt = (_transientRetryAttempts[task.trackId] ?? 0) + 1;
@@ -1756,6 +1975,25 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
       }
 
       _transientRetryAttempts.remove(task.trackId);
+
+      // The lossless copy wouldn't come down (a dead link, an unreadable
+      // manifest). The song can still be had from the next source.
+      if (source?.lossless != null) {
+        if (kDebugMode) {
+          print(
+            'DownloadService: Lossless copy failed for ${task.trackId}, trying next source: $e',
+          );
+        }
+        _losslessUnavailable.add(task.trackId);
+        _updateTask(
+          task.trackId,
+          task.copyWith(status: DownloadStatus.queued, error: null),
+        );
+        state = state.copyWith(isDownloading: false);
+        _processQueue();
+        return;
+      }
+      _losslessUnavailable.remove(task.trackId);
 
       _updateTask(
         task.trackId,
@@ -1819,6 +2057,12 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
           );
         }
         return false;
+      }
+
+      // FLAC: the stream marker, possibly behind an ID3v2 tag
+      if (extension == '.flac') {
+        final start = String.fromCharCodes(bytes.sublist(0, 4));
+        return start == 'fLaC' || start.startsWith('ID3');
       }
 
       // Check for Opus/WebM format (EBML/WebM header)

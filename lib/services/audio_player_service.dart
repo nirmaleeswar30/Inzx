@@ -21,6 +21,7 @@ import 'lyrics/lyrics_service.dart';
 import 'album_color_extractor.dart';
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'local_artwork_service.dart';
+import 'tagger/flac_tagger.dart';
 import 'package:hive/hive.dart';
 import '../data/entities/download_entity.dart';
 import '../data/entities/track_entity.dart';
@@ -830,6 +831,9 @@ class AudioPlayerService {
       }
 
       int? bitrateBps;
+      int? sampleRate;
+      int? channelCount;
+      int? bitsPerSample;
 
       // 1. Try reading from audio metadata (ID3, Vorbis, RIFF, MP4)
       try {
@@ -839,7 +843,26 @@ class AudioPlayerService {
               ? metadata.bitrate!
               : metadata.bitrate! * 1000;
         }
+        // For MP4 this can be the container's timescale, not a sample rate.
+        final rate = metadata.sampleRate;
+        if (rate != null && rate >= 8000 && rate <= 768000) sampleRate = rate;
       } catch (_) {}
+
+      if (path.endsWith('.opus') || path.endsWith('.webm')) {
+        // Opus always decodes at 48 kHz, whatever the source was.
+        sampleRate = 48000;
+      } else if (path.endsWith('.flac')) {
+        // The stream header states all of this, unlike the reader above,
+        // whose "bitrate" for FLAC is just bit depth x sample rate.
+        final info = await FlacTagger.readStreamInfo(file);
+        if (info != null) {
+          sampleRate = info.sampleRate;
+          channelCount = info.channels;
+          bitsPerSample = info.bitsPerSample;
+          final seconds = (info.duration?.inMilliseconds ?? 0) / 1000.0;
+          if (seconds > 0) bitrateBps = (fileSize * 8 / seconds).round();
+        }
+      }
 
       // 2. Check if this file is a known download entity
       bool isDownloaded = false;
@@ -884,6 +907,9 @@ class AudioPlayerService {
       final format = AudioFormat(
         mimeType: mimeType,
         bitrate: bitrateBps,
+        sampleRate: sampleRate,
+        channelCount: channelCount,
+        bitsPerSample: bitsPerSample,
         codecs: codec,
         contentLength: fileSize,
       );

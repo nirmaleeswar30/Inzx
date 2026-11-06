@@ -77,7 +77,10 @@ class TrackArtworkView extends StatelessWidget {
                   height: height,
                   fit: fit,
                   gaplessPlayback: true,
-                  errorBuilder: (_, _, _) => _buildFallback(),
+                  errorBuilder: (_, _, _) =>
+                      track.thumbnailUrl?.trim().isNotEmpty == true
+                      ? _buildNetworkImage()
+                      : _buildFallback(),
                 );
               }
               if (track.thumbnailUrl != null &&

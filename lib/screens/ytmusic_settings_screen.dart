@@ -350,6 +350,8 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           'offline quality',
           'download bitrate',
           'download quality',
+          'lossless',
+          'flac',
         ],
         title: l10n.downloadQuality,
         subtitle: l10n.downloadQualitySubtitle,

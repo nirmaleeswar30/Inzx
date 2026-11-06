@@ -1,5 +1,13 @@
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
+
+/// What [WebmTagger.readEmbedded] found in a file.
+class WebmEmbedded {
+  const WebmEmbedded({this.cover, this.lyrics});
+  final Uint8List? cover;
+  final String? lyrics;
+}
 
 /// Appends Matroska Tags (TITLE, ARTIST, ALBUM, LYRICS) and Attachments (cover.jpg)
 /// to an Opus / WebM file in place.
@@ -33,6 +41,171 @@ class WebmTagger {
   static final Uint8List _idFileMimeType = Uint8List.fromList([0x46, 0x60]);
   static final Uint8List _idFileData = Uint8List.fromList([0x46, 0x5C]);
   static final Uint8List _idFileUid = Uint8List.fromList([0x46, 0xAE]);
+  static final Uint8List _idCluster = Uint8List.fromList([
+    0x1F,
+    0x43,
+    0xB6,
+    0x75,
+  ]);
+
+  /// The cover and lyrics embedded in WebM/Opus [bytes], if any.
+  ///
+  /// Follows the file's element tree, so attachments are only looked for
+  /// where they can be. Scanning the whole file for a FileData ID won't do:
+  /// those two bytes turn up at random dozens of times in the audio.
+  static WebmEmbedded readEmbedded(Uint8List bytes) {
+    if (bytes.length < 16 || !_regionMatches(bytes, 0, _ebmlHeaderId)) {
+      return const WebmEmbedded();
+    }
+    final headerSize = _readSize(bytes, _ebmlHeaderId.length);
+    if (headerSize == null) return const WebmEmbedded();
+    final segmentOffset =
+        _ebmlHeaderId.length + headerSize.width + headerSize.value;
+    if (!_regionMatches(bytes, segmentOffset, _segmentId)) {
+      return const WebmEmbedded();
+    }
+    final segmentSize = _readSize(bytes, segmentOffset + _segmentId.length);
+    if (segmentSize == null) return const WebmEmbedded();
+
+    final start = segmentOffset + _segmentId.length + segmentSize.width;
+    final end = segmentSize.isUnknown
+        ? bytes.length
+        : min(start + segmentSize.value, bytes.length);
+
+    Uint8List? cover;
+    String? lyrics;
+
+    void read(int position, _EbmlElement element) {
+      if (_regionMatches(bytes, position, _idTags)) {
+        lyrics ??= _lyricsIn(bytes, element.contentStart, element.contentEnd);
+      } else if (_regionMatches(bytes, position, _idAttachments)) {
+        cover ??= _coverIn(bytes, element.contentStart, element.contentEnd);
+      }
+    }
+
+    var position = start;
+    while (position < end) {
+      final element = _readElement(bytes, position, end);
+      if (element == null) break;
+      if (element.isUnknownSize) {
+        // A live-style cluster runs on with no stated length, so it can't be
+        // stepped over. Tags and attachments are appended after all the
+        // audio, so go straight to the last of each.
+        if (_regionMatches(bytes, position, _idCluster)) {
+          for (final id in [_idTags, _idAttachments]) {
+            final at = _lastIndexOf(bytes, id, position + id.length);
+            if (at < 0) continue;
+            final found = _readElement(bytes, at, end);
+            if (found != null && !found.isUnknownSize) read(at, found);
+          }
+        }
+        break;
+      }
+      read(position, element);
+      position = element.contentEnd;
+    }
+    return WebmEmbedded(cover: cover, lyrics: lyrics);
+  }
+
+  static Uint8List? _coverIn(Uint8List bytes, int start, int end) {
+    var position = start;
+    while (position < end) {
+      final file = _readElement(bytes, position, end);
+      if (file == null || file.isUnknownSize) return null;
+      if (_regionMatches(bytes, position, _idAttachedFile)) {
+        var inner = file.contentStart;
+        while (inner < file.contentEnd) {
+          final field = _readElement(bytes, inner, file.contentEnd);
+          if (field == null || field.isUnknownSize) break;
+          if (_regionMatches(bytes, inner, _idFileData) &&
+              field.contentEnd > field.contentStart) {
+            return bytes.sublist(field.contentStart, field.contentEnd);
+          }
+          inner = field.contentEnd;
+        }
+      }
+      position = file.contentEnd;
+    }
+    return null;
+  }
+
+  static String? _lyricsIn(Uint8List bytes, int start, int end) {
+    var tag = start;
+    while (tag < end) {
+      final tagElement = _readElement(bytes, tag, end);
+      if (tagElement == null || tagElement.isUnknownSize) return null;
+      var simple = tagElement.contentStart;
+      while (simple < tagElement.contentEnd) {
+        final simpleElement = _readElement(
+          bytes,
+          simple,
+          tagElement.contentEnd,
+        );
+        if (simpleElement == null || simpleElement.isUnknownSize) break;
+        if (_regionMatches(bytes, simple, _idSimpleTag)) {
+          final value = _lyricsValue(bytes, simpleElement);
+          if (value != null) return value;
+        }
+        simple = simpleElement.contentEnd;
+      }
+      tag = tagElement.contentEnd;
+    }
+    return null;
+  }
+
+  /// The value of a SimpleTag, if its name is LYRICS.
+  static String? _lyricsValue(Uint8List bytes, _EbmlElement simpleTag) {
+    String? name;
+    String? value;
+    var position = simpleTag.contentStart;
+    while (position < simpleTag.contentEnd) {
+      final field = _readElement(bytes, position, simpleTag.contentEnd);
+      if (field == null || field.isUnknownSize) break;
+      String text() => utf8.decode(
+        bytes.sublist(field.contentStart, field.contentEnd),
+        allowMalformed: true,
+      );
+      if (_regionMatches(bytes, position, _idTagName)) {
+        name = text();
+      } else if (_regionMatches(bytes, position, _idTagString)) {
+        value = text();
+      }
+      position = field.contentEnd;
+    }
+    if (name?.toUpperCase() != 'LYRICS') return null;
+    return value == null || value.trim().isEmpty ? null : value;
+  }
+
+  /// The element at [offset]: an ID (whose length its first byte states)
+  /// and a size. Null if it doesn't fit before [limit].
+  static _EbmlElement? _readElement(Uint8List bytes, int offset, int limit) {
+    if (offset >= limit) return null;
+    final first = bytes[offset] & 0xFF;
+    var idWidth = 1;
+    var mask = 0x80;
+    while (mask != 0 && (first & mask) == 0) {
+      mask >>= 1;
+      idWidth++;
+    }
+    if (mask == 0 || idWidth > 4) return null;
+    final size = _readSize(bytes, offset + idWidth);
+    if (size == null) return null;
+    final contentStart = offset + idWidth + size.width;
+    if (contentStart > limit) return null;
+    if (size.isUnknown) {
+      return _EbmlElement(contentStart, limit, isUnknownSize: true);
+    }
+    final contentEnd = contentStart + size.value;
+    if (contentEnd > limit) return null;
+    return _EbmlElement(contentStart, contentEnd);
+  }
+
+  static int _lastIndexOf(Uint8List bytes, Uint8List pattern, int floor) {
+    for (var i = bytes.length - pattern.length; i >= floor; i--) {
+      if (_regionMatches(bytes, i, pattern)) return i;
+    }
+    return -1;
+  }
 
   /// Tag WebM/Opus bytes with metadata.
   /// Returns the tagged bytes, or original bytes if tagging fails.
@@ -227,6 +400,17 @@ class WebmTagger {
     }
     return out;
   }
+}
+
+class _EbmlElement {
+  final int contentStart;
+  final int contentEnd;
+  final bool isUnknownSize;
+  const _EbmlElement(
+    this.contentStart,
+    this.contentEnd, {
+    this.isUnknownSize = false,
+  });
 }
 
 class _EbmlSize {

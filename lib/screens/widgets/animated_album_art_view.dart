@@ -306,7 +306,11 @@ class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView>
     final controller = _controller;
     final hasActiveVideo = controller != null && _isInitialized;
 
+    // Expand, so the art fills the box like the video does. A loose Stack lets
+    // an image take its own size instead, leaving a small thumbnail as a small
+    // square in the middle whatever its BoxFit says.
     return Stack(
+      fit: StackFit.expand,
       alignment: Alignment.center,
       children: [
         // Layer 1: Static Art (Immediate 0ms fallback)

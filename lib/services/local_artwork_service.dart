@@ -8,6 +8,8 @@ import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import '../models/models.dart';
 import '../core/services/cache/hive_service.dart';
 import 'safe_audio_metadata_reader.dart';
+import 'tagger/media_tagger.dart';
+import 'tagger/webm_tagger.dart';
 import 'ytmusic_api_service.dart';
 import 'jiosaavn/jiosaavn_service.dart';
 
@@ -36,7 +38,13 @@ class OnlineTrackMetadata {
 class LocalArtworkService {
   static final Map<String, Uint8List> _memoryCache = <String, Uint8List>{};
   static final Map<String, Future<Uint8List?>> _inFlight = <String, Future<Uint8List?>>{};
-  static final Set<String> _notFoundCache = <String>{};
+
+  /// When a lookup last came up empty, per file. Misses are retried after
+  /// [_notFoundRetryAfter]: most of them just mean there was no connection
+  /// at the time, and that shouldn't last until the app restarts.
+  static final Map<String, DateTime> _notFoundCache = <String, DateTime>{};
+  static const Duration _notFoundRetryAfter = Duration(minutes: 5);
+
   static Directory? _cacheDir;
   static InnerTubeService? _innerTubeService;
 
@@ -73,6 +81,14 @@ class LocalArtworkService {
     return _placeholderArtists.contains(trimmed);
   }
 
+  static bool _isRecentMiss(String key) {
+    final at = _notFoundCache[key];
+    if (at == null) return false;
+    if (DateTime.now().difference(at) < _notFoundRetryAfter) return true;
+    _notFoundCache.remove(key);
+    return false;
+  }
+
   /// Fast synchronous check for cached image bytes in memory.
   static Uint8List? getCachedBytes(String localFilePath) {
     return _memoryCache[localFilePath.trim()];
@@ -86,7 +102,9 @@ class LocalArtworkService {
       try {
         final file = File('${_cacheDir!.path}/${trimmed.hashCode}.jpg');
         if (file.existsSync() && file.lengthSync() > 0) {
-          return file;
+          if (_fileStartsLikeImage(file)) return file;
+          // Saved by a build that could mistake audio for artwork.
+          file.deleteSync();
         }
       } catch (_) {}
     }
@@ -98,6 +116,15 @@ class LocalArtworkService {
       }
     } catch (_) {}
     return null;
+  }
+
+  static bool _fileStartsLikeImage(File file) {
+    final raf = file.openSync();
+    try {
+      return MediaTagger.isImageBytes(raf.readSync(12));
+    } finally {
+      raf.closeSync();
+    }
   }
 
   static const int _maxMemoryCacheEntries = 60;
@@ -194,10 +221,12 @@ class LocalArtworkService {
       final cacheFile = File('${cacheDir.path}/${trimmedPath.hashCode}.jpg');
       if (await cacheFile.exists() && await cacheFile.length() > 0) {
         final bytes = await cacheFile.readAsBytes();
-        if (bytes.isNotEmpty) {
+        if (MediaTagger.isImageBytes(bytes)) {
           _setMemoryCache(trimmedPath, bytes);
           return bytes;
         }
+        // Saved by a build that could mistake audio for artwork.
+        await cacheFile.delete();
       }
     } catch (_) {}
 
@@ -206,13 +235,17 @@ class LocalArtworkService {
       final legacyCover = File('$trimmedPath.cover.jpg');
       if (await legacyCover.exists() && await legacyCover.length() > 0) {
         final bytes = await legacyCover.readAsBytes();
-        if (bytes.isNotEmpty) {
+        if (MediaTagger.isImageBytes(bytes)) {
           _setMemoryCache(trimmedPath, bytes);
           _saveToDiskCache(trimmedPath, bytes);
           return bytes;
         }
       }
     } catch (_) {}
+
+    // Nothing in the file last time and nothing online: don't reread the
+    // whole file on every rebuild while waiting to try again.
+    if (track != null && _isRecentMiss(trimmedPath)) return null;
 
     final audioFile = File(trimmedPath);
     final fileExists = await audioFile.exists();
@@ -238,7 +271,7 @@ class LocalArtworkService {
       if (extracted == null && (lower.endsWith('.opus') || lower.endsWith('.webm'))) {
         try {
           final fileBytes = await audioFile.readAsBytes();
-          extracted = _extractWebmCover(fileBytes);
+          extracted = WebmTagger.readEmbedded(fileBytes).cover;
         } catch (e) {
           if (kDebugMode) {
             print('LocalArtworkService: WebM direct extract error: $e');
@@ -274,7 +307,7 @@ class LocalArtworkService {
       }
     }
 
-    if (extracted != null && extracted.isNotEmpty) {
+    if (extracted != null && MediaTagger.isImageBytes(extracted)) {
       _setMemoryCache(trimmedPath, extracted);
       _saveToDiskCache(trimmedPath, extracted);
 
@@ -288,16 +321,9 @@ class LocalArtworkService {
 
     // 5. Online lookup fallback if track info is available
     if (track != null) {
-      if (_notFoundCache.contains(trimmedPath)) {
-        return null;
-      }
-
       // If track already has a valid remote thumbnail URL, try downloading directly
-      final existingThumb = track.thumbnailUrl?.trim();
-      if (existingThumb != null &&
-          existingThumb.isNotEmpty &&
-          existingThumb.startsWith('http')) {
-        final downloaded = await _downloadArtworkBytes(existingThumb);
+      for (final url in artworkUrlCandidates(track)) {
+        final downloaded = await _downloadArtworkBytes(url);
         if (downloaded != null && downloaded.isNotEmpty) {
           _setMemoryCache(trimmedPath, downloaded);
           _saveToDiskCache(trimmedPath, downloaded);
@@ -357,10 +383,36 @@ class LocalArtworkService {
       }
 
       // Negative cache to prevent hammering APIs on subsequent rebuilds
-      _notFoundCache.add(trimmedPath);
+      _notFoundCache[trimmedPath] = DateTime.now();
     }
 
     return null;
+  }
+
+  /// The URLs [track] has for its art, sharpest first. YouTube Music's
+  /// thumbnails state their size in the URL, so a bigger one can be asked for.
+  static List<String> artworkUrlCandidates(Track track, {String? extraUrl}) {
+    final sized = RegExp(r'([=/])w\d+-h\d+');
+    final urls = <String>{};
+    for (final raw in [track.highResThumbnailUrl, track.thumbnailUrl, extraUrl]) {
+      final url = raw?.trim();
+      if (url == null || !url.startsWith('http')) continue;
+      if (sized.hasMatch(url)) {
+        urls.add(url.replaceAllMapped(sized, (m) => '${m[1]}w800-h800'));
+      }
+      urls.add(url);
+    }
+    return urls.toList();
+  }
+
+  /// Art for [track] from a search of the online catalogues, for when it has
+  /// no thumbnail of its own to use.
+  static Future<Uint8List?> searchArtworkBytes(Track track) async {
+    final query = sanitizeTrackQuery(track.title, track.artist);
+    if (query.isEmpty) return null;
+    final meta = await _lookupOnlineMetadata(query);
+    if (meta == null || !meta.hasArtwork) return null;
+    return _downloadArtworkBytes(meta.artworkUrl!);
   }
 
   /// Asynchronously fetch online metadata (including artist, album, artwork) for a local track.
@@ -369,11 +421,11 @@ class LocalArtworkService {
     if (cleanQuery.isEmpty) return null;
 
     final key = 'meta_${track.id}_${cleanQuery.hashCode}';
-    if (_notFoundCache.contains(key)) return null;
+    if (_isRecentMiss(key)) return null;
 
     final meta = await _lookupOnlineMetadata(cleanQuery);
     if (meta == null) {
-      _notFoundCache.add(key);
+      _notFoundCache[key] = DateTime.now();
       return null;
     }
 
@@ -515,7 +567,7 @@ class LocalArtworkService {
         },
       ).timeout(const Duration(seconds: 6));
 
-      if (res.statusCode == 200 && res.bodyBytes.length > 512) {
+      if (res.statusCode == 200 && MediaTagger.isImageBytes(res.bodyBytes)) {
         return res.bodyBytes;
       }
     } catch (e) {
@@ -693,39 +745,16 @@ class LocalArtworkService {
                 (bytes[j - 1] & 0xFF);
             final payloadStart = j + 12; // (j - 4) + 8 byte box header + 8 byte data header
             final payloadLength = dataSize - 16;
-            if (payloadStart + payloadLength <= bytes.length && payloadLength > 0) {
-              return bytes.sublist(payloadStart, payloadStart + payloadLength);
+            if (payloadStart + payloadLength <= bytes.length &&
+                payloadLength > 0) {
+              final payload = bytes.sublist(
+                payloadStart,
+                payloadStart + payloadLength,
+              );
+              // "covr" can turn up by chance in the audio: keep looking.
+              if (MediaTagger.isImageBytes(payload)) return payload;
             }
           }
-        }
-      }
-    }
-    return null;
-  }
-
-  /// Extract `FileData` (0x465C) from WebM/Matroska attachments.
-  static Uint8List? _extractWebmCover(Uint8List bytes) {
-    for (int i = 0; i < bytes.length - 10; i++) {
-      if (bytes[i] == 0x46 && bytes[i + 1] == 0x5C) {
-        int pos = i + 2;
-        if (pos >= bytes.length) return null;
-        int firstByte = bytes[pos];
-        int length = 0;
-        int mask = 0x80;
-        int numBytes = 1;
-        while ((firstByte & mask) == 0 && mask > 0) {
-          mask >>= 1;
-          numBytes++;
-        }
-        length = firstByte & (mask - 1);
-        for (int k = 1; k < numBytes; k++) {
-          pos++;
-          if (pos >= bytes.length) return null;
-          length = (length << 8) | bytes[pos];
-        }
-        pos++;
-        if (pos + length <= bytes.length && length > 0) {
-          return bytes.sublist(pos, pos + length);
         }
       }
     }

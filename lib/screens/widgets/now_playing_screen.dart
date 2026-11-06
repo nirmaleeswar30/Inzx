@@ -4851,7 +4851,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
               alignment: Alignment.center,
               gaplessPlayback: true,
               errorBuilder: (context, error, stackTrace) {
-                return _defaultArt(accentColor);
+                return _buildNetworkArtwork(displayTrack, accentColor);
               },
             );
           }
@@ -4874,15 +4874,14 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     }
 
     final candidates = <String>[];
+    // Thumbnails come in many sizes (a radio queue's can be tiny), so ask for
+    // the large version whichever one this is, then fall back to the original.
+    if (Track.isResizableArtworkUrl(rawThumbnail)) {
+      candidates.add(Track.upgradeArtworkUrl(rawThumbnail));
+    }
     final highResFromTrack = displayTrack?.highResThumbnailUrl?.trim();
     if (highResFromTrack != null && highResFromTrack.isNotEmpty) {
       candidates.add(highResFromTrack);
-    }
-
-    // Try an upgraded thumbnail first for now playing, then fallback to original.
-    final upgradedThumbnail = rawThumbnail.replaceAll('w120-h120', 'w600-h600');
-    if (upgradedThumbnail.isNotEmpty) {
-      candidates.add(upgradedThumbnail);
     }
     candidates.add(rawThumbnail);
 

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
+import '../tagger/webm_tagger.dart';
 import 'lyrics_models.dart';
 import 'enhanced_lrc_parser.dart';
 import 'background_vocals.dart';
@@ -27,7 +28,19 @@ class EmbeddedLyricsProvider implements LyricsProvider {
         if (parsed != null) return parsed;
       }
 
-      // 2. Read embedded lyrics from file metadata
+      // 2. WebM/Opus downloads, which the metadata reader below can't parse
+      final lowerPath = filePath.toLowerCase();
+      if (lowerPath.endsWith('.opus') || lowerPath.endsWith('.webm')) {
+        final webmLyrics = WebmTagger.readEmbedded(
+          await audioFile.readAsBytes(),
+        ).lyrics;
+        if (webmLyrics != null) {
+          final parsed = _parseRawLyrics(webmLyrics, info);
+          if (parsed != null) return parsed;
+        }
+      }
+
+      // 3. Read embedded lyrics from file metadata
       try {
         final metadata = readMetadata(audioFile, getImage: false);
         final rawLyrics = metadata.lyrics;

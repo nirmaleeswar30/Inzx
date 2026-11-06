@@ -381,7 +381,32 @@ class AddonService extends ChangeNotifier {
     });
   }
 
-  Future<AddonMatch?> _resolve(Track track, {AddonMatch? knownMatch}) async {
+  /// The lossless copy of [track] to download, or null when no addon has one
+  /// (or none could be reached). Never throws.
+  ///
+  /// Asks for a download rather than a stream, and keeps the answer to
+  /// itself: its URL isn't one to hand the player, and nothing here should
+  /// move the song playing onto FLAC. What's already known about the track
+  /// is still used, so a settled miss or a known copy costs no new search.
+  Future<AddonMatch?> matchForDownload(Track track) async {
+    await load();
+    if (!isEnabled || track.id.startsWith('local_')) return null;
+    final known = _cache[track.id];
+    if (_cache.containsKey(track.id) && known == null) return null;
+    return _resolve(track, knownMatch: known, download: true);
+  }
+
+  Future<AddonMatch?> _resolve(
+    Track track, {
+    AddonMatch? knownMatch,
+    bool download = false,
+  }) async {
+    void announce(AddonMatch match) {
+      if (download) return;
+      _remember(track.id, match);
+      _matchesController.add((trackId: track.id, match: match));
+    }
+
     final active = _addons.where((a) => a.enabled).toList();
     if (active.isEmpty) return null;
 
@@ -395,6 +420,7 @@ class AddonService extends ChangeNotifier {
           final stream = await knownEntry.client.stream(
             knownMatch.track.id,
             quality: knownEntry.quality,
+            download: download,
           );
           if (stream.isLossless) {
             final match = AddonMatch(
@@ -403,8 +429,7 @@ class AddonService extends ChangeNotifier {
               track: knownMatch.track,
               stream: stream,
             );
-            _remember(track.id, match);
-            _matchesController.add((trackId: track.id, match: match));
+            announce(match);
             return match;
           }
         } catch (_) {
@@ -431,7 +456,11 @@ class AddonService extends ChangeNotifier {
           continue; // try next addon in priority
         }
         watch.reset();
-        final stream = await client.stream(candidate.id, quality: quality);
+        final stream = await client.stream(
+          candidate.id,
+          quality: quality,
+          download: download,
+        );
         debugPrint(
           '[Lossless] [${entry.name} (#${i + 1})] Stream for "${track.title}" took ${watch.elapsedMilliseconds} ms '
           '(${stream.formatLabel})',
@@ -446,8 +475,7 @@ class AddonService extends ChangeNotifier {
           track: candidate,
           stream: stream,
         );
-        _remember(track.id, match);
-        _matchesController.add((trackId: track.id, match: match));
+        announce(match);
         return match;
       } on AddonMiss catch (e) {
         // 404, DRM-protected, or track not served by this addon: try next addon!

@@ -176,10 +176,10 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
           'at ${_khz(output.trackSampleRate ?? source ?? 0)}, '
           '${output.trackEncoding ?? 'PCM'} — Android\'s mixer is bypassed';
       good = true;
-    } else if (tier != null && !resampled && mixer != null) {
+    } else if (tier != null && source != null && mixer != null && !resampled) {
       badge = tier.toUpperCase();
       line = 'Lossless all the way to Android\'s mixer, at the track\'s own '
-          '${_khz(source!)}';
+          '${_khz(source)}';
       good = true;
     } else if (tier != null && resampled) {
       badge = '$tier · RESAMPLED'.toUpperCase();

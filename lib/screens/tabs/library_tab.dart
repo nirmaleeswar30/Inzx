@@ -2429,12 +2429,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
         );
 
         // Show now playing
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (context) => const NowPlayingScreen(),
-        );
+        NowPlayingScreen.show(context);
       },
     );
   }
@@ -2480,12 +2475,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
       sourceTitle: context.l10n.downloads,
     );
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const NowPlayingScreen(),
-    );
+    NowPlayingScreen.show(context);
   }
 
   void _showCreatePlaylistDialog() {

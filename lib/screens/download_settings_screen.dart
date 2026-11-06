@@ -5,6 +5,8 @@ import 'package:iconsax/iconsax.dart';
 import '../../core/l10n/app_localizations_x.dart';
 import '../../core/design_system/design_system.dart';
 import '../providers/providers.dart';
+import '../services/addons/addon_models.dart';
+import '../services/addons/addon_service.dart';
 import '../services/playback/playback_data.dart';
 import '../services/download_service.dart';
 
@@ -59,10 +61,13 @@ class DownloadSettingsScreen extends ConsumerWidget {
           const SizedBox(height: 16),
 
           // Download quality selector
-          _DownloadQualitySetting(
-            isDark: isDark,
-            accentColor: accentColor,
-            jioSaavnEnabled: jioSaavnEnabled,
+          ListenableBuilder(
+            listenable: AddonService.instance,
+            builder: (context, _) => _DownloadQualitySetting(
+              isDark: isDark,
+              accentColor: accentColor,
+              jioSaavnEnabled: jioSaavnEnabled,
+            ),
           ),
 
           const SizedBox(height: 32),
@@ -91,7 +96,15 @@ class DownloadSettingsScreen extends ConsumerWidget {
           const SizedBox(height: 32),
 
           // Data usage info
-          _buildDataUsageInfo(context, isDark, accentColor, jioSaavnEnabled),
+          ListenableBuilder(
+            listenable: AddonService.instance,
+            builder: (context, _) => _buildDataUsageInfo(
+              context,
+              isDark,
+              accentColor,
+              jioSaavnEnabled,
+            ),
+          ),
 
           const SizedBox(height: 32),
 
@@ -130,6 +143,7 @@ class DownloadSettingsScreen extends ConsumerWidget {
     bool jioSaavnEnabled,
   ) {
     final l10n = context.l10n;
+    final lossless = _LosslessTier.current();
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -178,8 +192,8 @@ class DownloadSettingsScreen extends ConsumerWidget {
             isDark,
           ),
           _buildDataRow(
-            '${l10n.qualityMaxChip} (${jioSaavnEnabled ? '320 kbps' : '~160 kbps'})',
-            jioSaavnEnabled ? '~8 – 10 MB' : '~4 – 5 MB',
+            '${l10n.qualityMaxChip} (${lossless?.bitrate ?? (jioSaavnEnabled ? '320 kbps' : '~160 kbps')})',
+            lossless?.storage ?? (jioSaavnEnabled ? '~8 – 10 MB' : '~4 – 5 MB'),
             isDark,
           ),
         ],
@@ -193,12 +207,15 @@ class DownloadSettingsScreen extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: isDark ? Colors.white70 : InzxColors.textSecondary,
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isDark ? Colors.white70 : InzxColors.textSecondary,
+              ),
             ),
           ),
+          const SizedBox(width: 12),
           Text(
             value,
             style: TextStyle(
@@ -207,6 +224,42 @@ class DownloadSettingsScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// What Max means for downloads with the lossless addons as they're set up:
+/// its numbers come from the enabled addons' quality tier.
+class _LosslessTier {
+  const _LosslessTier({
+    required this.chip,
+    required this.description,
+    required this.bitrate,
+    required this.storage,
+  });
+
+  final String chip;
+  final String description;
+  final String bitrate;
+  final String storage;
+
+  /// Null when no addon is enabled, so Max tops out at the best lossy copy.
+  static _LosslessTier? current() {
+    final enabled = AddonService.instance.addons.where((a) => a.enabled);
+    if (enabled.isEmpty) return null;
+    if (enabled.any((a) => a.quality == AddonQuality.hiRes)) {
+      return const _LosslessTier(
+        chip: 'Hi-Res FLAC',
+        description: 'Hi-Res FLAC, up to 24-bit / 192 kHz,',
+        bitrate: 'Hi-Res FLAC, ~700–5000 kbps',
+        storage: '~20 – 150 MB',
+      );
+    }
+    return const _LosslessTier(
+      chip: 'FLAC',
+      description: 'Lossless FLAC, 16-bit / 44.1 kHz,',
+      bitrate: 'FLAC, ~700–1100 kbps',
+      storage: '~20 – 35 MB',
     );
   }
 }
@@ -307,7 +360,8 @@ class _DownloadQualitySetting extends ConsumerWidget {
                 ref,
                 AudioQuality.max,
                 l10n.qualityMaxChip,
-                jioSaavnEnabled ? 'Up to 320 kbps' : '~160 kbps',
+                _LosslessTier.current()?.chip ??
+                    (jioSaavnEnabled ? 'Up to 320 kbps' : '~160 kbps'),
                 downloadQuality,
               ),
             ],
@@ -330,9 +384,13 @@ class _DownloadQualitySetting extends ConsumerWidget {
             ? 'High fidelity (~160–320 kbps with JioSaavn)'
             : 'Best standard quality (~160 kbps YouTube)';
       case AudioQuality.max:
-        return jioSaavnEnabled
-            ? 'Studio quality 320 kbps AAC (JioSaavn) or highest available'
-            : 'Highest available YouTube stream (~160 kbps)';
+        final bestLossy = jioSaavnEnabled
+            ? 'up to 320 kbps (JioSaavn) or ~160 kbps Opus'
+            : '~160 kbps Opus';
+        final lossless = _LosslessTier.current();
+        return lossless != null
+            ? '${lossless.description} when found, else best lossy ($bestLossy)'
+            : 'Best lossy ($bestLossy) • Lossless with an addon';
     }
   }
 
