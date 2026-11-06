@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/models.dart';
+import 'playback/auto_quality.dart';
 import 'playback/playback.dart';
 import 'jiosaavn/jiosaavn_service.dart';
 import 'addons/addon_service.dart';
@@ -384,8 +385,8 @@ class AudioPlayerService {
   PlaybackData? _currentPlaybackData;
   AudioQuality _audioQuality = AudioQuality.max;
 
-  /// Wi-Fi or ethernet right now, kept current by a connectivity listener
-  /// so quality checks don't have to wait on the platform.
+  /// Wi-Fi or ethernet right now, kept current by a connectivity listener.
+  /// Quality doesn't depend on it; a change just gives Auto a fresh try.
   bool _onUnmeteredNetwork = true;
   bool _streamCacheWifiOnly = false;
   int _streamCacheSizeLimitMb = kDefaultStreamCacheSizeLimitMb;
@@ -938,7 +939,7 @@ class AudioPlayerService {
 
     // Crossfading into a track whose lossless copy was resolved ahead of
     // time: fade straight into the FLAC.
-    if (_qualityAllowsLossless) {
+    if (_startsOnLossless) {
       final lossless = AddonService.instance.cachedFor(track);
       if (lossless != null) {
         _logLossless('Crossfading straight into ${lossless.stream.formatLabel}');
@@ -2378,8 +2379,13 @@ class AudioPlayerService {
   Future<void> _watchNetworkType() async {
     _onUnmeteredNetwork = await _isConnectedToWifi();
     _connectivity.onConnectivityChanged.listen((connections) {
-      _onUnmeteredNetwork = connections.contains(ConnectivityResult.wifi) ||
+      final unmetered = connections.contains(ConnectivityResult.wifi) ||
           connections.contains(ConnectivityResult.ethernet);
+      final changed = unmetered != _onUnmeteredNetwork;
+      _onUnmeteredNetwork = unmetered;
+      if (changed && !connections.contains(ConnectivityResult.none)) {
+        _onNetworkChangedForAuto();
+      }
     });
   }
 
@@ -2395,14 +2401,15 @@ class AudioPlayerService {
   void _bindPlayerEventStreams(AudioPlayer player) {
     // Seeks made straight on the player (restart, repeat-one) jump too.
     player.positionDiscontinuityStream.listen((d) {
-      if (identical(player, _player) &&
-          d.reason == PositionDiscontinuityReason.seek) {
-        _seekCount++;
+      if (identical(player, _player)) {
+        _markPlayheadJump();
+        if (d.reason == PositionDiscontinuityReason.seek) _seekCount++;
       }
     });
 
     player.playerStateStream.listen((playerState) {
       if (!identical(player, _player)) return;
+      _watchForStall(playerState);
       _updateState(
         isPlaying: playerState.playing,
         isBuffering: playerState.processingState == ProcessingState.buffering,
@@ -2441,6 +2448,7 @@ class AudioPlayerService {
       if (queueIndex == _currentIndex) return;
 
       _flushWatchtimeForCurrentTrackBeforeSwitch();
+      _markPlayheadJump();
       _currentIndex = queueIndex;
       _currentTrack = _queue[queueIndex];
       final playbackData = _activeSourcePlaybackDataByQueueIndex[queueIndex];
@@ -2485,6 +2493,7 @@ class AudioPlayerService {
 
       _positionController.add(position);
       _maybePersistPosition(position);
+      _watchBufferDrain();
 
       final now = DateTime.now();
       if (_lastPositionUpdate == null ||
@@ -3674,7 +3683,7 @@ class AudioPlayerService {
       // 0. A lossless copy already resolved (prefetched while the previous
       // track played) starts straight away; otherwise the track starts on
       // whatever answers first and is upgraded once lossless turns up.
-      if (_qualityAllowsLossless) {
+      if (_startsOnLossless) {
         final cachedLossless = AddonService.instance.cachedFor(_currentTrack!);
         if (cachedLossless != null) {
           try {
@@ -3696,7 +3705,8 @@ class AudioPlayerService {
       final qualityAllowsSaavn = _jioSaavnEnabled &&
           (_audioQuality == AudioQuality.high ||
               _audioQuality == AudioQuality.max ||
-              _audioQuality == AudioQuality.auto);
+              _audioQuality == AudioQuality.auto) &&
+          _autoAllowsJioSaavn;
 
       // Check if JioSaavn stream is already cached (e.g. from prefetch)
       if (qualityAllowsSaavn) {
@@ -4004,6 +4014,20 @@ class AudioPlayerService {
     }
   }
 
+  PlaybackData _saavnPlaybackData(JioSaavnStream stream) => PlaybackData(
+    streamUrl: stream.streamUrl,
+    format: AudioFormat(
+      mimeType: 'audio/mp4',
+      bitrate: stream.bitrateKbps * 1000,
+      codecs: 'mp4a.40.2',
+    ),
+    playbackTracking:
+        _authenticatedPlaybackTracking ?? _currentPlaybackData?.playbackTracking,
+    streamExpiresInSeconds: 86400,
+    fetchedAt: DateTime.now(),
+    audioSource: 'JioSaavn',
+  );
+
   /// Plays a resolved JioSaavn 320kbps stream directly.
   Future<void> _playJioSaavnStream(
     JioSaavnStream saavnStream,
@@ -4015,18 +4039,7 @@ class AudioPlayerService {
         'AudioPlayerService: Playing JioSaavn 320kbps stream (${saavnStream.streamUrl})',
       );
     }
-    final saavnPlaybackData = PlaybackData(
-      streamUrl: saavnStream.streamUrl,
-      format: AudioFormat(
-        mimeType: 'audio/mp4',
-        bitrate: saavnStream.bitrateKbps * 1000,
-        codecs: 'mp4a.40.2',
-      ),
-      playbackTracking: _authenticatedPlaybackTracking ?? _currentPlaybackData?.playbackTracking,
-      streamExpiresInSeconds: 86400,
-      fetchedAt: DateTime.now(),
-      audioSource: 'JioSaavn',
-    );
+    final saavnPlaybackData = _saavnPlaybackData(saavnStream);
     _currentPlaybackData = saavnPlaybackData;
     _activeSourceQueueIndices = <int>[_currentIndex];
     _activeSourcePlaybackDataByQueueIndex = <int, PlaybackData>{
@@ -4063,11 +4076,335 @@ class AudioPlayerService {
     unawaited(_enforceAudioCacheLimit());
   }
 
-  /// Lossless (a FLAC is ~10x a lossy stream) on Max always, and on Auto
-  /// while on Wi-Fi. High stays on the best lossy copy.
+  /// Lossless on Max always, and on Auto on any connection unless it has
+  /// stepped down for a struggling network and isn't due to try again (see
+  /// [AutoQuality]). High stays on the best lossy copy.
   bool get _qualityAllowsLossless =>
       _audioQuality == AudioQuality.max ||
-      (_audioQuality == AudioQuality.auto && _onUnmeteredNetwork);
+      (_audioQuality == AudioQuality.auto &&
+          _autoQuality.allowsFlacUpgrade(DateTime.now()));
+
+  /// Whether a new song may start straight on FLAC. While Auto is lowered
+  /// it starts lower, and any try at FLAC is the silent mid-song kind.
+  bool get _startsOnLossless =>
+      _audioQuality == AudioQuality.max ||
+      (_audioQuality == AudioQuality.auto && _autoQuality.startsOnFlac);
+
+  bool get _autoIsLowered =>
+      _audioQuality == AudioQuality.auto && _autoQuality.isLowered;
+
+  /// False only while Auto has stepped down to Opus and isn't due a retry.
+  bool get _autoAllowsJioSaavn =>
+      _audioQuality != AudioQuality.auto ||
+      _autoQuality.allowsJioSaavn(DateTime.now());
+
+  // ---- Auto: stepping down when the network struggles -------------------
+
+  final AutoQuality _autoQuality = AutoQuality();
+
+  /// Stalls just after a seek, a new source or a hand-over are the player
+  /// filling its buffer, not the network falling behind.
+  static const _stallGrace = Duration(seconds: 4);
+  DateTime? _lastJumpAt;
+  Timer? _stallTick;
+  DateTime? _lastBufferCheck;
+  bool _droppingQuality = false;
+  DateTime? _dropRetryAfter;
+  Timer? _autoRetryTimer;
+  Timer? _fallbackPrepareTimer;
+  String? _fallbackPreparedFor;
+
+  final _qualityDowngradingController = BehaviorSubject<bool>.seeded(false);
+
+  /// True while Auto is moving the song onto a lower-quality copy.
+  Stream<bool> get qualityDowngradingStream =>
+      _qualityDowngradingController.stream.distinct();
+
+  /// Why the quality is lower than the setting promises, or null. For the
+  /// signal path sheet.
+  String? get autoQualityNote {
+    if (!_autoIsLowered) return null;
+    final retryAt = _autoQuality.retryAt;
+    if (retryAt == null) return 'Lowered for a slow network';
+    final minutes = retryAt.difference(DateTime.now()).inMinutes + 1;
+    return retryAt.isAfter(DateTime.now())
+        ? 'Lowered for a slow network, tries again in $minutes min'
+        : 'Lowered for a slow network, trying again';
+  }
+
+  void _markPlayheadJump() {
+    _lastJumpAt = DateTime.now();
+    _autoQuality.forgetBufferTrend();
+  }
+
+  /// Whether the active player's stalls are Auto's to act on. Not while
+  /// something else holds the spare player, in a Jam (playback is synced),
+  /// or on audio that doesn't depend on the network.
+  bool get _autoWatchApplies {
+    if (_audioQuality != AudioQuality.auto) return false;
+    final track = _currentTrack;
+    if (track == null || _isLocalTrack(track)) return false;
+    if (_currentPlaybackData?.isLive == true) return false;
+    return !_jamsModeEnabled &&
+        !_isCrossfading &&
+        !_automixMixing &&
+        !_isUpgradingStream &&
+        !_droppingQuality;
+  }
+
+  void _watchForStall(PlayerState state) {
+    if (state.processingState == ProcessingState.loading) _markPlayheadJump();
+    final stalled =
+        state.playing && state.processingState == ProcessingState.buffering;
+    if (!stalled) {
+      _stallTick?.cancel();
+      _stallTick = null;
+      _autoQuality.stallEnded(DateTime.now());
+      return;
+    }
+    if (_audioQuality != AudioQuality.auto) return;
+    _stallTick ??= Timer.periodic(
+      const Duration(milliseconds: 250),
+      (_) => _onStallTick(),
+    );
+  }
+
+  void _onStallTick() {
+    final now = DateTime.now();
+    final stillStalled =
+        _player.playing && _player.processingState == ProcessingState.buffering;
+    if (!stillStalled || _audioQuality != AudioQuality.auto) {
+      _stallTick?.cancel();
+      _stallTick = null;
+      _autoQuality.stallEnded(now);
+      return;
+    }
+    if (!_autoWatchApplies) return;
+    final jump = _lastJumpAt;
+    if (jump != null && now.difference(jump) < _stallGrace) return;
+    _autoQuality.stallStarted(now);
+    if (_autoQuality.shouldDrop(now)) unawaited(_dropQualityForNetwork());
+  }
+
+  /// Catches a buffer draining towards empty, so the switch can land before
+  /// the stall is heard.
+  void _watchBufferDrain() {
+    if (!_autoWatchApplies || !_player.playing) return;
+    if (_player.processingState != ProcessingState.ready) return;
+    if (_playingStep == QualityStep.opus) return;
+    final now = DateTime.now();
+    final last = _lastBufferCheck;
+    if (last != null && now.difference(last) < const Duration(seconds: 1)) {
+      return;
+    }
+    _lastBufferCheck = now;
+    final jump = _lastJumpAt;
+    if (jump != null && now.difference(jump) < _stallGrace) return;
+    // Fully loaded to the end of the song: nothing left to fall behind on.
+    final total = _player.duration;
+    if (total != null &&
+        _player.bufferedPosition >= total - const Duration(seconds: 1)) {
+      return;
+    }
+    if (_autoQuality.noteBuffer(now, bufferedAhead)) {
+      _logLossless('Buffer draining (${bufferedAhead.inSeconds} s left)');
+      unawaited(_dropQualityForNetwork());
+    }
+  }
+
+  QualityStep get _playingStep {
+    final data = _currentPlaybackData;
+    if (data == null) return QualityStep.opus;
+    if (data.format.isLossless) return QualityStep.flac;
+    return data.audioSource == 'JioSaavn'
+        ? QualityStep.jioSaavn
+        : QualityStep.opus;
+  }
+
+  /// One rung down from what's playing: FLAC to JioSaavn (when it's on and
+  /// has this song), then Opus. Already on Opus there's nothing lower, but
+  /// the stall still means FLAC shouldn't be tried again for a while.
+  Future<void> _dropQualityForNetwork() async {
+    final now = DateTime.now();
+    final retryAfter = _dropRetryAfter;
+    if (retryAfter != null && now.isBefore(retryAfter)) return;
+    if (!_autoWatchApplies) return;
+    final track = _currentTrack!;
+    final from = _playingStep;
+    if (from == QualityStep.opus) {
+      // With no addon and JioSaavn off, Opus is already the top rung.
+      if (AddonService.instance.isEnabled || _jioSaavnEnabled) {
+        _autoQuality.lowered(now, QualityStep.opus);
+        _scheduleAutoRetry();
+      }
+      return;
+    }
+
+    _droppingQuality = true;
+    _qualityDowngradingController.add(true);
+    // A FLAC hand-over waiting its turn is exactly what must not happen now.
+    _losslessUpgradeId++;
+    _logLossless('Network struggling on "${track.title}"; stepping down');
+    try {
+      if (from == QualityStep.flac && _jioSaavnEnabled) {
+        if (await _dropToJioSaavn(track)) return;
+      }
+      if (await _dropToOpus(track)) return;
+      // Nothing could load either: keep the song and look again shortly.
+      _dropRetryAfter = DateTime.now().add(const Duration(seconds: 10));
+    } finally {
+      _droppingQuality = false;
+      _qualityDowngradingController.add(false);
+    }
+  }
+
+  Future<bool> _dropToJioSaavn(Track track) async {
+    try {
+      final stream = await JioSaavnService.instance
+          .getBestStreamForTrack(track)
+          .timeout(const Duration(seconds: 3));
+      if (stream == null || stream.bitrateKbps < 320) return false;
+      return await _swapDown(
+        track,
+        AudioSource.uri(Uri.parse(stream.streamUrl), tag: track),
+        _saavnPlaybackData(stream),
+        QualityStep.jioSaavn,
+      );
+    } catch (e) {
+      _logLossless('JioSaavn fallback unavailable: $e');
+      return false;
+    }
+  }
+
+  Future<bool> _dropToOpus(Track track) async {
+    try {
+      final result = await _ytPlayerUtils
+          .playerResponseForPlayback(
+            track.id,
+            quality: _audioQuality,
+            isMetered: false,
+          )
+          .timeout(const Duration(seconds: 5));
+      final data = result.data;
+      if (!result.isSuccess || data == null) return false;
+      // Reads from the disk cache when the fallback was prepared in time.
+      final source = await _streamingAudioSourceForTrack(
+        track,
+        data,
+        preferDirectStreamWithBackgroundPrecache: true,
+      );
+      return await _swapDown(track, source, data, QualityStep.opus);
+    } catch (e) {
+      _logLossless('Opus fallback unavailable: $e');
+      return false;
+    }
+  }
+
+  Future<bool> _swapDown(
+    Track track,
+    AudioSource source,
+    PlaybackData data,
+    QualityStep step,
+  ) async {
+    final swapped = await _seamlessSwap(
+      track: track,
+      source: source,
+      playbackData: data,
+      stillWanted: () =>
+          _audioQuality == AudioQuality.auto && _currentTrack?.id == track.id,
+      resumeIfStalled: true,
+      loadTimeout: const Duration(seconds: 8),
+    );
+    if (!swapped) return false;
+    _autoQuality.lowered(DateTime.now(), step);
+    _scheduleAutoRetry();
+    _logLossless('Stepped "${track.title}" down to ${step.name}');
+    return true;
+  }
+
+  void _scheduleAutoRetry() {
+    _autoRetryTimer?.cancel();
+    final retryAt = _autoQuality.retryAt;
+    if (!_autoIsLowered || retryAt == null) return;
+    final wait = retryAt.difference(DateTime.now());
+    _autoRetryTimer = Timer(
+      wait.isNegative ? Duration.zero : wait,
+      _tryGoingBackUp,
+    );
+  }
+
+  /// The wait is over: try the better copies for the song playing. They load
+  /// silently on the spare player, so nothing is heard if it isn't ready. A
+  /// song with no better copy leaves the try open for the next song.
+  void _tryGoingBackUp() {
+    final track = _currentTrack;
+    if (!_autoIsLowered || track == null) return;
+    if (_isLocalTrack(track) || _currentPlaybackData?.isLive == true) return;
+    _logLossless('Auto trying better quality for "${track.title}"');
+    unawaited(_upgradeTrackQualityIfPossible(track));
+    unawaited(_upgradeToLosslessIfPossible(track));
+  }
+
+  void _onNetworkChangedForAuto() {
+    if (_audioQuality != AudioQuality.auto) return;
+    if (!_autoQuality.networkChanged(DateTime.now())) return;
+    _autoRetryTimer?.cancel();
+    // Give the new connection a moment to settle first.
+    _autoRetryTimer = Timer(const Duration(seconds: 3), _tryGoingBackUp);
+  }
+
+  /// While FLAC plays in Auto, get the lower copies ready when the network
+  /// is still good: the JioSaavn link, and this song's Opus on disk, which a
+  /// drop can then play with no network at all. Held back a few seconds so
+  /// it never competes with the FLAC filling its own buffer.
+  void _prepareAutoFallbacks(Track track) {
+    if (_audioQuality != AudioQuality.auto || _isLocalTrack(track)) return;
+    if (_fallbackPreparedFor == track.id) return;
+    _fallbackPreparedFor = track.id;
+    _fallbackPrepareTimer?.cancel();
+    _fallbackPrepareTimer = Timer(const Duration(seconds: 8), () async {
+      if (_currentTrack?.id != track.id) return;
+      try {
+        if (_jioSaavnEnabled) {
+          unawaited(
+            JioSaavnService.instance
+                .getBestStreamForTrack(track)
+                .then<void>((_) {}, onError: (Object _) {}),
+          );
+        }
+        final result = await _ytPlayerUtils.playerResponseForPlayback(
+          track.id,
+          quality: _audioQuality,
+          isMetered: false,
+        );
+        final data = result.data;
+        if (!result.isSuccess || data == null) return;
+        if (await _canPrecacheOnCurrentNetwork()) {
+          await _precacheTrackAudioBytes(track, data);
+        }
+      } catch (e) {
+        _logLossless('Couldn\'t prepare fallbacks: $e');
+      }
+    });
+  }
+
+  /// An addon was just added. On High, lossless would stay blocked with no
+  /// hint why, so this moves to Max (the lossy copies don't change, so the
+  /// audio cache stays) and the playing song upgrades straight away. Returns
+  /// whether the setting changed.
+  bool onAddonInstalled() {
+    final switched = _audioQuality == AudioQuality.high;
+    if (switched) {
+      _audioQuality = AudioQuality.max;
+      _updateState(audioQuality: AudioQuality.max);
+      _saveStreamingQuality(AudioQuality.max);
+    }
+    final track = _currentTrack;
+    if (track != null && _currentPlaybackData?.isLive != true) {
+      unawaited(_upgradeToLosslessIfPossible(track));
+    }
+    return switched;
+  }
 
   /// Waits before looking again when the addon couldn't be reached.
   static const _losslessLookRetries = [
@@ -4215,6 +4552,7 @@ class AudioPlayerService {
     _flushWatchtimeForCurrentTrackBeforeSwitch();
     final incoming = _playerById(to);
     _player = incoming;
+    _markPlayheadJump();
     _currentIndex = index;
     _currentTrack = _queue[index];
     final data = _automixIncomingIndex == index ? _automixIncomingData : null;
@@ -4258,11 +4596,9 @@ class AudioPlayerService {
     await player.stop();
     await _setVolumeSafely(player, 1.0, context: 'automix-retire');
     // The blend is over, so the spare player is free for the song's
-    // lossless hand-over now.
+    // lossless hand-over now (or, already on FLAC, to get its fallbacks).
     final track = _currentTrack;
-    if (track != null && _currentPlaybackData?.format.isLossless != true) {
-      unawaited(_upgradeToLosslessIfPossible(track));
-    }
+    if (track != null) unawaited(_upgradeToLosslessIfPossible(track));
   }
 
   /// The engine started/paused a player itself; keep just_audio's own
@@ -4380,6 +4716,7 @@ class AudioPlayerService {
     if (kDebugMode && resolveTimeMs != null) {
       debugPrint('AudioPlayerService: Lossless playing in ${resolveTimeMs}ms');
     }
+    _prepareAutoFallbacks(track);
     _prefetchNextTrack();
     unawaited(_enforceAudioCacheLimit());
   }
@@ -4393,12 +4730,19 @@ class AudioPlayerService {
   Future<void> _upgradeToLosslessIfPossible(Track track) async {
     final addons = AddonService.instance;
     if (!_qualityAllowsLossless) {
-      _logLossless('Off: lossless needs Max quality, or Auto on Wi-Fi');
+      _logLossless(
+        _autoIsLowered
+            ? 'Holding off lossless: Auto stepped down for a slow network'
+            : 'Off: lossless needs Max or Auto quality',
+      );
       return;
     }
     if (!addons.isEnabled) return;
     if (track.localFilePath != null || track.id.startsWith('local_')) return;
-    if (_currentPlaybackData?.format.isLossless == true) return;
+    if (_currentPlaybackData?.format.isLossless == true) {
+      _prepareAutoFallbacks(track); // arrived on FLAC by crossfade or blend
+      return;
+    }
     // Several start paths ask for the same song (playback start, crossfade
     // arrival, gapless advance, the end of a blend). A second ask must not
     // start a second search; it's the same question.
@@ -4460,8 +4804,11 @@ class AudioPlayerService {
     }
     if (_currentPlaybackData?.format.isLossless == true) return;
     if (_currentPlaybackData?.isLive == true) return;
+    // The lookup may have started before Auto stepped down.
+    if (!_qualityAllowsLossless || _droppingQuality) return;
 
     final handOverId = ++_losslessUpgradeId;
+    final isAutoTry = _autoIsLowered;
     _losslessHandOverTrackId = track.id;
     bool stillWanted() =>
         handOverId == _losslessUpgradeId &&
@@ -4475,7 +4822,19 @@ class AudioPlayerService {
     // it's upgrading until the hand-over lands or is given up on.
     _losslessUpgradingController.add(track.id);
     try {
-      await _handOverToLossless(track, match, stillWanted);
+      final landed = await _handOverToLossless(track, match, stillWanted);
+      if (landed == true) _prepareAutoFallbacks(track);
+      if (isAutoTry && landed != null) {
+        final now = DateTime.now();
+        if (landed) {
+          _autoQuality.tryLanded(now, QualityStep.flac);
+          _autoRetryTimer?.cancel();
+        } else {
+          _autoQuality.tryFailed(now);
+          _scheduleAutoRetry();
+          _logLossless('Not ready for FLAC yet; ${autoQualityNote ?? ''}');
+        }
+      }
     } finally {
       if (_losslessUpgradingController.value == track.id) {
         _losslessUpgradingController.add(null);
@@ -4484,11 +4843,23 @@ class AudioPlayerService {
     }
   }
 
-  Future<void> _handOverToLossless(
+  /// True when the song moved onto [match], false when it couldn't get
+  /// ready in time, null when the attempt says nothing about the network
+  /// (the song changed, or something else held the spare player).
+  Future<bool?> _handOverToLossless(
     Track track,
     AddonMatch match,
     bool Function() stillWanted,
   ) async {
+    // Auto's try, too near the end to swap: that says nothing about the
+    // network, and the next song gets its own try.
+    final total = _player.duration ?? track.duration;
+    if (_autoIsLowered &&
+        total > Duration.zero &&
+        _player.position > total - const Duration(seconds: 20)) {
+      _logLossless('Hand-over skipped: too close to the end of the song');
+      return null;
+    }
     // Two tries: the first can lose to a crossfade or JioSaavn hand-over
     // starting at the same moment, or to a slow network.
     for (var attempt = 1; attempt <= 2; attempt++) {
@@ -4502,11 +4873,11 @@ class AudioPlayerService {
       }
       if (!stillWanted()) {
         _logLossless('Hand-over for "${track.title}" dropped: the song changed or is already lossless');
-        return;
+        return null;
       }
       if (_isUpgradingStream || _isCrossfading || _automixMixing) {
         _logLossless('Gave up waiting for another hand-over to finish');
-        return;
+        return null;
       }
 
       final swapped = await _seamlessSwap(
@@ -4523,15 +4894,16 @@ class AudioPlayerService {
           'Upgraded "${track.title}" to ${match.stream.formatLabel} '
           'at ${_player.position.inSeconds}s',
         );
-        return;
+        return true;
       }
       if (!stillWanted()) {
         _logLossless('Hand-over for "${track.title}" dropped: the song changed or is already lossless');
-        return;
+        return null;
       }
       if (attempt == 1) await Future.delayed(const Duration(seconds: 3));
     }
     _logLossless('Upgrade for "${track.title}" didn\'t happen');
+    return false;
   }
 
   /// Moves the playing track onto [source] mid-song without a gap.
@@ -4549,6 +4921,11 @@ class AudioPlayerService {
     required PlaybackData playbackData,
     required bool Function() stillWanted,
     Duration lead = const Duration(milliseconds: 2500),
+    // For stepping down: if the playing copy stalls, its position stops
+    // moving and would never reach the parked one, so switch where it stands.
+    bool resumeIfStalled = false,
+    // Give up on a load this slow, so the next option gets its turn.
+    Duration? loadTimeout,
   }) async {
     if (_jamsModeEnabled) {
       _logLossless('Hand-over skipped: in a Jam (playback is synced)');
@@ -4579,6 +4956,7 @@ class AudioPlayerService {
 
     void commit() {
       _player = incoming;
+      _markPlayheadJump();
       _currentPlaybackData = playbackData;
       _activeSourcePlaybackDataByQueueIndex = <int, PlaybackData>{
         _currentIndex: playbackData,
@@ -4591,6 +4969,26 @@ class AudioPlayerService {
       AudioRoutingService.reapplyAudioRoute();
       // The song is on the other player now: tell the Automix engine.
       _syncAutomix();
+    }
+
+    bool outgoingStalled() =>
+        resumeIfStalled &&
+        outgoing.playing &&
+        outgoing.processingState == ProcessingState.buffering;
+
+    // The playing copy is silent anyway: line up with where it stopped and
+    // carry on from there.
+    Future<bool> switchWhereStalled() async {
+      _logLossless('Playing copy stalled; switching at '
+          '${outgoing.position.inMilliseconds} ms');
+      await incoming.seek(outgoing.position);
+      commit();
+      await _setVolumeSafely(incoming, 1.0, context: 'downgrade-stalled-in');
+      unawaited(incoming.play());
+      await outgoing.stop();
+      await _setVolumeSafely(outgoing, 1.0, context: 'downgrade-stalled-out');
+      await _stabilizeIncomingAfterCrossfade(incoming);
+      return true;
     }
 
     _isUpgradingStream = true;
@@ -4611,21 +5009,24 @@ class AudioPlayerService {
       await incoming.setSpeed(outgoing.speed);
       await _setVolumeSafely(incoming, 0.0, context: 'upgrade-bootstrap');
       final loading = Stopwatch()..start();
-      await incoming.setAudioSource(
+      final load = incoming.setAudioSource(
         source,
         initialPosition: startAt,
         preload: true,
       );
+      await (loadTimeout == null ? load : load.timeout(loadTimeout));
       // How long this connection takes to get the new copy going: a re-park
       // has to be at least that far ahead to be ready in time.
       final loadTook = loading.elapsed;
       _logLossless(
-        'Lossless copy buffered, parked at ${startAt.inMilliseconds} ms '
+        'New copy buffered, parked at ${startAt.inMilliseconds} ms '
         '(playing at ${outgoing.position.inMilliseconds} ms)',
       );
       if (!stillWanted() || _isCrossfading) {
         return await abandon('track changed or a crossfade started');
       }
+
+      if (outgoingStalled()) return await switchWhereStalled();
 
       if (!outgoing.playing) {
         // Paused: nothing audible to blend. Line up and hand over.
@@ -4661,6 +5062,7 @@ class AudioPlayerService {
         startAt - outgoing.position + const Duration(seconds: 3),
       );
       while (outgoing.position < startAt - const Duration(milliseconds: 12)) {
+        if (outgoingStalled()) return await switchWhereStalled();
         if (!stillWanted() ||
             !outgoing.playing ||
             _isCrossfading ||
@@ -4783,6 +5185,9 @@ class AudioPlayerService {
 
     if (!_jioSaavnEnabled) return;
 
+    // Auto has stepped down to Opus and isn't due to try again yet.
+    if (!_autoAllowsJioSaavn) return;
+
     // Respect data saver quality preferences
     if (_audioQuality == AudioQuality.low ||
         _audioQuality == AudioQuality.medium) {
@@ -4855,18 +5260,7 @@ class AudioPlayerService {
       final wasPlaying = _player.playing;
       final currentPos = _player.position;
 
-      final upgradedPlaybackData = PlaybackData(
-        streamUrl: saavnStream.streamUrl,
-        format: AudioFormat(
-          mimeType: 'audio/mp4',
-          bitrate: saavnStream.bitrateKbps * 1000,
-          codecs: 'mp4a.40.2',
-        ),
-        playbackTracking: _authenticatedPlaybackTracking ?? _currentPlaybackData?.playbackTracking,
-        streamExpiresInSeconds: 86400,
-        fetchedAt: DateTime.now(),
-        audioSource: 'JioSaavn',
-      );
+      final upgradedPlaybackData = _saavnPlaybackData(saavnStream);
 
       final newSource = AudioSource.uri(
         Uri.parse(saavnStream.streamUrl),
@@ -4880,6 +5274,7 @@ class AudioPlayerService {
           sessionId == _upgradeSessionId &&
           _currentTrack?.id == track.id &&
           _currentPlaybackData?.format.isLossless != true;
+      final isAutoTry = _autoIsLowered;
       if (!_isUpgradingStream &&
           !_isCrossfading &&
           await _seamlessSwap(
@@ -4888,9 +5283,21 @@ class AudioPlayerService {
             playbackData: upgradedPlaybackData,
             stillWanted: stillWanted,
           )) {
+        if (isAutoTry) {
+          _autoQuality.tryLanded(DateTime.now(), QualityStep.jioSaavn);
+          _scheduleAutoRetry();
+        }
         return;
       }
       if (!stillWanted() || _isUpgradingStream) return;
+
+      // Auto trying to climb back must stay silent; a hot-swap is audible,
+      // and a load that failed here means the network isn't ready anyway.
+      if (isAutoTry) {
+        _autoQuality.tryFailed(DateTime.now());
+        _scheduleAutoRetry();
+        return;
+      }
 
       // Fallback: hot-swap the one player in place (brief break).
       _isUpgradingStream = true;
@@ -5257,6 +5664,7 @@ class AudioPlayerService {
       _youtubeTrackingLastPosition = position;
     }
     _seekCount++;
+    _markPlayheadJump();
     await _player.seek(position);
   }
 
@@ -5389,6 +5797,8 @@ class AudioPlayerService {
   void setAudioQuality(AudioQuality quality) {
     _audioQuality = quality;
     _updateState(audioQuality: quality);
+    _autoQuality.reset();
+    _autoRetryTimer?.cancel();
 
     // Persist the setting
     _saveStreamingQuality(quality);
@@ -5550,6 +5960,10 @@ class AudioPlayerService {
     _stateController.close();
     _positionController.close();
     _losslessUpgradingController.close();
+    _stallTick?.cancel();
+    _autoRetryTimer?.cancel();
+    _fallbackPrepareTimer?.cancel();
+    _qualityDowngradingController.close();
     _bufferedPositionController.close();
     _ytPlayerUtils.dispose();
   }

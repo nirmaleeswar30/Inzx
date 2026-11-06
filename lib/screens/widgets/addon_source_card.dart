@@ -6,6 +6,8 @@ import '../../core/design_system/design_system.dart';
 import '../../services/addons/addon_client.dart';
 import '../../services/addons/addon_models.dart';
 import '../../services/addons/addon_service.dart';
+import '../../services/audio_player_service.dart';
+import '../../services/playback/playback_data.dart';
 
 /// Audio settings card for the lossless addon: install one by pasting its
 /// URL, then turn it on/off, pick the tier, or remove it. Styled like the
@@ -487,8 +489,21 @@ class _InstallSheetState extends State<_InstallSheet> {
       if (!mounted) return;
       final messenger = ScaffoldMessenger.of(context);
       Navigator.pop(context);
+      final player = AudioPlayerService.instance;
+      final switchedToMax = player.onAddonInstalled();
+      final dataSaver =
+          player.audioQuality == AudioQuality.low ||
+          player.audioQuality == AudioQuality.medium;
       messenger.showSnackBar(
-        SnackBar(content: Text('${manifest.displayName} added')),
+        SnackBar(
+          content: Text(
+            switchedToMax
+                ? '${manifest.displayName} added. Quality set to Max for lossless'
+                : dataSaver
+                ? '${manifest.displayName} added. Lossless needs Auto or Max quality'
+                : '${manifest.displayName} added',
+          ),
+        ),
       );
     } on AddonException catch (e) {
       if (mounted) setState(() => _error = e.message);

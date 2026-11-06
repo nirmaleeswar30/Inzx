@@ -8,8 +8,9 @@ import 'signal_path_sheet.dart';
 
 /// "Lossless" / "Hi-Res Lossless" under the progress bar, shown only while
 /// a lossless stream plays, whatever the stats-for-nerds setting — and
-/// "Upgrading" in its place while the song is being moved onto its lossless
-/// copy mid-play. Tapping it opens the signal path.
+/// "Upgrading" or "Downgrading" in its place while the song is being moved
+/// onto a better or (for a struggling network, in Auto) a lower copy mid-play.
+/// Tapping it opens the signal path.
 class LosslessBadge extends ConsumerWidget {
   const LosslessBadge({super.key, required this.color, this.fontSize = 11});
 
@@ -23,13 +24,21 @@ class LosslessBadge extends ConsumerWidget {
     );
     final upgrading =
         tier == null && (ref.watch(losslessUpgradingProvider).valueOrNull ?? false);
+    // Ahead of the tier: stepping down from FLAC, the song is still lossless
+    // until the switch lands.
+    final downgrading =
+        ref.watch(qualityDowngradingProvider).valueOrNull ?? false;
     final glyphSize = fontSize + 2;
-    final Widget? glyph = tier != null
+    final Widget? glyph = downgrading
+        ? _UpgradingGlyph(color: color, size: glyphSize, down: true)
+        : tier != null
         ? _LosslessGlyph(color: color, size: glyphSize)
         : upgrading
         ? _UpgradingGlyph(color: color, size: glyphSize)
         : null;
-    final label = tier ?? (upgrading ? 'Upgrading' : null);
+    final label = downgrading
+        ? 'Downgrading'
+        : tier ?? (upgrading ? 'Upgrading' : null);
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 300),
       child: label == null || glyph == null
@@ -66,11 +75,17 @@ class LosslessBadge extends ConsumerWidget {
 }
 
 /// An arrow that keeps rising out of a baseline: the stream moving up to
-/// its lossless copy.
+/// its lossless copy. With [down], it sinks into the line instead: Auto
+/// stepping down for a slow network.
 class _UpgradingGlyph extends StatefulWidget {
-  const _UpgradingGlyph({required this.color, required this.size});
+  const _UpgradingGlyph({
+    required this.color,
+    required this.size,
+    this.down = false,
+  });
   final Color color;
   final double size;
+  final bool down;
 
   @override
   State<_UpgradingGlyph> createState() => _UpgradingGlyphState();
@@ -94,15 +109,19 @@ class _UpgradingGlyphState extends State<_UpgradingGlyph>
     width: widget.size,
     height: widget.size,
     child: RepaintBoundary(
-      child: CustomPaint(painter: _UpgradingPainter(widget.color, _rise)),
+      child: CustomPaint(
+        painter: _UpgradingPainter(widget.color, _rise, down: widget.down),
+      ),
     ),
   );
 }
 
 class _UpgradingPainter extends CustomPainter {
-  _UpgradingPainter(this.color, this.rise) : super(repaint: rise);
+  _UpgradingPainter(this.color, this.rise, {this.down = false})
+    : super(repaint: rise);
   final Color color;
   final Animation<double> rise;
+  final bool down;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -124,6 +143,11 @@ class _UpgradingPainter extends CustomPainter {
     // top, while the next one follows it in.
     canvas.save();
     canvas.clipRect(Rect.fromLTRB(0, 0, w, base - stroke));
+    if (down) {
+      // Mirrored within the clip: the same motion, sinking into the line.
+      canvas.translate(0, base - stroke);
+      canvas.scale(1, -1);
+    }
     final t = Curves.easeInOut.transform(rise.value);
     for (final lap in const [0.0, 1.0]) {
       final dy = h * 0.75 * (lap - t);
@@ -149,7 +173,8 @@ class _UpgradingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _UpgradingPainter old) => old.color != color;
+  bool shouldRepaint(covariant _UpgradingPainter old) =>
+      old.color != color || old.down != down;
 }
 
 /// A small waveform mark: three bars, taller in the middle, that bounce out

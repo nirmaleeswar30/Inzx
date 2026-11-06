@@ -38,7 +38,9 @@ const double _staggerFraction = 0.06;
 // line is picked out by colour and opacity only, never by zooming it (a zoom
 // pushed the line wider than its row and read as the words jumping).
 const double _inactiveLineScale = 1.0;
-const List<double> _lineFalloffAlpha = [1.0, 0.74, 0.6, 0.48, 0.4, 0.34];
+// Inactive lines are grey, starting from the app's 50% secondary text and
+// fading further with distance; only the playing line is full strength.
+const List<double> _lineFalloffAlpha = [1.0, 0.5, 0.44, 0.38, 0.32, 0.28];
 const double _syncedFontSize = 26.0;
 
 double _falloffAlpha(int dist) =>

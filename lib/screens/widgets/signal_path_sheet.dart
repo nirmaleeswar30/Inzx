@@ -386,10 +386,12 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
     bool isDark,
   ) {
     final ahead = player.bufferedAhead;
+    final autoNote = player.autoQualityNote;
     final rows = <(String, String)>[
       ('Buffered ahead', '${ahead.inSeconds} s'),
       ('Network', player.isOnUnmeteredNetwork ? 'Wi-Fi' : 'Mobile data'),
       ('Quality setting', _qualityName(quality)),
+      if (autoNote != null) ('Auto', autoNote),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -420,14 +422,17 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
                   child: Row(
                     children: [
                       Text(label, style: TextStyle(color: secondary, fontSize: 13.5)),
-                      const Spacer(),
-                      Text(
-                        value,
-                        style: TextStyle(
-                          color: primary,
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          value,
+                          textAlign: TextAlign.end,
+                          style: TextStyle(
+                            color: primary,
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
                         ),
                       ),
                     ],

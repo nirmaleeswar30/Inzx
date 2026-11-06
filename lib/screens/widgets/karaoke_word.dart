@@ -38,9 +38,6 @@ class KaraokeWord extends StatelessWidget {
     this.rise,
   });
 
-  /// The words ahead of the highlight, held back.
-  static const double _unsungAlpha = 0.45;
-
   /// The wipe's leading edge fades over this many pixels instead of ending on
   /// a cut, so it reads as words lighting up rather than a bar sliding along.
   static const double _wipeFeather = 30;
@@ -76,7 +73,9 @@ class KaraokeWord extends StatelessWidget {
     final start = word.startTimeMs;
     final end = word.endTimeMs;
     final duration = math.max(1, end - start);
-    final unsung = textColor.withValues(alpha: _unsungAlpha);
+    // Words the highlight hasn't reached yet: plain text colour, brighter than
+    // the grey inactive lines, so the playing line stands out before it's sung.
+    final unsung = textColor;
     final holdsNote = duration >= _glowMinDurationMs;
 
     return RepaintBoundary(

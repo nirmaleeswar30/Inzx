@@ -868,6 +868,11 @@ final losslessUpgradingProvider = StreamProvider<bool>((ref) {
   ).distinct();
 });
 
+/// True while Auto is moving the song onto a lower-quality copy.
+final qualityDowngradingProvider = StreamProvider<bool>((ref) {
+  return ref.watch(audioPlayerServiceProvider).qualityDowngradingStream;
+});
+
 /// Provider for prefetching tracks (OuterTune-style)
 /// Call this when tracks become visible to prefetch their stream URLs
 /// This makes play taps instant (pure cache lookup)

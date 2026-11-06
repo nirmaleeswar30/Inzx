@@ -93,8 +93,8 @@ class AudioSettingsScreen extends ConsumerWidget {
 
           // Quality options. What each one does (see the player's
           // _qualityAllowsLossless): Low/Medium are YouTube only, High is
-          // the best lossy copy, Max adds lossless, Auto is Max on Wi-Fi
-          // and lighter on mobile data.
+          // the best lossy copy, Max adds lossless, Auto is Max on any
+          // connection but steps down when the network struggles.
           ListenableBuilder(
             listenable: AddonService.instance,
             builder: (context, _) {
@@ -113,8 +113,8 @@ class AudioSettingsScreen extends ConsumerWidget {
                     currentQuality: currentQuality,
                     title: l10n.qualityAutoChip,
                     subtitle: hasLossless
-                        ? 'Wi-Fi: lossless FLAC • Mobile data: lossy, lighter'
-                        : 'Wi-Fi: best quality • Mobile data: lighter',
+                        ? 'Lossless FLAC, lowered for a while if it buffers'
+                        : 'Best quality, lowered for a while if it buffers',
                     icon: Iconsax.autobrightness,
                     onTap: () =>
                         playerService.setAudioQuality(AudioQuality.auto),
