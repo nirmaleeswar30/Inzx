@@ -166,6 +166,10 @@ Inzx is free and open source. If it makes your day a little better, consider sup
 |:---:|
 | <img src="./.github/screenshots/widgets.jpg" alt="Home Screen Widgets" width="360" style="max-width:100%" /> |
 
+| **Share Song Card** | **Share Lyrics Card** |
+|:---:|:---:|
+| <img src="./.github/screenshots/sharesongcard.jpg" alt="Share Song Card" width="300" style="max-width:100%" /> | <img src="./.github/screenshots/sharelyricscard.jpg" alt="Share Lyrics Card" width="300" style="max-width:100%" /> |
+
 | **Android Auto** | **Android Auto — Now Playing** |
 |:---:|:---:|
 | ![Android Auto](./.github/screenshots/android_auto.png) | ![Android Auto - Now Playing](./.github/screenshots/android_auto-nowplaying.png) |

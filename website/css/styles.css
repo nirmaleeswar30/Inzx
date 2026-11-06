@@ -2208,7 +2208,7 @@ code{ font-family:var(--mono); font-size:.88em; }
 /* ═══════════ SHOWCASE PINNED STICKY ═══════════ */
 .showcase-pin-wrap{
   position:relative;
-  height:440vh;
+  height:550vh;
 }
 .section-showcase{
   position:sticky;
