@@ -6,6 +6,7 @@ import 'package:video_player/video_player.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../core/providers/theme_provider.dart';
+import '../../core/utils/platform_utils.dart';
 import '../../services/canvas/canvas_artwork.dart';
 import '../../services/canvas/canvas_repository.dart';
 
@@ -176,6 +177,9 @@ class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView>
   }
 
   Future<void> _setupVideo(CanvasArtwork canvas, int requestId) async {
+    // video_player has no desktop backend: the static art stays up.
+    if (isDesktop) return;
+
     VideoPlayerController? controller;
 
     try {

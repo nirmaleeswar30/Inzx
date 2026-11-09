@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
+import '../core/utils/platform_utils.dart';
 import '../core/l10n/app_localizations_x.dart';
 import '../core/providers/locale_provider.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -29,7 +30,8 @@ class DownloadNotificationService {
 
   /// Initialize the notification service
   Future<void> initialize() async {
-    if (_isInitialized) return;
+    // Downloads show their progress in the app on desktop.
+    if (_isInitialized || isDesktop) return;
     final l10n = await _resolveL10n();
 
     const androidSettings = AndroidInitializationSettings(
@@ -80,6 +82,7 @@ class DownloadNotificationService {
 
   /// Show download started notification
   Future<void> showDownloadStarted(String trackId, String trackTitle) async {
+    if (isDesktop) return;
     if (!_isInitialized) await initialize();
     final l10n = await _resolveL10n();
 
@@ -116,6 +119,7 @@ class DownloadNotificationService {
     String trackTitle,
     double progress,
   ) async {
+    if (isDesktop) return;
     if (!_isInitialized) await initialize();
     final l10n = await _resolveL10n();
 
@@ -149,6 +153,7 @@ class DownloadNotificationService {
 
   /// Show download completed notification
   Future<void> showDownloadCompleted(String trackId, String trackTitle) async {
+    if (isDesktop) return;
     if (!_isInitialized) await initialize();
     final l10n = await _resolveL10n();
 
@@ -185,6 +190,7 @@ class DownloadNotificationService {
     String trackTitle,
     String error,
   ) async {
+    if (isDesktop) return;
     if (!_isInitialized) await initialize();
     final l10n = await _resolveL10n();
 
@@ -235,11 +241,13 @@ class DownloadNotificationService {
   /// Cancel notification for a track
   Future<void> cancelNotification(String trackId) async {
     final notificationId = _getNotificationId(trackId);
+    if (isDesktop) return;
     await _notifications.cancel(notificationId);
   }
 
   /// Cancel all download notifications
   Future<void> cancelAllNotifications() async {
+    if (isDesktop) return;
     await _notifications.cancelAll();
   }
 }

@@ -41,6 +41,7 @@ import 'browse_moods_screen.dart';
 import 'downloads_screen.dart';
 import 'widgets/sleep_timer_sheet.dart';
 import '../services/scrobbling/scrobble_service.dart';
+import '../core/utils/platform_utils.dart';
 
 /// Provider for sync service
 final ytMusicSyncServiceProvider = Provider<YTMusicSyncService>((ref) {
@@ -1347,6 +1348,13 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
     // Search through deep-link items (Audio, Downloads, Backup settings)
     final matchedItems = _deepSearchItems
         .where((item) => _matchesSearchQuery(item.searchTerms))
+        .where(
+          (item) =>
+              !isDesktop ||
+              !(item.screen is EqualizerScreen ||
+                  item.screen is AutoEqScreen ||
+                  item.screen is DiscordRichPresenceScreen),
+        )
         .toList();
 
     if (matchedSections.isEmpty && matchedItems.isEmpty) {
@@ -2286,7 +2294,8 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           height: 1,
           color: _isDark ? InzxColors.darkDivider : InzxColors.divider,
         ),
-        ValueListenableBuilder<DiscordRpcState>(
+        // Discord's sign-in returns through an Android deep link.
+        if (!isDesktop) ValueListenableBuilder<DiscordRpcState>(
           valueListenable: DiscordRpcService.instance.stateNotifier,
           builder: (context, rpcState, _) {
             final connected = DiscordRpcService.instance.isAuthorized;

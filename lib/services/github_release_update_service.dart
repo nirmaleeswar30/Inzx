@@ -5,6 +5,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../core/utils/platform_utils.dart';
+
 class GithubReleaseInfo {
   const GithubReleaseInfo({
     required this.latestVersion,
@@ -184,7 +186,8 @@ class GithubReleaseUpdateService {
   }
 
   String? _pickInzxApkDownloadUrl(dynamic assetsRaw) {
-    if (assetsRaw is! List) return null;
+    // Desktop users get the release page, not an APK.
+    if (assetsRaw is! List || isDesktop) return null;
 
     for (final item in assetsRaw) {
       if (item is! Map<String, dynamic>) continue;

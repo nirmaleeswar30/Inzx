@@ -12,6 +12,9 @@ import 'tabs/home_tab.dart';
 import 'tabs/songs_tab.dart';
 import 'tabs/library_tab.dart';
 import 'tabs/folders_tab.dart';
+import 'tabs/desktop_explore_tab.dart';
+import '../core/utils/platform_utils.dart';
+import 'widgets/desktop_shell.dart';
 import 'widgets/mini_player.dart';
 import 'widgets/now_playing_screen.dart';
 import 'widgets/jiosaavn_notice_sheet.dart';
@@ -37,11 +40,11 @@ class _MusicAppState extends ConsumerState<MusicApp>
   static const double _hideThreshold = 25.0;
   static const double _showThreshold = 20.0;
 
-  final List<Widget> _tabs = const [
-    MusicHomeTab(),
-    MusicSongsTab(),
-    MusicLibraryTab(),
-    MusicFoldersTab(),
+  final List<Widget> _tabs = [
+    const MusicHomeTab(),
+    isDesktop ? const DesktopExploreTab() : const MusicSongsTab(),
+    const MusicLibraryTab(),
+    const MusicFoldersTab(),
   ];
 
   @override
@@ -179,6 +182,9 @@ class _MusicAppState extends ConsumerState<MusicApp>
         ? albumColors.accent
         : colorScheme.primary;
 
+    // Desktop's sidebar and player bar live in DesktopAppFrame.
+    final tabIndex = isDesktop ? ref.watch(desktopTabProvider) : _currentIndex;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -225,10 +231,10 @@ class _MusicAppState extends ConsumerState<MusicApp>
               ),
               // Main content (extends full screen behind floating nav)
               Positioned.fill(
-                child: IndexedStack(index: _currentIndex, children: _tabs),
+                child: IndexedStack(index: tabIndex, children: _tabs),
               ),
               // Mini player + nav bar positioned at bottom
-              Positioned(
+              if (!isDesktop) Positioned(
                 left: 0,
                 right: 0,
                 bottom: 0,

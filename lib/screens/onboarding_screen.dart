@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/utils/platform_utils.dart';
 import 'ytmusic_login_screen.dart';
 
 /// First-launch onboarding: a slow, colour-shifting aurora behind three short
@@ -146,7 +147,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       24,
                       padding.bottom > 0 ? 8 : 24,
                     ),
-                    child: AnimatedSwitcher(
+                    child: _DesktopWidth(
+                      child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
                       child: _page < _pageCount - 1
                           ? _PrimaryButton(
@@ -180,6 +182,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                 ),
                               ],
                             ),
+                      ),
                     ),
                   ),
                 ],
@@ -406,7 +409,7 @@ class _PrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 56,
+      height: isDesktop ? 46 : 56,
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
@@ -422,6 +425,24 @@ class _PrimaryButton extends StatelessWidget {
             Text(label),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Keeps full-width phone buttons to a sensible size in a desktop window.
+class _DesktopWidth extends StatelessWidget {
+  const _DesktopWidth({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isDesktop) return child;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 320),
+        child: child,
       ),
     );
   }

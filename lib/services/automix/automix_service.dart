@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/utils/platform_utils.dart';
+
 /// How hard Automix's analysis (BitChord's beat and vocal models) works.
 /// Names match BitChord's AutomixPerformanceMode, which reads them.
 enum AutomixPerformanceMode {
@@ -86,6 +88,8 @@ class AutomixService extends ChangeNotifier {
   Future<void> load() async {
     if (_loaded) return;
     _loaded = true;
+    // The engine is Android-native; desktop uses the plain crossfade.
+    if (isDesktop) return;
     final prefs = await SharedPreferences.getInstance();
     _enabled = prefs.getBool(_enabledKey) ?? false;
     _mode = AutomixPerformanceMode.fromWire(prefs.getString(_modeKey));
@@ -186,6 +190,7 @@ class AutomixService extends ChangeNotifier {
     required int crossfadeSeconds,
     Map<String, double> loudness = const {},
   }) async {
+    if (isDesktop) return;
     try {
       await _channel.invokeMethod('sync', {
         'loudness': loudness,

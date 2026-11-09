@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+
+import '../core/utils/platform_utils.dart';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show compute, kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -62,6 +64,16 @@ Future<String> _getDownloadsDirPath() async {
   } catch (e) {
     if (kDebugMode) {
       print('DownloadService: Error reading custom download path: $e');
+    }
+  }
+
+  // Desktop has no app-private external storage: use the Downloads folder.
+  if (isDesktop) {
+    final downloads = await getDownloadsDirectory();
+    if (downloads != null) {
+      final inzxDir = Directory('${downloads.path}/Inzx');
+      await inzxDir.create(recursive: true);
+      return inzxDir.path;
     }
   }
 

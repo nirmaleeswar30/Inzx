@@ -11,8 +11,10 @@ import 'core/providers/locale_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/services/cache/hive_service.dart';
 import 'core/utils/app_logger.dart';
+import 'core/utils/platform_utils.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'services/audio_handler.dart';
+import 'services/desktop/desktop_bootstrap.dart';
 import 'services/github_release_update_service.dart';
 import 'services/jams/jams_background_service_native.dart';
 import 'services/notification_service.dart';
@@ -29,6 +31,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'screens/widgets/whats_new_dialog.dart';
 import 'screens/widgets/update_dialog.dart';
+import 'screens/widgets/desktop_shell.dart';
 import 'services/scrobbling/scrobble_service.dart';
 
 InzxAudioHandler? audioHandler;
@@ -64,6 +67,14 @@ void main() async {
     return true;
   };
 
+  if (isDesktop) {
+    try {
+      await initDesktopPlatform();
+    } catch (e, stack) {
+      AppLogger.e('Desktop', 'Desktop startup failed', e, stack);
+    }
+  }
+
   // Initialize environment variables
   try {
     await dotenv.load(fileName: ".env");
@@ -86,6 +97,7 @@ void main() async {
     showOnboarding =
         !(prefs.getBool(OnboardingScreen.completedPrefKey) ?? false) &&
         prefs.getString('last_seen_changelog_version') == null;
+    desktopShellVisible.value = !showOnboarding;
   } catch (_) {}
 
   // Initialize Supabase for Jams feature
@@ -294,6 +306,7 @@ class _InzxAppState extends ConsumerState<InzxApp> {
 
   void _finishOnboarding() {
     showOnboarding = false;
+    desktopShellVisible.value = true;
     rootNavigatorKey.currentState?.pushReplacement(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
@@ -355,6 +368,7 @@ class _InzxAppState extends ConsumerState<InzxApp> {
       navigatorKey: rootNavigatorKey,
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,
+      scrollBehavior: isDesktop ? const DesktopScrollBehavior() : null,
       scaffoldMessengerKey: rootScaffoldMessengerKey,
       locale: locale,
       supportedLocales: supportedAppLocales,
@@ -394,7 +408,13 @@ class _InzxAppState extends ConsumerState<InzxApp> {
               MediaQuery.of(context).textScaler.scale(1.0).clamp(0.8, 1.2),
             ),
           ),
-          child: child ?? const SizedBox.shrink(),
+          child: isDesktop
+              ? DesktopShortcuts(
+                  child: DesktopAppFrame(
+                    child: child ?? const SizedBox.shrink(),
+                  ),
+                )
+              : child ?? const SizedBox.shrink(),
         );
       },
     );

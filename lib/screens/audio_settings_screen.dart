@@ -11,6 +11,7 @@ import 'widgets/audio_output_card.dart';
 import 'widgets/automix_settings_card.dart';
 import '../services/automix/automix_service.dart';
 import 'equalizer_screen.dart';
+import '../core/utils/platform_utils.dart';
 import 'auto_eq_screen.dart';
 import '../services/addons/addon_service.dart';
 
@@ -257,69 +258,72 @@ class AudioSettingsScreen extends ConsumerWidget {
                     ),
                   ),
           ),
-          AutomixSettingsCard(
-            isDark: isDark,
-            accentColor: accentColor,
-            switchBuilder: (value, onChanged) => _buildCustomSwitch(
-              value: value,
-              accentColor: accentColor,
+          // Automix, the output path and EQ run in the Android audio engine.
+          if (!isDesktop) ...[
+            AutomixSettingsCard(
               isDark: isDark,
-              onChanged: onChanged,
-            ),
-          ),
-
-          const SizedBox(height: 32),
-
-          // Output: hi-res and bit-perfect USB DAC
-          Text(
-            'Output',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : InzxColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'How lossless audio leaves the app',
-            style: TextStyle(
-              fontSize: 14,
-              color: isDark ? Colors.white54 : InzxColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 16),
-          AudioOutputCard(
-            isDark: isDark,
-            accentColor: accentColor,
-            switchBuilder: (value, onChanged) => _buildCustomSwitch(
-              value: value,
               accentColor: accentColor,
+              switchBuilder: (value, onChanged) => _buildCustomSwitch(
+                value: value,
+                accentColor: accentColor,
+                isDark: isDark,
+                onChanged: onChanged,
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // Output: hi-res and bit-perfect USB DAC
+            Text(
+              'Output',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : InzxColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'How lossless audio leaves the app',
+              style: TextStyle(
+                fontSize: 14,
+                color: isDark ? Colors.white54 : InzxColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            AudioOutputCard(
               isDark: isDark,
-              onChanged: onChanged,
+              accentColor: accentColor,
+              switchBuilder: (value, onChanged) => _buildCustomSwitch(
+                value: value,
+                accentColor: accentColor,
+                isDark: isDark,
+                onChanged: onChanged,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          _buildNavCard(
-            isDark: isDark,
-            accentColor: accentColor,
-            icon: Iconsax.setting_4,
-            title: 'Equalizer',
-            subtitle: '7 bands with presets',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const EqualizerScreen()),
+            const SizedBox(height: 12),
+            _buildNavCard(
+              isDark: isDark,
+              accentColor: accentColor,
+              icon: Iconsax.setting_4,
+              title: 'Equalizer',
+              subtitle: '7 bands with presets',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const EqualizerScreen()),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          _buildNavCard(
-            isDark: isDark,
-            accentColor: accentColor,
-            icon: Iconsax.headphone,
-            title: 'AutoEQ',
-            subtitle: 'Correct your headphones with the AutoEQ database',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const AutoEqScreen()),
+            const SizedBox(height: 12),
+            _buildNavCard(
+              isDark: isDark,
+              accentColor: accentColor,
+              icon: Iconsax.headphone,
+              title: 'AutoEQ',
+              subtitle: 'Correct your headphones with the AutoEQ database',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AutoEqScreen()),
+              ),
             ),
-          ),
+          ],
 
           const SizedBox(height: 32),
 
@@ -393,18 +397,20 @@ class AudioSettingsScreen extends ConsumerWidget {
             onChanged: (val) =>
                 ref.read(preferAudioVersionsProvider.notifier).setEnabled(val),
           ),
-          const SizedBox(height: 12),
-          _buildToggleTile(
-            isDark: isDark,
-            accentColor: accentColor,
-            icon: Iconsax.volume_high,
-            title: l10n.smartAudioRouting,
-            subtitle: l10n.smartAudioRoutingSubtitle,
-            value: showSmartAudioRouting,
-            onChanged: (val) => ref
-                .read(showSmartAudioRoutingProvider.notifier)
-                .setEnabled(val),
-          ),
+          if (!isDesktop) ...[
+            const SizedBox(height: 12),
+            _buildToggleTile(
+              isDark: isDark,
+              accentColor: accentColor,
+              icon: Iconsax.volume_high,
+              title: l10n.smartAudioRouting,
+              subtitle: l10n.smartAudioRoutingSubtitle,
+              value: showSmartAudioRouting,
+              onChanged: (val) => ref
+                  .read(showSmartAudioRoutingProvider.notifier)
+                  .setEnabled(val),
+            ),
+          ],
         ],
       ),
     );

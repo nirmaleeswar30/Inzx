@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../core/utils/platform_utils.dart';
 
 import '../../models/models.dart';
 import '../../providers/providers.dart';
@@ -184,18 +185,30 @@ class _PodcastVideoScreenState extends ConsumerState<PodcastVideoScreen>
             aspectRatio: 16 / 9,
             child: Stack(
               children: [
-                YouTubeWebViewPlayer(
-                  key: _playerKey,
-                  videoId: widget.episode.videoId,
-                  autoPlay: true,
-                  onReady: () {
-                    if (mounted) setState(() => _loading = false);
-                  },
-                  onError: (code) {
-                    if (mounted) setState(() => _playerError = code);
-                  },
-                ),
-                if (_loading && _playerError == null)
+                if (isLinuxDesktop)
+                  ColoredBox(
+                    color: Colors.black,
+                    child: Center(
+                      child: TextButton.icon(
+                        onPressed: _openInYouTube,
+                        icon: const Icon(Icons.open_in_new),
+                        label: const Text('Watch on YouTube'),
+                      ),
+                    ),
+                  )
+                else
+                  YouTubeWebViewPlayer(
+                    key: _playerKey,
+                    videoId: widget.episode.videoId,
+                    autoPlay: true,
+                    onReady: () {
+                      if (mounted) setState(() => _loading = false);
+                    },
+                    onError: (code) {
+                      if (mounted) setState(() => _playerError = code);
+                    },
+                  ),
+                if (_loading && _playerError == null && !isLinuxDesktop)
                   Container(
                     color: Colors.black,
                     child: Center(

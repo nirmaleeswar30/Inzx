@@ -78,6 +78,15 @@ dependencies:
   xml: ^6.6.1
   flutter_markdown_plus: ^1.0.12
   html_unescape: ^2.0.0
+
+  # Desktop (Windows & Linux). None of these touch the Android build.
+  just_audio_media_kit: ^2.1.0 # libmpv backend for just_audio
+  media_kit_libs_windows_audio: ^1.0.9
+  media_kit_libs_linux: ^1.2.1
+  audio_service_mpris: ^0.2.1 # Linux media keys / desktop player widgets
+  audio_service_platform_interface: ^0.1.0
+  window_manager: ^0.5.0
+  desktop_webview_window: ^0.4.2 # YouTube Music sign-in window
 dev_dependencies:
   flutter_test:
     sdk: flutter

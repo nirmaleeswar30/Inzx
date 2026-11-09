@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/utils/platform_utils.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../../../../core/design_system/design_system.dart';
@@ -283,8 +284,9 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
         onNotification: _handleScrollNotification,
         child: Column(
           children: [
-            // Search bar / topbar with smooth hide/show animation on scroll
-            ClipRect(
+            // Search bar / topbar with smooth hide/show animation on scroll.
+            // Desktop has these in the window's top bar.
+            if (!isDesktop) ClipRect(
               child: SizeTransition(
                 sizeFactor: _headerAnimation,
                 alignment: Alignment.topCenter,
@@ -1226,8 +1228,8 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
                   ],
                 ),
               ),
-              // Jams button - minimalist
-              GestureDetector(
+              // Jams button - minimalist (in the window's top bar on desktop)
+              if (!isDesktop) GestureDetector(
                 onTap: () => JamsScreen.open(context),
                 child: Container(
                   width: 44,

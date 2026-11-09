@@ -5,6 +5,8 @@ import 'package:flutter/widgets.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/utils/platform_utils.dart';
+
 /// Proof-of-Origin Token Generator
 ///
 /// This is the critical anti-403 mechanism. YouTube now requires JS-executed
@@ -166,6 +168,10 @@ class PoTokenGenerator {
   /// This executes YouTube's botguard challenge in a real WebView,
   /// which generates cryptographically valid proof-of-origin tokens.
   Future<bool> generateTokens({bool force = false}) async {
+    // Tokens come from a hidden WebView, which desktop doesn't have. Playback
+    // falls back to a visitor id from the YT Music page.
+    if (isDesktop) return false;
+
     // First try to load from cache if not forcing
     if (!force && !hasValidTokens) {
       final cached = await loadCachedTokens();

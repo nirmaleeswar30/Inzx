@@ -35,6 +35,7 @@ const String kStreamCacheMaxConcurrentKey = 'stream_cache_max_concurrent';
 const String kCrossfadeDurationMsKey = 'crossfade_duration_ms';
 const String kShowNerdStatsKey = 'show_nerd_stats';
 const String kJioSaavnEnabledKey = 'jiosaavn_enabled';
+const String kMasterVolumeKey = 'desktop_master_volume';
 const int kDefaultStreamCacheSizeLimitMb = 1024;
 const int kMinStreamCacheSizeLimitMb = 128;
 const int kMaxStreamCacheSizeLimitMb = 4096;
@@ -380,6 +381,7 @@ class AudioPlayerService {
       0; // Incremented on every queue change to force UI updates
   int _currentIndex = -1;
   bool _shuffleEnabled = false;
+  double _masterVolume = 1.0;
   LoopMode _loopMode = LoopMode.off;
   Track? _currentTrack;
   PlaybackData? _currentPlaybackData;
@@ -509,6 +511,9 @@ class AudioPlayerService {
         );
       }
 
+      _masterVolume = prefs.getDouble(kMasterVolumeKey) ?? 1.0;
+      unawaited(_player.setVolume(_masterVolume));
+
       _updateState(
         streamCacheWifiOnly: _streamCacheWifiOnly,
         streamCacheSizeLimitMb: _streamCacheSizeLimitMb,
@@ -525,6 +530,19 @@ class AudioPlayerService {
     }
   }
 
+  /// The app's own volume, 0..1, for the desktop player bar. Crossfades scale
+  /// against it. Phones use the system volume, so it stays at 1 there.
+  double get masterVolume => _masterVolume;
+
+  Future<void> setMasterVolume(double volume, {bool persist = true}) async {
+    _masterVolume = volume.clamp(0.0, 1.0);
+    await _player.setVolume(_masterVolume);
+    if (persist) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble(kMasterVolumeKey, _masterVolume);
+    }
+  }
+
   bool get streamCacheWifiOnly => _streamCacheWifiOnly;
   int get streamCacheSizeLimitMb => _streamCacheSizeLimitMb;
   int get streamCacheMaxConcurrent => _streamCacheMaxConcurrent;
@@ -536,8 +554,8 @@ class AudioPlayerService {
     try {
       if (_crossfadeDurationMs <= 0) {
         _crossfadeTriggeredForTrack = false;
-        await _player.setVolume(1.0);
-        await _inactivePlayer.setVolume(1.0);
+        await _player.setVolume(_masterVolume);
+        await _inactivePlayer.setVolume(_masterVolume);
       }
       if (kDebugMode) {
         print(
@@ -692,7 +710,7 @@ class AudioPlayerService {
   }) async {
     try {
       await player
-          .setVolume(volume)
+          .setVolume(volume * _masterVolume)
           .timeout(const Duration(milliseconds: 1200));
     } catch (e) {
       if (kDebugMode) {
@@ -2573,7 +2591,7 @@ class AudioPlayerService {
 
   void _init() {
     _player = _primaryPlayer;
-    unawaited(_player.setVolume(1.0));
+    unawaited(_player.setVolume(_masterVolume));
     unawaited(_applyCrossfadeDurationToPlayer());
     _bindPlayerEventStreams(_primaryPlayer);
     _bindPlayerEventStreams(_secondaryPlayer);
@@ -3558,7 +3576,7 @@ class AudioPlayerService {
       final trackId = _currentTrack!.id;
       final stopwatch = Stopwatch()..start();
       await _inactivePlayer.stop();
-      await _player.setVolume(1.0);
+      await _player.setVolume(_masterVolume);
 
       if (kDebugMode) {
         print(
@@ -3989,7 +4007,7 @@ class AudioPlayerService {
         unawaited(_upgradeToLosslessIfPossible(_currentTrack!));
       }
     } catch (e) {
-      unawaited(_player.setVolume(1.0));
+      unawaited(_player.setVolume(_masterVolume));
       if (kDebugMode) {
         print('AudioPlayerService: Error: $e');
       }
@@ -5636,8 +5654,8 @@ class AudioPlayerService {
     _activeSourcePlaybackDataByQueueIndex = const <int, PlaybackData>{};
     _isCrossfading = false;
     _crossfadeTriggeredForTrack = false;
-    await _player.setVolume(1.0);
-    await _inactivePlayer.setVolume(1.0);
+    await _player.setVolume(_masterVolume);
+    await _inactivePlayer.setVolume(_masterVolume);
   }
 
   /// Seek to position

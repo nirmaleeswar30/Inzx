@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../core/l10n/app_localizations_x.dart';
+import '../core/utils/platform_utils.dart';
+import 'desktop_ytmusic_login.dart';
 import '../providers/ytmusic_providers.dart';
 import '../services/ytmusic_auth_service.dart';
 
@@ -13,7 +15,9 @@ class YTMusicLoginScreen extends ConsumerStatefulWidget {
   const YTMusicLoginScreen({super.key});
 
   @override
-  ConsumerState<YTMusicLoginScreen> createState() => _YTMusicLoginScreenState();
+  ConsumerState<YTMusicLoginScreen> createState() =>
+      // ignore: no_logic_in_create_state
+      isDesktop ? DesktopYTMusicLoginState() : _YTMusicLoginScreenState();
 }
 
 class _YTMusicLoginScreenState extends ConsumerState<YTMusicLoginScreen> {

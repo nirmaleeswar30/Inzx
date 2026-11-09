@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/providers/theme_provider.dart';
+import '../../core/utils/platform_utils.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import 'package:marquee/marquee.dart';
@@ -217,6 +218,9 @@ class _MusicMiniPlayerState extends ConsumerState<MusicMiniPlayer> {
 
   @override
   Widget build(BuildContext context) {
+    // Desktop's player bar is always on screen, under every page.
+    if (isDesktop) return const SizedBox.shrink();
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     final playbackState = ref.watch(playbackStateProvider);

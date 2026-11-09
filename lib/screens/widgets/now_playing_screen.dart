@@ -48,6 +48,10 @@ import 'now_playing_bottom_bar.dart';
 import 'canvas_ambient_glow.dart';
 import 'progress_bar_painters.dart';
 import 'share_sheet.dart';
+import '../../core/utils/platform_utils.dart';
+import '../../main.dart' show rootNavigatorKey;
+import 'desktop_shell.dart'
+    show desktopNowPlayingOpen, desktopNowPlayingTab;
 import '../../services/download_service.dart';
 import 'explicit_badge.dart';
 
@@ -1232,8 +1236,67 @@ class NowPlayingScreen extends ConsumerStatefulWidget {
 
   const NowPlayingScreen({super.key, this.onClose});
 
+  static Route<void>? _desktopRoute;
+
+  /// Opens the view that sits between the desktop sidebar and player bar.
+  static void showDesktop() {
+    final navigator = rootNavigatorKey.currentState;
+    if (navigator == null) return;
+
+    final existing = _desktopRoute;
+    if (existing != null) {
+      if (existing.isCurrent) return;
+      // Buried under a page opened from it: bring it back to the top.
+      navigator.removeRoute(existing);
+    }
+
+    final route = PageRouteBuilder<void>(
+      pageBuilder: (_, _, _) => const NowPlayingScreen(),
+      transitionsBuilder: (_, animation, _, child) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.04),
+            end: Offset.zero,
+          ).animate(
+            CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+          ),
+          child: child,
+        ),
+      ),
+      transitionDuration: const Duration(milliseconds: 220),
+      reverseTransitionDuration: const Duration(milliseconds: 160),
+    );
+    _desktopRoute = route;
+    desktopNowPlayingOpen.value = true;
+    route.popped.whenComplete(() {
+      if (identical(_desktopRoute, route)) {
+        _desktopRoute = null;
+        desktopNowPlayingOpen.value = false;
+      }
+    });
+    navigator.push(route);
+  }
+
+  static void closeDesktop() {
+    final navigator = rootNavigatorKey.currentState;
+    final route = _desktopRoute;
+    if (navigator == null || route == null) return;
+    _desktopRoute = null;
+    desktopNowPlayingOpen.value = false;
+    if (route.isCurrent) {
+      navigator.pop();
+    } else {
+      navigator.removeRoute(route);
+    }
+  }
+
   /// Show the Now Playing screen with Hero animation support
   static void show(BuildContext context) {
+    if (isDesktop) {
+      showDesktop();
+      return;
+    }
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false,
@@ -1336,6 +1399,12 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     // Tab controller for bottom tabs
     _tabController = TabController(length: 3, vsync: this);
     // Sheet tab state is driven by _selectSheetTab (no TabBar listens).
+    if (isDesktop) {
+      _tabController.index = desktopNowPlayingTab.value;
+      _showQueue = _tabController.index == 0;
+      _showLyrics = _tabController.index == 1;
+      desktopNowPlayingTab.addListener(_onDesktopTabChanged);
+    }
 
     // Page controller for swiping content
     _pageController = PageController(initialPage: 0);
@@ -1389,6 +1458,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   void dispose() {
     _sheetSnapshot.dispose();
     _colorAnimController.dispose();
+    if (isDesktop) desktopNowPlayingTab.removeListener(_onDesktopTabChanged);
     _tabController.dispose();
     _pageController.dispose();
     _albumArtPageController.dispose();
@@ -1487,7 +1557,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
         } catch (_) {}
       });
 
-      if (currentOrientation == Orientation.landscape) {
+      if (isDesktop) {
+        // Desktop's panel is chosen by its tabs, whatever the window's shape.
+      } else if (currentOrientation == Orientation.landscape) {
         // In landscape, ensure tabs are on Lyrics (index 1) without async post-frame jumps
         if (_tabController.index != 1) {
           _tabController.index = 1;
@@ -1663,6 +1735,21 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
           final isLandscape =
               MediaQuery.of(context).orientation == Orientation.landscape;
           final nowPlayingStyle = ref.watch(nowPlayingStyleProvider);
+
+          if (isDesktop) {
+            return Scaffold(
+              backgroundColor: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.black
+                  : backgroundColor,
+              body: _buildDesktopView(
+                track,
+                textColor,
+                secondaryTextColor,
+                accentColor,
+                colors.surface,
+              ),
+            );
+          }
 
           if (isLandscape) {
             return Scaffold(
@@ -2117,6 +2204,134 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   }
 
   /// Stage View (Landscape Mode): Album Art & Controls on left, Live Lyrics / Queue on right
+  /// YouTube Music's desktop layout: the art filling the left, and the Up
+  /// Next, Lyrics and Related panel on the right.
+  Widget _buildDesktopView(
+    Track track,
+    Color textColor,
+    Color secondaryTextColor,
+    Color accentColor,
+    Color surfaceColor,
+  ) {
+    final tab = _tabController.index;
+    final labels = [context.l10n.upNext, 'LYRICS', 'RELATED'];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final panelWidth = (constraints.maxWidth * 0.4).clamp(320.0, 520.0);
+        return Row(
+          children: [
+            Expanded(
+              child: Stack(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(40),
+                    child: Center(
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: _buildStaticAlbumArtContent(track, accentColor),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: IconButton(
+                      tooltip: 'Close',
+                      onPressed: NowPlayingScreen.closeDesktop,
+                      icon: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: textColor,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              width: panelWidth,
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      for (final (index, label) in labels.indexed)
+                        Expanded(
+                          child: InkWell(
+                            onTap: () => desktopNowPlayingTab.value = index,
+                            child: Container(
+                              height: 52,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: index == tab
+                                        ? textColor
+                                        : textColor.withValues(alpha: 0.15),
+                                    width: index == tab ? 2 : 1,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                label,
+                                style: TextStyle(
+                                  color: index == tab
+                                      ? textColor
+                                      : secondaryTextColor,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  Expanded(
+                    child: IndexedStack(
+                      index: tab,
+                      children: [
+                        _buildQueueContent(
+                          textColor,
+                          secondaryTextColor,
+                          surfaceColor,
+                        ),
+                        _buildLyricsView(isActive: tab == 1),
+                        // Built only when asked for: it fetches on build.
+                        if (tab == 2)
+                          _buildRelatedContent(textColor, secondaryTextColor)
+                        else
+                          const SizedBox.shrink(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 24),
+          ],
+        );
+      },
+    );
+  }
+
+  void _onDesktopTabChanged() {
+    if (!mounted) return;
+    setState(() {
+      _tabController.index = desktopNowPlayingTab.value;
+      _showQueue = _tabController.index == 0;
+      _showLyrics = _tabController.index == 1;
+    });
+    if (_showQueue) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _scrollToActiveTrack(animate: true);
+      });
+    }
+  }
+
   Widget _buildStageView(
     Track track,
     player.PlaybackState state,
