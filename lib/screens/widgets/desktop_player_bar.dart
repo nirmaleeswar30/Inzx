@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../../main.dart' show rootNavigatorKey;
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../services/audio_player_service.dart' as player_service;
 import '../../services/desktop/desktop_bootstrap.dart'
     show kDesktopMinWindowSize;
+import 'artist_screen.dart';
 import 'desktop_shell.dart';
 import 'now_playing_screen.dart';
 import 'track_artwork_view.dart';
@@ -78,8 +80,14 @@ class DesktopPlayerBar extends ConsumerWidget {
     final track = state?.currentTrack;
     if (state == null || track == null) return const SizedBox.shrink();
 
-    return SizedBox(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final albumColors = ref.watch(albumColorsProvider);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 350),
       height: _kPlayerBarHeight,
+      color:
+          (isDark ? albumColors : albumColors.toLightMode()).backgroundPrimary,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final compact = constraints.maxWidth < _kPlayerBarCompactWidth;
@@ -119,56 +127,53 @@ class _TrackDetails extends ConsumerWidget {
     final accent = ref.watch(effectiveAccentColorProvider);
     final liked = ref.watch(isTrackLikedProvider(track.id));
 
+    final artistId = track.artistId;
+
+    // The text is loosely sized, so the + sits right after whichever of the
+    // title and artist is wider.
     return Row(
       children: [
-        Expanded(
-          child: InkWell(
-            borderRadius: BorderRadius.circular(6),
-            onTap: () => _toggleNowPlaying(context),
-            child: Row(
-              children: [
-                TrackArtworkView(
-                  track: track,
-                  width: 56,
-                  height: 56,
-                  borderRadius: BorderRadius.circular(5),
+        _ArtButton(track: track),
+        const SizedBox(width: 12),
+        Flexible(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _LinkText(
+                text: track.title,
+                style: TextStyle(
+                  color: base,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
                 ),
-                const SizedBox(width: 12),
-                Flexible(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        track.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: base,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        track.artist,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: base.withValues(alpha: 0.65),
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
+                onTap: () => _toggleNowPlaying(context),
+              ),
+              const SizedBox(height: 2),
+              _LinkText(
+                text: track.artist,
+                style: TextStyle(
+                  color: base.withValues(alpha: 0.65),
+                  fontSize: 13,
                 ),
-              ],
-            ),
+                onTap: artistId.isEmpty
+                    ? null
+                    : () {
+                        final navigator = rootNavigatorKey.currentContext;
+                        if (navigator == null) return;
+                        ArtistScreen.open(
+                          navigator,
+                          artistId: artistId,
+                          name: track.artist,
+                        );
+                      },
+              ),
+            ],
           ),
         ),
         const SizedBox(width: 4),
         IconButton(
-          tooltip: liked ? 'Remove from Liked' : 'Add to Liked',
+          tooltip: liked ? 'Remove from Liked Songs' : 'Add to Liked Songs',
           onPressed: () => toggleTrackLike(ref: ref, track: track),
           icon: Icon(
             liked
@@ -179,6 +184,104 @@ class _TrackDetails extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The album art, with its own hover: opens and closes the now playing view.
+class _ArtButton extends StatefulWidget {
+  const _ArtButton({required this.track});
+
+  final Track track;
+
+  @override
+  State<_ArtButton> createState() => _ArtButtonState();
+}
+
+class _ArtButtonState extends State<_ArtButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: () => _toggleNowPlaying(context),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            TrackArtworkView(
+              track: widget.track,
+              width: 56,
+              height: 56,
+              borderRadius: BorderRadius.circular(5),
+            ),
+            AnimatedOpacity(
+              opacity: _hovered ? 1 : 0,
+              duration: const Duration(milliseconds: 120),
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: ListenableBuilder(
+                  listenable: desktopNowPlayingOpen,
+                  builder: (context, _) => Icon(
+                    desktopNowPlayingOpen.value
+                        ? Icons.keyboard_arrow_down_rounded
+                        : Icons.keyboard_arrow_up_rounded,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One line of text that underlines under the pointer, on its own.
+class _LinkText extends StatefulWidget {
+  const _LinkText({required this.text, required this.style, this.onTap});
+
+  final String text;
+  final TextStyle style;
+  final VoidCallback? onTap;
+
+  @override
+  State<_LinkText> createState() => _LinkTextState();
+}
+
+class _LinkTextState extends State<_LinkText> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final clickable = widget.onTap != null;
+    return MouseRegion(
+      cursor: clickable ? SystemMouseCursors.click : MouseCursor.defer,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Text(
+          widget.text,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: widget.style.copyWith(
+            decoration: clickable && _hovered
+                ? TextDecoration.underline
+                : TextDecoration.none,
+            decorationColor: widget.style.color,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -432,7 +535,10 @@ class _RightControls extends ConsumerWidget {
               onPressed: () => _toggleNowPlaying(context, tab: _kUpNextTab),
               icon: Icon(Icons.queue_music_rounded, color: panel(_kUpNextTab)),
             ),
-            if (!compact) _VolumeControl(base: base),
+            if (!compact) ...[
+              _VolumeControl(base: base),
+              const SizedBox(width: 12),
+            ],
             IconButton(
               iconSize: 20,
               tooltip: 'Mini player',
@@ -506,51 +612,18 @@ class _VolumeControlState extends ConsumerState<_VolumeControl> {
   }
 }
 
-class _FullscreenButton extends StatefulWidget {
+class _FullscreenButton extends StatelessWidget {
   const _FullscreenButton();
-
-  @override
-  State<_FullscreenButton> createState() => _FullscreenButtonState();
-}
-
-class _FullscreenButtonState extends State<_FullscreenButton>
-    with WindowListener {
-  bool _fullScreen = false;
-
-  @override
-  void initState() {
-    super.initState();
-    windowManager.addListener(this);
-  }
-
-  @override
-  void dispose() {
-    windowManager.removeListener(this);
-    super.dispose();
-  }
-
-  @override
-  void onWindowEnterFullScreen() => setState(() => _fullScreen = true);
-
-  @override
-  void onWindowLeaveFullScreen() => setState(() => _fullScreen = false);
-
-  Future<void> _toggle() async {
-    final next = !await windowManager.isFullScreen();
-    await windowManager.setFullScreen(next);
-    if (next && !desktopNowPlayingOpen.value) NowPlayingScreen.showDesktop();
-    if (mounted) setState(() => _fullScreen = next);
-  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return IconButton(
       iconSize: 22,
-      tooltip: _fullScreen ? 'Exit full screen' : 'Full screen',
-      onPressed: _toggle,
+      tooltip: 'Full screen',
+      onPressed: () => setDesktopFullScreen(true),
       icon: Icon(
-        _fullScreen ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded,
+        Icons.fullscreen_rounded,
         color: (isDark ? Colors.white : Colors.black87).withValues(alpha: 0.75),
       ),
     );

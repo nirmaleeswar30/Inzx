@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../core/utils/platform_utils.dart';
 import 'dart:io';
 import 'package:archive/archive_io.dart';
 import 'package:flutter/foundation.dart' show compute;
@@ -67,7 +68,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
         : colorScheme.primary;
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: desktopPageBackground(backgroundColor),
       appBar: AppBar(
         title: Text(l10n.backupRestoreTitle),
         backgroundColor: Colors.transparent,

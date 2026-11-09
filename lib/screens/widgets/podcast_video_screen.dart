@@ -159,9 +159,9 @@ class _PodcastVideoScreenState extends ConsumerState<PodcastVideoScreen>
     final isDisliked = _disliked ?? false;
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : colorScheme.surface,
+      backgroundColor: desktopPageBackground(isDark ? Colors.black : colorScheme.surface),
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: desktopPageBackground(Colors.black),
         foregroundColor: Colors.white,
         elevation: 0,
         title: Text(

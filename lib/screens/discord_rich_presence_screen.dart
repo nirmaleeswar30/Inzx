@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/utils/platform_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -49,7 +50,7 @@ class _DiscordRichPresenceScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _backgroundColor,
+      backgroundColor: desktopPageBackground(_backgroundColor),
       appBar: AppBar(
         title: const Text('Discord Rich Presence'),
         backgroundColor: Colors.transparent,

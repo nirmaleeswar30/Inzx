@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/utils/platform_utils.dart';
+import '../widgets/desktop_track_grid.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../../../../core/design_system/design_system.dart';
@@ -598,11 +599,13 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
 
       switch (layout) {
         case ShelfLayout.quickPicksStyle:
-          shelfWidget = TrackListShelf(
-            shelf: shelf,
-            isDark: isDark,
-            colorScheme: colorScheme,
-          );
+          shelfWidget = isDesktop
+              ? DesktopTrackGridShelf(shelf: shelf)
+              : TrackListShelf(
+                  shelf: shelf,
+                  isDark: isDark,
+                  colorScheme: colorScheme,
+                );
           break;
 
         case ShelfLayout.videoStyle:
@@ -1192,6 +1195,10 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
         .map((item) => item.toTrack())
         .whereType<Track>()
         .toList();
+
+    if (isDesktop && songs.isNotEmpty) {
+      return DesktopTrackGridShelf(shelf: shelf);
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

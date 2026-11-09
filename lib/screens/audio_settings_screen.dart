@@ -50,7 +50,7 @@ class AudioSettingsScreen extends ConsumerWidget {
     final playerService = ref.watch(audioPlayerServiceProvider);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: desktopPageBackground(backgroundColor),
       appBar: AppBar(
         title: Text(l10n.audioSettingsTitle),
         backgroundColor: Colors.transparent,

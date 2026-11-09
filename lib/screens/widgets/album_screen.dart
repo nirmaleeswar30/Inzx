@@ -1,4 +1,5 @@
 import 'dart:ui';
+import '../../core/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marquee/marquee.dart';
@@ -497,7 +498,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
     final playerService = ref.read(audioPlayerServiceProvider);
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : colorScheme.surface,
+      backgroundColor: desktopPageBackground(isDark ? Colors.black : colorScheme.surface),
       body: albumAsync.when(
         loading: () => _buildLoadingState(
           widget.albumTitle,

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show kDebugMode;
+import '../core/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
@@ -108,9 +109,9 @@ class _ImportPlaylistScreenState extends ConsumerState<ImportPlaylistScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: isDark
+      backgroundColor: desktopPageBackground(isDark
           ? InzxColors.darkBackground
-          : InzxColors.background,
+          : InzxColors.background),
       appBar: AppBar(
         title: Text(context.l10n.importFromYoutubeMusic),
         backgroundColor: Colors.transparent,

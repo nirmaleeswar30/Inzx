@@ -104,93 +104,123 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 ),
               ),
             ),
-            SafeArea(
-              child: Column(
-                children: [
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: AnimatedOpacity(
-                      opacity: _page < _pageCount - 1 ? 1 : 0,
-                      duration: const Duration(milliseconds: 250),
-                      child: TextButton(
-                        onPressed: _page < _pageCount - 1
-                            ? () => _pages.animateToPage(
-                                _pageCount - 1,
-                                duration: const Duration(milliseconds: 600),
-                                curve: Curves.easeOutCubic,
-                              )
-                            : null,
-                        child: const Text(
-                          'Skip',
-                          style: TextStyle(color: Colors.white70),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: PageView(
-                      controller: _pages,
-                      onPageChanged: (i) => setState(() => _page = i),
-                      children: const [
-                        _WelcomePage(),
-                        _FeaturesPage(),
-                        _SignInPage(),
-                      ],
-                    ),
-                  ),
-                  _PageDots(count: _pageCount, index: _page),
-                  const SizedBox(height: 24),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      24,
-                      0,
-                      24,
-                      padding.bottom > 0 ? 8 : 24,
-                    ),
-                    child: _DesktopWidth(
-                      child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      child: _page < _pageCount - 1
-                          ? _PrimaryButton(
-                              key: const ValueKey('next'),
-                              label: 'Continue',
-                              onPressed: _next,
-                            )
-                          : Column(
-                              key: const ValueKey('auth'),
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _PrimaryButton(
-                                  label: 'Continue with Google',
-                                  leading: const _GoogleMark(),
-                                  onPressed: _signIn,
-                                ),
-                                const SizedBox(height: 10),
-                                TextButton(
-                                  onPressed: _finish,
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: Colors.white70,
-                                    minimumSize: const Size.fromHeight(48),
-                                  ),
-                                  child: const Text(
-                                    'Continue without signing in',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                      ),
-                    ),
-                  ),
-                ],
+            if (isDesktop) ...[
+              // Centred in the whole window, with the controls laid over it,
+              // rather than in the space left between them.
+              Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.sizeOf(context).height < 680 ? 150 : 0,
+                ),
+                child: _buildPages(),
               ),
-            ),
+              SafeArea(
+                child: Stack(
+                  children: [
+                    Align(alignment: Alignment.topRight, child: _buildSkip()),
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: _buildBottomControls(padding),
+                    ),
+                  ],
+                ),
+              ),
+            ] else
+              SafeArea(
+                child: Column(
+                  children: [
+                    Align(alignment: Alignment.topRight, child: _buildSkip()),
+                    Expanded(child: _buildPages()),
+                    _buildBottomControls(padding),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSkip() {
+    return AnimatedOpacity(
+      opacity: _page < _pageCount - 1 ? 1 : 0,
+      duration: const Duration(milliseconds: 250),
+      child: TextButton(
+        onPressed: _page < _pageCount - 1
+            ? () => _pages.animateToPage(
+                _pageCount - 1,
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.easeOutCubic,
+              )
+            : null,
+        child: const Text('Skip', style: TextStyle(color: Colors.white70)),
+      ),
+    );
+  }
+
+  Widget _buildPages() {
+    return PageView(
+      controller: _pages,
+      onPageChanged: (i) => setState(() => _page = i),
+      children: [
+        // The mascot image has empty space above it, which makes this page
+        // look low when its box is centred.
+        Transform.translate(
+          offset: Offset(0, isDesktop ? -13 : 0),
+          child: const _WelcomePage(),
+        ),
+        const _FeaturesPage(),
+        const _SignInPage(),
+      ],
+    );
+  }
+
+  Widget _buildBottomControls(EdgeInsets padding) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _PageDots(count: _pageCount, index: _page),
+        const SizedBox(height: 24),
+        Padding(
+          padding: EdgeInsets.fromLTRB(24, 0, 24, padding.bottom > 0 ? 8 : 24),
+          child: _DesktopWidth(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: _page < _pageCount - 1
+                  ? _PrimaryButton(
+                      key: const ValueKey('next'),
+                      label: 'Continue',
+                      onPressed: _next,
+                    )
+                  : Column(
+                      key: const ValueKey('auth'),
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _PrimaryButton(
+                          label: 'Continue with Google',
+                          leading: const _GoogleMark(),
+                          onPressed: _signIn,
+                        ),
+                        const SizedBox(height: 10),
+                        TextButton(
+                          onPressed: _finish,
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.white70,
+                            minimumSize: const Size.fromHeight(48),
+                          ),
+                          child: const Text(
+                            'Continue without signing in',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -255,10 +285,26 @@ class _FeaturesPage extends StatelessWidget {
   const _FeaturesPage();
 
   static const _features = <(IconData, String, String)>[
-    (Iconsax.music_square, 'Hi-fi streaming', 'Up to 320 kbps with smart crossfade'),
-    (Iconsax.document_text, 'Living lyrics', 'Word-synced, translated, beautifully animated'),
-    (Iconsax.profile_2user, 'Jams', 'Listen together with friends in real time'),
-    (Iconsax.document_download, 'Offline', 'Download anything and take it everywhere'),
+    (
+      Iconsax.music_square,
+      'Hi-fi streaming',
+      'Up to 320 kbps with smart crossfade',
+    ),
+    (
+      Iconsax.document_text,
+      'Living lyrics',
+      'Word-synced, translated, beautifully animated',
+    ),
+    (
+      Iconsax.profile_2user,
+      'Jams',
+      'Listen together with friends in real time',
+    ),
+    (
+      Iconsax.document_download,
+      'Offline',
+      'Download anything and take it everywhere',
+    ),
   ];
 
   @override
@@ -416,7 +462,11 @@ class _PrimaryButton extends StatelessWidget {
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
           shape: const StadiumBorder(),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          textStyle: TextStyle(
+            fontFamily: desktopFontFamily,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -479,10 +529,34 @@ class _GoogleMarkPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke;
     const deg = math.pi / 180;
-    canvas.drawArc(rect, -40 * deg, -95 * deg, false, arc(const Color(0xFFEA4335)));
-    canvas.drawArc(rect, -135 * deg, -90 * deg, false, arc(const Color(0xFFFBBC05)));
-    canvas.drawArc(rect, 135 * deg, -95 * deg, false, arc(const Color(0xFF34A853)));
-    canvas.drawArc(rect, 40 * deg, -40 * deg, false, arc(const Color(0xFF4285F4)));
+    canvas.drawArc(
+      rect,
+      -40 * deg,
+      -95 * deg,
+      false,
+      arc(const Color(0xFFEA4335)),
+    );
+    canvas.drawArc(
+      rect,
+      -135 * deg,
+      -90 * deg,
+      false,
+      arc(const Color(0xFFFBBC05)),
+    );
+    canvas.drawArc(
+      rect,
+      135 * deg,
+      -95 * deg,
+      false,
+      arc(const Color(0xFF34A853)),
+    );
+    canvas.drawArc(
+      rect,
+      40 * deg,
+      -40 * deg,
+      false,
+      arc(const Color(0xFF4285F4)),
+    );
     canvas.drawLine(
       Offset(size.width / 2, size.height / 2),
       Offset(size.width - stroke / 2, size.height / 2),
@@ -530,12 +604,13 @@ class _AuroraPainter extends CustomPainter {
 
   final Animation<double> animation;
 
-  static const _blobs = <({double hue, double r, double sx, double sy, double phase})>[
-    (hue: 265, r: 0.95, sx: 1, sy: 2, phase: 0.0),
-    (hue: 320, r: 0.80, sx: 2, sy: 1, phase: 1.7),
-    (hue: 200, r: 0.85, sx: 1, sy: 1, phase: 3.1),
-    (hue: 25, r: 0.65, sx: 3, sy: 2, phase: 4.4),
-  ];
+  static const _blobs =
+      <({double hue, double r, double sx, double sy, double phase})>[
+        (hue: 265, r: 0.95, sx: 1, sy: 2, phase: 0.0),
+        (hue: 320, r: 0.80, sx: 2, sy: 1, phase: 1.7),
+        (hue: 200, r: 0.85, sx: 1, sy: 1, phase: 3.1),
+        (hue: 25, r: 0.65, sx: 3, sy: 2, phase: 4.4),
+      ];
 
   @override
   void paint(Canvas canvas, Size size) {

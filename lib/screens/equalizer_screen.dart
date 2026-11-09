@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/utils/platform_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,7 +39,7 @@ class _EqualizerScreenState extends ConsumerState<EqualizerScreen> {
     final secondary = isDark ? Colors.white54 : InzxColors.textSecondary;
 
     return Scaffold(
-      backgroundColor: background,
+      backgroundColor: desktopPageBackground(background),
       appBar: AppBar(
         title: const Text('Equalizer'),
         backgroundColor: Colors.transparent,

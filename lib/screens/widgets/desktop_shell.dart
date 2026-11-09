@@ -45,6 +45,15 @@ final desktopNowPlayingOpen = ValueNotifier<bool>(false);
 /// Whether the window is currently the small always-on-top player.
 final desktopMiniMode = ValueNotifier<bool>(false);
 
+/// Whether the player has taken over the whole screen, in its landscape layout.
+final desktopFullScreen = ValueNotifier<bool>(false);
+
+Future<void> setDesktopFullScreen(bool on) async {
+  if (on) NowPlayingScreen.showDesktop();
+  desktopFullScreen.value = on;
+  await windowManager.setFullScreen(on);
+}
+
 final desktopTabProvider = StateProvider<int>((ref) => 0);
 final desktopSidebarCollapsedProvider = StateProvider<bool>((ref) => false);
 
@@ -87,8 +96,13 @@ class DesktopShortcuts extends ConsumerWidget {
             player.skipToNext,
         const SingleActivator(LogicalKeyboardKey.arrowLeft, control: true):
             player.skipToPrevious,
-        const SingleActivator(LogicalKeyboardKey.escape):
-            NowPlayingScreen.closeDesktop,
+        const SingleActivator(LogicalKeyboardKey.escape): () {
+          if (desktopFullScreen.value) {
+            setDesktopFullScreen(false);
+          } else {
+            NowPlayingScreen.closeDesktop();
+          }
+        },
       },
       child: Focus(autofocus: true, child: child),
     );
@@ -125,16 +139,20 @@ class _DesktopAppFrameState extends State<DesktopAppFrame> {
 
   Widget _buildFrame(BuildContext context) {
     final frame = Material(
-      color: Theme.of(context).brightness == Brightness.dark
-          ? Colors.black
-          : InzxColors.background,
+      color: Colors.transparent,
       child: ListenableBuilder(
-        listenable: Listenable.merge([desktopShellVisible, desktopMiniMode]),
+        listenable: Listenable.merge([
+          desktopShellVisible,
+          desktopMiniMode,
+          desktopFullScreen,
+        ]),
         builder: (context, _) {
-          final showShell = desktopShellVisible.value;
+          final showShell =
+              desktopShellVisible.value && !desktopFullScreen.value;
           final mini = desktopMiniMode.value;
           return Stack(
             children: [
+              const Positioned.fill(child: _DesktopBackdrop()),
               // Offstage rather than removed, so pages and scroll positions
               // are all still there when the mini player is closed.
               Offstage(
@@ -151,7 +169,9 @@ class _DesktopAppFrameState extends State<DesktopAppFrame> {
                                 if (showShell) const _DesktopSidebar(),
                                 Expanded(
                                   child: _CenterPane(
-                                    topInset: showShell ? 0 : _kTopBarHeight,
+                                    topInset: desktopShellVisible.value
+                                        ? 0
+                                        : _kTopBarHeight,
                                     child: widget.child,
                                   ),
                                 ),
@@ -162,7 +182,7 @@ class _DesktopAppFrameState extends State<DesktopAppFrame> {
                         ],
                       ),
                       // Onboarding runs edge to edge behind the window buttons.
-                      if (!showShell)
+                      if (!desktopShellVisible.value)
                         const Positioned(
                           top: 0,
                           left: 0,
@@ -185,6 +205,52 @@ class _DesktopAppFrameState extends State<DesktopAppFrame> {
   @override
   Widget build(BuildContext context) {
     return Overlay(initialEntries: [_entry]);
+  }
+}
+
+/// The album-coloured background behind the entire window. The top bar,
+/// sidebar and pages are all see-through, so they share one colour and one
+/// gradient from the very top edge.
+class _DesktopBackdrop extends ConsumerWidget {
+  const _DesktopBackdrop();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final albumColors = ref.watch(albumColorsProvider);
+    final hasAlbumColors = !albumColors.isDefault;
+    final accent = hasAlbumColors
+        ? albumColors.accent
+        : Theme.of(context).colorScheme.primary;
+    final Color background;
+    if (hasAlbumColors && isDark) {
+      background = albumColors.backgroundSecondary;
+    } else {
+      background = isDark ? InzxColors.darkBackground : InzxColors.background;
+    }
+    final strength = isDark ? (hasAlbumColors ? 0.4 : 0.35) : 0.22;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 350),
+      color: background,
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 350),
+          height: 320,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                accent.withValues(alpha: strength),
+                accent.withValues(alpha: 0),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -232,7 +298,13 @@ class _CenterPane extends StatelessWidget {
             padding: EdgeInsets.only(top: topInset),
             viewPadding: EdgeInsets.only(top: topInset),
           ),
-          child: child,
+          // Pages that don't set a background show the backdrop too.
+          child: Theme(
+            data: Theme.of(
+              context,
+            ).copyWith(scaffoldBackgroundColor: Colors.transparent),
+            child: child,
+          ),
         ),
       ),
     );
@@ -269,24 +341,42 @@ class _DesktopTopBar extends ConsumerWidget {
               },
             ),
             const SizedBox(width: 6),
-            Image.asset('assets/logo_transparent.png', width: 30, height: 30),
+            Image.asset('assets/logo_transparent.png', width: 42, height: 42),
             const SizedBox(width: 8),
-            Text(
-              'Inzx',
-              style: TextStyle(
-                color: foreground,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
+            // The wordmark's letters are white, so light themes keep text.
+            if (isDark)
+              ClipRect(
+                child: Align(
+                  // The image has wide transparent margins around the letters.
+                  widthFactor: 0.7,
+                  heightFactor: 0.56,
+                  child: Image.asset(
+                    'assets/text.png',
+                    height: 40,
+                    filterQuality: FilterQuality.medium,
+                  ),
+                ),
+              )
+            else
+              Text(
+                'Inzx',
+                style: TextStyle(
+                  color: foreground,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
           ],
           Expanded(
             child: DragToMoveArea(
               child: SizedBox.expand(
                 child: showShell
                     ? Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Center(child: _SearchPill(isDark: isDark)),
+                        padding: const EdgeInsets.only(left: 40, right: 24),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: _SearchPill(isDark: isDark),
+                        ),
                       )
                     : null,
               ),
@@ -342,7 +432,7 @@ class _SearchPill extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    context.l10n.searchMusicHint,
+                    'Search songs, albums, artists, podcasts',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(color: muted, fontSize: 14),
@@ -368,9 +458,13 @@ class _ProfileButton extends ConsumerWidget {
 
     return InkWell(
       customBorder: const CircleBorder(),
-      onTap: () => rootNavigatorKey.currentState?.push(
-        MaterialPageRoute(builder: (_) => const YTMusicSettingsScreen()),
-      ),
+      onTap: () {
+        // Settings has no back button here, so never stack a second one.
+        _showFirstRoute();
+        rootNavigatorKey.currentState?.push(
+          MaterialPageRoute(builder: (_) => const YTMusicSettingsScreen()),
+        );
+      },
       child: CircleAvatar(
         radius: 16,
         backgroundColor: accent,
@@ -585,7 +679,7 @@ class _DesktopSidebar extends ConsumerWidget {
       curve: Curves.easeOutCubic,
       width: collapsed ? _kSidebarCollapsedWidth : _kSidebarWidth,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
+        padding: const EdgeInsets.fromLTRB(10, 14, 10, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -607,7 +701,7 @@ class _DesktopSidebar extends ConsumerWidget {
                   alpha: 0.14,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 18),
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.only(bottom: 8),

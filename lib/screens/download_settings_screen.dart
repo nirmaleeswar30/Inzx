@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/utils/platform_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:iconsax/iconsax.dart';
@@ -32,7 +33,7 @@ class DownloadSettingsScreen extends ConsumerWidget {
         : colorScheme.primary;
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: desktopPageBackground(backgroundColor),
       appBar: AppBar(
         title: Text(l10n.downloadSettingsTitle),
         backgroundColor: Colors.transparent,

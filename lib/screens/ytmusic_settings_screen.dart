@@ -1216,37 +1216,54 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
     final l10n = context.l10n;
 
     return Scaffold(
-      backgroundColor: _backgroundColor,
+      backgroundColor: desktopPageBackground(_backgroundColor),
       body: authState.isLoading
           ? Center(child: CircularProgressIndicator(color: _accentColor))
           : CustomScrollView(
               slivers: [
                 // ── Collapsing App Bar ───────────────────────────────
-                SliverAppBar.large(
-                  expandedHeight: 120,
-                  backgroundColor: _backgroundColor,
-                  surfaceTintColor: Colors.transparent,
-                  scrolledUnderElevation: 0,
-                  elevation: 0,
-                  leading: IconButton(
-                    icon: Icon(Iconsax.arrow_left, color: _textPrimary),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: Container(color: _backgroundColor),
-                    title: Text(
-                      l10n.settings,
-                      style: TextStyle(
-                        color: _textPrimary,
-                        fontWeight: FontWeight.w700,
+                if (isDesktop)
+                  // The sidebar is the way out, so no back button or
+                  // collapsing bar: just the heading, level with the page.
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+                    sliver: SliverToBoxAdapter(
+                      child: Text(
+                        l10n.settings,
+                        style: TextStyle(
+                          color: _textPrimary,
+                          fontSize: 30,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                    titlePadding: const EdgeInsetsDirectional.only(
-                      start: 56,
-                      bottom: 16,
+                  )
+                else
+                  SliverAppBar.large(
+                    expandedHeight: 120,
+                    backgroundColor: _backgroundColor,
+                    surfaceTintColor: Colors.transparent,
+                    scrolledUnderElevation: 0,
+                    elevation: 0,
+                    leading: IconButton(
+                      icon: Icon(Iconsax.arrow_left, color: _textPrimary),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: Container(color: _backgroundColor),
+                      title: Text(
+                        l10n.settings,
+                        style: TextStyle(
+                          color: _textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      titlePadding: const EdgeInsetsDirectional.only(
+                        start: 56,
+                        bottom: 16,
+                      ),
                     ),
                   ),
-                ),
 
                 // ── Search bar ───────────────────────────────────────
                 SliverPadding(
@@ -1886,7 +1903,8 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
-              textStyle: const TextStyle(
+              textStyle: TextStyle(
+                fontFamily: desktopFontFamily,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),

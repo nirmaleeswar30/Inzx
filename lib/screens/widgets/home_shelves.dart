@@ -11,7 +11,16 @@ import '../../services/audio_player_service.dart' as player;
 import 'now_playing_screen.dart';
 import 'track_options_sheet.dart';
 import 'shelf_details_screen.dart';
+import '../../core/utils/platform_utils.dart';
 import 'explicit_badge.dart';
+
+/// A square shelf card: [mobile] on phones. On desktop, big enough that six
+/// fill the page, allowing for the 12 list padding and 4 card margins.
+double _squareCardSize(BuildContext context, double mobile) {
+  if (!isDesktop) return mobile;
+  final sixAcross = (MediaQuery.sizeOf(context).width - 24) / 6 - 8;
+  return sixAcross < mobile ? mobile : sixAcross;
+}
 
 // ============================================================================
 // HELPER: Determine which widget to use based on shelf title
@@ -482,7 +491,7 @@ class MixesShelf extends ConsumerWidget {
         const SizedBox(height: 16),
         // Horizontal carousel of mixes
         SizedBox(
-          height: 210,
+          height: _squareCardSize(context, 160) + 50,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -507,7 +516,7 @@ class MixesShelf extends ConsumerWidget {
         onMixTap?.call(item);
       },
       child: Container(
-        width: 160,
+        width: _squareCardSize(context, 160),
         margin: const EdgeInsets.symmetric(horizontal: 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -516,8 +525,8 @@ class MixesShelf extends ConsumerWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: SizedBox(
-                width: 160,
-                height: 160,
+                width: _squareCardSize(context, 160),
+                height: _squareCardSize(context, 160),
                 child: item.thumbnailUrl != null
                     ? CachedNetworkImage(
                         imageUrl: item.thumbnailUrl!,
@@ -673,7 +682,7 @@ class ContentCarouselShelf extends ConsumerWidget {
         const SizedBox(height: 16),
         // Horizontal carousel
         SizedBox(
-          height: _getShelfHeight(),
+          height: _getShelfHeight(context),
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -688,12 +697,14 @@ class ContentCarouselShelf extends ConsumerWidget {
     );
   }
 
-  double _getShelfHeight() {
+  double _getShelfHeight(BuildContext context) {
     // Artists have circular thumbnails, others square
     final hasArtists = shelf.items.any(
       (i) => i.itemType == HomeShelfItemType.artist,
     );
-    return hasArtists ? 195 : 220;
+    return hasArtists
+        ? _squareCardSize(context, 140) + 55
+        : _squareCardSize(context, 150) + 70;
   }
 
   Widget _buildContentCard(
@@ -702,7 +713,7 @@ class ContentCarouselShelf extends ConsumerWidget {
     WidgetRef ref,
   ) {
     final isArtist = item.itemType == HomeShelfItemType.artist;
-    final size = isArtist ? 140.0 : 150.0;
+    final size = _squareCardSize(context, isArtist ? 140.0 : 150.0);
 
     return GestureDetector(
       onTap: () => onItemTap?.call(item),
@@ -917,7 +928,7 @@ class ChartsShelf extends ConsumerWidget {
         const SizedBox(height: 16),
         // Chart cards
         SizedBox(
-          height: 200,
+          height: _squareCardSize(context, 150) + 50,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -936,7 +947,7 @@ class ChartsShelf extends ConsumerWidget {
     return GestureDetector(
       onTap: () => onItemTap?.call(item),
       child: Container(
-        width: 150,
+        width: _squareCardSize(context, 150),
         margin: const EdgeInsets.symmetric(horizontal: 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -945,8 +956,8 @@ class ChartsShelf extends ConsumerWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: SizedBox(
-                width: 150,
-                height: 150,
+                width: _squareCardSize(context, 150),
+                height: _squareCardSize(context, 150),
                 child: item.thumbnailUrl != null
                     ? CachedNetworkImage(
                         imageUrl: item.thumbnailUrl!,
@@ -1293,7 +1304,7 @@ class CommunityShelf extends ConsumerWidget {
         const SizedBox(height: 16),
         // Horizontal carousel of playlists/items
         SizedBox(
-          height: 200,
+          height: _squareCardSize(context, 150) + 50,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1316,7 +1327,7 @@ class CommunityShelf extends ConsumerWidget {
     return GestureDetector(
       onTap: () => onItemTap?.call(item),
       child: Container(
-        width: 150,
+        width: _squareCardSize(context, 150),
         margin: const EdgeInsets.symmetric(horizontal: 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1325,8 +1336,8 @@ class CommunityShelf extends ConsumerWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: SizedBox(
-                width: 150,
-                height: 150,
+                width: _squareCardSize(context, 150),
+                height: _squareCardSize(context, 150),
                 child: item.thumbnailUrl != null
                     ? CachedNetworkImage(
                         imageUrl: item.thumbnailUrl!,

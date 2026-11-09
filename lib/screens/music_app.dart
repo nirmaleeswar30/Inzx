@@ -198,13 +198,14 @@ class _MusicAppState extends ConsumerState<MusicApp>
       },
       child: Scaffold(
         resizeToAvoidBottomInset: false,
-        backgroundColor: backgroundColor,
+        backgroundColor: desktopPageBackground(backgroundColor),
         body: NotificationListener<ScrollNotification>(
           onNotification: _handleScrollNotification,
           child: Stack(
             children: [
-              // Strong accent gradient at the very top (like YT Music)
-              Positioned(
+              // Strong accent gradient at the very top (like YT Music).
+              // Desktop's spans the whole window, in DesktopAppFrame.
+              if (!isDesktop) Positioned(
                 top: 0,
                 left: 0,
                 right: 0,

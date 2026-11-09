@@ -2,6 +2,8 @@ import 'dart:io' show Platform;
 import 'dart:ui' show Size;
 
 import 'package:audio_service_platform_interface/audio_service_platform_interface.dart';
+import 'package:flutter/foundation.dart' show LicenseRegistry, LicenseEntryWithLineBreaks;
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -13,6 +15,13 @@ const Size kDesktopMinWindowSize = Size(720, 540);
 /// Everything that has to be in place on Windows and Linux before the app
 /// touches audio, the image cache or its window.
 Future<void> initDesktopPlatform() async {
+  // The SIL Open Font License asks for its text to ship with the font.
+  LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks(const [
+      'Poppins',
+    ], await rootBundle.loadString('assets/fonts/poppins/OFL.txt'));
+  });
+
   // just_audio has no desktop backend of its own; this one is libmpv.
   JustAudioMediaKit.title = 'Inzx';
   JustAudioMediaKit.ensureInitialized(linux: true, windows: true);

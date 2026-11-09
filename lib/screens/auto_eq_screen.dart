@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../core/utils/platform_utils.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -57,7 +58,7 @@ class _AutoEqScreenState extends ConsumerState<AutoEqScreen> {
     final s = _state;
 
     return Scaffold(
-      backgroundColor: background,
+      backgroundColor: desktopPageBackground(background),
       appBar: AppBar(
         title: const Text('AutoEQ'),
         backgroundColor: Colors.transparent,

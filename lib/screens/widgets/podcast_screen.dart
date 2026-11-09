@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/utils/platform_utils.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -226,7 +227,7 @@ class _PodcastScreenState extends ConsumerState<PodcastScreen> {
     final secondary = textColor.withValues(alpha: 0.6);
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : colorScheme.surface,
+      backgroundColor: desktopPageBackground(isDark ? Colors.black : colorScheme.surface),
       body: Stack(
         children: [
           // Background - Smooth 3-stop fading gradient like PlaylistScreen

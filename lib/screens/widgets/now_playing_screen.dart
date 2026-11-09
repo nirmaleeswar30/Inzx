@@ -51,7 +51,11 @@ import 'share_sheet.dart';
 import '../../core/utils/platform_utils.dart';
 import '../../main.dart' show rootNavigatorKey;
 import 'desktop_shell.dart'
-    show desktopNowPlayingOpen, desktopNowPlayingTab;
+    show
+        desktopFullScreen,
+        desktopNowPlayingOpen,
+        desktopNowPlayingTab,
+        setDesktopFullScreen;
 import '../../services/download_service.dart';
 import 'explicit_badge.dart';
 
@@ -1404,6 +1408,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
       _showQueue = _tabController.index == 0;
       _showLyrics = _tabController.index == 1;
       desktopNowPlayingTab.addListener(_onDesktopTabChanged);
+      desktopFullScreen.addListener(_onDesktopTabChanged);
     }
 
     // Page controller for swiping content
@@ -1458,7 +1463,10 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   void dispose() {
     _sheetSnapshot.dispose();
     _colorAnimController.dispose();
-    if (isDesktop) desktopNowPlayingTab.removeListener(_onDesktopTabChanged);
+    if (isDesktop) {
+      desktopNowPlayingTab.removeListener(_onDesktopTabChanged);
+      desktopFullScreen.removeListener(_onDesktopTabChanged);
+    }
     _tabController.dispose();
     _pageController.dispose();
     _albumArtPageController.dispose();
@@ -1736,11 +1744,10 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
               MediaQuery.of(context).orientation == Orientation.landscape;
           final nowPlayingStyle = ref.watch(nowPlayingStyleProvider);
 
-          if (isDesktop) {
+          if (isDesktop && !desktopFullScreen.value) {
+            // See-through: the window's album-coloured backdrop shows behind.
             return Scaffold(
-              backgroundColor: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.black
-                  : backgroundColor,
+              backgroundColor: Colors.transparent,
               body: _buildDesktopView(
                 track,
                 textColor,
@@ -1766,14 +1773,33 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                     stops: const [0.0, 1.0],
                   ),
                 ),
-                child: _buildStageView(
-                  track,
-                  state,
-                  playerService,
-                  textColor,
-                  secondaryTextColor,
-                  accentColor,
-                  colors.surface,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: _buildStageView(
+                        track,
+                        state,
+                        playerService,
+                        textColor,
+                        secondaryTextColor,
+                        accentColor,
+                        colors.surface,
+                      ),
+                    ),
+                    if (isDesktop)
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: IconButton(
+                          tooltip: 'Exit full screen',
+                          onPressed: () => setDesktopFullScreen(false),
+                          icon: Icon(
+                            Icons.fullscreen_exit_rounded,
+                            color: textColor,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             );
@@ -2222,34 +2248,36 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
         return Row(
           children: [
             Expanded(
-              child: Stack(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(40),
-                    child: Center(
-                      child: AspectRatio(
-                        aspectRatio: 1,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: _buildStaticAlbumArtContent(track, accentColor),
+              child: Padding(
+                padding: const EdgeInsets.all(40),
+                child: Center(
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: ref
+                            .read(audioPlayerServiceProvider)
+                            .togglePlayPause,
+                        onDoubleTap: () => _triggerDoubleTapLike(track),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: _buildStaticAlbumArtContent(
+                                track,
+                                accentColor,
+                              ),
+                            ),
+                            _buildHeartOverlay(),
+                          ],
                         ),
                       ),
                     ),
                   ),
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: IconButton(
-                      tooltip: 'Close',
-                      onPressed: NowPlayingScreen.closeDesktop,
-                      icon: Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: textColor,
-                        size: 28,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
             SizedBox(
@@ -4956,6 +4984,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     if (queue.length <= 1) {
       return GestureDetector(
         behavior: HitTestBehavior.opaque,
+        onTap: isDesktop ? playerService.togglePlayPause : null,
         onDoubleTap: () => _triggerDoubleTapLike(track),
         onHorizontalDragEnd: (details) {
           if (details.primaryVelocity != null) {
@@ -5059,6 +5088,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                 child: Opacity(
                   opacity: opacity,
                   child: GestureDetector(
+                    onTap: isDesktop ? playerService.togglePlayPause : null,
                     onDoubleTap: () => _triggerDoubleTapLike(displayTrack),
                     child: Stack(
                       alignment: Alignment.center,

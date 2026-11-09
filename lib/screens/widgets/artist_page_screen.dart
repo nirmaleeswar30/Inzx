@@ -1,4 +1,5 @@
 import 'dart:ui';
+import '../../core/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -127,7 +128,7 @@ class _ArtistPageScreenState extends ConsumerState<ArtistPageScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : colorScheme.surface,
+      backgroundColor: desktopPageBackground(isDark ? Colors.black : colorScheme.surface),
       body: artistAsync.when(
         loading: () => _buildLoadingState(),
         error: (e, _) => _buildErrorState(l10n.errorLoadingArtist),

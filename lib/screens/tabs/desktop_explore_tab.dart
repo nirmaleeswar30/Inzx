@@ -7,6 +7,7 @@ import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../widgets/album_screen.dart';
 import '../widgets/artist_screen.dart';
+import '../widgets/desktop_track_grid.dart' show cleanShelfSubtitle;
 import '../widgets/now_playing_screen.dart';
 import '../widgets/playlist_screen.dart';
 import '../widgets/podcast_screen.dart';
@@ -30,12 +31,6 @@ final _explorePageProvider = FutureProvider.family<ExplorePage?, _ExploreKey>((
       .watch(innerTubeServiceProvider)
       .getExplorePage(browseId: key.browseId, params: key.params);
 });
-
-/// The parser joins every text run with a bullet, including the "&" and ","
-/// between artist names.
-String _cleanSubtitle(String subtitle) => subtitle
-    .replaceAll(RegExp(r'\s*•\s*&\s*•\s*'), ' & ')
-    .replaceAll(RegExp(r'\s*•\s*,\s*•\s*'), ', ');
 
 void _openLink(BuildContext context, ExploreLink link) {
   Navigator.of(context).push(
@@ -412,6 +407,9 @@ class _Heading extends StatelessWidget {
                 OutlinedButton(
                   onPressed: () => _openMore(context),
                   style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 38),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    shape: const StadiumBorder(),
                     foregroundColor: base,
                     side: BorderSide(color: base.withValues(alpha: 0.25)),
                   ),
@@ -482,6 +480,7 @@ class _HorizontalSectionState extends State<_HorizontalSection> {
       child: IconButton.outlined(
         style: IconButton.styleFrom(
           side: BorderSide(color: base.withValues(alpha: 0.25)),
+          shape: const CircleBorder(),
         ),
         iconSize: 20,
         onPressed: () => _page(direction),
@@ -611,7 +610,7 @@ class _TrackRow extends ConsumerWidget {
                   ),
                   if (item.subtitle != null)
                     Text(
-                      _cleanSubtitle(item.subtitle!),
+                      cleanShelfSubtitle(item.subtitle!),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -677,7 +676,7 @@ class _ItemCard extends ConsumerWidget {
             ),
             if (item.subtitle != null)
               Text(
-                _cleanSubtitle(item.subtitle!),
+                cleanShelfSubtitle(item.subtitle!),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(

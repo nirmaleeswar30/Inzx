@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../core/utils/platform_utils.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -233,7 +234,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
     final secondaryTextColor = textColor.withValues(alpha: 0.6);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: desktopPageBackground(backgroundColor),
       body: Stack(
         children: [
           // Ambient dynamic top gradient

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/utils/platform_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -147,7 +148,7 @@ class _ShelfDetailsScreenState extends ConsumerState<ShelfDetailsScreen> {
     final currentTrack = ref.watch(currentTrackProvider);
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
+      backgroundColor: desktopPageBackground(colorScheme.surface),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

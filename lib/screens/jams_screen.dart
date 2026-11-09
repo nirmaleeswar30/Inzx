@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/utils/platform_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -65,9 +66,9 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: desktopPageBackground(backgroundColor),
       appBar: AppBar(
-        backgroundColor: backgroundColor,
+        backgroundColor: desktopPageBackground(backgroundColor),
         elevation: 0,
         title: Text(
           l10n.jams,

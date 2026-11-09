@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/utils/platform_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -27,9 +28,9 @@ class StatisticsScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      backgroundColor: isDark
+      backgroundColor: desktopPageBackground(isDark
           ? InzxColors.darkBackground
-          : InzxColors.background,
+          : InzxColors.background),
       appBar: AppBar(
         title: Text(l10n.statisticsTitle),
         backgroundColor: Colors.transparent,

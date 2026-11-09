@@ -1,4 +1,5 @@
 import 'dart:ui';
+import '../../core/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marquee/marquee.dart';
@@ -628,7 +629,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     if (widget.isOfflineDownloaded) {
       final playlist = widget.buildOfflinePlaylist(context);
       return Scaffold(
-        backgroundColor: isDark ? Colors.black : colorScheme.surface,
+        backgroundColor: desktopPageBackground(isDark ? Colors.black : colorScheme.surface),
         body: _buildContent(
           context,
           ref,
@@ -676,7 +677,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
       if ((ytLikedAsync.isLoading || ytLikedSongsAsync.isLoading) &&
           combinedTracks.isEmpty) {
         return Scaffold(
-          backgroundColor: isDark ? Colors.black : colorScheme.surface,
+          backgroundColor: desktopPageBackground(isDark ? Colors.black : colorScheme.surface),
           body: _buildLoadingState(
             widget.playlistTitle ?? context.l10n.likedSongsLabel,
             null,
@@ -698,7 +699,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
       );
 
       return Scaffold(
-        backgroundColor: isDark ? Colors.black : colorScheme.surface,
+        backgroundColor: desktopPageBackground(isDark ? Colors.black : colorScheme.surface),
         body: _buildContent(
           context,
           ref,
@@ -714,7 +715,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     final playlistAsync = ref.watch(ytMusicPlaylistProvider(widget.playlistId));
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : colorScheme.surface,
+      backgroundColor: desktopPageBackground(isDark ? Colors.black : colorScheme.surface),
       body: playlistAsync.when(
         loading: () => _buildLoadingState(
           widget.playlistTitle,
