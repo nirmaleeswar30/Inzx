@@ -1223,65 +1223,6 @@ class YTPlayerUtils {
     return false;
   }
 
-  /// Prefetch playback data for multiple videos (OuterTune-style)
-  ///
-  /// Call this when:
-  /// - Queue changes
-  /// - Next track becomes known
-  /// - Playlist is loaded
-  ///
-  /// This resolves streams BEFORE play is tapped, eliminating delay.
-  /// Runs with low priority to avoid UI jank.
-  Future<void> prefetch(
-    List<String> videoIds, {
-    AudioQuality quality = AudioQuality.auto,
-    bool isMetered = false,
-  }) async {
-    if (videoIds.isEmpty) return;
-
-    if (kDebugMode) {
-      print('YTPlayerUtils: Prefetching ${videoIds.length} tracks...');
-    }
-
-    // Schedule as a low-priority background task
-    // This ensures UI frames are never blocked by prefetch operations
-    Future.microtask(() async {
-      // Yield to UI thread before starting
-      await Future.delayed(const Duration(milliseconds: 16));
-
-      // Ensure tokens are ready before prefetching
-      if (!_poToken.hasValidTokens) {
-        await _poToken.generateTokens();
-      }
-
-      // Prefetch sequentially with delays to avoid UI jank
-      for (int i = 0; i < videoIds.length; i++) {
-        final videoId = videoIds[i];
-
-        // Skip if already cached (memory or disk)
-        if (hasCachedData(videoId)) continue;
-
-        // Check disk cache before network call
-        final diskCached = _loadFromPersistentCache(videoId);
-        if (diskCached != null) {
-          _cache[videoId] = diskCached;
-          continue;
-        }
-
-        await _prefetchSingle(videoId, quality, isMetered);
-
-        // Yield to UI thread between each fetch
-        // Longer delays for later tracks (first few are higher priority)
-        final delay = i < 3 ? 50 : 150;
-        await Future.delayed(Duration(milliseconds: delay));
-      }
-
-      if (kDebugMode) {
-        print('YTPlayerUtils: Prefetch complete, cache size: $cacheSize');
-      }
-    });
-  }
-
   /// Prefetch a single video (internal)
   Future<void> _prefetchSingle(
     String videoId,

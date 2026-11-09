@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -30,9 +29,6 @@ class MusicHomeTab extends ConsumerStatefulWidget {
 
 class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
     with SingleTickerProviderStateMixin {
-  bool _hasPrefetched =
-      false; // Track if we've already prefetched for current home data
-
   late final AnimationController _headerAnimationController;
   late final Animation<double> _headerAnimation;
   bool _isHeaderVisible = true;
@@ -119,31 +115,6 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
 
   ({Color primary, Color secondary, Color tertiary}) get _textColors =>
       InzxColors.adaptiveTextColors(_backgroundColor);
-
-  /// OuterTune-style prefetching: resolve stream URLs when tracks become visible
-  /// This makes play taps instant (pure cache lookup, no network call)
-  void _prefetchShelfTracks(List<HomeShelf> shelves) {
-    if (_hasPrefetched) return; // Only prefetch once per home load
-    _hasPrefetched = true;
-
-    // Collect all tracks from all shelves
-    final allTracks = <Track>[];
-    for (final shelf in shelves) {
-      allTracks.addAll(shelf.tracks.take(10)); // First 10 per shelf
-    }
-
-    if (allTracks.isEmpty) return;
-
-    // Prefetch using the provider
-    final prefetchManager = ref.read(trackPrefetchProvider);
-    prefetchManager.prefetchVisibleTracks(allTracks);
-
-    if (kDebugMode) {
-      print(
-        'HomeTab: Triggered prefetch for ${allTracks.length} visible tracks',
-      );
-    }
-  }
 
   /// Navigate to search results screen with a query
   void _performSearch(String query) {
@@ -552,9 +523,6 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
                 } else if (homeState.shelves.isEmpty) {
                   return _buildFallbackShelves(isDark, colorScheme);
                 } else {
-                  // OuterTune-style: Prefetch all visible tracks immediately
-                  // This makes play taps instant (pure cache lookup)
-                  _prefetchShelfTracks(homeState.shelves);
                   return _buildYTMusicShelvesFromState(
                     homeState,
                     isDark,
@@ -974,12 +942,6 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
     final forgotten = recentlyPlayed.length > 6
         ? recentlyPlayed.skip(4).take(6).toList()
         : recentlyPlayed.take(4).toList();
-
-    // Prefetch forgotten favorites tracks for instant playback
-    if (forgotten.isNotEmpty) {
-      final prefetchManager = ref.read(trackPrefetchProvider);
-      prefetchManager.prefetchVisibleTracks(forgotten);
-    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

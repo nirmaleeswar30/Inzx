@@ -3,6 +3,93 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+/// The planned Automix window on a progress bar: a band whose ends dissolve on
+/// a smoothstep (BitChord's feathered window).
+@immutable
+class AutomixWindowBand {
+  const AutomixWindowBand({
+    required this.start,
+    required this.end,
+    required this.alpha,
+    required this.color,
+  });
+
+  /// Where the window runs, as 0..1 fractions of the bar.
+  final double start;
+  final double end;
+
+  /// 0..1: the window's fade.
+  final double alpha;
+  final Color color;
+
+  // BitChord: feather = 40% of the window, kept between 6 and 40 dp and never
+  // more than half the span.
+  static double _feather(double span) =>
+      (span * 0.4).clamp(6.0, 40.0).clamp(0.0, span / 2);
+
+  static double _smoothstep(double t) => t * t * (3 - 2 * t);
+
+  /// Paints the band over [track].
+  void paint(Canvas canvas, Rect track) {
+    final from = track.left + track.width * start.clamp(0.0, 1.0);
+    final to = track.left + track.width * end.clamp(0.0, 1.0);
+    final span = to - from;
+    if (span <= 0 || alpha <= 0) return;
+
+    // Six smoothstep stops per end.
+    final f = _feather(span) / span;
+    final full = color.a * alpha;
+    final colors = <Color>[];
+    final stops = <double>[];
+    for (var s = 0; s <= 6; s++) {
+      final t = s / 6;
+      colors.add(color.withValues(alpha: full * _smoothstep(t)));
+      stops.add(f * t);
+    }
+    for (var s = 6; s >= 0; s--) {
+      final t = s / 6;
+      colors.add(color.withValues(alpha: full * _smoothstep(t)));
+      stops.add(1 - f * t);
+    }
+    final band = Rect.fromLTRB(from, track.top, to, track.bottom);
+    canvas.save();
+    canvas.clipRRect(
+      RRect.fromRectAndRadius(track, Radius.circular(track.height / 2)),
+    );
+    canvas.drawRect(
+      band,
+      Paint()
+        ..shader = LinearGradient(
+          colors: colors,
+          stops: stops,
+        ).createShader(band),
+    );
+    canvas.restore();
+  }
+
+  /// 0..1: how strongly the band covers [x] on a bar [width] wide, for bars
+  /// that have no continuous track to paint it over.
+  double weightAt(double x, double width) {
+    final from = width * start.clamp(0.0, 1.0);
+    final to = width * end.clamp(0.0, 1.0);
+    final span = to - from;
+    final edge = math.min(x - from, to - x);
+    if (span <= 0 || edge <= 0) return 0;
+    return alpha * _smoothstep((edge / _feather(span)).clamp(0.0, 1.0));
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is AutomixWindowBand &&
+      other.start == start &&
+      other.end == end &&
+      other.alpha == alpha &&
+      other.color == color;
+
+  @override
+  int get hashCode => Object.hash(start, end, alpha, color);
+}
+
 /// Custom painter for the animated wavy progress bar
 class WavyProgressBarPainter extends CustomPainter {
   final double progress; // 0.0 to 1.0
@@ -14,6 +101,12 @@ class WavyProgressBarPainter extends CustomPainter {
   final double thumbRadius;
   final bool isSeeking;
 
+  /// 0..1: the whole thumb's size, halo included. Shrinks away in a blend.
+  final double thumbScale;
+
+  /// The planned Automix window, if there is one.
+  final AutomixWindowBand? window;
+
   WavyProgressBarPainter({
     required this.progress,
     required this.phase,
@@ -23,6 +116,8 @@ class WavyProgressBarPainter extends CustomPainter {
     required this.trackHeight,
     required this.thumbRadius,
     required this.isSeeking,
+    this.thumbScale = 1,
+    this.window,
   });
 
   @override
@@ -46,6 +141,25 @@ class WavyProgressBarPainter extends CustomPainter {
       inactivePath.moveTo(progressWidth, midY);
       inactivePath.lineTo(size.width, midY);
       canvas.drawPath(inactivePath, inactivePaint);
+
+      // Only over the flat, unplayed line: behind the wave it would show as a
+      // stray bar wherever the wave swings away from the middle.
+      if (window != null) {
+        canvas.save();
+        canvas.clipRect(
+          Rect.fromLTRB(progressWidth, 0, size.width, size.height),
+        );
+        window!.paint(
+          canvas,
+          Rect.fromLTRB(
+            0,
+            midY - trackHeight / 2,
+            size.width,
+            midY + trackHeight / 2,
+          ),
+        );
+        canvas.restore();
+      }
     }
 
     // 2. Draw active wavy path from 0 to progressWidth
@@ -79,6 +193,7 @@ class WavyProgressBarPainter extends CustomPainter {
     }
 
     // 3. Draw rolling soft-rounded square thumb at progressWidth
+    if (thumbScale <= 0) return;
     final side = (isSeeking ? thumbRadius * 1.35 : thumbRadius) * 2.1;
     final cornerRadius = Radius.circular(side * 0.28);
     final rollAngle = isSeeking
@@ -88,6 +203,7 @@ class WavyProgressBarPainter extends CustomPainter {
     canvas.save();
     canvas.translate(progressWidth, midY);
     canvas.rotate(rollAngle);
+    canvas.scale(thumbScale);
 
     // Dynamic accent glow/halo (subtle ambient aura while playing, expanded when seeking)
     final haloSide = side + (isSeeking ? 10.0 : 4.0);
@@ -129,7 +245,9 @@ class WavyProgressBarPainter extends CustomPainter {
         oldDelegate.thumbColor != thumbColor ||
         oldDelegate.trackHeight != trackHeight ||
         oldDelegate.thumbRadius != thumbRadius ||
-        oldDelegate.isSeeking != isSeeking;
+        oldDelegate.isSeeking != isSeeking ||
+        oldDelegate.thumbScale != thumbScale ||
+        oldDelegate.window != window;
   }
 }
 
@@ -143,6 +261,9 @@ class SpectrumBarPainter extends CustomPainter {
   final double seekScale;
   final bool isSeeking;
 
+  /// The planned Automix window, if there is one.
+  final AutomixWindowBand? window;
+
   SpectrumBarPainter({
     required this.progress,
     required this.amplitudes,
@@ -151,6 +272,7 @@ class SpectrumBarPainter extends CustomPainter {
     required this.thumbColor,
     required this.seekScale,
     required this.isSeeking,
+    this.window,
   });
 
   /// Generates a high-sensitivity, dynamic audio spectrum profile customized per track
@@ -259,6 +381,20 @@ class SpectrumBarPainter extends CustomPainter {
         Radius.circular(currentBarWidth / 2),
       );
       canvas.drawRRect(rect, isActive ? activePaint : inactivePaint);
+
+      // There's no track to lay the Automix window on, so it tints the
+      // unplayed bars it covers instead.
+      final band = window;
+      if (band != null && !isActive) {
+        final weight = band.weightAt(x, size.width);
+        if (weight > 0) {
+          canvas.drawRRect(
+            rect,
+            Paint()
+              ..color = band.color.withValues(alpha: band.color.a * weight),
+          );
+        }
+      }
     }
 
     // Draw animated seek playhead needle & glowing indicator when seeking
@@ -330,7 +466,8 @@ class SpectrumBarPainter extends CustomPainter {
         oldDelegate.inactiveColor != inactiveColor ||
         oldDelegate.thumbColor != thumbColor ||
         oldDelegate.seekScale != seekScale ||
-        oldDelegate.isSeeking != isSeeking;
+        oldDelegate.isSeeking != isSeeking ||
+        oldDelegate.window != window;
   }
 }
 
@@ -404,6 +541,9 @@ class CometProgressBarPainter extends CustomPainter {
   /// brighter one under the finger.
   final double intensity;
 
+  /// The planned Automix window, if there is one.
+  final AutomixWindowBand? window;
+
   CometProgressBarPainter({
     required this.progress,
     required this.activeColor,
@@ -413,6 +553,7 @@ class CometProgressBarPainter extends CustomPainter {
     this.tailLength = 110,
     this.rayOpacity = 1,
     this.intensity = 0.5,
+    this.window,
   });
 
   @override
@@ -427,6 +568,7 @@ class CometProgressBarPainter extends CustomPainter {
       RRect.fromLTRBR(0, top, size.width, bottom, radius),
       Paint()..color = inactiveColor,
     );
+    window?.paint(canvas, Rect.fromLTRB(0, top, size.width, bottom));
     if (headX <= 0) return;
 
     final tail = math.min(tailLength, headX);
@@ -500,5 +642,6 @@ class CometProgressBarPainter extends CustomPainter {
       oldDelegate.trackHeight != trackHeight ||
       oldDelegate.tailLength != tailLength ||
       oldDelegate.rayOpacity != rayOpacity ||
-      oldDelegate.intensity != intensity;
+      oldDelegate.intensity != intensity ||
+      oldDelegate.window != window;
 }

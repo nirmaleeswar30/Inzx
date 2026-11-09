@@ -873,14 +873,6 @@ final qualityDowngradingProvider = StreamProvider<bool>((ref) {
   return ref.watch(audioPlayerServiceProvider).qualityDowngradingStream;
 });
 
-/// Provider for prefetching tracks (OuterTune-style)
-/// Call this when tracks become visible to prefetch their stream URLs
-/// This makes play taps instant (pure cache lookup)
-final trackPrefetchProvider = Provider<TrackPrefetchManager>((ref) {
-  final playerService = ref.watch(audioPlayerServiceProvider);
-  return TrackPrefetchManager(playerService);
-});
-
 /// Provider for cache management operations
 /// Use this to get cache stats, cleanup expired entries, or clear cache
 final cacheManagementProvider = Provider<CacheManager>((ref) {
@@ -909,54 +901,4 @@ class CacheManager {
   Future<void> clearAllCache() async {
     await _repo.clearAllCache();
   }
-}
-
-/// Manager for prefetching tracks on visibility
-/// Keeps track of what's already prefetched to avoid duplicate work
-class TrackPrefetchManager {
-  final player.AudioPlayerService _playerService;
-  final Set<String> _prefetchedIds = {};
-  bool _isPrefetching = false;
-
-  TrackPrefetchManager(this._playerService);
-
-  /// Prefetch tracks when they become visible on screen
-  /// This is called by home page widgets when shelves are displayed
-  void prefetchVisibleTracks(List<Track> tracks) {
-    if (tracks.isEmpty || _isPrefetching) return;
-
-    // Filter out already prefetched tracks
-    final newTracks = tracks
-        .where((t) => !_prefetchedIds.contains(t.id))
-        .toList();
-    if (newTracks.isEmpty) return;
-
-    // Mark as prefetching (limit to first 20 for performance)
-    final toPrefetch = newTracks.take(20).toList();
-    for (final track in toPrefetch) {
-      _prefetchedIds.add(track.id);
-    }
-
-    // Fire and forget - don't block UI
-    _isPrefetching = true;
-    _playerService
-        .prefetchTracks(toPrefetch.map((t) => t.id).toList())
-        .then((_) {
-          _isPrefetching = false;
-        })
-        .catchError((e) {
-          _isPrefetching = false;
-          // Prefetch error - silently ignore to not interrupt user experience
-          // ignore: avoid_print
-          if (kDebugMode) {
-            print('TrackPrefetchManager: Prefetch error: $e');
-          }
-        });
-  }
-
-  /// Check if a track is prefetched (for debugging)
-  bool isPrefetched(String trackId) => _prefetchedIds.contains(trackId);
-
-  /// Clear prefetch cache (call on logout or app restart)
-  void clear() => _prefetchedIds.clear();
 }

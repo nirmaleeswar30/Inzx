@@ -21,6 +21,7 @@ import '../../services/lyrics/instrumental_gaps.dart';
 import '../../core/design_system/design_system.dart';
 import '../../core/l10n/app_localizations_x.dart';
 import '../../core/providers/theme_provider.dart';
+import '../../core/utils/duration_format.dart';
 import 'artist_screen.dart';
 import 'album_screen.dart' show AlbumScreen;
 import 'playlist_screen.dart' show PlaylistScreen;
@@ -208,6 +209,31 @@ class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
     _onSeekChanged(frac * maxMs);
   }
 
+  // Automix (BitChord's ThinSlider), shared by every bar style: during a blend
+  // the fill glides out to the full bar and pulses on the beat, and the
+  // planned window shows as a feathered band. A drag shows the plain position.
+  double get _mixCover =>
+      _isSeeking ? 0.0 : AutomixMixPulse.eased(_mixPulse.cover);
+
+  double _mixShownProgress(double progress) =>
+      (progress + (1 - progress) * _mixCover).clamp(0.0, 1.0);
+
+  Color _mixFill(Color color) => color.withValues(
+    alpha: _isSeeking ? color.a : _mixPulse.alpha(color.a),
+  );
+
+  AutomixWindowBand? get _mixWindow {
+    final start = _mixPulse.windowStart;
+    final end = _mixPulse.windowEnd;
+    if (start == null || end == null || _mixPulse.windowAlpha <= 0) return null;
+    return AutomixWindowBand(
+      start: start,
+      end: end,
+      alpha: _mixPulse.windowAlpha,
+      color: widget.accentColor.withValues(alpha: 0.5),
+    );
+  }
+
   Widget _buildWaveformProgressBar({
     required double progress,
     required double displayMs,
@@ -231,19 +257,25 @@ class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
         height: barHeight,
         width: double.infinity,
         child: AnimatedBuilder(
-          animation: Listenable.merge([_wavePhaseController, _scaleController]),
+          animation: Listenable.merge([
+            _wavePhaseController,
+            _scaleController,
+            _mixPulse,
+          ]),
           builder: (context, child) {
             return CustomPaint(
               size: Size.infinite,
               painter: WavyProgressBarPainter(
-                progress: progress,
+                progress: _mixShownProgress(progress),
                 phase: _wavePhaseController.value * 2 * math.pi,
-                activeColor: widget.accentColor,
+                activeColor: _mixFill(widget.accentColor),
                 inactiveColor: widget.textColor.withValues(alpha: 0.20),
                 thumbColor: widget.textColor,
                 trackHeight: _trackHeightAnim.value,
                 thumbRadius: _thumbRadiusAnim.value,
                 isSeeking: _isSeeking,
+                thumbScale: 1 - _mixCover,
+                window: _mixWindow,
               ),
             );
           },
@@ -283,23 +315,30 @@ class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
             animation: Listenable.merge([
               _wavePhaseController,
               _scaleController,
+              _mixPulse,
             ]),
             builder: (context, child) {
               // A slow breath while playing, fully lit under the finger.
               final breath =
                   0.5 +
                   0.35 * math.sin(_wavePhaseController.value * 2 * math.pi);
+              // The streak's bright tip and ray are the comet's thumb, so in
+              // a blend they give way as a thumb would.
+              final cover = _mixCover;
               return CustomPaint(
                 size: Size.infinite,
                 painter: CometProgressBarPainter(
-                  progress: progress,
-                  activeColor: widget.accentColor,
+                  progress: _mixShownProgress(progress),
+                  activeColor: _mixFill(widget.accentColor),
                   inactiveColor: widget.textColor.withValues(alpha: 0.20),
-                  headColor: widget.textColor,
+                  headColor: _mixFill(
+                    Color.lerp(widget.textColor, widget.accentColor, cover)!,
+                  ),
                   trackHeight: _trackHeightAnim.value,
                   tailLength: widget.isCompact ? 80 : 120,
-                  rayOpacity: rayOpacity,
+                  rayOpacity: rayOpacity * (1 - cover),
                   intensity: _isSeeking ? 1 : breath,
+                  window: _mixWindow,
                 ),
               );
             },
@@ -343,18 +382,19 @@ class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
           height: barContainerHeight,
           width: double.infinity,
           child: AnimatedBuilder(
-            animation: _spectrumZoomAnim,
+            animation: Listenable.merge([_spectrumZoomAnim, _mixPulse]),
             builder: (context, child) {
               return CustomPaint(
                 size: Size.infinite,
                 painter: SpectrumBarPainter(
-                  progress: progress,
+                  progress: _mixShownProgress(progress),
                   amplitudes: amplitudes,
-                  activeColor: widget.accentColor,
+                  activeColor: _mixFill(widget.accentColor),
                   inactiveColor: widget.textColor.withValues(alpha: 0.20),
                   thumbColor: widget.textColor,
                   seekScale: _spectrumZoomAnim.value,
                   isSeeking: _isSeeking,
+                  window: _mixWindow,
                 ),
               );
             },
@@ -497,19 +537,9 @@ class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
               AnimatedBuilder(
                 animation: Listenable.merge([_scaleController, _mixPulse]),
                 builder: (context, child) {
-                  // Automix (BitChord's ThinSlider): during a blend the fill
-                  // glides out to the full bar and pulses on the beat; the
-                  // planned window shows as a feathered band. A drag shows
-                  // the plain position.
-                  final cover = _isSeeking
-                      ? 0.0
-                      : AutomixMixPulse.eased(_mixPulse.cover);
+                  final cover = _mixCover;
                   final shownMs = (displayMs + (maxMs - displayMs) * cover)
                       .clamp(0.0, maxMs);
-                  final accent = widget.accentColor;
-                  final fillAlpha = _isSeeking
-                      ? accent.a
-                      : _mixPulse.alpha(accent.a);
                   return SliderTheme(
                     data: SliderThemeData(
                       trackHeight: _trackHeightAnim.value,
@@ -519,13 +549,8 @@ class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
                       overlayShape: RoundSliderOverlayShape(
                         overlayRadius: widget.isCompact ? 10 : 14,
                       ),
-                      trackShape: AutomixWindowTrackShape(
-                        windowStart: _mixPulse.windowStart,
-                        windowEnd: _mixPulse.windowEnd,
-                        windowAlpha: _mixPulse.windowAlpha,
-                        markerColor: accent.withValues(alpha: 0.5),
-                      ),
-                      activeTrackColor: accent.withValues(alpha: fillAlpha),
+                      trackShape: AutomixWindowTrackShape(window: _mixWindow),
+                      activeTrackColor: _mixFill(widget.accentColor),
                       inactiveTrackColor: widget.textColor.withValues(
                         alpha: 0.2,
                       ),
@@ -554,7 +579,7 @@ class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    _formatDuration(displayPosition),
+                    formatPlaybackDuration(displayPosition),
                     style: TextStyle(
                       fontSize: 12,
                       color: widget.secondaryColor,
@@ -585,7 +610,7 @@ class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
                     ),
                   ),
                   Text(
-                    _formatDuration(widget.duration ?? Duration.zero),
+                    formatPlaybackDuration(widget.duration ?? Duration.zero),
                     style: TextStyle(
                       fontSize: 12,
                       color: widget.secondaryColor,
@@ -598,12 +623,6 @@ class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
         ),
       ),
     );
-  }
-
-  String _formatDuration(Duration d) {
-    final minutes = d.inMinutes.remainder(60);
-    final seconds = d.inSeconds.remainder(60);
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 }
 
@@ -3116,7 +3135,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                                     ? track.formattedDuration
                                     : (playerDuration != null &&
                                               playerDuration.inSeconds > 0
-                                          ? _formatDuration(playerDuration)
+                                          ? formatPlaybackDuration(
+                                              playerDuration,
+                                            )
                                           : null);
 
                                 return Row(
@@ -4094,13 +4115,6 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
               .playQueue(tracks, startIndex: index >= 0 ? index : 0);
         }
     }
-  }
-
-  String _formatDuration(Duration? d) {
-    if (d == null) return '--:--';
-    final minutes = d.inMinutes.remainder(60);
-    final seconds = d.inSeconds.remainder(60);
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
   void _showSaveQueueDialog(

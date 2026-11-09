@@ -966,7 +966,7 @@ class AudioSettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            context.l10n.concurrentPreCacheDownloads,
+            context.l10n.songsToPreCache,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -998,7 +998,7 @@ class AudioSettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            context.l10n.higherValuesCacheFaster,
+            context.l10n.preCacheSongsHint,
             style: TextStyle(
               fontSize: 12,
               color: isDark ? Colors.white54 : InzxColors.textSecondary,

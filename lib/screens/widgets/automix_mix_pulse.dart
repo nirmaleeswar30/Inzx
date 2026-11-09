@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../../services/automix/automix_service.dart';
+import 'progress_bar_painters.dart';
 
 /// One beat clock for everything that pulses with an Automix blend — the
 /// seek bar's fill and the "Mixing" label — so the two can never drift out
@@ -173,17 +174,9 @@ class AutomixMixPulse extends ChangeNotifier {
 /// The seek bar's track with the planned Automix window drawn over it: a
 /// band whose ends dissolve on a smoothstep (BitChord's feathered window).
 class AutomixWindowTrackShape extends RoundedRectSliderTrackShape {
-  const AutomixWindowTrackShape({
-    required this.windowStart,
-    required this.windowEnd,
-    required this.windowAlpha,
-    required this.markerColor,
-  });
+  const AutomixWindowTrackShape({required this.window});
 
-  final double? windowStart;
-  final double? windowEnd;
-  final double windowAlpha;
-  final Color markerColor;
+  final AutomixWindowBand? window;
 
   @override
   void paint(
@@ -213,41 +206,7 @@ class AutomixWindowTrackShape extends RoundedRectSliderTrackShape {
       RRect.fromRectAndRadius(rect, radius),
       Paint()..color = sliderTheme.inactiveTrackColor ?? Colors.white24,
     );
-    final start = windowStart;
-    final end = windowEnd;
-    if (start != null && end != null && windowAlpha > 0) {
-      final from = rect.left + rect.width * start.clamp(0.0, 1.0);
-      final to = rect.left + rect.width * end.clamp(0.0, 1.0);
-      final span = to - from;
-      if (span > 0) {
-        // BitChord: feather = 40% of the window, kept between 6 and 40 dp
-        // and never more than half the span; six smoothstep stops per end.
-        final feather = (span * 0.4).clamp(6.0, 40.0).clamp(0.0, span / 2);
-        final f = feather / span;
-        final full = markerColor.a * windowAlpha;
-        final colors = <Color>[];
-        final stops = <double>[];
-        for (var s = 0; s <= 6; s++) {
-          final t = s / 6;
-          colors.add(markerColor.withValues(alpha: full * t * t * (3 - 2 * t)));
-          stops.add(f * t);
-        }
-        for (var s = 6; s >= 0; s--) {
-          final t = s / 6;
-          colors.add(markerColor.withValues(alpha: full * t * t * (3 - 2 * t)));
-          stops.add(1 - f * t);
-        }
-        canvas.save();
-        canvas.clipRRect(RRect.fromRectAndRadius(rect, radius));
-        canvas.drawRect(
-          Rect.fromLTRB(from, rect.top, to, rect.bottom),
-          Paint()
-            ..shader = LinearGradient(colors: colors, stops: stops)
-                .createShader(Rect.fromLTRB(from, rect.top, to, rect.bottom)),
-        );
-        canvas.restore();
-      }
-    }
+    window?.paint(canvas, rect);
     final played = Rect.fromLTRB(
       rect.left,
       rect.top,

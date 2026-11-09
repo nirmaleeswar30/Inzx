@@ -12,6 +12,7 @@ import '../../services/audio_player_service.dart' as player;
 import '../../services/lyrics/lyrics_service.dart';
 import '../../services/lyrics/lyrics_models.dart';
 import '../../core/design_system/design_system.dart';
+import '../../core/utils/duration_format.dart';
 import 'artist_screen.dart';
 import 'podcast_screen.dart' show PodcastScreen;
 import 'ripple_circular_progress_scrubber.dart';
@@ -718,12 +719,6 @@ class _RippleTimeReadoutState extends ConsumerState<_RippleTimeReadout>
     }
   }
 
-  String _formatDuration(Duration d) {
-    final minutes = d.inMinutes.remainder(60);
-    final seconds = d.inSeconds.remainder(60);
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final streamPos =
@@ -756,7 +751,7 @@ class _RippleTimeReadoutState extends ConsumerState<_RippleTimeReadout>
         ),
         children: [
           TextSpan(
-            text: _formatDuration(current),
+            text: formatPlaybackDuration(current),
             style: TextStyle(color: widget.textColor),
           ),
           TextSpan(
@@ -767,7 +762,7 @@ class _RippleTimeReadoutState extends ConsumerState<_RippleTimeReadout>
             ),
           ),
           TextSpan(
-            text: _formatDuration(widget.totalDuration),
+            text: formatPlaybackDuration(widget.totalDuration),
             style: TextStyle(color: widget.secondaryTextColor),
           ),
         ],

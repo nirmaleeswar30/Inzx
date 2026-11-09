@@ -44,7 +44,6 @@ const int kMaxStreamCacheMaxConcurrent = 4;
 const int kDefaultCrossfadeDurationMs = 8000;
 const int kMinCrossfadeDurationMs = 0;
 const int kMaxCrossfadeDurationMs = 12000;
-const int kPrecacheAheadTrackCount = 3;
 const int kLyricsPrefetchAheadTrackCount = 4;
 const int kMinValidStreamCacheFileBytes = 50 * 1024;
 const int kParallelPrecacheMinBytes = 1024 * 1024;
@@ -1884,12 +1883,12 @@ class AudioPlayerService {
         }
         return;
       }
+      // The pre-cache setting is also how many upcoming songs get prepared.
       final maxConcurrent = _effectivePrecacheConcurrency();
-      final candidateLimit = min(kPrecacheAheadTrackCount, maxConcurrent);
-      final end = min(_queue.length, start + candidateLimit);
+      final end = min(_queue.length, start + maxConcurrent);
       if (kDebugMode) {
         print(
-          'AudioPlayerService: Pre-cache candidates ${end - start} tracks ($start..${end - 1}, limit=$candidateLimit)',
+          'AudioPlayerService: Pre-cache candidates ${end - start} tracks ($start..${end - 1}, limit=$maxConcurrent)',
         );
       }
 
@@ -3195,11 +3194,9 @@ class AudioPlayerService {
 
   /// Play a queue of tracks
   ///
-  /// OuterTune approach:
-  /// 1. Immediately start prefetching stream URLs for all tracks
-  /// 2. Build ConcatenatingAudioSource with resolved URLs
-  /// 3. Player starts at the requested index
-  /// 4. Next tracks are pre-buffered automatically
+  /// Only the requested track is resolved up front. Once it starts, the next
+  /// track and the user's pre-cache window follow (see [_prefetchNextTrack]);
+  /// anything further down the queue is resolved when it's actually played.
   ///
   /// [sourceId] - optional ID of the playlist/album/artist this queue came from
   /// [sourceTitle] - optional title of the playlist/album/artist this queue came from
@@ -3269,8 +3266,6 @@ class AudioPlayerService {
           'AudioPlayerService: Running delayed work, _isRadioMode=$_isRadioMode, queue.length=${_queue.length}',
         );
       }
-      // Start prefetching ALL tracks in background
-      _prefetchAllTracks();
       // Playlist build removed to fix native ExoPlayer leaks
       // If radio mode is on and queue is short, immediately fetch related tracks
       // This ensures the queue is populated right away, not just after first song ends
@@ -3281,18 +3276,6 @@ class AudioPlayerService {
         _fetchRadioTracks();
       }
     });
-  }
-
-  /// Public method to prefetch tracks (called by TrackPrefetchManager)
-  /// This resolves stream URLs so play taps are instant
-  Future<void> prefetchTracks(List<String> videoIds) async {
-    if (videoIds.isEmpty) return;
-    if (kDebugMode) {
-      print(
-        'AudioPlayerService: Prefetching ${videoIds.length} visible tracks',
-      );
-    }
-    await _ytPlayerUtils.prefetch(videoIds, quality: _audioQuality);
   }
 
   bool _isLocalTrack(Track track) {
@@ -3308,27 +3291,6 @@ class AudioPlayerService {
       }
     } catch (_) {}
     return false;
-  }
-
-  /// Prefetch all tracks in queue (OuterTune approach)
-  /// This resolves stream URLs in background
-  void _prefetchAllTracks() {
-    if (_queue.isEmpty) return;
-
-    // Prefetch all tracks, but prioritize current and next, filtering out local tracks
-    final allIds = _queue
-        .where((t) => !_isLocalTrack(t))
-        .map((t) => t.id)
-        .toList();
-        
-    if (allIds.isEmpty) return;
-    
-    if (kDebugMode) {
-      print('AudioPlayerService: Prefetching ${allIds.length} remote tracks');
-    }
-
-    // Fire and forget - prefetch happens in background
-    _ytPlayerUtils.prefetch(allIds, quality: _audioQuality);
   }
 
   void _scheduleLyricsPrefetchAroundCurrent() {
@@ -3368,12 +3330,7 @@ class AudioPlayerService {
     _updateState(queue: _queue, queueRevision: _queueRevision);
     _saveQueueDebounced();
 
-    // Prefetch newly added tracks
     if (tracks.isNotEmpty) {
-      _ytPlayerUtils.prefetch(
-        tracks.map((t) => t.id).toList(),
-        quality: _audioQuality,
-      );
       if (_jioSaavnEnabled &&
           (_audioQuality == AudioQuality.high ||
               _audioQuality == AudioQuality.max ||
@@ -5538,13 +5495,13 @@ class AudioPlayerService {
           // Update state
           _updateState(queue: _queue, queueRevision: _queueRevision);
 
-          // Prefetch new tracks for instant playback
-          _ytPlayerUtils.prefetch(
-            newTracks.map((t) => t.id).toList(),
-            quality: _audioQuality,
-          );
           _schedulePrecacheAhead();
           _scheduleLyricsPrefetchAroundCurrent();
+
+          // If we were at the end of the queue, the next track now exists.
+          if (_currentIndex >= _queue.length - newTracks.length - 1) {
+            _prefetchNextTrack();
+          }
 
           // Update radio source for next fetch - use track from new batch
           if (newTracks.length > 2) {
