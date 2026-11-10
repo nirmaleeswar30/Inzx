@@ -26,6 +26,8 @@ class DesktopPodcastPlayer extends StatefulWidget {
     required this.videoId,
     required this.accent,
     this.volume = 1.0,
+    this.fullscreen = false,
+    this.onToggleFullscreen,
     this.onUnavailable,
   });
 
@@ -34,6 +36,10 @@ class DesktopPodcastPlayer extends StatefulWidget {
 
   /// Inzx's own volume (the player bar's slider), 0..1.
   final double volume;
+
+  /// Whether the page shows only this player, the window fullscreen.
+  final bool fullscreen;
+  final VoidCallback? onToggleFullscreen;
   final VoidCallback? onUnavailable;
 
   @override
@@ -197,6 +203,8 @@ class DesktopPodcastPlayerState extends State<DesktopPodcastPlayer>
                     child: _Controls(
                       position: _position,
                       accent: widget.accent,
+                      fullscreen: widget.fullscreen,
+                      onFullscreen: widget.onToggleFullscreen,
                       onToggle: _togglePlay,
                       onSeek: (d) {
                         seekTo(d.inSeconds);
@@ -233,10 +241,14 @@ class _Controls extends StatefulWidget {
     required this.accent,
     required this.onToggle,
     required this.onSeek,
+    this.fullscreen = false,
+    this.onFullscreen,
   });
 
   final ValueNotifier<_Playback> position;
   final Color accent;
+  final bool fullscreen;
+  final VoidCallback? onFullscreen;
   final VoidCallback onToggle;
   final ValueChanged<Duration> onSeek;
 
@@ -309,6 +321,15 @@ class _ControlsState extends State<_Controls> {
                 _fmt(p.duration),
                 style: const TextStyle(color: Colors.white70, fontSize: 12),
               ),
+              if (widget.onFullscreen != null)
+                IconButton(
+                  tooltip: widget.fullscreen ? 'Exit full screen' : 'Full screen',
+                  onPressed: widget.onFullscreen,
+                  icon: Icon(
+                    widget.fullscreen ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded,
+                    color: Colors.white,
+                  ),
+                ),
             ],
           );
         },

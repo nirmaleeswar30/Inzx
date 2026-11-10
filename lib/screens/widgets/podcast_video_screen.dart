@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +10,7 @@ import '../../models/models.dart';
 import '../../providers/providers.dart';
 import 'podcast_screen.dart' show RichDescription, PodcastScreen;
 import 'desktop_podcast_player.dart';
+import 'desktop_shell.dart' show desktopVideoFullScreen, setDesktopVideoFullScreen;
 import 'youtube_webview_player.dart';
 import 'share_sheet.dart';
 
@@ -27,6 +30,7 @@ class PodcastVideoScreen extends ConsumerStatefulWidget {
 class _PodcastVideoScreenState extends ConsumerState<PodcastVideoScreen>
     with SingleTickerProviderStateMixin {
   final _playerKey = GlobalKey();
+  final _playerSlotKey = GlobalKey();
 
   /// Linux plays the episode itself (DesktopPodcastPlayer: no web view
   /// there); this flips when YouTube offers it no stream. Android and
@@ -46,15 +50,28 @@ class _PodcastVideoScreenState extends ConsumerState<PodcastVideoScreen>
     super.initState();
     // Pause background audio when opening video
     ref.read(audioPlayerServiceProvider).pause();
+    desktopVideoFullScreen.addListener(_onVideoFullScreen);
     _tabController = TabController(length: 3, vsync: this);
     _pageController = PageController();
   }
 
   @override
   void dispose() {
+    desktopVideoFullScreen.removeListener(_onVideoFullScreen);
+    // Leaving the episode leaves its fullscreen too.
+    if (desktopVideoFullScreen.value) setDesktopVideoFullScreen(false);
     _tabController.dispose();
     _pageController.dispose();
     super.dispose();
+  }
+
+  /// Fullscreen ended from the app (Esc): take the embed out of its own
+  /// fullscreen too, or it keeps filling only its box.
+  void _onVideoFullScreen() {
+    if (desktopVideoFullScreen.value) return;
+    if (_playerKey.currentState case final YouTubeWebViewPlayerState web) {
+      web.exitFullscreen();
+    }
   }
 
   void _seekVideo(Duration pos) {
@@ -166,32 +183,14 @@ class _PodcastVideoScreenState extends ConsumerState<PodcastVideoScreen>
     final isLiked = _liked ?? false;
     final isDisliked = _disliked ?? false;
 
-    return Scaffold(
-      backgroundColor: desktopPageBackground(isDark ? Colors.black : colorScheme.surface),
-      appBar: AppBar(
-        backgroundColor: desktopPageBackground(Colors.black),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          ep.title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 15),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share_rounded),
-            tooltip: 'Share',
-            onPressed: _shareEpisode,
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // 16:9 Embedded YouTube Player (official IFrame API + origin trick)
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child: Stack(
+    return ValueListenableBuilder<bool>(
+      valueListenable: desktopVideoFullScreen,
+      builder: (context, videoFull, _) {
+        // One player, moved between layouts by its key so the web view
+        // (and where it is in the episode) survives the move.
+        final player = KeyedSubtree(
+          key: _playerSlotKey,
+          child: Stack(
               children: [
                 if (!_useEmbed)
                   DesktopPodcastPlayer(
@@ -199,6 +198,9 @@ class _PodcastVideoScreenState extends ConsumerState<PodcastVideoScreen>
                     videoId: widget.episode.videoId,
                     accent: accent,
                     volume: ref.read(audioPlayerServiceProvider).masterVolume,
+                    fullscreen: videoFull,
+                    onToggleFullscreen: () =>
+                        setDesktopVideoFullScreen(!desktopVideoFullScreen.value),
                     onUnavailable: () {
                       if (mounted) setState(() => _useEmbed = true);
                     },
@@ -227,6 +229,9 @@ class _PodcastVideoScreenState extends ConsumerState<PodcastVideoScreen>
                     onReady: () {
                       if (mounted) setState(() => _loading = false);
                     },
+                    // YouTube's own fullscreen button: on desktop it only
+                    // fills the web view, so the window follows it.
+                    onFullscreenChanged: isDesktop ? setDesktopVideoFullScreen : null,
                     onError: (code) {
                       if (mounted) setState(() => _playerError = code);
                     },
@@ -269,10 +274,8 @@ class _PodcastVideoScreenState extends ConsumerState<PodcastVideoScreen>
                   ),
               ],
             ),
-          ),
-
-          // Header Info & Like/Unlike Action Row
-          Padding(
+        );
+        final header = Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -352,10 +355,10 @@ class _PodcastVideoScreenState extends ConsumerState<PodcastVideoScreen>
                 ),
               ],
             ),
-          ),
-
-          // Swipeable Navigation Bar: EPISODE DETAILS | COMMENTS | RELATED
-          Container(
+          );
+        final tabs = Column(
+          children: [
+            Container(
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
@@ -397,9 +400,7 @@ class _PodcastVideoScreenState extends ConsumerState<PodcastVideoScreen>
               ],
             ),
           ),
-
-          // Swipeable Content Pages
-          Expanded(
+            Expanded(
             child: PageView(
               controller: _pageController,
               physics: const BouncingScrollPhysics(),
@@ -415,8 +416,116 @@ class _PodcastVideoScreenState extends ConsumerState<PodcastVideoScreen>
               ],
             ),
           ),
+          ],
+        );
+
+        if (isDesktop && videoFull) {
+          return Scaffold(
+            backgroundColor: Colors.black,
+            body: SizedBox.expand(child: player),
+          );
+        }
+        return Scaffold(
+      backgroundColor: desktopPageBackground(isDark ? Colors.black : colorScheme.surface),
+      appBar: AppBar(
+        backgroundColor: desktopPageBackground(Colors.black),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Text(
+          ep.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 15),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share_rounded),
+            tooltip: 'Share',
+            onPressed: _shareEpisode,
+          ),
         ],
       ),
+          body: LayoutBuilder(
+            builder: (context, box) {
+              // Desktop, wide: the video as large as fits with its title
+              // under it, and the details / comments / related in a side
+              // panel (YouTube's arrangement).
+              if (isDesktop && box.maxWidth >= 900) {
+                const panelWidth = 400.0;
+                const pad = 24.0;
+                const headerHeight = 76.0;
+                final videoWidth = math.max(
+                  240.0,
+                  math.min(
+                    box.maxWidth - panelWidth - pad * 2,
+                    (box.maxHeight - pad * 2 - headerHeight) * 16 / 9,
+                  ),
+                );
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(pad),
+                        child: Center(
+                          child: SizedBox(
+                            width: videoWidth,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: SizedBox(
+                                    width: videoWidth,
+                                    height: videoWidth * 9 / 16,
+                                    child: player,
+                                  ),
+                                ),
+                                header,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: panelWidth,
+                      decoration: BoxDecoration(
+                        border: Border(
+                          left: BorderSide(color: textColor.withValues(alpha: 0.08)),
+                        ),
+                      ),
+                      child: tabs,
+                    ),
+                  ],
+                );
+              }
+              // Phones, and narrow desktop windows: video on top. On desktop
+              // it never takes more than about half the height, so the tabs
+              // below always have room.
+              final videoHeight = isDesktop
+                  ? math.min(box.maxWidth * 9 / 16, box.maxHeight * 0.45)
+                  : box.maxWidth * 9 / 16;
+              return Column(
+                children: [
+                  Container(
+                    color: Colors.black,
+                    height: videoHeight,
+                    alignment: Alignment.center,
+                    child: SizedBox(
+                      width: videoHeight * 16 / 9,
+                      height: videoHeight,
+                      child: player,
+                    ),
+                  ),
+                  header,
+                  Expanded(child: tabs),
+                ],
+              );
+            },
+          ),
+        );
+      },
     );
   }
 

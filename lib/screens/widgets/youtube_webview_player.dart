@@ -28,6 +28,12 @@ class YouTubeWebViewPlayer extends StatefulWidget {
   final VoidCallback? onReady;
   final ValueChanged<int>? onError;
 
+  /// The player's own fullscreen button was pressed (true) or fullscreen
+  /// was left (false). The embed lives in an iframe, so the page sees it as
+  /// its iframe entering fullscreen; on desktop that only fills the web
+  /// view, and the screen makes the window fullscreen around it.
+  final ValueChanged<bool>? onFullscreenChanged;
+
   /// Desktop: Inzx's own volume (0..1, the player bar's slider), applied
   /// when the embed unmutes; 0 keeps it muted. Android plays at full volume.
   final double volume;
@@ -40,6 +46,7 @@ class YouTubeWebViewPlayer extends StatefulWidget {
     this.onStateChanged,
     this.onReady,
     this.onError,
+    this.onFullscreenChanged,
     this.volume = 1.0,
   });
 
@@ -77,6 +84,12 @@ class YouTubeWebViewPlayerState extends State<YouTubeWebViewPlayer>
 <script>
   var tag=document.createElement('script');tag.src='https://www.youtube.com/iframe_api';
   var s=document.getElementsByTagName('script')[0];s.parentNode.insertBefore(tag,s);
+  function inzxFullscreen(){
+    if(window.flutter_inappwebview)window.flutter_inappwebview.callHandler('onFullscreen',
+      !!(document.fullscreenElement||document.webkitFullscreenElement));
+  }
+  document.addEventListener('fullscreenchange',inzxFullscreen);
+  document.addEventListener('webkitfullscreenchange',inzxFullscreen);
   var player;
   function onYouTubeIframeAPIReady(){
     player=new YT.Player('player',{events:{
@@ -200,6 +213,12 @@ class YouTubeWebViewPlayerState extends State<YouTubeWebViewPlayer>
           },
         );
         c.addJavaScriptHandler(
+          handlerName: 'onFullscreen',
+          callback: (args) {
+            if (args.isNotEmpty) widget.onFullscreenChanged?.call(args[0] == true);
+          },
+        );
+        c.addJavaScriptHandler(
           handlerName: 'onError',
           callback: (args) {
             if (args.isNotEmpty) widget.onError?.call((args[0] as num).toInt());
@@ -221,6 +240,13 @@ class YouTubeWebViewPlayerState extends State<YouTubeWebViewPlayer>
       );
 
   bool get isReady => _isReady;
+
+  /// Leaves the page's own fullscreen (the embed's), if it's in it.
+  Future<void> exitFullscreen() async {
+    await _controller?.evaluateJavascript(
+      source: 'if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen();',
+    );
+  }
 
   Future<void> _eval(String api, String mp, String raw) async {
     await _controller?.evaluateJavascript(source:

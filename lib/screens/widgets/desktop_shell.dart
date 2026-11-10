@@ -55,6 +55,17 @@ Future<void> setDesktopFullScreen(bool on) async {
   await windowManager.setFullScreen(on);
 }
 
+/// Whether a video (a podcast episode) has taken over the whole screen. Like
+/// [desktopFullScreen] the frame steps aside, but the page stays as it is
+/// and shows only its video.
+final desktopVideoFullScreen = ValueNotifier<bool>(false);
+
+Future<void> setDesktopVideoFullScreen(bool on) async {
+  if (desktopVideoFullScreen.value == on) return;
+  desktopVideoFullScreen.value = on;
+  await windowManager.setFullScreen(on);
+}
+
 final desktopTabProvider = StateProvider<int>((ref) => 0);
 final desktopSidebarCollapsedProvider = StateProvider<bool>((ref) => false);
 
@@ -98,7 +109,9 @@ class DesktopShortcuts extends ConsumerWidget {
         const SingleActivator(LogicalKeyboardKey.arrowLeft, control: true):
             player.skipToPrevious,
         const SingleActivator(LogicalKeyboardKey.escape): () {
-          if (desktopFullScreen.value) {
+          if (desktopVideoFullScreen.value) {
+            setDesktopVideoFullScreen(false);
+          } else if (desktopFullScreen.value) {
             setDesktopFullScreen(false);
           } else {
             NowPlayingScreen.closeDesktop();
@@ -146,10 +159,12 @@ class _DesktopAppFrameState extends State<DesktopAppFrame> {
           desktopShellVisible,
           desktopMiniMode,
           desktopFullScreen,
+          desktopVideoFullScreen,
         ]),
         builder: (context, _) {
-          final showShell =
-              desktopShellVisible.value && !desktopFullScreen.value;
+          final showShell = desktopShellVisible.value &&
+              !desktopFullScreen.value &&
+              !desktopVideoFullScreen.value;
           final mini = desktopMiniMode.value;
           return Stack(
             children: [
