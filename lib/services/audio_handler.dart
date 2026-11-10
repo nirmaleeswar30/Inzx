@@ -9,6 +9,7 @@ import 'playback/playback.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/services/cache/hive_service.dart';
+import '../core/utils/platform_utils.dart';
 import '../data/sources/music_local_source.dart';
 import 'ytmusic_api_service.dart';
 import 'ytmusic_auth_service.dart';
@@ -112,7 +113,9 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
         track: state.currentTrack,
         isPlaying: state.isPlaying,
         position: _currentPosition,
-        duration: effectiveDuration ?? state.duration,
+        duration: isDesktop
+            ? state.duration
+            : effectiveDuration ?? state.duration,
       );
     });
 
@@ -148,6 +151,7 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
             isPlaying: true,
             position: position,
             duration: state.duration,
+            seekCount: isDesktop ? _playerService.playhead.seeks : null,
           );
         }
       }

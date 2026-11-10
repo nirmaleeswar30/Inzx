@@ -1376,9 +1376,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
         .where(
           (item) =>
               !isDesktop ||
-              !(item.screen is EqualizerScreen ||
-                  item.screen is AutoEqScreen ||
-                  item.screen is DiscordRichPresenceScreen),
+              !(item.screen is EqualizerScreen || item.screen is AutoEqScreen),
         )
         .toList();
 
@@ -2320,11 +2318,17 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           height: 1,
           color: _isDark ? InzxColors.darkDivider : InzxColors.divider,
         ),
-        // Discord's sign-in returns through an Android deep link.
-        if (!isDesktop) ValueListenableBuilder<DiscordRpcState>(
+        ValueListenableBuilder<DiscordRpcState>(
           valueListenable: DiscordRpcService.instance.stateNotifier,
           builder: (context, rpcState, _) {
-            final connected = DiscordRpcService.instance.isAuthorized;
+            final service = DiscordRpcService.instance;
+            final subtitle = isDesktop && service.desktopEnabled
+                ? rpcState.status == DiscordRpcStatus.connected
+                      ? 'Connected to the Discord app'
+                      : 'Waiting for the Discord app'
+                : service.isAuthorized
+                ? 'Connected as ${rpcState.displayName}'
+                : 'Show your listening activity on Discord';
             return ListTile(
               contentPadding: EdgeInsets.zero,
               leading: Container(
@@ -2347,9 +2351,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                 ),
               ),
               subtitle: Text(
-                connected
-                    ? 'Connected as ${rpcState.displayName}'
-                    : 'Show your listening activity on Discord',
+                subtitle,
                 style: TextStyle(fontSize: 12, color: _textSecondary),
               ),
               trailing: Icon(Iconsax.arrow_right_3, size: 18, color: _textTertiary),

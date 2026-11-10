@@ -90,6 +90,7 @@ dependencies:
   audio_service_platform_interface: ^0.1.0
   window_manager: ^0.5.0
   desktop_webview_window: ^0.4.2 # YouTube Music sign-in window
+  win32: ^5.15.0 # Windows named pipes for Discord Rich Presence
 dev_dependencies:
   flutter_test:
     sdk: flutter
