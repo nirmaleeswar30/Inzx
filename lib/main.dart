@@ -33,6 +33,7 @@ import 'screens/widgets/whats_new_dialog.dart';
 import 'screens/widgets/update_dialog.dart';
 import 'screens/widgets/desktop_shell.dart';
 import 'services/scrobbling/scrobble_service.dart';
+import 'services/desktop/desktop_updater.dart';
 
 InzxAudioHandler? audioHandler;
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
@@ -265,6 +266,13 @@ class _InzxAppState extends ConsumerState<InzxApp> {
 
     if (didPatchUpdate) {
       _showPatchUpdateBanner();
+      return;
+    }
+
+    // Desktop: the updater downloads it in the background and the top bar
+    // shows it; no dialog.
+    if (isDesktop) {
+      unawaited(DesktopUpdater.instance.check());
       return;
     }
 

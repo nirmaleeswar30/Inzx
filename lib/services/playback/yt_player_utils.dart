@@ -1063,6 +1063,106 @@ class YTPlayerUtils {
 
   /// Extract stream URL from format data
   /// Appends poToken and includes visitorData for request binding
+  /// Video for in-app podcast playback on desktop, where the episode plays
+  /// straight from YouTube instead of an embedded page. Each client is
+  /// asked in the usual order; what it offers is returned:
+  ///
+  /// * [VideoStream.hls]: an HLS manifest (audio and video together, all
+  ///   qualities). Apple-family clients send one. Media Foundation (Windows)
+  ///   and mpv (Linux) both play it.
+  /// * [VideoStream.muxed]: a progressive file with sound (360p at best).
+  /// * [VideoStream.video] + [VideoStream.audio]: separate adaptive streams,
+  ///   up to [maxHeight], for players that can join them (mpv).
+  Future<VideoStream?> videoStreamFor(String videoId, {int maxHeight = 1080}) async {
+    await _ensurePoTokensInitialized();
+    String? poToken;
+    String? visitorData;
+    if (_poToken.hasValidTokens) {
+      poToken = _poToken.streamingPoToken;
+      visitorData = _poToken.visitorData;
+    }
+    if (visitorData == null || visitorData.isEmpty) {
+      visitorData = await _fallbackVisitorData();
+    }
+    for (final client in InnerTubeClient.defaultClients) {
+      await _applyThrottle(client.name);
+      try {
+        int? sts;
+        if (client.supportsSignatureCipher) {
+          sts = await _api.getSignatureTimestamp(videoId);
+        }
+        final response = await _api.player(
+          videoId,
+          client: client,
+          signatureTimestamp: sts,
+          poToken: poToken,
+          visitorData: visitorData,
+        );
+        if (response == null || !response.playabilityStatus.isPlayable) continue;
+        final data = response.streamingData;
+        if (data == null) continue;
+
+        final hls = data['hlsManifestUrl'] as String?;
+        String? muxed;
+        for (final f in (data['formats'] as List? ?? const [])) {
+          if (f is! Map<String, dynamic>) continue;
+          final url = await _extractStreamUrl(f, poToken: poToken, visitorData: visitorData);
+          if (url != null) muxed = url; // last = highest listed (360p)
+        }
+
+        String? video, audio;
+        var height = 0;
+        final adaptive = (data['adaptiveFormats'] as List? ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .toList();
+        // Video: the tallest within maxHeight, H.264 first (cheapest to
+        // decode in software), then VP9, then AV1.
+        int codecRank(String mime) => mime.contains('avc1')
+            ? 0
+            : (mime.contains('vp9') || mime.contains('vp09'))
+            ? 1
+            : 2;
+        final videos = adaptive.where((f) {
+          final mime = f['mimeType']?.toString() ?? '';
+          final h = (f['height'] as num?)?.toInt() ?? 0;
+          return mime.startsWith('video/') && h > 0 && h <= maxHeight;
+        }).toList()
+          ..sort((a, b) {
+            final h = ((b['height'] as num).toInt()).compareTo((a['height'] as num).toInt());
+            if (h != 0) return h;
+            return codecRank(a['mimeType'].toString()).compareTo(codecRank(b['mimeType'].toString()));
+          });
+        if (videos.isNotEmpty) {
+          video = await _extractStreamUrl(videos.first, poToken: poToken, visitorData: visitorData);
+          height = (videos.first['height'] as num).toInt();
+          final best = _selectBestFormat(adaptive, quality: AudioQuality.high, isMetered: false);
+          if (best != null) {
+            audio = await _extractStreamUrl(
+              best['raw'] as Map<String, dynamic>,
+              poToken: poToken,
+              visitorData: visitorData,
+            );
+          }
+        }
+
+        final stream = VideoStream(
+          client: client.name,
+          hls: (hls != null && hls.isNotEmpty) ? hls : null,
+          muxed: muxed,
+          video: video != null && audio != null ? video : null,
+          audio: video != null && audio != null ? audio : null,
+          height: height,
+        );
+        if (stream.isEmpty) continue;
+        if (kDebugMode) print('YTPlayerUtils: video for $videoId from ${client.name}: $stream');
+        return stream;
+      } catch (e) {
+        if (kDebugMode) print('YTPlayerUtils: video from ${client.name} failed: $e');
+      }
+    }
+    return null;
+  }
+
   Future<String?> _extractStreamUrl(
     Map<String, dynamic> format, {
     String? poToken,
@@ -1263,4 +1363,31 @@ class YTPlayerUtils {
     _clientCooldownUntil.clear();
     _clientLastRequest.clear();
   }
+}
+
+/// What [YTPlayerUtils.videoStreamFor] found for a video.
+class VideoStream {
+  const VideoStream({
+    required this.client,
+    this.hls,
+    this.muxed,
+    this.video,
+    this.audio,
+    this.height = 0,
+  });
+
+  final String client;
+  final String? hls;
+  final String? muxed;
+  final String? video;
+  final String? audio;
+
+  /// Height of [video], in pixels.
+  final int height;
+
+  bool get isEmpty => hls == null && muxed == null && video == null;
+
+  @override
+  String toString() =>
+      '${hls != null ? 'HLS ' : ''}${muxed != null ? 'muxed ' : ''}${video != null ? 'adaptive ${height}p' : ''}';
 }

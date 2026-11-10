@@ -7,6 +7,7 @@ import '../../core/utils/platform_utils.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import 'podcast_screen.dart' show RichDescription, PodcastScreen;
+import 'desktop_podcast_player.dart';
 import 'youtube_webview_player.dart';
 import 'share_sheet.dart';
 
@@ -25,7 +26,12 @@ class PodcastVideoScreen extends ConsumerStatefulWidget {
 
 class _PodcastVideoScreenState extends ConsumerState<PodcastVideoScreen>
     with SingleTickerProviderStateMixin {
-  final _playerKey = GlobalKey<YouTubeWebViewPlayerState>();
+  final _playerKey = GlobalKey();
+
+  /// Linux plays the episode itself (DesktopPodcastPlayer: no web view
+  /// there); this flips when YouTube offers it no stream. Android and
+  /// Windows use YouTube's embed.
+  bool _useEmbed = !isLinuxDesktop;
   late final TabController _tabController;
   late final PageController _pageController;
   bool _loading = true;
@@ -52,7 +58,9 @@ class _PodcastVideoScreenState extends ConsumerState<PodcastVideoScreen>
   }
 
   void _seekVideo(Duration pos) {
-    _playerKey.currentState?.seekTo(pos.inSeconds);
+    if (_playerKey.currentState case final PodcastPlayerHandle player) {
+      player.seekTo(pos.inSeconds);
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Jumped to ${_formatDuration(pos)}'),
@@ -185,7 +193,19 @@ class _PodcastVideoScreenState extends ConsumerState<PodcastVideoScreen>
             aspectRatio: 16 / 9,
             child: Stack(
               children: [
-                if (isLinuxDesktop)
+                if (!_useEmbed)
+                  DesktopPodcastPlayer(
+                    key: _playerKey,
+                    videoId: widget.episode.videoId,
+                    accent: accent,
+                    volume: ref.read(audioPlayerServiceProvider).masterVolume,
+                    onUnavailable: () {
+                      if (mounted) setState(() => _useEmbed = true);
+                    },
+                  )
+                else if (isLinuxDesktop)
+                  // No stream YouTube would give us, and Linux has no
+                  // embeddable web view: YouTube itself is the last resort.
                   ColoredBox(
                     color: Colors.black,
                     child: Center(
@@ -201,6 +221,9 @@ class _PodcastVideoScreenState extends ConsumerState<PodcastVideoScreen>
                     key: _playerKey,
                     videoId: widget.episode.videoId,
                     autoPlay: true,
+                    volume: isDesktop
+                        ? ref.read(audioPlayerServiceProvider).masterVolume
+                        : 1.0,
                     onReady: () {
                       if (mounted) setState(() => _loading = false);
                     },
@@ -208,7 +231,7 @@ class _PodcastVideoScreenState extends ConsumerState<PodcastVideoScreen>
                       if (mounted) setState(() => _playerError = code);
                     },
                   ),
-                if (_loading && _playerError == null && !isLinuxDesktop)
+                if (_useEmbed && _loading && _playerError == null && !isLinuxDesktop)
                   Container(
                     color: Colors.black,
                     child: Center(

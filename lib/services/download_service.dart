@@ -67,14 +67,15 @@ Future<String> _getDownloadsDirPath() async {
     }
   }
 
-  // Desktop has no app-private external storage: use the Downloads folder.
+  // Desktop has no app-private external storage: use the Downloads folder,
+  // or Inzx's own data folder if the system reports none (never Documents).
   if (isDesktop) {
     final downloads = await getDownloadsDirectory();
-    if (downloads != null) {
-      final inzxDir = Directory('${downloads.path}/Inzx');
-      await inzxDir.create(recursive: true);
-      return inzxDir.path;
-    }
+    final inzxDir = downloads != null
+        ? Directory('${downloads.path}/Inzx')
+        : Directory('${(await appDataDirectory()).path}/downloads');
+    await inzxDir.create(recursive: true);
+    return inzxDir.path;
   }
 
   // 2. Use app-private external storage (OuterTune style)

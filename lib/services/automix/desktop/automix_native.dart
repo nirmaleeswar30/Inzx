@@ -420,7 +420,13 @@ class MpvDecoder {
     if (_instance != null) return _instance;
     final names = Platform.isWindows
         ? [p.join(p.dirname(Platform.resolvedExecutable), 'libmpv-2.dll'), 'libmpv-2.dll']
-        : ['libmpv.so.2', 'libmpv.so', 'libmpv.so.1'];
+        : [
+            // The AppImage pins its bundled libmpv here (see build_appimage.sh).
+            ?Platform.environment['LIBMPV_LIBRARY_PATH'],
+            'libmpv.so.2',
+            'libmpv.so',
+            'libmpv.so.1',
+          ];
     for (final name in names) {
       try {
         return _instance = MpvDecoder._(DynamicLibrary.open(name));

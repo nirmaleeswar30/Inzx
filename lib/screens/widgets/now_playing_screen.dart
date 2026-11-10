@@ -2275,6 +2275,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                               ),
                             ),
                             _buildHeartOverlay(),
+                            // Stats for nerds on the art, as on Android.
+                            const _DesktopArtStats(),
                           ],
                         ),
                       ),
@@ -5862,6 +5864,65 @@ class __QueuePlayingEqualizerBarsState extends State<_QueuePlayingEqualizerBars>
       decoration: BoxDecoration(
         color: widget.color,
         borderRadius: BorderRadius.circular(2),
+      ),
+    );
+  }
+}
+
+/// Stats for nerds over the desktop artwork, as the Android player shows
+/// them: the stream line (tap for the signal path) and Automix's under it,
+/// on a small scrim so they read over any cover.
+class _DesktopArtStats extends ConsumerWidget {
+  const _DesktopArtStats();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(playbackStateProvider).valueOrNull;
+    final stats = state?.qualityInfo;
+    if (!(state?.showNerdStats ?? false) || stats == null || stats.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Positioned(
+      left: 16,
+      right: 16,
+      bottom: 14,
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.45),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () => SignalPathSheet.show(
+                    context,
+                    accentColor: ref.read(playerAlbumColorsProvider).accent,
+                  ),
+                  child: Text(
+                    stats,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white70,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ),
+              ),
+              const IgnorePointer(
+                child: AutomixStatsLine(color: Colors.white54, fontSize: 10.5),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

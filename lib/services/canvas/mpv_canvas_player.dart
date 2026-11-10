@@ -9,8 +9,9 @@ import 'package:ffi/ffi.dart';
 import 'package:flutter/widgets.dart';
 import 'package:path/path.dart' as p;
 
-/// Plays a canvas (looping, silent motion artwork) through libmpv's
-/// software render API, for Linux, where video_player has no backend.
+/// Plays video through libmpv's software render API, for Linux, where
+/// video_player has no backend: canvases (looping, silent motion artwork)
+/// and, with sound and [playback] reports, podcast episodes.
 ///
 /// Pure Dart over FFI: no plugin, so nothing reaches the Android build.
 /// libmpv decodes and scales in a background isolate and hands over RGBA
@@ -30,6 +31,9 @@ class MpvCanvasPlayer {
 
   /// The latest frame. Owned by the player: don't dispose it yourself.
   final ValueNotifier<ui.Image?> frame = ValueNotifier(null);
+
+  /// Position, length and state, about four times a second.
+  final ValueNotifier<MpvPlaybackState> playback = ValueNotifier(const MpvPlaybackState());
 
   Size get size => _size;
   Size _size = Size.zero;
@@ -74,6 +78,7 @@ class MpvCanvasPlayer {
 
   void play() => _commands?.send(['pause', false]);
   void pause() => _commands?.send(['pause', true]);
+  void seek(Duration to) => _commands?.send(['seek', to.inMilliseconds / 1000.0]);
 
 
   void _complete(bool ok) {
@@ -106,6 +111,15 @@ class MpvCanvasPlayer {
           old?.dispose();
           _complete(true);
         });
+      case 'state':
+        if (_disposed) return;
+        playback.value = MpvPlaybackState(
+          position: Duration(milliseconds: ((message[1] as double) * 1000).round()),
+          duration: Duration(milliseconds: ((message[2] as double) * 1000).round()),
+          paused: message[3] as bool,
+          buffering: message[4] as bool,
+          ended: message[5] as bool,
+        );
       case 'error':
         debugPrint('MpvCanvasPlayer: ${message[1]}');
         _complete(false);
@@ -132,7 +146,26 @@ class MpvCanvasPlayer {
     frame.value = null;
     old?.dispose();
     frame.dispose();
+    playback.dispose();
   }
+}
+
+/// [MpvCanvasPlayer.playback]'s report.
+@immutable
+class MpvPlaybackState {
+  const MpvPlaybackState({
+    this.position = Duration.zero,
+    this.duration = Duration.zero,
+    this.paused = false,
+    this.buffering = false,
+    this.ended = false,
+  });
+
+  final Duration position;
+  final Duration duration;
+  final bool paused;
+  final bool buffering;
+  final bool ended;
 }
 
 /// Paints an [MpvCanvasPlayer]'s frames, filling its box like VideoPlayer.
@@ -202,7 +235,13 @@ DynamicLibrary? _openLibmpv(String? explicit) {
       ? [explicit]
       : Platform.isWindows
       ? [p.join(p.dirname(Platform.resolvedExecutable), 'libmpv-2.dll'), 'libmpv-2.dll']
-      : ['libmpv.so.2', 'libmpv.so', 'libmpv.so.1'];
+      : [
+          // The AppImage pins its bundled libmpv here (see build_appimage.sh).
+          ?Platform.environment['LIBMPV_LIBRARY_PATH'],
+          'libmpv.so.2',
+          'libmpv.so',
+          'libmpv.so.1',
+        ];
   for (final name in names) {
     try {
       return DynamicLibrary.open(name);
@@ -409,15 +448,32 @@ void _canvasWorker(_WorkerArgs args) {
         setProperty(handle, k, v);
         calloc.free(k);
         calloc.free(v);
+      case 'seek':
+        run(['seek', '${message[1]}', 'absolute']);
       case 'dispose':
         close();
     }
   });
   out.send(commands.sendPort);
 
+  var lastState = 0;
+  bool flag(String name) => prop(name) == 'yes';
+
   // ~120 Hz poll: mpv says when a new frame is due; render only then.
   ticker = Timer.periodic(const Duration(milliseconds: 8), (_) {
     if (closed) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - lastState >= 250) {
+      lastState = now;
+      out.send([
+        'state',
+        double.tryParse(prop('time-pos') ?? '') ?? 0.0,
+        double.tryParse(prop('duration') ?? '') ?? 0.0,
+        flag('pause'),
+        flag('paused-for-cache'),
+        flag('eof-reached'),
+      ]);
+    }
     while (true) {
       final ev = waitEvent(handle, 0);
       final id = ev.ref.eventId;

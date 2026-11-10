@@ -22,6 +22,7 @@ import '../search_screen.dart';
 import '../ytmusic_settings_screen.dart';
 import 'artist_screen.dart';
 import 'desktop_player_bar.dart';
+import 'desktop_update_button.dart';
 import 'now_playing_screen.dart';
 import 'playlist_screen.dart';
 import 'podcast_screen.dart';
@@ -383,6 +384,7 @@ class _DesktopTopBar extends ConsumerWidget {
             ),
           ),
           if (showShell) ...[
+            DesktopUpdateButton(foreground: foreground),
             _JamsButton(foreground: foreground),
             const SizedBox(width: 6),
             const _ProfileButton(),

@@ -24,6 +24,8 @@ import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../services/github_release_update_service.dart';
 import '../services/shorebird_update_service.dart';
+import '../services/desktop/desktop_updater.dart';
+import 'widgets/desktop_update_button.dart';
 import 'widgets/whats_new_dialog.dart';
 import 'widgets/update_dialog.dart';
 import 'widgets/color_picker_dialog.dart';
@@ -3737,6 +3739,23 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           ),
           onTap: _handleCheckForUpdates,
         ),
+        // Desktop: background updates (DesktopUpdater), on by default.
+        if (isDesktop)
+          ListenableBuilder(
+            listenable: DesktopUpdater.instance,
+            builder: (context, _) => _switchTile(
+              icon: Icons.system_update_alt_rounded,
+              iconBg: _accentColor,
+              title: 'Update automatically',
+              subtitle: DesktopUpdater.canSelfUpdate
+                  ? 'Downloads new versions in the background and installs '
+                        'them when you close Inzx'
+                  : 'Only for Inzx installed with its installer or AppImage; '
+                        'this copy shows new versions instead',
+              value: DesktopUpdater.instance.autoUpdate,
+              onChanged: DesktopUpdater.instance.setAutoUpdate,
+            ),
+          ),
         Divider(color: _isDark ? Colors.white10 : Colors.black12, height: 16),
         // What's New & Changelog
         ListTile(
@@ -3963,7 +3982,32 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       return;
     }
 
-    // 2. Check GitHub Releases API for new release build
+    // 2. Desktop: the updater checks, downloads and installs; its dialog
+    // explains where it stands.
+    if (isDesktop) {
+      await DesktopUpdater.instance.check(force: true);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      if (DesktopUpdater.instance.update != null) {
+        await DesktopUpdateButton.showDetails(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle_rounded, color: Colors.greenAccent),
+                SizedBox(width: 10),
+                Text('You are on the latest version!'),
+              ],
+            ),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+      return;
+    }
+
+    // 3. Check GitHub Releases API for new release build
     final releaseInfo = await GithubReleaseUpdateService.instance.checkForNewRelease(
       ignoreReleaseMode: true,
     );
