@@ -7,8 +7,11 @@
 #include <winrt/Windows.Storage.Streams.h>
 
 #include <chrono>
+#include <iterator>
 #include <string>
 #include <variant>
+
+#include "resource.h"
 
 using flutter::EncodableMap;
 using flutter::EncodableValue;
@@ -24,6 +27,26 @@ using winrt::Windows::Media::SystemMediaTransportControlsTimelineProperties;
 using winrt::Windows::Storage::Streams::RandomAccessStreamReference;
 
 namespace {
+
+enum TaskbarButton : UINT {
+  kTaskbarPrevious = 0x100,
+  kTaskbarPlayPause,
+  kTaskbarNext,
+};
+
+THUMBBUTTON MakeTaskbarButton(UINT id, int icon, const wchar_t* tooltip,
+                             bool enabled, UINT dpi) {
+  THUMBBUTTON button{};
+  button.dwMask = THB_ICON | THB_TOOLTIP | THB_FLAGS;
+  button.iId = id;
+  button.hIcon = static_cast<HICON>(LoadImageW(
+      GetModuleHandleW(nullptr), MAKEINTRESOURCEW(icon), IMAGE_ICON,
+      GetSystemMetricsForDpi(SM_CXICON, dpi),
+      GetSystemMetricsForDpi(SM_CYICON, dpi), LR_DEFAULTCOLOR));
+  wcscpy_s(button.szTip, tooltip);
+  button.dwFlags = enabled ? THBF_ENABLED : THBF_DISABLED;
+  return button;
+}
 
 const EncodableValue* Find(const EncodableMap& map, const char* key) {
   auto it = map.find(EncodableValue(key));
@@ -55,7 +78,8 @@ TimeSpan Milliseconds(int64_t ms) {
 
 WindowsMediaControls::WindowsMediaControls(flutter::BinaryMessenger* messenger,
                                            HWND window)
-    : window_(window) {
+    : window_(window),
+      taskbar_created_message_(RegisterWindowMessageW(L"TaskbarButtonCreated")) {
   channel_ = std::make_unique<flutter::MethodChannel<EncodableValue>>(
       messenger, "inzx/windows_media",
       &flutter::StandardMethodCodec::GetInstance());
@@ -147,6 +171,76 @@ void WindowsMediaControls::HandleControlMessage(WPARAM control, LPARAM value) {
   }
 }
 
+bool WindowsMediaControls::HandleTaskbarMessage(UINT message, WPARAM wparam) {
+  if (taskbar_created_message_ && message == taskbar_created_message_) {
+    // Explorer also sends this after it recreates the taskbar.
+    taskbar_ = winrt::try_create_instance<ITaskbarList3>(__uuidof(TaskbarList));
+    if (taskbar_ && SUCCEEDED(taskbar_->HrInit())) {
+      UpdateTaskbarButtons(true, GetDpiForWindow(window_));
+    } else {
+      taskbar_ = nullptr;
+    }
+    return true;
+  }
+  if (message == WM_DPICHANGED && taskbar_) {
+    UpdateTaskbarButtons(false, LOWORD(wparam));
+  }
+  if (message != WM_COMMAND || HIWORD(wparam) != THBN_CLICKED) return false;
+
+  switch (LOWORD(wparam)) {
+    case kTaskbarPrevious:
+      if (taskbar_active_ && taskbar_can_previous_) {
+        HandleControlMessage(kPrevious, 0);
+      }
+      return true;
+    case kTaskbarPlayPause:
+      if (taskbar_active_) {
+        HandleControlMessage(taskbar_playing_ ? kPause : kPlay, 0);
+      }
+      return true;
+    case kTaskbarNext:
+      if (taskbar_active_ && taskbar_can_next_) {
+        HandleControlMessage(kNext, 0);
+      }
+      return true;
+    default:
+      return false;
+  }
+}
+
+void WindowsMediaControls::SetTaskbarState(bool active, bool playing,
+                                           bool can_previous, bool can_next) {
+  if (active == taskbar_active_ && playing == taskbar_playing_ &&
+      can_previous == taskbar_can_previous_ && can_next == taskbar_can_next_) {
+    return;
+  }
+  taskbar_active_ = active;
+  taskbar_playing_ = playing;
+  taskbar_can_previous_ = can_previous;
+  taskbar_can_next_ = can_next;
+  if (taskbar_) UpdateTaskbarButtons(false, GetDpiForWindow(window_));
+}
+
+void WindowsMediaControls::UpdateTaskbarButtons(bool add, UINT dpi) {
+  THUMBBUTTON buttons[] = {
+      MakeTaskbarButton(kTaskbarPrevious, IDI_TASKBAR_PREVIOUS, L"Previous track",
+                        taskbar_active_ && taskbar_can_previous_, dpi),
+      MakeTaskbarButton(kTaskbarPlayPause,
+                        taskbar_playing_ ? IDI_TASKBAR_PAUSE : IDI_TASKBAR_PLAY,
+                        taskbar_playing_ ? L"Pause" : L"Play", taskbar_active_,
+                        dpi),
+      MakeTaskbarButton(kTaskbarNext, IDI_TASKBAR_NEXT, L"Next track",
+                        taskbar_active_ && taskbar_can_next_, dpi),
+  };
+  constexpr UINT count = static_cast<UINT>(std::size(buttons));
+  if (!add || FAILED(taskbar_->ThumbBarAddButtons(window_, count, buttons))) {
+    taskbar_->ThumbBarUpdateButtons(window_, count, buttons);
+  }
+  for (const auto& button : buttons) {
+    if (button.hIcon) DestroyIcon(button.hIcon);
+  }
+}
+
 void WindowsMediaControls::UpdateTimeline(int64_t position_ms) {
   SystemMediaTransportControlsTimelineProperties timeline;
   timeline.StartTime(Milliseconds(0));
@@ -160,15 +254,21 @@ void WindowsMediaControls::UpdateTimeline(int64_t position_ms) {
 void WindowsMediaControls::HandleMethodCall(
     const flutter::MethodCall<EncodableValue>& call,
     std::unique_ptr<flutter::MethodResult<EncodableValue>> result) {
+  const auto* args = std::get_if<EncodableMap>(call.arguments());
+  const std::string& method = call.method_name();
+  if (method == "setState" && args) {
+    SetTaskbarState(GetBool(*args, "active"), GetBool(*args, "playing"),
+                    GetBool(*args, "canPrevious"), GetBool(*args, "canNext"));
+  } else if (method == "clear") {
+    SetTaskbarState(false, false, false, false);
+  }
+
   if (!controls_) {
     result->Success();
     return;
   }
 
   try {
-    const auto* args = std::get_if<EncodableMap>(call.arguments());
-    const std::string& method = call.method_name();
-
     if (method == "setState" && args) {
       controls_.IsEnabled(GetBool(*args, "active"));
       controls_.IsNextEnabled(GetBool(*args, "canNext"));

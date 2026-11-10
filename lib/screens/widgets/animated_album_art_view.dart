@@ -9,6 +9,7 @@ import '../../core/providers/theme_provider.dart';
 import '../../core/utils/platform_utils.dart';
 import '../../services/canvas/canvas_artwork.dart';
 import '../../services/canvas/canvas_repository.dart';
+import '../../services/canvas/mpv_canvas_player.dart';
 
 /// Renders looping animated motion artwork (Canvas) over the static album art.
 ///
@@ -50,6 +51,10 @@ class AnimatedAlbumArtView extends ConsumerStatefulWidget {
 class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView>
     with WidgetsBindingObserver {
   VideoPlayerController? _controller;
+
+  /// Linux: video_player has no backend there, so canvases play through
+  /// libmpv's software renderer instead.
+  MpvCanvasPlayer? _mpv;
   bool _isInitialized = false;
   int _loadRequestId = 0;
 
@@ -64,14 +69,23 @@ class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView>
   /// keep decoding it (it costs battery and holds a hardware decoder).
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    final controller = _controller;
-    if (controller == null || !_isInitialized) return;
+    if (!_isInitialized) return;
     if (state == AppLifecycleState.resumed) {
-      if (ref.read(isPlayingProvider)) controller.play();
+      if (ref.read(isPlayingProvider)) _play();
     } else if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
-      controller.pause();
+      _pause();
     }
+  }
+
+  void _play() {
+    _controller?.play();
+    _mpv?.play();
+  }
+
+  void _pause() {
+    _controller?.pause();
+    _mpv?.pause();
   }
 
   @override
@@ -97,12 +111,15 @@ class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView>
   void _stopAndReset({bool notifyState = true}) {
     _loadRequestId++;
     final oldController = _controller;
+    final oldMpv = _mpv;
     _controller = null;
+    _mpv = null;
     _isInitialized = false;
     if (notifyState && mounted) {
       setState(() {});
     }
     _disposeController(oldController);
+    oldMpv?.dispose();
   }
 
   Future<void> _loadCanvas() async {
@@ -176,9 +193,56 @@ class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView>
     }
   }
 
+  /// A local copy of a direct MP4 when the cache can get one, else [url]
+  /// (HLS always streams).
+  Future<String> _localOrUrl(String url, CanvasSource source) async {
+    final isHls =
+        url.toLowerCase().contains('.m3u8') || source == CanvasSource.appleMusic;
+    if (isHls) return url;
+    try {
+      final file = await DefaultCacheManager()
+          .getSingleFile(url)
+          .timeout(const Duration(seconds: 8));
+      return file.path;
+    } catch (_) {
+      return url;
+    }
+  }
+
+  /// Linux: the canvas, else its fallback, through [MpvCanvasPlayer].
+  Future<void> _setupMpv(CanvasArtwork canvas, int requestId) async {
+    for (final url in [canvas.url, ?canvas.fallbackUrl]) {
+      final source = await _localOrUrl(url, canvas.source);
+      if (!mounted || requestId != _loadRequestId) return;
+      final player = MpvCanvasPlayer();
+      final ok = await player.open(source);
+      if (!mounted || requestId != _loadRequestId) {
+        player.dispose();
+        return;
+      }
+      if (!ok) {
+        player.dispose();
+        debugPrint('AnimatedAlbumArt: libmpv could not play $url');
+        continue;
+      }
+      final old = _mpv;
+      _mpv = player;
+      old?.dispose();
+      if (ref.read(isPlayingProvider)) {
+        player.play();
+      } else {
+        player.pause();
+      }
+      setState(() => _isInitialized = true);
+      debugPrint('AnimatedAlbumArt: libmpv canvas looping for "${widget.track.title}"');
+      return;
+    }
+  }
+
   Future<void> _setupVideo(CanvasArtwork canvas, int requestId) async {
-    // video_player has no desktop backend: the static art stays up.
-    if (isDesktop) return;
+    // Windows plays canvases through video_player_win; Linux, which has no
+    // video_player backend, through libmpv.
+    if (isLinuxDesktop) return _setupMpv(canvas, requestId);
 
     VideoPlayerController? controller;
 
@@ -288,11 +352,11 @@ class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView>
     // Sync play/pause with player service state
     ref.listen<bool>(isPlayingProvider, (previous, isPlaying) {
       if (!mounted) return;
-      if (_controller != null && _isInitialized) {
+      if (_isInitialized) {
         if (isPlaying) {
-          _controller!.play();
+          _play();
         } else {
-          _controller!.pause();
+          _pause();
         }
       }
     });
@@ -308,7 +372,9 @@ class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView>
     });
 
     final controller = _controller;
-    final hasActiveVideo = controller != null && _isInitialized;
+    final mpv = _mpv;
+    final hasActiveVideo = (controller != null || mpv != null) && _isInitialized;
+    final videoSize = controller?.value.size ?? mpv?.size ?? Size.zero;
 
     // Expand, so the art fills the box like the video does. A loose Stack lets
     // an image take its own size instead, leaving a small thumbnail as a small
@@ -333,17 +399,15 @@ class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView>
                   child: FittedBox(
                     fit: widget.fit,
                     child: SizedBox(
-                      width: controller.value.size.width > 0
-                          ? controller.value.size.width
-                          : 1280,
-                      height: controller.value.size.height > 0
-                          ? controller.value.size.height
-                          : 1280,
+                      width: videoSize.width > 0 ? videoSize.width : 1280,
+                      height: videoSize.height > 0 ? videoSize.height : 1280,
                       // Own layer: the video repaints every frame and
                       // shouldn't drag the rest of the screen with it.
                       child: RepaintBoundary(
                         key: widget.captureKey,
-                        child: VideoPlayer(controller),
+                        child: controller != null
+                            ? VideoPlayer(controller)
+                            : MpvCanvasView(mpv!),
                       ),
                     ),
                   ),

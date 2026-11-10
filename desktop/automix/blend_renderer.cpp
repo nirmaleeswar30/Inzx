@@ -263,6 +263,30 @@ void writeU16(std::FILE* file, uint16_t value) { std::fwrite(&value, 2, 1, file)
 
 }  // namespace
 
+std::FILE* OpenFloatWav(const std::string& path, int sampleRate, int64_t frames) {
+  std::FILE* file = openForWrite(path);
+  if (file == nullptr) return nullptr;
+  const uint32_t dataBytes = uint32_t(frames * 2 * sizeof(float));
+  std::fwrite("RIFF", 1, 4, file);
+  writeU32(file, 4 + 26 + 12 + 8 + dataBytes);
+  std::fwrite("WAVE", 1, 4, file);
+  std::fwrite("fmt ", 1, 4, file);
+  writeU32(file, 18);
+  writeU16(file, 3);  // IEEE float
+  writeU16(file, 2);
+  writeU32(file, uint32_t(sampleRate));
+  writeU32(file, uint32_t(sampleRate) * 2 * 4);
+  writeU16(file, 8);
+  writeU16(file, 32);
+  writeU16(file, 0);
+  std::fwrite("fact", 1, 4, file);
+  writeU32(file, 4);
+  writeU32(file, uint32_t(frames));
+  std::fwrite("data", 1, 4, file);
+  writeU32(file, dataBytes);
+  return file;
+}
+
 void BlendRenderer::renderDeck(BlendDeck& deck, int64_t frame, int frames, float* outLeft, float* outRight) {
   const double sr = sampleRate_;
   const double blockStart = frame / sr;
@@ -349,27 +373,8 @@ void BlendRenderer::renderDeck(BlendDeck& deck, int64_t frame, int frames, float
 
 bool BlendRenderer::renderToFile(const std::string& path, int64_t frames) {
   if (frames <= 0) return false;
-  std::FILE* file = openForWrite(path);
+  std::FILE* file = OpenFloatWav(path, sampleRate_, frames);
   if (file == nullptr) return false;
-
-  const uint32_t dataBytes = uint32_t(frames * 2 * sizeof(float));
-  std::fwrite("RIFF", 1, 4, file);
-  writeU32(file, 4 + 26 + 12 + 8 + dataBytes);
-  std::fwrite("WAVE", 1, 4, file);
-  std::fwrite("fmt ", 1, 4, file);
-  writeU32(file, 18);
-  writeU16(file, 3);  // IEEE float
-  writeU16(file, 2);
-  writeU32(file, uint32_t(sampleRate_));
-  writeU32(file, uint32_t(sampleRate_) * 2 * 4);
-  writeU16(file, 8);
-  writeU16(file, 32);
-  writeU16(file, 0);
-  std::fwrite("fact", 1, 4, file);
-  writeU32(file, 4);
-  writeU32(file, uint32_t(frames));
-  std::fwrite("data", 1, 4, file);
-  writeU32(file, dataBytes);
 
   for (BlendDeck& deck : decks_) {
     deck.stretch.presetDefault(2, float(sampleRate_));

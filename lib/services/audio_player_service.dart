@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:math';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_media_kit/just_audio_media_kit.dart' show JustAudioMediaKit;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:rxdart/rxdart.dart';
@@ -16,6 +17,9 @@ import 'jiosaavn/jiosaavn_service.dart';
 import 'addons/addon_service.dart';
 import 'automix/automix_service.dart';
 import 'automix/desktop/desktop_automix_engine.dart';
+import 'desktop/desktop_audio_dsp.dart';
+import 'desktop/desktop_loudness.dart';
+import 'automix/desktop/loop_mix.dart' show LoopLyricLine;
 import '../core/utils/platform_utils.dart' show isDesktop;
 import 'ytmusic_api_service.dart';
 import 'ytmusic_auth_service.dart';
@@ -305,6 +309,7 @@ class AudioPlayerService {
     // Desktop renders its blends in Dart; it drives these two players.
     if (isDesktop) {
       unawaited(AutomixService.instance.attachDesktopHost(_DesktopAutomixHost(this)));
+      _attachDesktopLoudness();
     }
     unawaited(_watchNetworkType());
     // Load persisted queue from previous session
@@ -712,6 +717,10 @@ class AudioPlayerService {
   Duration get _crossfadeDuration =>
       Duration(milliseconds: _crossfadeDurationMs);
 
+  /// Desktop bit-perfect output holds the device for one stream, so tracks
+  /// change without overlapping.
+  bool get _exclusiveOutput => isDesktop && DesktopAudioDsp.instance.exclusive;
+
   Future<void> _setVolumeSafely(
     AudioPlayer player,
     double volume, {
@@ -1033,7 +1042,7 @@ class AudioPlayerService {
 
   Future<void> _crossfadeToIndex(int targetIndex) async {
     if (_isCrossfading) return;
-    if (_crossfadeDurationMs <= 0) {
+    if (_crossfadeDurationMs <= 0 || _exclusiveOutput) {
       _currentIndex = targetIndex;
       _currentTrack = _queue[targetIndex];
       await _loadAndPlayCurrent();
@@ -1200,7 +1209,7 @@ class AudioPlayerService {
     if (_jamsModeEnabled) return;
     // With Automix on, the engine plans and runs every transition.
     if (_automixOn) return;
-    if (_crossfadeDurationMs <= 0) return;
+    if (_crossfadeDurationMs <= 0 || _exclusiveOutput) return;
     if (_isCrossfading) return;
     if (_crossfadeTriggeredForTrack) return;
     if (_loopMode == LoopMode.one) return;
@@ -4508,6 +4517,7 @@ class AudioPlayerService {
       final db = _ytPlayerUtils.loudnessDbFor(t.id);
       if (db != null) loudness[t.id] = db;
     }
+    if (isDesktop) DesktopLoudness.instance.update(loudness);
     unawaited(
       AutomixService.instance.sync(
         primary: _primaryPlayer.playerId,

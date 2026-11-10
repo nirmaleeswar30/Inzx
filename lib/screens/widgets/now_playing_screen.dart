@@ -2266,9 +2266,12 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: _buildStaticAlbumArtContent(
+                              // Animated canvases: video_player_win on
+                              // Windows, libmpv's software renderer on Linux.
+                              child: _buildAlbumArtContent(
                                 track,
                                 accentColor,
+                                borderRadius: BorderRadius.circular(8),
                               ),
                             ),
                             _buildHeartOverlay(),

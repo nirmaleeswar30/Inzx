@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/utils/platform_utils.dart';
+import '../desktop/desktop_audio_dsp.dart';
 import 'desktop/automix_native.dart';
 import 'desktop/desktop_automix_engine.dart';
 import 'desktop/desktop_track_analyzer.dart';
@@ -117,7 +118,9 @@ class AutomixService extends ChangeNotifier {
       scratchDir: host.scratchDir,
       threads: () => threadsFor(_mode),
     );
-    _desktop = DesktopAutomixEngine(host: host, analyzer: analyzer)..enabled = _enabled;
+    _desktop = DesktopAutomixEngine(host: host, analyzer: analyzer)
+      ..enabled = _enabled
+      ..exclusiveOutput = DesktopAudioDsp.instance.exclusive;
   }
 
   /// Logical processors available to the desktop app.

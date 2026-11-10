@@ -14,6 +14,7 @@ import 'equalizer_screen.dart';
 import '../core/utils/platform_utils.dart';
 import 'auto_eq_screen.dart';
 import '../services/addons/addon_service.dart';
+import '../services/desktop/desktop_audio_dsp.dart';
 
 /// Audio settings screen with quality selection
 class AudioSettingsScreen extends ConsumerWidget {
@@ -260,7 +261,8 @@ class AudioSettingsScreen extends ConsumerWidget {
           ),
           // Automix, the output path and EQ run in the Android audio engine.
           // Desktop renders Automix's blends itself when its native
-          // library was bundled; the output path and EQ stay Android's.
+          // library was bundled, and runs the EQ / AutoEQ / exclusive
+          // output as libmpv settings (DesktopAudioDsp).
           if (AutomixService.instance.available) ...[
             AutomixSettingsCard(
               isDark: isDark,
@@ -275,8 +277,9 @@ class AudioSettingsScreen extends ConsumerWidget {
 
             const SizedBox(height: 32),
           ],
-          if (!isDesktop) ...[
-            // Output: hi-res and bit-perfect USB DAC
+          ...[
+            // Output: hi-res and bit-perfect USB DAC (desktop: bit-perfect
+            // on Windows only), then the EQ screens.
             Text(
               'Output',
               style: TextStyle(
@@ -287,7 +290,9 @@ class AudioSettingsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'How lossless audio leaves the app',
+              isDesktop && !DesktopAudioDsp.exclusiveSupported
+                  ? 'Loudness, equalizer and headphone correction'
+                  : 'How lossless audio leaves the app',
               style: TextStyle(
                 fontSize: 14,
                 color: isDark ? Colors.white54 : InzxColors.textSecondary,

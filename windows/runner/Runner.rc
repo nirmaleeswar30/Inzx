@@ -53,6 +53,10 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_APP_ICON            ICON                    "resources\\app_icon.ico"
+IDI_TASKBAR_PREVIOUS    ICON                    "resources\\taskbar_previous.ico"
+IDI_TASKBAR_PLAY        ICON                    "resources\\taskbar_play.ico"
+IDI_TASKBAR_PAUSE       ICON                    "resources\\taskbar_pause.ico"
+IDI_TASKBAR_NEXT        ICON                    "resources\\taskbar_next.ico"
 
 
 /////////////////////////////////////////////////////////////////////////////

@@ -99,8 +99,11 @@ class _EqualizerScreenState extends ConsumerState<EqualizerScreen> {
               ),
               const SizedBox(height: 22),
               Text(
-                'Turned off automatically while bit-perfect USB output is on, '
-                'since any EQ changes the samples.',
+                isDesktop
+                    ? 'Turned off automatically while bit-perfect output is on, '
+                          'since any EQ changes the samples.'
+                    : 'Turned off automatically while bit-perfect USB output is on, '
+                          'since any EQ changes the samples.',
                 style: TextStyle(fontSize: 12.5, color: secondary, height: 1.35),
               ),
             ],

@@ -21,12 +21,17 @@
 #pragma once
 
 #include <cstdint>
+#include <cstdio>
 #include <string>
 #include <vector>
 
 #include "signalsmith-stretch/signalsmith-stretch.h"
 
 namespace inzx::automix {
+
+/// Creates [path] (UTF-8) as a stereo 32-bit float WAV of [frames] frames,
+/// header written, ready for the samples. Null if it can't be created.
+std::FILE* OpenFloatWav(const std::string& path, int sampleRate, int64_t frames);
 
 /// Values every [step] seconds from t = 0; linear (or log, for cutoffs)
 /// between them, held past either end.

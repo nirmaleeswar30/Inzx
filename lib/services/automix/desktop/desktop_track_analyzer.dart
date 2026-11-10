@@ -271,17 +271,22 @@ class _WholeTrack {
   }
 
   TrackAnalysis? _analyze() {
-    final duration = args.duration;
-    if (!duration.isFinite || duration <= 0) {
-      why = 'no duration';
-      return TrackAnalysis(status: TrackAnalysis.statusReady, trackId: args.trackId);
-    }
-
     // Pass 1: the whole track at the DSP's own rate.
     final whole = decoder.decode(args.path, scratch: args.scratch, sampleRate: _decodeRate, channels: 1);
     if (whole == null) {
       why = 'could not decode ${args.path}';
       return null;
+    }
+    // Callers often don't know the duration yet (a queue row before it
+    // plays). Android then reads the container's; the full decode's length
+    // is the same thing here. Nothing readable: skip, store nothing.
+    var duration = args.duration;
+    if (!duration.isFinite || duration <= 0) {
+      duration = whole.seconds;
+      if (duration <= 1) {
+        why = 'no readable duration';
+        return null;
+      }
     }
     if (whole.seconds < duration * _minDecodedFraction) {
       why = 'decoded ${whole.seconds.toStringAsFixed(1)}s of ${duration.toStringAsFixed(1)}s; refused';

@@ -1,5 +1,8 @@
 import 'package:flutter/services.dart';
 
+import '../core/utils/platform_utils.dart';
+import 'autoeq/desktop_auto_eq.dart';
+
 /// One headphone in the AutoEQ database.
 class AutoEqHeadphone {
   const AutoEqHeadphone(this.name, this.subtitle, this.path, this.inEar);
@@ -64,19 +67,28 @@ class AutoEqState {
 
 /// AutoEQ, ported from LastWave: headphone correction from the AutoEQ
 /// database (Jaakko Pasanen, MIT), with LastWave's target/bass/tilt refitting
-/// and per-device profiles. The correction runs natively on every player.
+/// and per-device profiles. The correction runs natively on every player;
+/// on desktop the same calls go to a Dart port (DesktopAutoEq) whose
+/// correction runs in libmpv's filter chain.
 class AutoEqService {
   static const _channel = MethodChannel('inzx/autoeq');
 
+  static Future<T?> _invoke<T>(String method, [Map<String, Object?>? args]) async {
+    if (isDesktop) {
+      return await DesktopAutoEq.instance.invoke(method, args ?? const {}) as T?;
+    }
+    return _channel.invokeMethod<T>(method, args);
+  }
+
   static Future<AutoEqState?> _state(String method, [Map<String, Object?>? args]) async {
-    final m = await _channel.invokeMethod<Map>(method, args);
+    final m = await _invoke<Map>(method, args);
     return m == null ? null : AutoEqState(m);
   }
 
   static Future<AutoEqState?> state() => _state('state');
 
   static Future<List<AutoEqHeadphone>> search(String query) async {
-    final rows = await _channel.invokeMethod<List>('search', {'query': query});
+    final rows = await _invoke<List>('search', {'query': query});
     return [for (final r in rows ?? const []) AutoEqHeadphone.fromMap(r as Map)];
   }
 

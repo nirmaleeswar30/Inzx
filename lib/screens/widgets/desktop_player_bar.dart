@@ -11,6 +11,7 @@ import '../../services/desktop/desktop_bootstrap.dart'
     show kDesktopMinWindowSize;
 import '../../services/lyrics/lyrics_models.dart';
 import '../../services/lyrics/lyrics_service.dart';
+import '../../services/desktop/desktop_audio_dsp.dart';
 import 'artist_screen.dart';
 import 'automix_mix_pulse.dart';
 import 'desktop_shell.dart';
@@ -705,7 +706,7 @@ class _VolumeControlState extends ConsumerState<_VolumeControl> {
       icon = Icons.volume_up_rounded;
     }
 
-    return Row(
+    final control = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
@@ -732,6 +733,17 @@ class _VolumeControlState extends ConsumerState<_VolumeControl> {
           ),
         ),
       ],
+    );
+    // Bit-perfect output plays at full scale; the level is the device's.
+    return ListenableBuilder(
+      listenable: DesktopAudioDsp.instance,
+      builder: (context, child) => DesktopAudioDsp.instance.exclusive
+          ? Tooltip(
+              message: 'Bit-perfect output is on: set the volume on your device',
+              child: IgnorePointer(child: Opacity(opacity: 0.35, child: child)),
+            )
+          : child!,
+      child: control,
     );
   }
 }

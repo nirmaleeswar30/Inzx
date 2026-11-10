@@ -29,9 +29,11 @@ import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart' as mk;
 import 'package:path/path.dart' as p;
 
+import '../../desktop/desktop_audio_dsp.dart';
 import 'automix_native.dart';
 import 'blend_automation.dart';
 import 'desktop_track_analyzer.dart';
+import 'loop_mix.dart';
 import 'track_analysis.dart';
 import 'transition_planner.dart';
 
@@ -68,6 +70,15 @@ abstract class DesktopAutomixHost {
   void clipEnded(String sessionPlayerId);
 
   Future<void> fetchAudio(String videoId);
+
+  /// Line-synced lyrics for [videoId] (fetched if need be), or null when it
+  /// has none; the loop mix keeps its loops off sung lines with them.
+  Future<List<LoopLyricLine>?> syncedLyrics(String videoId);
+
+  /// Loudness normalization's linear gain for [trackId] (1 when off). The
+  /// players carry it for normal playback; a rendered blend bakes each
+  /// side's in, since one clip player plays both songs.
+  double loudnessGain(String trackId);
   double get masterVolume;
   String get scratchDir;
 }
@@ -105,7 +116,10 @@ class _Blend {
     required this.rate,
     required this.cue,
     required this.outgoingDuration,
+    this.loop,
   });
+  /// Set for a loop mix rather than a blend.
+  final LoopMixClock? loop;
   final TransitionPlan plan;
   final Render render;
   final int outgoingIndex;
@@ -135,7 +149,28 @@ class _Blend {
   /// The outgoing song's source second the clip opens on.
   double get outStart => tStart + offOut;
   /// The incoming song's source second clip second [t] plays.
-  double incomingAt(double t) => cue + offIn + t * rate;
+  double incomingAt(double t) {
+    final loop = this.loop;
+    if (loop != null) return (loop.incomingAt(t) ?? loop.plan.inn.loopStart) + offIn;
+    return cue + offIn + t * rate;
+  }
+
+  /// The outgoing song's source second clip second [t] plays (a loop mix
+  /// keeps going round its loop).
+  double outgoingAt(double t) {
+    final loop = this.loop;
+    if (loop != null) return (loop.outgoingAt(t) ?? loop.plan.out.loopEnd) + offOut;
+    return outStart + t;
+  }
+
+  /// Whether the incoming song is the current one by clip second [t].
+  bool handoffDue(double t) {
+    final loop = this.loop;
+    if (loop != null) return t >= loop.handoffAt;
+    return progressAt(t) >= render.handoffAt;
+  }
+
+  bool get isRealMix => loop != null || render.isRealMix(plan);
 
   /// Clip seconds rendered: the blend, then a little of the incoming song
   /// alone so the closing hand-over has room.
@@ -145,6 +180,7 @@ class _Blend {
 
   /// How far through the blend clip second [t] is.
   double progressAt(double t) {
+    if (loop != null) return (t / span).clamp(0.0, 1.0);
     final byTime = t / span;
     final outRemaining = outgoingDuration - tStart - t;
     final byEnd = (span - outRemaining) / span;
@@ -159,6 +195,9 @@ const double _envelopeStep = 0.005;
 const Duration _armLead = Duration(seconds: 25);
 const Duration _minArmLead = Duration(milliseconds: 2500);
 const Duration _crossoverTime = Duration(milliseconds: 80);
+// CrossfadeController's loop-mix lead times.
+const Duration _loopMinLead = Duration(seconds: 9);
+const double _loopSetupSeconds = 15.0;
 
 class DesktopAutomixEngine {
   DesktopAutomixEngine({required this.host, required this.analyzer}) {
@@ -237,10 +276,32 @@ class DesktopAutomixEngine {
     if (value) _abort('jam');
   }
 
+  bool _exclusive = false;
+
+  /// Bit-perfect (exclusive) output: the device takes one stream, so
+  /// nothing mixes while it's on (Android's rule too).
+  set exclusiveOutput(bool value) {
+    if (_exclusive == value) return;
+    _exclusive = value;
+    if (value) _abort('bit-perfect output');
+    _schedule();
+  }
+
   void dispose() {
     _ticker?.cancel();
     unawaited(_analysisLanded.cancel());
-    unawaited(_clipPlayer?.dispose());
+    final clip = _clipPlayer;
+    if (clip != null) {
+      DesktopAudioDsp.instance.unregister(clip);
+      unawaited(clip.dispose());
+    }
+  }
+
+  /// The blend player, with the equaliser / AutoEQ chain the others run.
+  mk.Player _createClipPlayer() {
+    final clip = mk.Player();
+    DesktopAudioDsp.instance.register(clip);
+    return clip;
   }
 
   // ---- From the player service --------------------------------------------
@@ -274,7 +335,7 @@ class DesktopAutomixEngine {
   void audioCached(String videoId, String path) => analyzer.registerAudio(videoId, path);
 
   void request(String videoId, Duration duration) {
-    if (!_enabled || _inJam) return;
+    if (!_enabled || _inJam || _exclusive) return;
     analyzer.request(videoId, duration.inMilliseconds / 1000.0);
     // Wanted even once an analysis is restored from disk: a blend measures
     // the playing source against this copy (see _measureOffset). Free when
@@ -316,7 +377,7 @@ class DesktopAutomixEngine {
       await host.retire(blend.outPlayer);
     } else {
       session = blend.outPlayer;
-      await host.seek(session, _seconds(blend.outStart + t));
+      await host.seek(session, _seconds(blend.outgoingAt(t)));
       await host.setVolume(session, 1.0);
       await host.retire(blend.inPlayer);
     }
@@ -344,7 +405,20 @@ class DesktopAutomixEngine {
           : analyzer.analysisFor(blend.outgoingId);
       final position = blend.handedOff ? blend.cue + t * blend.rate : blend.tStart + t;
       final rate = blend.handedOff ? blend.rate : 1.0;
-      final beat = _beatAt(dominant, position);
+      final loop = blend.loop;
+      final (int, double)? loopBeat;
+      if (loop != null && t < loop.beatTimes.last) {
+        final (k, frac) = loop.beatAt(t);
+        final length = k >= 0 && k + 1 < loop.beatTimes.length ? loop.beatTimes[k + 1] - loop.beatTimes[k] : 0.0;
+        loopBeat = length > 0 ? (k, length) : null;
+        if (loopBeat != null) {
+          beatMs = length / speed * 1000;
+          sinceBeatMs = frac * length / speed * 1000;
+        }
+      } else {
+        loopBeat = null;
+      }
+      final beat = loopBeat != null ? null : _beatAt(dominant, position);
       if (beat != null) {
         beatMs = beat.$2 / rate / speed * 1000;
         sinceBeatMs = beat.$1 / rate / speed * 1000;
@@ -380,7 +454,7 @@ class DesktopAutomixEngine {
 
   /// AutomixBridge.statsLine's wording.
   String? statsLine(String current, String? next) {
-    if (!_enabled || _inJam) return null;
+    if (!_enabled || _inJam || _exclusive) return null;
     String label(String? id, bool outgoing) {
       if (id == null) return 'none';
       final analysis = analyzer.analysisFor(id);
@@ -422,7 +496,7 @@ class DesktopAutomixEngine {
   void _planSoon() => _schedule(immediate: true);
 
   void _schedule({bool immediate = false}) {
-    final wanted = _enabled && !_inJam;
+    final wanted = _enabled && !_inJam && !_exclusive;
     if (!wanted && _phase == _Phase.idle) {
       _ticker?.cancel();
       _ticker = null;
@@ -473,7 +547,7 @@ class DesktopAutomixEngine {
   }
 
   void _considerTransition() {
-    if (!_enabled || _inJam) return;
+    if (!_enabled || _inJam || _exclusive) return;
     final active = _active;
     if (active == null || _index < 0 || _index >= _queue.length) return;
     final current = _queue[_index];
@@ -519,6 +593,19 @@ class DesktopAutomixEngine {
       _windowStart = _windowEnd = null;
     }
 
+    final spareFor = active == _primary ? _secondary : _primary;
+    final loop = _loopPlanFor(active, current, next, currentAnalysis, nextAnalysis, duration, position);
+    if (loop != null) {
+      final loopStartMs = (loop.out.loopStart * 1000).round();
+      _windowStart = (loopStartMs / duration.inMilliseconds).clamp(0.0, 1.0);
+      _windowEnd = 1.0;
+      if (_phase != _Phase.idle || !host.isPlaying(active) || spareFor == null) return;
+      final remaining = Duration(milliseconds: loopStartMs) - position;
+      if (remaining > _armLead || remaining < _minArmLead) return;
+      unawaited(_armLoop(loop, nextIndex, active, spareFor, duration));
+      return;
+    }
+
     if (_phase != _Phase.idle || plan.blocked || plan.fadeMs <= 0) return;
     if (!host.isPlaying(active)) return;
     final startMs = (plan.transitionStart * 1000).round();
@@ -528,6 +615,181 @@ class DesktopAutomixEngine {
     if (spare == null) return;
     if (_failedPair == '${current.id}>${next.id}') return;
     unawaited(_arm(plan, nextIndex, active, spare, duration));
+  }
+
+  // ---- The loop mix -------------------------------------------------------------
+
+  final Map<String, List<SungSpan>?> _lyricSpans = {};
+  final Set<String> _lyricsAsked = {};
+  String? _loopKey;
+  LoopMixPlan? _loopPlanned;
+  String _loopVerdict = '';
+  /// Pairs a loop mix turned out not to suit (a source that isn't the
+  /// analysed recording): they get a blend instead.
+  final Set<String> _noLoopPairs = {};
+
+  void _askLyrics(String id) {
+    if (!_lyricsAsked.add(id)) return;
+    unawaited(host.syncedLyrics(id).then((lines) {
+      // Only line-synced lyrics say where a voice is.
+      final timed = lines?.where((l) => l.timeMs > 0).length ?? 0;
+      _lyricSpans[id] = lines != null && timed >= 4 ? LoopMix.sungSpans(lines) : null;
+      _planSoon();
+    }).catchError((Object _) {
+      _lyricSpans[id] = null;
+    }));
+  }
+
+  /// A source the analysis was measured on: the analysed file itself or the
+  /// YouTube stream it came from. A loop is cut from the audio that plays,
+  /// so a different recording (JioSaavn, lossless) can't carry one.
+  bool _canonical(String id, DecodeSource? source) {
+    if (source == null) return false;
+    final uri = _decodable(source.uri);
+    if (uri.contains('googlevideo.com')) return true;
+    final analysed = analyzer.audioFor(id);
+    // Compared as paths: the cache hands out "Temp/stream_audio_cache/x"
+    // while the player's file URI comes back as "Temp\stream_audio_cache\x".
+    return analysed != null && !uri.contains('://') && p.equals(uri, analysed);
+  }
+
+  /// CrossfadeController.loopPlanFor: the loop mix for this pair, or null.
+  LoopMixPlan? _loopPlanFor(String active, QueueEntry current, QueueEntry next, TrackAnalysis currentAnalysis,
+      TrackAnalysis nextAnalysis, Duration duration, Duration position) {
+    final pair = '${current.id}>${next.id}';
+    String? refusal;
+    if (AutomixNative.instance == null) {
+      refusal = 'no renderer';
+    } else if ((host.listenerSpeed - 1.0).abs() > 1e-6) {
+      refusal = 'playback speed is not 1x';
+    } else if (!currentAnalysis.isUsable || !nextAnalysis.isUsable) {
+      refusal = 'waiting on analysis';
+    } else if (_noLoopPairs.contains(pair) || !_canonical(current.id, host.sourceOf(active))) {
+      final src = host.sourceOf(active);
+      refusal = 'analysed off another recording '
+          '(playing ${src == null ? 'an unreadable source' : _decodable(src.uri)}, '
+          'analysed ${analyzer.audioFor(current.id) ?? 'nothing'})';
+    }
+    if (refusal == null) {
+      _askLyrics(current.id);
+      _askLyrics(next.id);
+      if (!_lyricSpans.containsKey(current.id) || !_lyricSpans.containsKey(next.id)) refusal = 'waiting on lyrics';
+    }
+    if (refusal != null) {
+      _noteLoop('$pair: no loop mix ($refusal)');
+      return null;
+    }
+    final key = '$pair|${identityHashCode(currentAnalysis)}|${identityHashCode(nextAnalysis)}';
+    final cached = _loopPlanned;
+    if (key == _loopKey &&
+        (cached == null || cached.out.loopStart * 1000 - position.inMilliseconds >= _loopMinLead.inMilliseconds)) {
+      return cached;
+    }
+    final why = StringBuffer();
+    final plan = LoopMix.plan(
+      out: currentAnalysis,
+      outDuration: duration.inMilliseconds / 1000.0,
+      inn: nextAnalysis,
+      inDuration: next.durationMs / 1000.0,
+      earliestOutSec: position.inMilliseconds / 1000.0 + _loopSetupSeconds,
+      sungOut: _lyricSpans[current.id],
+      sungIn: _lyricSpans[next.id],
+      why: why,
+    );
+    _loopKey = key;
+    _loopPlanned = plan;
+    _noteLoop(plan == null
+        ? '$pair: no loop mix ($why)'
+        : '$pair: loop mix at ${plan.out.loopStart.toStringAsFixed(2)}s · ${plan.describe()}');
+    return plan;
+  }
+
+  void _noteLoop(String verdict) {
+    if (verdict == _loopVerdict) return;
+    _loopVerdict = verdict;
+    debugPrint('Automix: loop $verdict');
+  }
+
+  Future<void> _armLoop(LoopMixPlan plan, int nextIndex, String outPlayer, String inPlayer, Duration duration) async {
+    final generation = ++_generation;
+    _phase = _Phase.rendering;
+    _endEase();
+    final current = _queue[_index];
+    final next = _queue[nextIndex];
+    final clock = LoopMixClock(plan);
+    final blend = _Blend(
+      plan: const TransitionPlan(),
+      render: Render(),
+      outgoingIndex: _index,
+      incomingIndex: nextIndex,
+      outgoingId: current.id,
+      incomingId: next.id,
+      outPlayer: outPlayer,
+      inPlayer: inPlayer,
+      tStart: plan.out.loopStart,
+      span: clock.elementAt,
+      rate: 1.0,
+      cue: plan.inn.loopStart,
+      outgoingDuration: duration.inMilliseconds / 1000.0,
+      loop: clock,
+    );
+    _blend = blend;
+    debugPrint('Automix: arming loop mix ${current.id} -> ${next.id} at ${plan.out.loopStart.toStringAsFixed(2)}s, '
+        '${clock.elementAt.toStringAsFixed(1)}s long · ${plan.describe()}');
+    bool stale() => generation != _generation;
+    try {
+      final outSource = host.sourceOf(outPlayer);
+      if (outSource == null) throw StateError('no source for the playing song');
+      final loaded = await host.loadIncoming(inPlayer, nextIndex, _seconds(blend.resumeAt));
+      if (stale()) return;
+      if (!loaded) throw StateError('incoming song would not load');
+      await host.setSpeed(inPlayer, host.listenerSpeed);
+      final inSource = host.sourceOf(inPlayer);
+      if (!_canonical(next.id, inSource)) {
+        // The incoming song plays another recording: a blend it is.
+        _noLoopPairs.add('${current.id}>${next.id}');
+        debugPrint('Automix: loop mix dropped, the incoming song plays another recording');
+        if (!stale()) await _bail();
+        return;
+      }
+      final scratch = host.scratchDir;
+      await Directory(scratch).create(recursive: true);
+      final clipPath = p.join(scratch, 'automix_blend_${generation}_${DateTime.now().millisecondsSinceEpoch}.wav');
+      final job = _LoopJob(
+        outUri: outSource.uri,
+        outHeaders: outSource.headers,
+        inUri: inSource!.uri,
+        inHeaders: inSource.headers,
+        plan: plan,
+        clipSeconds: blend.clipSeconds,
+        scratch: scratch,
+        clipPath: clipPath,
+        outLevel: host.loudnessGain(current.id),
+        inLevel: host.loudnessGain(next.id),
+      );
+      final began = DateTime.now();
+      final report = await _renderLoopOffThread(job);
+      if (stale()) {
+        _deleteQuietly(clipPath);
+        return;
+      }
+      if (report != null) throw StateError(report);
+      debugPrint('Automix: rendered ${blend.clipSeconds.toStringAsFixed(1)}s loop mix in '
+          '${DateTime.now().difference(began).inMilliseconds}ms');
+      blend.clipPath = clipPath;
+      final clip = _clipPlayer ??= _createClipPlayer();
+      await clip.setVolume(0);
+      await clip.setRate(host.listenerSpeed);
+      await clip.open(mk.Media(Uri.file(clipPath).toString()), play: false);
+      await _waitFor(() => clip.state.duration > Duration.zero, const Duration(seconds: 3));
+      if (stale()) return;
+      _phase = _Phase.armed;
+      _schedule();
+    } catch (e) {
+      debugPrint('Automix: loop mix failed: $e');
+      _noLoopPairs.add('${current.id}>${next.id}');
+      if (!stale()) await _bail();
+    }
   }
 
   // ---- Arming: load the spare, decode both sides, render -----------------
@@ -595,6 +857,8 @@ class DesktopAutomixEngine {
         clipPath: clipPath,
         outCopy: analyzer.audioFor(current.id),
         inCopy: analyzer.audioFor(next.id),
+        outLevel: host.loudnessGain(current.id),
+        inLevel: host.loudnessGain(next.id),
       );
       final began = DateTime.now();
       final result = await _renderOffThread(job);
@@ -611,7 +875,7 @@ class DesktopAutomixEngine {
           '${DateTime.now().difference(began).inMilliseconds}ms');
       blend.clipPath = clipPath;
 
-      final clip = _clipPlayer ??= mk.Player();
+      final clip = _clipPlayer ??= _createClipPlayer();
       await clip.setVolume(0);
       await clip.setRate(host.listenerSpeed);
       await clip.open(mk.Media(Uri.file(clipPath).toString()), play: false);
@@ -658,11 +922,11 @@ class DesktopAutomixEngine {
 
     await _crossover(
       fadeOut: (v) => host.setVolume(blend.outPlayer, v),
-      fadeIn: (v) => clip.setVolume(v * host.masterVolume * 100),
+      fadeIn: (v) => clip.setVolume(v * host.masterVolume * 100 * DesktopAudioDsp.instance.volumeScale),
     );
     if (stale()) return;
     await host.pause(blend.outPlayer);
-    _mixing = blend.render.isRealMix(blend.plan);
+    _mixing = blend.isRealMix;
     _windowStart = _windowEnd = null;
     host.clipBegan();
     _schedule();
@@ -681,7 +945,7 @@ class DesktopAutomixEngine {
     if (blend.handedOff) {
       host.clipProgress(blend.incomingIndex, _seconds(blend.incomingAt(t)), playing);
     } else {
-      host.clipProgress(blend.outgoingIndex, _seconds(blend.outStart + t), playing);
+      host.clipProgress(blend.outgoingIndex, _seconds(blend.outgoingAt(t)), playing);
     }
   }
 
@@ -693,7 +957,7 @@ class DesktopAutomixEngine {
     final t = _clipSeconds();
     final progress = blend.progressAt(t);
     _mixProgress = progress;
-    if (!blend.handedOff && progress >= blend.render.handoffAt) {
+    if (!blend.handedOff && blend.handoffDue(t)) {
       blend.handedOff = true;
       host.clipHandoff(blend.inPlayer, blend.incomingIndex);
     }
@@ -727,7 +991,7 @@ class DesktopAutomixEngine {
     await _align(spareTime, clipIncomingTime, (to) => host.seek(blend.inPlayer, _seconds(to)));
     if (stale()) return;
     await _crossover(
-      fadeOut: (v) => clip.setVolume(v * host.masterVolume * 100),
+      fadeOut: (v) => clip.setVolume(v * host.masterVolume * 100 * DesktopAudioDsp.instance.volumeScale),
       fadeIn: (v) => host.setVolume(blend.inPlayer, v),
     );
     if (stale()) return;
@@ -928,7 +1192,12 @@ class _RenderJob {
     required this.clipPath,
     this.outCopy,
     this.inCopy,
+    this.outLevel = 1.0,
+    this.inLevel = 1.0,
   });
+  /// Loudness normalization's gain for each side.
+  final double outLevel;
+  final double inLevel;
   /// The files each song was analysed from, to measure the sources against.
   final String? outCopy;
   final String? inCopy;
@@ -1097,6 +1366,7 @@ _RenderResult _renderInIsolate(_RenderJob job) {
       startSample: (job.tStart + offOut - outFrom) * _renderRate,
       rate: 1.0,
       stopAt: render.echo ? job.clipSeconds : job.span + 0.05,
+      level: job.outLevel,
       echoSeconds: render.echo ? render.echoSeconds : 0.0,
       gain: env.outGain,
       lowPassHz: env.outLow,
@@ -1109,6 +1379,7 @@ _RenderResult _renderInIsolate(_RenderJob job) {
       right: incoming.channel(1),
       startSample: (job.cue + offIn - inFrom) * _renderRate,
       rate: job.rate,
+      level: job.inLevel,
       gain: env.inGain,
       lowPassHz: env.inLow,
       highPassHz: env.inHigh,
@@ -1128,3 +1399,112 @@ _RenderResult _renderInIsolate(_RenderJob job) {
 
 /// Where desktop keeps Automix's analyses between runs.
 String automixStoreDir(String appData) => p.join(appData, 'automix_analysis');
+
+// ---- The loop mix render, in its own isolate ----------------------------------------
+
+class _LoopJob {
+  const _LoopJob({
+    required this.outUri,
+    required this.outHeaders,
+    required this.inUri,
+    required this.inHeaders,
+    required this.plan,
+    required this.clipSeconds,
+    required this.scratch,
+    required this.clipPath,
+    this.outLevel = 1.0,
+    this.inLevel = 1.0,
+  });
+  final String outUri;
+  final Map<String, String> outHeaders;
+  final String inUri;
+  final Map<String, String> inHeaders;
+  /// Loudness normalization's gain for each side.
+  final double outLevel;
+  final double inLevel;
+  final LoopMixPlan plan;
+  final double clipSeconds;
+  final String scratch;
+  final String clipPath;
+}
+
+/// Null when the clip was written, otherwise why not.
+Future<String?> _renderLoopOffThread(_LoopJob job) => Isolate.run(() => _renderLoopInIsolate(job));
+
+/// LoopMixSession.build, decoding with libmpv and writing the mix to a file
+/// instead of handing it to the sinks.
+String? _renderLoopInIsolate(_LoopJob job) {
+  final decoder = MpvDecoder.instance;
+  if (decoder == null || AutomixNative.instance == null) return 'native library missing';
+  final plan = job.plan;
+  final clock = LoopMixClock(plan);
+  const sr = _renderRate;
+  const preroll = 1.0;
+  const tail = 3.0;
+  final outFrom = math.max(0.0, plan.out.loopStart - preroll);
+  final outRegion = decoder.decode(_decodable(job.outUri),
+      scratch: job.scratch, start: outFrom, end: plan.out.loopEnd + 0.5, sampleRate: sr, headers: job.outHeaders);
+  if (outRegion == null || outRegion.frames < sr) return 'the outgoing loop would not decode';
+  final inFrom = math.max(0.0, plan.inn.loopStart - preroll);
+  final inRegion = decoder.decode(_decodable(job.inUri),
+      scratch: job.scratch,
+      start: inFrom,
+      end: clock.elementTrackTime + tail,
+      sampleRate: sr,
+      headers: job.inHeaders);
+  if (inRegion == null || inRegion.frames < sr) return 'the incoming loop would not decode';
+
+  double samplesOf(double regionStart, double trackSeconds) => (trackSeconds - regionStart) * sr;
+  final beats = clock.beats;
+  final knotFrames = Float64List.fromList([for (var k = 0; k <= beats; k++) clock.beatTimes[k] * sr]);
+  final outKnots = Float64List.fromList([for (var k = 0; k <= beats; k++) samplesOf(outFrom, clock.outPositionAt(k))]);
+  final inKnots = Float64List.fromList([for (var k = 0; k <= beats; k++) samplesOf(inFrom, clock.inPositionAt(k))]);
+  const h = LoopMix.handoverSec;
+  final swapFrom = clock.handoffAt - clock.swapBar / 2;
+  final swapTo = clock.handoffAt + clock.swapBar / 2;
+  const cut = LoopMix.bassCutDb;
+  final ok = renderLoopMix(
+    path: job.clipPath,
+    sampleRate: sr,
+    frames: (job.clipSeconds * sr).round(),
+    outgoing: LoopDeckInput(
+      left: outRegion.channel(0),
+      right: outRegion.channel(1),
+      regionStart: outFrom,
+      loopStart: samplesOf(outFrom, plan.out.loopStart).round(),
+      loopEnd: samplesOf(outFrom, plan.out.loopEnd).round(),
+      releaseAt: 1e18,
+      knotFrames: knotFrames,
+      knotPositions: outKnots,
+      runOn: false,
+      stopAt: clock.releaseAt + 0.05,
+      level: job.outLevel,
+    ),
+    incoming: LoopDeckInput(
+      left: inRegion.channel(0),
+      right: inRegion.channel(1),
+      regionStart: inFrom,
+      loopStart: samplesOf(inFrom, plan.inn.loopStart).round(),
+      loopEnd: samplesOf(inFrom, plan.inn.loopEnd).round(),
+      releaseAt: samplesOf(inFrom, clock.inReleasePosition),
+      knotFrames: knotFrames,
+      knotPositions: inKnots,
+      runOn: true,
+      // Runs on past the hand-over: the spare player takes over from the
+      // clip with a crossover of its own rather than the deck fading out.
+      stopAt: clock.elementAt + 2.0,
+      level: job.inLevel,
+    ),
+    envelopes: [
+      LoopEnvelope(0, LoopEnvelope.gain, [-h, 0.0, clock.enterEnd, clock.rampEnd, clock.releaseAt],
+          [0, 1, 1, 0.6, 0]),
+      LoopEnvelope(1, LoopEnvelope.gain, [0.0, clock.enterEnd, clock.rampEnd], [0, 0.55, 1]),
+      LoopEnvelope(0, LoopEnvelope.lowDb, [swapFrom, swapTo], [0, cut]),
+      LoopEnvelope(1, LoopEnvelope.lowDb, [swapFrom, swapTo], [cut, 0]),
+      LoopEnvelope(0, LoopEnvelope.highPassHz, [clock.rampEnd, clock.releaseAt],
+          [LoopMix.highPassFromHz, LoopMix.highPassToHz],
+          exponential: true),
+    ],
+  );
+  return ok ? null : 'the loop mix would not render';
+}

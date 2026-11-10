@@ -117,6 +117,10 @@ install(FILES ${AUTOMIX_BUNDLED_LIBRARIES}
 install(FILES ${AUTOMIX_MODELS}
   DESTINATION "${INSTALL_BUNDLE_DATA_DIR}/automix"
   COMPONENT Runtime)
+# AutoEQ's target curves, shared with Android's assets.
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../android/app/src/main/assets/autoeq_targets.json"
+  DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
+  COMPONENT Runtime)
 
 # Copy the native assets provided by the build.dart from all packages.
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/linux/")

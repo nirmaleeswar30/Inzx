@@ -69,6 +69,8 @@ add_library(inzx_automix SHARED
   "${AUTOMIX_NATIVE}/loopmix/loop_mix_renderer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/blend_renderer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/automix_ffi.cpp"
+  # AutoEQ's per-device profiles: the output in use.
+  "${CMAKE_CURRENT_SOURCE_DIR}/output_device.cpp"
 )
 set_target_properties(inzx_automix PROPERTIES
   CXX_STANDARD 17
@@ -80,6 +82,9 @@ target_include_directories(inzx_automix PRIVATE
   "${AUTOMIX_NATIVE}/third_party"
   "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(inzx_automix PRIVATE onnxruntime)
+if(WIN32)
+  target_link_libraries(inzx_automix PRIVATE ole32)
+endif()
 if(MSVC)
   # Optimised in every configuration: the analysis is far too slow without
   # it. Debug's runtime checks can't be combined with /O2, so they go.

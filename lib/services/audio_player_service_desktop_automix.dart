@@ -187,4 +187,70 @@ class _DesktopAutomixHost implements DesktopAutomixHost {
 
   @override
   Future<void> fetchAudio(String videoId) => s.fetchAnalysisAudio(videoId);
+
+  @override
+  double loudnessGain(String trackId) {
+    final db = s._ytPlayerUtils.loudnessDbFor(trackId);
+    if (db != null) DesktopLoudness.instance.update({trackId: db});
+    return DesktopLoudness.instance.gainFor(trackId);
+  }
+
+  @override
+  Future<List<LoopLyricLine>?> syncedLyrics(String videoId) async {
+    var lines = LyricsNotifier.cachedSyncedLines(videoId);
+    if (lines == null) {
+      final track = s._queue.where((t) => t.id == videoId).firstOrNull;
+      if (track == null) return null;
+      await LyricsWarmupService.instance.prefetchForTrack(
+        videoId: track.id,
+        title: track.title,
+        artist: track.artist,
+        album: track.album,
+        durationSeconds: track.duration.inSeconds,
+        localFilePath: track.localFilePath,
+      );
+      lines = LyricsNotifier.cachedSyncedLines(videoId);
+    }
+    if (lines == null) return null;
+    return [
+      for (final line in lines)
+        LoopLyricLine(
+          line.timeInMs,
+          line.sungUntilMs ?? (line.words != null && line.words!.isNotEmpty ? line.words!.last.endTimeMs : null),
+          blank: line.isGap || line.text.trim().isEmpty,
+        ),
+    ];
+  }
+}
+
+/// Desktop loudness normalization (DesktopLoudness): each player is levelled
+/// for the song it holds, re-checked when its source changes or a figure or
+/// setting does. Automix's rendered blends level each side themselves (see
+/// [_DesktopAutomixHost.loudnessGain]).
+extension _DesktopLoudnessWiring on AudioPlayerService {
+  void _attachDesktopLoudness() {
+    final loudness = DesktopLoudness.instance;
+    unawaited(loudness.load());
+    loudness.addListener(_applyDesktopLoudness);
+    for (final player in [_primaryPlayer, _secondaryPlayer]) {
+      player.sequenceStateStream.listen((_) => _applyDesktopLoudness());
+    }
+  }
+
+  String? _trackIdOn(AudioPlayer player) {
+    final tag = player.sequenceState?.currentSource?.tag;
+    return tag is Track ? tag.id : null;
+  }
+
+  void _applyDesktopLoudness() {
+    final loudness = DesktopLoudness.instance;
+    for (final player in [_primaryPlayer, _secondaryPlayer]) {
+      final id = _trackIdOn(player);
+      if (id != null) {
+        final db = _ytPlayerUtils.loudnessDbFor(id);
+        if (db != null) loudness.update({id: db});
+      }
+      JustAudioMediaKit.setTrackGain(player.playerId, loudness.gainFor(id));
+    }
+  }
 }

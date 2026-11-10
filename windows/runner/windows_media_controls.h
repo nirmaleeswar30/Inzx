@@ -5,6 +5,7 @@
 #include <flutter/encodable_value.h>
 #include <flutter/method_channel.h>
 #include <windows.h>
+#include <shobjidl.h>
 
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Media.h>
@@ -12,8 +13,8 @@
 #include <cstdint>
 #include <memory>
 
-// Bridges the app's playback to the System Media Transport Controls, so media
-// keys and the Windows volume flyout control Inzx.
+// Bridges playback to Windows media keys, the volume flyout, and the
+// taskbar preview.
 class WindowsMediaControls {
  public:
   // Posted to the window when a control is used, because the system raises
@@ -25,6 +26,7 @@ class WindowsMediaControls {
 
   // Forwards a posted control press to Dart, on the platform thread.
   void HandleControlMessage(WPARAM control, LPARAM value);
+  bool HandleTaskbarMessage(UINT message, WPARAM wparam);
 
  private:
   enum Control : WPARAM { kPlay, kPause, kStop, kNext, kPrevious, kSeek };
@@ -33,8 +35,17 @@ class WindowsMediaControls {
       const flutter::MethodCall<flutter::EncodableValue>& call,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
   void UpdateTimeline(int64_t position_ms);
+  void SetTaskbarState(bool active, bool playing, bool can_previous,
+                       bool can_next);
+  void UpdateTaskbarButtons(bool add, UINT dpi);
 
   HWND window_;
+  const UINT taskbar_created_message_;
+  winrt::com_ptr<ITaskbarList3> taskbar_;
+  bool taskbar_active_ = false;
+  bool taskbar_playing_ = false;
+  bool taskbar_can_previous_ = false;
+  bool taskbar_can_next_ = false;
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel_;
   winrt::Windows::Media::SystemMediaTransportControls controls_{nullptr};
   winrt::event_token button_token_{};

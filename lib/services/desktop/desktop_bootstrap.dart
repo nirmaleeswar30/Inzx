@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'dart:io' show Platform;
 import 'dart:ui' show Size;
 
@@ -7,6 +8,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'desktop_audio_dsp.dart';
 import 'windows_media_controls.dart';
 
 /// Below this the sidebar, player bar and content stop fitting.
@@ -24,7 +26,10 @@ Future<void> initDesktopPlatform() async {
 
   // just_audio has no desktop backend of its own; this one is libmpv.
   JustAudioMediaKit.title = 'Inzx';
+  // Every mpv player gets the equaliser / AutoEQ chain and exclusive output.
+  DesktopAudioDsp.instance.install();
   JustAudioMediaKit.ensureInitialized(linux: true, windows: true);
+  unawaited(DesktopAudioDsp.instance.start());
 
   // Linux gets MPRIS from audio_service_mpris, which registers itself.
   if (Platform.isWindows) {

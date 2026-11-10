@@ -354,6 +354,28 @@ AX_API void ax_loop_render(void* handle, int64_t frame, float* interleaved, int 
   if (handle != nullptr && frames > 0) static_cast<Renderer*>(handle)->render(frame, interleaved, frames);
 }
 
+/// Renders the prepared loop mix's first [frames] mix frames (from mix frame
+/// 0, its pre-roll discarded) to a float WAV at [path]. 1 on success.
+AX_API int ax_loop_render_file(void* handle, const char* path, int64_t frames) {
+  auto* renderer = static_cast<Renderer*>(handle);
+  if (renderer == nullptr || path == nullptr || frames <= 0) return 0;
+  std::FILE* file = inzx::automix::OpenFloatWav(path, renderer->sampleRate(), frames);
+  if (file == nullptr) return 0;
+  constexpr int kBlock = 1024;
+  std::vector<float> block(kBlock * 2);
+  bool ok = true;
+  for (int64_t frame = std::min<int64_t>(0, renderer->firstFrame()); frame < frames && ok;) {
+    const int count = int(std::min<int64_t>(kBlock, frames - frame));
+    renderer->render(frame, block.data(), count);
+    const int skip = frame < 0 ? int(std::min<int64_t>(count, -frame)) : 0;
+    const size_t samples = size_t(count - skip) * 2;
+    if (samples > 0 && std::fwrite(block.data() + skip * 2, sizeof(float), samples, file) != samples) ok = false;
+    frame += count;
+  }
+  ok = std::fclose(file) == 0 && ok;
+  return ok ? 1 : 0;
+}
+
 AX_API double ax_loop_heard(void* handle, int index) {
   Deck* deck = loopDeck(handle, index);
   return deck != nullptr ? deck->heard.load() : 0.0;

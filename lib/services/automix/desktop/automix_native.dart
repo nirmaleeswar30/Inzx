@@ -66,6 +66,14 @@ typedef _BlendEnvC = Void Function(Pointer<Void>, Int32, Int32, Pointer<Float>, 
 typedef _BlendEnvD = void Function(Pointer<Void>, int, int, Pointer<Float>, int, double);
 typedef _BlendRenderC = Int32 Function(Pointer<Void>, Pointer<Utf8>, Int64);
 typedef _BlendRenderD = int Function(Pointer<Void>, Pointer<Utf8>, int);
+typedef _LoopDeckC = Void Function(Pointer<Void>, Int32, Pointer<Float>, Pointer<Float>, Int64, Double, Int64, Int64,
+    Double, Pointer<Double>, Pointer<Double>, Int32, Int32, Double, Double, Float);
+typedef _LoopDeckD = void Function(Pointer<Void>, int, Pointer<Float>, Pointer<Float>, int, double, int, int, double,
+    Pointer<Double>, Pointer<Double>, int, int, double, double, double);
+typedef _LoopEnvC = Void Function(Pointer<Void>, Int32, Int32, Pointer<Double>, Pointer<Float>, Int32, Int32);
+typedef _LoopEnvD = void Function(Pointer<Void>, int, int, Pointer<Double>, Pointer<Float>, int, int);
+typedef _HandleC = Void Function(Pointer<Void>);
+typedef _HandleD = void Function(Pointer<Void>);
 
 /// The C API of desktop/automix/automix_ffi.cpp.
 class AutomixNative {
@@ -84,6 +92,12 @@ class AutomixNative {
         _blendSetDeck = lib.lookupFunction<_BlendDeckC, _BlendDeckD>('ax_blend_set_deck'),
         _blendSetEnvelope = lib.lookupFunction<_BlendEnvC, _BlendEnvD>('ax_blend_set_envelope'),
         _blendRender = lib.lookupFunction<_BlendRenderC, _BlendRenderD>('ax_blend_render'),
+        _loopCreate = lib.lookupFunction<_CreateC, _CreateD>('ax_loop_create'),
+        _loopDestroy = lib.lookupFunction<_FreeC, _FreeD>('ax_loop_destroy'),
+        _loopSetDeck = lib.lookupFunction<_LoopDeckC, _LoopDeckD>('ax_loop_set_deck'),
+        _loopSetEnvelope = lib.lookupFunction<_LoopEnvC, _LoopEnvD>('ax_loop_set_envelope'),
+        _loopPrepare = lib.lookupFunction<_HandleC, _HandleD>('ax_loop_prepare'),
+        _loopRenderFile = lib.lookupFunction<_BlendRenderC, _BlendRenderD>('ax_loop_render_file'),
         analysisSampleRate = lib.lookupFunction<_DoubleC, _DoubleD>('ax_analysis_sample_rate')(),
         beatMels = lib.lookupFunction<_IntC, _IntD>('ax_beat_mels')(),
         beatSampleRate = lib.lookupFunction<_DoubleC, _DoubleD>('ax_beat_sample_rate')(),
@@ -120,6 +134,12 @@ class AutomixNative {
   final _BlendDeckD _blendSetDeck;
   final _BlendEnvD _blendSetEnvelope;
   final _BlendRenderD _blendRender;
+  final _CreateD _loopCreate;
+  final _FreeD _loopDestroy;
+  final _LoopDeckD _loopSetDeck;
+  final _LoopEnvD _loopSetEnvelope;
+  final _HandleD _loopPrepare;
+  final _BlendRenderD _loopRenderFile;
 
   /// TrackFeatures.sampleRate: what the whole-track DSP reads.
   final double analysisSampleRate;
@@ -515,5 +535,121 @@ class MpvDecoder {
         if (file.existsSync()) file.deleteSync();
       } catch (_) {}
     }
+  }
+}
+
+// ---- The loop mix -------------------------------------------------------------
+
+/// One deck of [renderLoopMix] (loop_mix_renderer.h's Deck).
+class LoopDeckInput {
+  LoopDeckInput({
+    required this.left,
+    required this.right,
+    required this.regionStart,
+    required this.loopStart,
+    required this.loopEnd,
+    required this.releaseAt,
+    required this.knotFrames,
+    required this.knotPositions,
+    required this.runOn,
+    required this.stopAt,
+    this.preroll = 0.4,
+    this.level = 1.0,
+  });
+  final Float32List left;
+  final Float32List right;
+  final double regionStart;
+  final int loopStart;
+  final int loopEnd;
+  final double releaseAt;
+  final Float64List knotFrames;
+  final Float64List knotPositions;
+  final bool runOn;
+  final double stopAt;
+  final double preroll;
+  final double level;
+}
+
+/// A loop-mix envelope: values at mix-second times.
+class LoopEnvelope {
+  const LoopEnvelope(this.deck, this.kind, this.times, this.values, {this.exponential = false});
+  static const gain = 0, lowDb = 1, highPassHz = 2;
+  final int deck;
+  final int kind;
+  final List<double> times;
+  final List<double> values;
+  final bool exponential;
+}
+
+/// Renders a loop mix's first [frames] mix frames to a float WAV. Blocking.
+bool renderLoopMix({
+  required String path,
+  required int sampleRate,
+  required int frames,
+  required LoopDeckInput outgoing,
+  required LoopDeckInput incoming,
+  required List<LoopEnvelope> envelopes,
+}) {
+  final native = AutomixNative.instance;
+  if (native == null) return false;
+  final handle = native._loopCreate(sampleRate);
+  if (handle == nullptr) return false;
+  final allocations = <Pointer>[];
+  Pointer<Double> doubles(List<double> values) {
+    final p = malloc<Double>(math.max(values.length, 1));
+    p.asTypedList(values.length).setAll(0, values);
+    allocations.add(p);
+    return p;
+  }
+
+  Pointer<Float> floats(List<double> values) {
+    final p = malloc<Float>(math.max(values.length, 1));
+    final list = p.asTypedList(values.length);
+    for (var i = 0; i < values.length; i++) {
+      list[i] = values[i];
+    }
+    allocations.add(p);
+    return p;
+  }
+
+  try {
+    for (final (index, deck) in [(0, outgoing), (1, incoming)]) {
+      final knots = math.min(deck.knotFrames.length, deck.knotPositions.length);
+      native._loopSetDeck(
+        handle,
+        index,
+        floats(deck.left),
+        floats(deck.right),
+        math.min(deck.left.length, deck.right.length),
+        deck.regionStart,
+        deck.loopStart,
+        deck.loopEnd,
+        deck.releaseAt,
+        doubles(deck.knotFrames),
+        doubles(deck.knotPositions),
+        knots,
+        deck.runOn ? 1 : 0,
+        deck.stopAt,
+        deck.preroll,
+        deck.level,
+      );
+    }
+    for (final e in envelopes) {
+      final points = math.min(e.times.length, e.values.length);
+      native._loopSetEnvelope(
+          handle, e.deck, e.kind, doubles(e.times), floats(e.values), points, e.exponential ? 1 : 0);
+    }
+    native._loopPrepare(handle);
+    final utf8Path = path.toNativeUtf8();
+    try {
+      return native._loopRenderFile(handle, utf8Path, frames) == 1;
+    } finally {
+      malloc.free(utf8Path);
+    }
+  } finally {
+    for (final p in allocations) {
+      malloc.free(p);
+    }
+    native._loopDestroy(handle);
   }
 }
