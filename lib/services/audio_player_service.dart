@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:math';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,6 +15,8 @@ import 'playback/playback.dart';
 import 'jiosaavn/jiosaavn_service.dart';
 import 'addons/addon_service.dart';
 import 'automix/automix_service.dart';
+import 'automix/desktop/desktop_automix_engine.dart';
+import '../core/utils/platform_utils.dart' show isDesktop;
 import 'ytmusic_api_service.dart';
 import 'ytmusic_auth_service.dart';
 import 'queue_persistence_service.dart';
@@ -26,6 +29,8 @@ import 'package:hive/hive.dart';
 import '../data/entities/download_entity.dart';
 import '../data/entities/track_entity.dart';
 import 'audio_routing_service.dart';
+
+part 'audio_player_service_desktop_automix.dart';
 
 /// Key for persisting streaming quality preference
 const String kStreamingQualityKey = 'streaming_quality';
@@ -297,6 +302,10 @@ class AudioPlayerService {
     unawaited(AutomixService.instance.load());
     AutomixService.instance.fetchAudio = fetchAnalysisAudio;
     _wireAutomixEngine();
+    // Desktop renders its blends in Dart; it drives these two players.
+    if (isDesktop) {
+      unawaited(AutomixService.instance.attachDesktopHost(_DesktopAutomixHost(this)));
+    }
     unawaited(_watchNetworkType());
     // Load persisted queue from previous session
     _loadPersistedQueue();
@@ -2452,6 +2461,7 @@ class AudioPlayerService {
 
     player.playerStateStream.listen((playerState) {
       if (!identical(player, _player)) return;
+      if (_automixClipActive) return;
       _watchForStall(playerState);
       _updateState(
         isPlaying: playerState.playing,
@@ -2525,6 +2535,7 @@ class AudioPlayerService {
 
     player.positionStream.listen((position) {
       if (!identical(player, _player)) return;
+      if (_automixClipActive) return;
 
       // Avoid overwriting restored position while idle.
       if (player.processingState == ProcessingState.idle &&
@@ -2561,6 +2572,7 @@ class AudioPlayerService {
 
     player.durationStream.listen((duration) {
       if (!identical(player, _player)) return;
+      if (_automixClipActive) return;
       final isLive = _currentPlaybackData?.isLive == true;
       final didUpdateDuration =
           duration != null && _applyDurationToCurrentTrack(duration);
@@ -4453,6 +4465,16 @@ class AudioPlayerService {
 
   bool get _automixOn => AutomixService.instance.enabled && !_jamsModeEnabled;
 
+  /// Desktop: a rendered blend is playing on Automix's own player, and the
+  /// UI follows it rather than either of these two (see
+  /// audio_player_service_desktop_automix.dart).
+  bool _automixClipActive = false;
+  bool _automixClipPlaying = false;
+  DateTime? _automixClipStateAt;
+
+  /// The listener's own playback speed, under any Automix stretch.
+  double _listenerSpeed = 1.0;
+
   AudioPlayer _playerById(String id) =>
       _primaryPlayer.playerId == id ? _primaryPlayer : _secondaryPlayer;
 
@@ -5569,6 +5591,10 @@ class AudioPlayerService {
   /// Play
   Future<void> play() async {
     if (_currentTrack == null) return;
+    if (_automixClipActive) {
+      await AutomixService.instance.desktopEngine?.clipPlay();
+      return;
+    }
 
     // If no source is loaded (e.g., app restarted), load and play current track.
     if (_player.processingState == ProcessingState.idle ||
@@ -5628,6 +5654,10 @@ class AudioPlayerService {
 
   /// Pause
   Future<void> pause() async {
+    if (_automixClipActive) {
+      await AutomixService.instance.desktopEngine?.clipPause();
+      return;
+    }
     await _player.pause();
     await _inactivePlayer.pause();
     _persistQueueNow(position: _player.position);
@@ -5635,7 +5665,7 @@ class AudioPlayerService {
 
   /// Toggle play/pause
   Future<void> togglePlayPause() async {
-    if (_player.playing) {
+    if (_automixClipActive ? _automixClipPlaying : _player.playing) {
       await pause();
     } else {
       await play();
@@ -5644,6 +5674,7 @@ class AudioPlayerService {
 
   /// Stop playback
   Future<void> stop() async {
+    if (_automixClipActive) await AutomixService.instance.skip();
     final position = _player.position;
     unawaited(_sendYoutubeWatchtime(state: 'paused', force: true));
     _stopYoutubeWatchtimeTimer();
@@ -5660,6 +5691,8 @@ class AudioPlayerService {
 
   /// Seek to position
   Future<void> seek(Duration position) async {
+    // A seek during a rendered blend lands on whichever song is current.
+    if (_automixClipActive) await AutomixService.instance.desktopEngine?.leaveClip();
     if (_youtubeWatchtimeTimer != null && _player.playing) {
       unawaited(_sendYoutubeWatchtime(state: 'playing', force: true));
       _youtubeTrackingLastPosition = position;
@@ -5679,7 +5712,11 @@ class AudioPlayerService {
   /// Uses pre-built playlist for instant skip if available (OuterTune approach)
   Future<void> skipToNext() async {
     // A skip is never blended: drop any Automix blend in flight first.
-    unawaited(AutomixService.instance.skip());
+    if (_automixClipActive) {
+      await AutomixService.instance.skip();
+    } else {
+      unawaited(AutomixService.instance.skip());
+    }
     // In Jams mode, emit track complete event and let sync controller handle it
     if (_jamsModeEnabled) {
       if (kDebugMode) {
@@ -5711,7 +5748,11 @@ class AudioPlayerService {
 
   /// Skip to previous track
   Future<void> skipToPrevious() async {
-    unawaited(AutomixService.instance.skip());
+    if (_automixClipActive) {
+      await AutomixService.instance.skip();
+    } else {
+      unawaited(AutomixService.instance.skip());
+    }
     if (_queue.isEmpty) return;
 
     // If more than 3 seconds in, restart current track
@@ -5789,6 +5830,7 @@ class AudioPlayerService {
 
   /// Set playback speed
   Future<void> setSpeed(double speed) async {
+    _listenerSpeed = speed;
     await _player.setSpeed(speed);
     await _inactivePlayer.setSpeed(speed);
     _updateState(speed: speed);

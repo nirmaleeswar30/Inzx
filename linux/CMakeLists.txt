@@ -60,6 +60,11 @@ add_subdirectory("runner")
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)
 
+# Automix's analysis, ONNX Runtime and blend renderer; see desktop/automix.
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../desktop/automix"
+  "${CMAKE_BINARY_DIR}/automix")
+add_dependencies(${BINARY_NAME} inzx_automix)
+
 # Only the install-generated bundle's copy of the executable will launch
 # correctly, since the resources must in the right relative locations. To avoid
 # people trying to run the unbundled copy, put it in a subdirectory instead of
@@ -105,6 +110,13 @@ foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
     DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
     COMPONENT Runtime)
 endforeach(bundled_library)
+
+install(FILES ${AUTOMIX_BUNDLED_LIBRARIES}
+  DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+  COMPONENT Runtime)
+install(FILES ${AUTOMIX_MODELS}
+  DESTINATION "${INSTALL_BUNDLE_DATA_DIR}/automix"
+  COMPONENT Runtime)
 
 # Copy the native assets provided by the build.dart from all packages.
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/linux/")

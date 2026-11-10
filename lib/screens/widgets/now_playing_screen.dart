@@ -2952,6 +2952,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                 }
                 return ReorderableListView.builder(
                   scrollController: _queueScrollController,
+                  buildDefaultDragHandles: !isDesktop,
                   physics: const BouncingScrollPhysics(
                     parent: AlwaysScrollableScrollPhysics(),
                   ),

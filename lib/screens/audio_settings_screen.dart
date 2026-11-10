@@ -259,7 +259,9 @@ class AudioSettingsScreen extends ConsumerWidget {
                   ),
           ),
           // Automix, the output path and EQ run in the Android audio engine.
-          if (!isDesktop) ...[
+          // Desktop renders Automix's blends itself when its native
+          // library was bundled; the output path and EQ stay Android's.
+          if (AutomixService.instance.available) ...[
             AutomixSettingsCard(
               isDark: isDark,
               accentColor: accentColor,
@@ -272,7 +274,8 @@ class AudioSettingsScreen extends ConsumerWidget {
             ),
 
             const SizedBox(height: 32),
-
+          ],
+          if (!isDesktop) ...[
             // Output: hi-res and bit-perfect USB DAC
             Text(
               'Output',

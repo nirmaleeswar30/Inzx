@@ -12,6 +12,7 @@ import '../../services/desktop/desktop_bootstrap.dart'
 import '../../services/lyrics/lyrics_models.dart';
 import '../../services/lyrics/lyrics_service.dart';
 import 'artist_screen.dart';
+import 'automix_mix_pulse.dart';
 import 'desktop_shell.dart';
 import 'lyrics_view.dart';
 import 'now_playing_screen.dart';
@@ -393,8 +394,20 @@ class _ProgressRow extends ConsumerStatefulWidget {
   ConsumerState<_ProgressRow> createState() => _ProgressRowState();
 }
 
-class _ProgressRowState extends ConsumerState<_ProgressRow> {
+class _ProgressRowState extends ConsumerState<_ProgressRow>
+    with TickerProviderStateMixin {
   double? _dragMs;
+
+  // Automix, as on the phone's seek bar: the planned window as a feathered
+  // band, and during a blend the fill gliding out to the end and pulsing on
+  // the beat. A drag shows the plain position.
+  late final AutomixMixPulse _mixPulse = AutomixMixPulse(this);
+
+  @override
+  void dispose() {
+    _mixPulse.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -423,16 +436,30 @@ class _ProgressRowState extends ConsumerState<_ProgressRow> {
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: _ThinSlider(
-            value: valueMs,
-            max: maxMs > 0 ? maxMs : 1.0,
-            base: widget.base,
-            onChanged: (value) => setState(() => _dragMs = value),
-            onChangeEnd: (value) {
-              ref
-                  .read(audioPlayerServiceProvider)
-                  .seek(Duration(milliseconds: value.toInt()));
-              setState(() => _dragMs = null);
+          child: AnimatedBuilder(
+            animation: _mixPulse,
+            builder: (context, _) {
+              final max = maxMs > 0 ? maxMs : 1.0;
+              final dragging = _dragMs != null;
+              final cover = dragging ? 0.0 : AutomixMixPulse.eased(_mixPulse.cover);
+              final start = _mixPulse.windowStart;
+              final end = _mixPulse.windowEnd;
+              return _ThinSlider(
+                value: valueMs + (max - valueMs) * cover,
+                max: max,
+                base: widget.base,
+                fillOpacity: dragging ? 1.0 : _mixPulse.alpha(1.0),
+                window: start != null && end != null && _mixPulse.windowAlpha > 0 && !dragging
+                    ? (start: start, end: end, alpha: _mixPulse.windowAlpha)
+                    : null,
+                onChanged: (value) => setState(() => _dragMs = value),
+                onChangeEnd: (value) {
+                  ref
+                      .read(audioPlayerServiceProvider)
+                      .seek(Duration(milliseconds: value.toInt()));
+                  setState(() => _dragMs = null);
+                },
+              );
             },
           ),
         ),
@@ -454,6 +481,8 @@ class _ThinSlider extends ConsumerStatefulWidget {
     required this.base,
     required this.onChanged,
     this.onChangeEnd,
+    this.fillOpacity = 1.0,
+    this.window,
   });
 
   final double value;
@@ -461,12 +490,17 @@ class _ThinSlider extends ConsumerStatefulWidget {
   final Color base;
   final ValueChanged<double> onChanged;
   final ValueChanged<double>? onChangeEnd;
+  final double fillOpacity;
+  /// Automix's planned window, as fractions of the track.
+  final ({double start, double end, double alpha})? window;
 
   @override
   ConsumerState<_ThinSlider> createState() => _ThinSliderState();
 }
 
 class _ThinSliderState extends ConsumerState<_ThinSlider> {
+  static const double _trackHeight = 4;
+
   bool _hovered = false;
 
   @override
@@ -477,29 +511,96 @@ class _ThinSliderState extends ConsumerState<_ThinSlider> {
       onExit: (_) => setState(() => _hovered = false),
       child: SizedBox(
         height: 16,
-        child: SliderTheme(
-          data: SliderThemeData(
-            trackHeight: 4,
-            padding: EdgeInsets.zero,
-            activeTrackColor: _hovered ? accent : widget.base,
-            inactiveTrackColor: widget.base.withValues(alpha: 0.25),
-            thumbColor: widget.base,
-            overlayShape: SliderComponentShape.noOverlay,
-            thumbShape: RoundSliderThumbShape(
-              enabledThumbRadius: _hovered ? 6 : 0,
-              elevation: 0,
+        child: Stack(
+          children: [
+            if (widget.window case final window?)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: _WindowBandPainter(
+                      start: window.start,
+                      end: window.end,
+                      color: accent.withValues(alpha: 0.55 * window.alpha),
+                      trackHeight: _trackHeight,
+                    ),
+                  ),
+                ),
+              ),
+            SliderTheme(
+              data: SliderThemeData(
+                trackHeight: _trackHeight,
+                padding: EdgeInsets.zero,
+                activeTrackColor: (_hovered ? accent : widget.base).withValues(
+                  alpha:
+                      (_hovered ? accent : widget.base).a * widget.fillOpacity,
+                ),
+                inactiveTrackColor: widget.base.withValues(alpha: 0.25),
+                thumbColor: widget.base,
+                overlayShape: SliderComponentShape.noOverlay,
+                thumbShape: RoundSliderThumbShape(
+                  enabledThumbRadius: _hovered ? 6 : 0,
+                  elevation: 0,
+                ),
+              ),
+              child: Slider(
+                value: widget.value.clamp(0.0, widget.max),
+                max: widget.max,
+                onChanged: widget.onChanged,
+                onChangeEnd: widget.onChangeEnd,
+              ),
             ),
-          ),
-          child: Slider(
-            value: widget.value.clamp(0.0, widget.max),
-            max: widget.max,
-            onChanged: widget.onChanged,
-            onChangeEnd: widget.onChangeEnd,
-          ),
+          ],
         ),
       ),
     );
   }
+}
+
+/// Automix's planned window on the track: a band feathered at both ends.
+class _WindowBandPainter extends CustomPainter {
+  _WindowBandPainter({
+    required this.start,
+    required this.end,
+    required this.color,
+    required this.trackHeight,
+  });
+
+  final double start;
+  final double end;
+  final Color color;
+  final double trackHeight;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final left = size.width * start;
+    final right = size.width * end;
+    if (right <= left) return;
+    final centerY = size.height / 2;
+    final radius = trackHeight / 2;
+    final rect = Rect.fromLTRB(left, centerY - radius, right, centerY + radius);
+    final feather = ((right - left) * 0.2).clamp(2.0, 12.0) / (right - left);
+    final paint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          color.withValues(alpha: 0),
+          color,
+          color,
+          color.withValues(alpha: 0),
+        ],
+        stops: [0, feather, 1 - feather, 1],
+      ).createShader(rect);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, Radius.circular(radius)),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_WindowBandPainter old) =>
+      old.start != start ||
+      old.end != end ||
+      old.color != color ||
+      old.trackHeight != trackHeight;
 }
 
 class _RightControls extends ConsumerWidget {

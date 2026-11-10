@@ -1,8 +1,16 @@
+import 'dart:async';
+import 'dart:io';
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/utils/platform_utils.dart';
+import 'desktop/automix_native.dart';
+import 'desktop/desktop_automix_engine.dart';
+import 'desktop/desktop_track_analyzer.dart';
 
 /// How hard Automix's analysis (BitChord's beat and vocal models) works.
 /// Names match BitChord's AutomixPerformanceMode, which reads them.
@@ -85,11 +93,65 @@ class AutomixService extends ChangeNotifier {
   bool get enabled => _enabled;
   AutomixPerformanceMode get mode => _mode;
 
+  // ---- Desktop -------------------------------------------------------------
+  //
+  // Desktop runs the same analysis and planning in Dart over the native
+  // library in desktop/automix, and renders each blend rather than riding
+  // live filters; see desktop/desktop_automix_engine.dart.
+
+  DesktopAutomixEngine? _desktop;
+
+  /// Whether Automix can run here: always on Android, on desktop when the
+  /// native library and models were bundled.
+  bool get available => !isDesktop || AutomixPaths.available;
+
+  /// The desktop engine, once the player service has attached to it.
+  DesktopAutomixEngine? get desktopEngine => _desktop;
+
+  /// Called by the player service on desktop with the players it owns.
+  Future<void> attachDesktopHost(DesktopAutomixHost host) async {
+    if (!isDesktop || _desktop != null || !AutomixPaths.available) return;
+    final dataDir = await appDataDirectory();
+    final analyzer = DesktopTrackAnalyzer(
+      storeDir: p.join(dataDir.path, 'automix_analysis'),
+      scratchDir: host.scratchDir,
+      threads: () => threadsFor(_mode),
+    );
+    _desktop = DesktopAutomixEngine(host: host, analyzer: analyzer)..enabled = _enabled;
+  }
+
+  /// Logical processors available to the desktop app.
+  int get logicalProcessors => Platform.numberOfProcessors;
+
+  /// Desktop's analysis thread counts, based on the available processors.
+  Map<String, int> _desktopThreads() {
+    final processors = logicalProcessors;
+    return {
+      AutomixPerformanceMode.efficient.wire: 1,
+      AutomixPerformanceMode.balanced.wire: math.max(
+        2,
+        math.min(4, processors ~/ 4),
+      ),
+      AutomixPerformanceMode.performance.wire: math.max(
+        4,
+        math.min(8, processors ~/ 2),
+      ),
+    };
+  }
+
   Future<void> load() async {
     if (_loaded) return;
     _loaded = true;
-    // The engine is Android-native; desktop uses the plain crossfade.
-    if (isDesktop) return;
+    if (isDesktop) {
+      if (!AutomixPaths.available) return;
+      final prefs = await SharedPreferences.getInstance();
+      _enabled = prefs.getBool(_enabledKey) ?? false;
+      _mode = AutomixPerformanceMode.fromWire(prefs.getString(_modeKey));
+      _threads = _desktopThreads();
+      _desktop?.enabled = _enabled;
+      notifyListeners();
+      return;
+    }
     final prefs = await SharedPreferences.getInstance();
     _enabled = prefs.getBool(_enabledKey) ?? false;
     _mode = AutomixPerformanceMode.fromWire(prefs.getString(_modeKey));
@@ -100,8 +162,7 @@ class AutomixService extends ChangeNotifier {
     } catch (_) {}
   }
 
-  /// Analysis threads per mode, sized natively from this phone's cores, plus
-  /// `cores` (all of them) and `fastCores` (those not on the little cluster).
+  /// Analysis threads per mode, plus core counts reported by Android.
   Map<String, int> _threads = const {};
 
   int threadsFor(AutomixPerformanceMode mode) =>
@@ -112,6 +173,7 @@ class AutomixService extends ChangeNotifier {
 
   Future<void> setEnabled(bool on) async {
     _enabled = on;
+    _desktop?.enabled = on;
     notifyListeners();
     await (await SharedPreferences.getInstance()).setBool(_enabledKey, on);
   }
@@ -124,6 +186,10 @@ class AutomixService extends ChangeNotifier {
 
   /// A complete YouTube audio file for [videoId] is in the stream cache.
   Future<void> audioCached(String videoId, String path) async {
+    if (isDesktop) {
+      _desktop?.audioCached(videoId, path);
+      return;
+    }
     try {
       await _channel.invokeMethod('registerAudio', {
         'videoId': videoId,
@@ -135,6 +201,10 @@ class AutomixService extends ChangeNotifier {
   /// Queue analysis for [videoId] if Automix is on. Cheap to repeat.
   Future<void> request(String videoId, Duration duration) async {
     if (!_enabled) return;
+    if (isDesktop) {
+      _desktop?.request(videoId, duration);
+      return;
+    }
     try {
       await _channel.invokeMethod('request', {
         'videoId': videoId,
@@ -146,6 +216,10 @@ class AutomixService extends ChangeNotifier {
   }
 
   Future<AutomixAnalysis?> analysis(String videoId) async {
+    if (isDesktop) {
+      final engine = _desktop;
+      return engine == null ? null : AutomixAnalysis(engine.describe(videoId));
+    }
     try {
       final m = await _channel.invokeMapMethod<dynamic, dynamic>('analysis', {
         'videoId': videoId,
@@ -160,6 +234,7 @@ class AutomixService extends ChangeNotifier {
   /// wording), or null while Automix is off.
   Future<String?> statsLine(String currentId, String? nextId) async {
     if (!_enabled) return null;
+    if (isDesktop) return _desktop?.statsLine(currentId, nextId);
     try {
       return await _channel.invokeMethod<String>('statsLine', {
         'current': currentId,
@@ -171,6 +246,10 @@ class AutomixService extends ChangeNotifier {
   }
 
   Future<void> setInJam(bool inJam) async {
+    if (isDesktop) {
+      _desktop?.inJam = inJam;
+      return;
+    }
     try {
       await _channel.invokeMethod('setInJam', {'inJam': inJam});
     } catch (_) {}
@@ -190,7 +269,26 @@ class AutomixService extends ChangeNotifier {
     required int crossfadeSeconds,
     Map<String, double> loudness = const {},
   }) async {
-    if (isDesktop) return;
+    if (isDesktop) {
+      _desktop?.sync(
+        primary: primary,
+        secondary: secondary,
+        active: active,
+        index: index,
+        repeat: repeat,
+        queue: [
+          for (final e in queue)
+            QueueEntry(
+              id: e['id'] as String? ?? '',
+              title: e['title'] as String? ?? '',
+              artist: e['artist'] as String? ?? '',
+              durationMs: (e['durationMs'] as num?)?.toInt() ?? 0,
+              isVideo: e['video'] == true,
+            ),
+        ],
+      );
+      return;
+    }
     try {
       await _channel.invokeMethod('sync', {
         'loudness': loudness,
@@ -209,6 +307,7 @@ class AutomixService extends ChangeNotifier {
   }
 
   Future<void> loaded(String playerId, int index) async {
+    if (isDesktop) return;
     try {
       await _channel.invokeMethod('loaded', {'playerId': playerId, 'index': index});
     } catch (_) {}
@@ -217,6 +316,7 @@ class AutomixService extends ChangeNotifier {
   /// A lossless/JioSaavn hand-over is using the spare player: the engine
   /// waits it out (as BitChord's waits out a version swap).
   Future<void> setBusy(bool busy) async {
+    if (isDesktop) return;
     try {
       await _channel.invokeMethod('busy', {'busy': busy});
     } catch (_) {}
@@ -225,6 +325,10 @@ class AutomixService extends ChangeNotifier {
   /// The listener asked for another song: drop any blend in flight.
   Future<void> skip() async {
     if (!_enabled) return;
+    if (isDesktop) {
+      await _desktop?.skip();
+      return;
+    }
     try {
       await _channel.invokeMethod('skip');
     } catch (_) {}
@@ -233,6 +337,7 @@ class AutomixService extends ChangeNotifier {
   /// For the player UI: mixing now, progress, the planned window, the beat.
   Future<Map<dynamic, dynamic>?> mixState() async {
     if (!_enabled) return null;
+    if (isDesktop) return _desktop?.mixState();
     try {
       return await _channel.invokeMapMethod<dynamic, dynamic>('mixState');
     } catch (_) {
