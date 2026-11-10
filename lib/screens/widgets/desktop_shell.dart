@@ -340,7 +340,7 @@ class _DesktopTopBar extends ConsumerWidget {
                 collapsed.state = !collapsed.state;
               },
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 18),
             Image.asset('assets/logo_transparent.png', width: 42, height: 42),
             const SizedBox(width: 8),
             // The wordmark's letters are white, so light themes keep text.
@@ -352,7 +352,7 @@ class _DesktopTopBar extends ConsumerWidget {
                   heightFactor: 0.56,
                   child: Image.asset(
                     'assets/text.png',
-                    height: 40,
+                    height: 33,
                     filterQuality: FilterQuality.medium,
                   ),
                 ),
@@ -383,14 +383,7 @@ class _DesktopTopBar extends ConsumerWidget {
             ),
           ),
           if (showShell) ...[
-            IconButton(
-              icon: Icon(Iconsax.profile_2user, color: foreground, size: 20),
-              tooltip: 'Jams',
-              onPressed: () {
-                final context = rootNavigatorKey.currentContext;
-                if (context != null) JamsScreen.open(context);
-              },
-            ),
+            _JamsButton(foreground: foreground),
             const SizedBox(width: 6),
             const _ProfileButton(),
             const SizedBox(width: 12),
@@ -443,6 +436,54 @@ class _SearchPill extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Opens Jams. While a jam is on, the icon lights up in the accent colour
+/// and carries the number of people listening.
+class _JamsButton extends ConsumerWidget {
+  const _JamsButton({required this.foreground});
+
+  final Color foreground;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final session = ref.watch(currentJamSessionProvider).valueOrNull;
+    final accent = ref.watch(effectiveAccentColorProvider);
+    final count = session?.participants.length ?? 0;
+    final active = session != null;
+
+    final icon = Icon(
+      Iconsax.profile_2user,
+      color: active ? accent : foreground,
+      size: 20,
+    );
+
+    return IconButton(
+      tooltip: active ? 'Jam on · $count listening' : 'Jams',
+      style: active
+          ? IconButton.styleFrom(
+              backgroundColor: accent.withValues(alpha: 0.16),
+            )
+          : null,
+      onPressed: () {
+        final context = rootNavigatorKey.currentContext;
+        if (context != null) JamsScreen.open(context);
+      },
+      icon: active
+          ? Badge(
+              label: Text('$count'),
+              backgroundColor: accent,
+              textColor:
+                  ThemeData.estimateBrightnessForColor(accent) ==
+                      Brightness.dark
+                  ? Colors.white
+                  : Colors.black,
+              offset: const Offset(10, -8),
+              child: icon,
+            )
+          : icon,
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:ui';
+import '../../core/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -716,8 +717,8 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
                   horizontal: 16,
                   vertical: 8,
                 ),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: desktopGridColumns(context),
                   childAspectRatio: 0.78,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
@@ -895,8 +896,8 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: desktopGridColumns(context),
         childAspectRatio: 0.78,
         crossAxisSpacing: 12,
         mainAxisSpacing: 16,
@@ -1416,8 +1417,8 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
                       vertical: 8,
                     ),
                     gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
+                        SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: desktopGridColumns(context),
                           childAspectRatio: 0.78,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
@@ -1548,8 +1549,8 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: desktopGridColumns(context),
         childAspectRatio: 0.78,
         crossAxisSpacing: 12,
         mainAxisSpacing: 16,
@@ -1793,8 +1794,8 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
                       vertical: 8,
                     ),
                     gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
+                        SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: desktopGridColumns(context),
                           childAspectRatio: 0.85,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 16,
@@ -1879,8 +1880,8 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: desktopGridColumns(context),
         childAspectRatio: 0.85,
         crossAxisSpacing: 12,
         mainAxisSpacing: 16,

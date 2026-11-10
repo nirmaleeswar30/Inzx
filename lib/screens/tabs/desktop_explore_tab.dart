@@ -7,7 +7,8 @@ import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../widgets/album_screen.dart';
 import '../widgets/artist_screen.dart';
-import '../widgets/desktop_track_grid.dart' show cleanShelfSubtitle;
+import '../widgets/desktop_track_grid.dart'
+    show DesktopHomeSkeleton, cleanShelfSubtitle;
 import '../widgets/now_playing_screen.dart';
 import '../widgets/playlist_screen.dart';
 import '../widgets/podcast_screen.dart';
@@ -148,7 +149,11 @@ class _ExploreBody extends ConsumerWidget {
     return ref
         .watch(_explorePageProvider(key))
         .when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const SingleChildScrollView(
+            physics: NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: DesktopHomeSkeleton(),
+          ),
           error: (_, _) => _retry(ref, key),
           data: (page) {
             if (page == null) return _retry(ref, key);
@@ -447,7 +452,9 @@ class _HorizontalSection extends StatefulWidget {
 }
 
 class _HorizontalSectionState extends State<_HorizontalSection> {
-  final ScrollController _controller = ScrollController();
+  final ScrollController _controller = ScrollController(
+    keepScrollOffset: false,
+  );
 
   @override
   void dispose() {

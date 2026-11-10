@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
@@ -8,8 +9,11 @@ import '../../providers/providers.dart';
 import '../../services/audio_player_service.dart' as player_service;
 import '../../services/desktop/desktop_bootstrap.dart'
     show kDesktopMinWindowSize;
+import '../../services/lyrics/lyrics_models.dart';
+import '../../services/lyrics/lyrics_service.dart';
 import 'artist_screen.dart';
 import 'desktop_shell.dart';
+import 'lyrics_view.dart';
 import 'now_playing_screen.dart';
 import 'track_artwork_view.dart';
 
@@ -326,8 +330,8 @@ class _TransportControls extends ConsumerWidget {
             ),
             const SizedBox(width: 4),
             SizedBox(
-              width: 40,
-              height: 40,
+              width: 34,
+              height: 34,
               child: IconButton.filled(
                 padding: EdgeInsets.zero,
                 style: IconButton.styleFrom(
@@ -338,8 +342,8 @@ class _TransportControls extends ConsumerWidget {
                 onPressed: player.togglePlayPause,
                 icon: loading
                     ? SizedBox(
-                        width: 18,
-                        height: 18,
+                        width: 16,
+                        height: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           color: isDark ? Colors.black : Colors.white,
@@ -349,7 +353,7 @@ class _TransportControls extends ConsumerWidget {
                         playing
                             ? Icons.pause_rounded
                             : Icons.play_arrow_rounded,
-                        size: 26,
+                        size: 22,
                       ),
               ),
             ),
@@ -523,12 +527,15 @@ class _RightControls extends ConsumerWidget {
         return Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            IconButton(
-              iconSize: 20,
-              tooltip: 'Lyrics',
-              onPressed: () => _toggleNowPlaying(context, tab: _kLyricsTab),
-              icon: Icon(Icons.mic_none_rounded, color: panel(_kLyricsTab)),
-            ),
+            // Narrow windows only have room for three buttons; lyrics are
+            // still a tab away in the queue panel.
+            if (!compact)
+              IconButton(
+                iconSize: 20,
+                tooltip: 'Lyrics',
+                onPressed: () => _toggleNowPlaying(context, tab: _kLyricsTab),
+                icon: Icon(Icons.mic_none_rounded, color: panel(_kLyricsTab)),
+              ),
             IconButton(
               iconSize: 20,
               tooltip: 'Queue',
@@ -538,17 +545,33 @@ class _RightControls extends ConsumerWidget {
             if (!compact) ...[
               _VolumeControl(base: base),
               const SizedBox(width: 12),
+              IconButton(
+                iconSize: 20,
+                tooltip: 'Mini player',
+                onPressed: enterDesktopMiniMode,
+                icon: Icon(
+                  Icons.picture_in_picture_alt_rounded,
+                  color: base.withValues(alpha: 0.75),
+                ),
+              ),
             ],
+            const _FullscreenButton(),
             IconButton(
               iconSize: 20,
-              tooltip: 'Mini player',
-              onPressed: enterDesktopMiniMode,
+              tooltip: 'Close player',
+              onPressed: () {
+                if (desktopNowPlayingOpen.value) {
+                  NowPlayingScreen.closeDesktop();
+                }
+                ref.read(audioPlayerServiceProvider).clearQueue();
+                // Nothing is playing now, so drop the closed song's colours.
+                ref.read(playerAlbumColorsProvider.notifier).reset();
+              },
               icon: Icon(
-                Icons.picture_in_picture_alt_rounded,
+                Icons.close_rounded,
                 color: base.withValues(alpha: 0.75),
               ),
             ),
-            const _FullscreenButton(),
           ],
         );
       },
@@ -630,6 +653,10 @@ class _FullscreenButton extends StatelessWidget {
   }
 }
 
+/// Whether the small player shows lyrics instead of the artwork. Kept for the
+/// session, so it reopens the way it was left.
+final desktopMiniLyrics = ValueNotifier<bool>(false);
+
 /// What the window shows while it's the small always-on-top player.
 class DesktopPopoutPlayer extends ConsumerStatefulWidget {
   const DesktopPopoutPlayer({super.key});
@@ -641,6 +668,44 @@ class DesktopPopoutPlayer extends ConsumerStatefulWidget {
 
 class _DesktopPopoutPlayerState extends ConsumerState<DesktopPopoutPlayer> {
   bool _hovered = false;
+  String? _lyricsRequestedFor;
+
+  @override
+  void initState() {
+    super.initState();
+    desktopMiniLyrics.addListener(_rebuild);
+  }
+
+  @override
+  void dispose() {
+    desktopMiniLyrics.removeListener(_rebuild);
+    super.dispose();
+  }
+
+  void _rebuild() => setState(() {});
+
+  /// The full window's now playing view normally loads lyrics, but it isn't
+  /// running while the window is this small, so fetch them here.
+  void _ensureLyrics(Track track) {
+    if (_lyricsRequestedFor == track.id || ref.read(isLiveProvider)) return;
+    _lyricsRequestedFor = track.id;
+    if (ref.read(lyricsProvider).videoId == track.id) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref
+          .read(lyricsProvider.notifier)
+          .fetchLyrics(
+            LyricsSearchInfo(
+              videoId: track.id,
+              title: track.title,
+              artist: track.artist,
+              album: track.album,
+              durationSeconds: track.duration.inSeconds,
+              localFilePath: track.localFilePath,
+            ),
+          );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -650,6 +715,10 @@ class _DesktopPopoutPlayerState extends ConsumerState<DesktopPopoutPlayer> {
     if (state == null || track == null) {
       return const ColoredBox(color: Colors.black);
     }
+    final showLyrics = desktopMiniLyrics.value;
+    if (showLyrics) _ensureLyrics(track);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final albumColors = ref.watch(playerAlbumColorsProvider);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
@@ -658,28 +727,75 @@ class _DesktopPopoutPlayerState extends ConsumerState<DesktopPopoutPlayer> {
         builder: (context, constraints) => Stack(
           fit: StackFit.expand,
           children: [
-            const ColoredBox(color: Colors.black),
-            TrackArtworkView(
-              track: track.copyWith(thumbnailUrl: track.bestThumbnail),
-              width: constraints.maxWidth,
-              height: constraints.maxHeight,
-            ),
-            DragToMoveArea(child: const SizedBox.expand()),
+            if (showLyrics) ...[
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 350),
+                color: (isDark ? albumColors : albumColors.toLightMode())
+                    .backgroundPrimary,
+              ),
+              const Padding(
+                padding: EdgeInsets.only(top: 40, bottom: 8),
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: _MiniLyrics(),
+                ),
+              ),
+              // Lyrics scroll, so only the strip along the top drags.
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 40,
+                child: DragToMoveArea(child: const SizedBox.expand()),
+              ),
+            ] else ...[
+              const ColoredBox(color: Colors.black),
+              _MiniArtwork(
+                track: track,
+                width: constraints.maxWidth,
+                height: constraints.maxHeight,
+              ),
+              DragToMoveArea(child: const SizedBox.expand()),
+            ],
             AnimatedOpacity(
               opacity: _hovered ? 1 : 0,
               duration: const Duration(milliseconds: 150),
               child: Stack(
                 children: [
-                  const IgnorePointer(
+                  IgnorePointer(
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [Color(0x66000000), Color(0xCC000000)],
+                          // Lyrics stay readable under the controls.
+                          colors: showLyrics
+                              ? const [
+                                  Color(0x00000000),
+                                  Color(0x00000000),
+                                  Color(0xCC000000),
+                                ]
+                              : const [Color(0x66000000), Color(0xCC000000)],
+                          stops: showLyrics ? const [0, 0.5, 1] : null,
                         ),
                       ),
-                      child: SizedBox.expand(),
+                      child: const SizedBox.expand(),
+                    ),
+                  ),
+                  Positioned(
+                    top: 2,
+                    left: 2,
+                    child: IconButton(
+                      tooltip: showLyrics ? 'Show artwork' : 'Show lyrics',
+                      onPressed: () =>
+                          desktopMiniLyrics.value = !desktopMiniLyrics.value,
+                      icon: Icon(
+                        showLyrics
+                            ? Icons.album_rounded
+                            : Icons.lyrics_outlined,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
                   Positioned(
@@ -761,6 +877,79 @@ class _DesktopPopoutPlayerState extends ConsumerState<DesktopPopoutPlayer> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Lyrics for the small player. Watches the position on its own so the rest
+/// of the player doesn't rebuild on every tick.
+class _MiniLyrics extends ConsumerWidget {
+  const _MiniLyrics();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (ref.watch(isLiveProvider)) {
+      return const Center(
+        child: Text(
+          'Lyrics aren’t available for live streams',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white70, fontSize: 13),
+        ),
+      );
+    }
+    final position =
+        ref.watch(positionStreamProvider).valueOrNull ?? Duration.zero;
+    // The lyrics are sized for the full window; scale them to this one.
+    return MediaQuery(
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: const TextScaler.linear(0.75)),
+      child: RepaintBoundary(child: LyricsView(currentPosition: position)),
+    );
+  }
+}
+
+/// The cover at full size for the small player. Song covers come as small
+/// thumbnails and video thumbnails have black bars, so both look rough here:
+/// use the 1200px cover, or a video's full-HD frame when it has one.
+class _MiniArtwork extends StatelessWidget {
+  const _MiniArtwork({
+    required this.track,
+    required this.width,
+    required this.height,
+  });
+
+  final Track track;
+  final double width;
+  final double height;
+
+  static final _videoThumb = RegExp(
+    r'(i\.ytimg\.com/vi(?:_webp)?/[^/]+/)(?:default|mqdefault|hqdefault|sddefault)\.(jpg|webp)',
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final art = track.systemArtworkUrl ?? track.bestThumbnail;
+    final maxRes = art != null && _videoThumb.hasMatch(art)
+        ? art.replaceFirstMapped(
+            _videoThumb,
+            (m) => '${m[1]}maxresdefault.${m[2]}',
+          )
+        : null;
+
+    return TrackArtworkView(
+      track: track.copyWith(thumbnailUrl: maxRes ?? art),
+      width: width,
+      height: height,
+      // Not every video has a full-HD frame; keep the original then.
+      errorWidget: maxRes != null
+          ? CachedNetworkImage(
+              imageUrl: art!,
+              width: width,
+              height: height,
+              fit: BoxFit.cover,
+            )
+          : null,
     );
   }
 }

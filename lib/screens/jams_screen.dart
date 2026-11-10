@@ -65,30 +65,67 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
       textColor = isDark ? Colors.white : Colors.black;
     }
 
+    final Widget page = isSignedIn
+        ? currentSession != null
+              ? _buildActiveSession(
+                  isDark,
+                  currentSession,
+                  albumColors,
+                  connectionState,
+                )
+              : _buildJoinOrCreate(isDark, jamsUIState, albumColors)
+        : _buildSignInPrompt(isDark, albumColors);
+
     return Scaffold(
       backgroundColor: desktopPageBackground(backgroundColor),
-      appBar: AppBar(
-        backgroundColor: desktopPageBackground(backgroundColor),
-        elevation: 0,
-        title: Text(
-          l10n.jams,
-          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
-        ),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: textColor),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: isSignedIn
-          ? currentSession != null
-                ? _buildActiveSession(
-                    isDark,
-                    currentSession,
-                    albumColors,
-                    connectionState,
-                  )
-                : _buildJoinOrCreate(isDark, jamsUIState, albumColors)
-          : _buildSignInPrompt(isDark, albumColors),
+      // The sidebar is the way out on desktop, so no bar or back button.
+      appBar: isDesktop
+          ? null
+          : AppBar(
+              backgroundColor: backgroundColor,
+              elevation: 0,
+              title: Text(
+                l10n.jams,
+                style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+              ),
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back, color: textColor),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+      body: isDesktop
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                  child: Text(
+                    l10n.jams,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                      // An active jam is two columns wide.
+                      constraints: BoxConstraints(
+                        maxWidth: isSignedIn && currentSession != null
+                            ? 1040
+                            : 640,
+                        minHeight: double.infinity,
+                      ),
+                      child: page,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : page,
     );
   }
 
@@ -465,203 +502,232 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
     final secondaryColor = textColor.withValues(alpha: 0.7);
     final accentColor = hasAlbumColors ? albumColors.accent : Colors.purple;
 
-    return SafeArea(
+    // Session header
+    final Widget header = Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            accentColor.withValues(alpha: 0.2),
+            Colors.transparent,
+          ],
+        ),
+      ),
       child: Column(
         children: [
-          // Session header
+          // Session code
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 12,
+            ),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  accentColor.withValues(alpha: 0.2),
-                  Colors.transparent,
-                ],
-              ),
+              color: textColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Column(
-              children: [
-                // Session code
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: textColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        session.sessionCode,
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 6,
-                          color: textColor,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      IconButton(
-                        onPressed: () {
-                          Clipboard.setData(
-                            ClipboardData(text: session.sessionCode),
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(l10n.codeCopied)),
-                          );
-                        },
-                        icon: Icon(Icons.copy, color: secondaryColor),
-                      ),
-                      IconButton(
-                        tooltip: 'Share Jam link',
-                        onPressed: () => shareJamInvite(
-                          session.sessionCode,
-                          videoId: ref.read(currentTrackProvider)?.id,
-                        ),
-                        icon: Icon(Icons.share_rounded, color: secondaryColor),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  isHost ? l10n.youAreHost : l10n.hostedBy(session.hostName),
-                  style: TextStyle(color: secondaryColor),
-                ),
-                if (connectionState != null) ...[
-                  const SizedBox(height: 8),
-                  _buildConnectionBadge(connectionState, textColor),
-                ],
-              ],
-            ),
-          ),
-
-          // Participants
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  l10n.listeningTogetherCount(session.participants.length),
+                  session.sessionCode,
                   style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 6,
                     color: textColor,
                   ),
                 ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 76,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: session.participants.length,
-                    itemBuilder: (context, index) {
-                      final participant = session.participants[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 16),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Stack(
-                              children: [
-                                Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: participant.photoUrl == null
-                                        ? accentColor.withValues(alpha: 0.5)
-                                        : null,
-                                    border: participant.isHost
-                                        ? Border.all(
-                                            color: Colors.amber,
-                                            width: 2,
-                                          )
-                                        : null,
-                                  ),
-                                  child: ClipOval(
-                                    child: participant.photoUrl != null
-                                        ? CachedNetworkImage(
-                                            imageUrl: participant.photoUrl!,
-                                            fit: BoxFit.cover,
-                                          )
-                                        : Center(
-                                            child: Text(
-                                              participant.name[0].toUpperCase(),
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                  ),
-                                ),
-                                if (participant.isHost)
-                                  Positioned(
-                                    bottom: 0,
-                                    right: 0,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(2),
-                                      decoration: const BoxDecoration(
-                                        color: Colors.amber,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.star,
-                                        size: 12,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              participant.name.split(' ').first,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: secondaryColor,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                const SizedBox(width: 12),
+                IconButton(
+                  onPressed: () {
+                    Clipboard.setData(
+                      ClipboardData(text: session.sessionCode),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.codeCopied)),
+                    );
+                  },
+                  icon: Icon(Icons.copy, color: secondaryColor),
+                ),
+                IconButton(
+                  tooltip: 'Share Jam link',
+                  onPressed: () => shareJamInvite(
+                    session.sessionCode,
+                    videoId: ref.read(currentTrackProvider)?.id,
                   ),
+                  icon: Icon(Icons.share_rounded, color: secondaryColor),
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 8),
+          Text(
+            isHost ? l10n.youAreHost : l10n.hostedBy(session.hostName),
+            style: TextStyle(color: secondaryColor),
+          ),
+          if (connectionState != null) ...[
+            const SizedBox(height: 8),
+            _buildConnectionBadge(connectionState, textColor),
+          ],
+        ],
+      ),
+    );
+
+    // Participants
+    final Widget participants = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.listeningTogetherCount(session.participants.length),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 76,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: session.participants.length,
+              itemBuilder: (context, index) {
+                final participant = session.participants[index];
+                return Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Stack(
+                        children: [
+                          Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: participant.photoUrl == null
+                                  ? accentColor.withValues(alpha: 0.5)
+                                  : null,
+                              border: participant.isHost
+                                  ? Border.all(
+                                      color: Colors.amber,
+                                      width: 2,
+                                    )
+                                  : null,
+                            ),
+                            child: ClipOval(
+                              child: participant.photoUrl != null
+                                  ? CachedNetworkImage(
+                                      imageUrl: participant.photoUrl!,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Center(
+                                      child: Text(
+                                        participant.name[0].toUpperCase(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          if (participant.isHost)
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(
+                                  color: Colors.amber,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.star,
+                                  size: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        participant.name.split(' ').first,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: secondaryColor,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // Leave button
+    final Widget leaveButton = Padding(
+      padding: const EdgeInsets.all(20),
+      child: SizedBox(
+        width: double.infinity,
+        child: OutlinedButton(
+          onPressed: () {
+            ref.read(jamsNotifierProvider.notifier).leaveSession();
+          },
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.red,
+            side: const BorderSide(color: Colors.red),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+          ),
+          child: Text(isHost ? l10n.endSession : l10n.leaveSession),
+        ),
+      ),
+    );
+
+    if (isDesktop) {
+      // Side by side on desktop, so Up Next keeps the window's full height.
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 380,
+            child: SingleChildScrollView(
+              child: Column(children: [header, participants, leaveButton]),
+            ),
+          ),
+          Expanded(
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+                _buildJamQueue(isDark, session, albumColors),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    return SafeArea(
+      child: Column(
+        children: [
+          header,
+          participants,
           const SizedBox(height: 16),
 
           // Jam Queue section (includes now playing at top)
           _buildJamQueue(isDark, session, albumColors),
 
-          // Leave button
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () {
-                  ref.read(jamsNotifierProvider.notifier).leaveSession();
-                },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.red,
-                  side: const BorderSide(color: Colors.red),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: Text(isHost ? l10n.endSession : l10n.leaveSession),
-              ),
-            ),
-          ),
+          leaveButton,
         ],
       ),
     );

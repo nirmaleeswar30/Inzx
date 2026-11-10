@@ -17,6 +17,7 @@ class Track extends Equatable {
   final String? setVideoId; // Used for playlist operations
   final String? localFilePath; // For offline playback
   final String? podcastId; // If this track belongs to a podcast show
+  final String? playCountText; // Display only, e.g. "808M plays"
 
   const Track({
     required this.id,
@@ -34,6 +35,7 @@ class Track extends Equatable {
     this.setVideoId,
     this.localFilePath,
     this.podcastId,
+    this.playCountText,
   });
 
   /// Whether this track is a podcast episode
@@ -90,6 +92,7 @@ class Track extends Equatable {
     String? setVideoId,
     String? localFilePath,
     String? podcastId,
+    String? playCountText,
   }) {
     return Track(
       id: id ?? this.id,
@@ -107,6 +110,7 @@ class Track extends Equatable {
       setVideoId: setVideoId ?? this.setVideoId,
       localFilePath: localFilePath ?? this.localFilePath,
       podcastId: podcastId ?? this.podcastId,
+      playCountText: playCountText ?? this.playCountText,
     );
   }
 

@@ -1313,19 +1313,27 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
             setState(() => _searchQuery = value.toLowerCase()),
         style: TextStyle(fontSize: 14, color: _textPrimary),
         decoration: InputDecoration(
+          // The container above draws the field; the theme's solid fill
+          // would paint it black over the desktop backdrop.
+          filled: !isDesktop,
+          enabledBorder: isDesktop ? InputBorder.none : null,
+          focusedBorder: isDesktop ? InputBorder.none : null,
           hintText: context.l10n.searchSettingsHint,
-          hintStyle: TextStyle(fontSize: 14, color: _textTertiary),
+          hintStyle: TextStyle(
+            fontSize: 14,
+            color: isDesktop ? _textSecondary : _textTertiary,
+          ),
           prefixIcon: Icon(
             Iconsax.search_normal,
             size: 18,
-            color: _textTertiary,
+            color: isDesktop ? _textSecondary : _textTertiary,
           ),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
                   icon: Icon(
                     Icons.close_rounded,
                     size: 18,
-                    color: _textTertiary,
+                    color: isDesktop ? _textSecondary : _textTertiary,
                   ),
                   onPressed: () {
                     _searchController.clear();

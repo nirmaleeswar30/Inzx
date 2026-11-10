@@ -5135,6 +5135,7 @@ class InnerTubeService {
       Duration? duration;
       String? album;
       String? albumId;
+      String? playCountText;
 
       if (flexColumns.length > 1) {
         final subtitleRuns =
@@ -5163,7 +5164,8 @@ class InnerTubeService {
             continue;
           }
 
-          if (RegExp(r'^\d+(\.\d+)?[kmb]?\s+(views|plays|view|play)$', caseSensitive: false).hasMatch(text)) {
+          if (RegExp(r'^[\d.,]+\s*[kmb]?\s+(views|plays|view|play)$', caseSensitive: false).hasMatch(text)) {
+            playCountText ??= text;
             continue;
           }
 
@@ -5267,6 +5269,7 @@ class InnerTubeService {
         isLiked: true,
         setVideoId: setVideoId,
         isExplicit: isExplicit,
+        playCountText: playCountText,
       );
     } catch (e) {
       return null;

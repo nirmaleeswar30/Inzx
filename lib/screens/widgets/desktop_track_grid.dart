@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../models/models.dart';
 import '../../providers/providers.dart';
@@ -16,6 +17,109 @@ String cleanShelfSubtitle(String subtitle) => subtitle
     .replaceAll(RegExp(r'\s*•\s*&\s*•\s*'), ' & ')
     .replaceAll(RegExp(r'\s*•\s*,\s*•\s*'), ', ');
 
+/// The loading placeholder for desktop's shelves: a Quick picks grid and rows
+/// of square cards, sized like the real ones.
+class DesktopHomeSkeleton extends StatelessWidget {
+  const DesktopHomeSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Skeletonizer.zone(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 960
+                ? 3
+                : (constraints.maxWidth >= 720 ? 2 : 1);
+            const cardGap = 16.0;
+            final cardSize = (constraints.maxWidth - 5 * cardGap) / 6;
+
+            Widget trackColumn() => Column(
+              children: [
+                for (var i = 0; i < _kRowsPerColumn; i++)
+                  SizedBox(
+                    height: _kRowHeight,
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 8),
+                        const Bone.square(
+                          size: 60,
+                          borderRadius: BorderRadius.all(Radius.circular(4)),
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Bone.text(words: 3, fontSize: 16),
+                              SizedBox(height: 6),
+                              Bone.text(words: 2, fontSize: 14),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            );
+
+            Widget cardRow() => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Bone.text(words: 3, fontSize: 24),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    for (var i = 0; i < 6; i++) ...[
+                      if (i > 0) const SizedBox(width: cardGap),
+                      SizedBox(
+                        width: cardSize,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Bone.square(
+                              size: cardSize,
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(8),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Bone.text(words: 2, fontSize: 14),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            );
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Bone.text(words: 2, fontSize: 30),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    for (var i = 0; i < columns; i++)
+                      Expanded(child: trackColumn()),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                cardRow(),
+                const SizedBox(height: 32),
+                cardRow(),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
 /// YouTube Music's Quick picks: rows of songs four deep, in columns that page
 /// sideways, with Play all and arrows in the heading.
 class DesktopTrackGridShelf extends ConsumerStatefulWidget {
@@ -29,7 +133,9 @@ class DesktopTrackGridShelf extends ConsumerStatefulWidget {
 }
 
 class _DesktopTrackGridShelfState extends ConsumerState<DesktopTrackGridShelf> {
-  final ScrollController _controller = ScrollController();
+  final ScrollController _controller = ScrollController(
+    keepScrollOffset: false,
+  );
 
   @override
   void initState() {

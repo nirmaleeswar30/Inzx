@@ -1,7 +1,7 @@
 import 'dart:io' show Directory, Platform;
-import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/widgets.dart' show BuildContext, Color, MediaQuery;
 import 'package:path_provider/path_provider.dart';
 
 /// True on the desktop targets Inzx ships for (Windows and Linux).
@@ -9,6 +9,12 @@ bool get isDesktop => !kIsWeb && (Platform.isWindows || Platform.isLinux);
 
 /// Linux has no embedded web view for the podcast video player.
 bool get isLinuxDesktop => !kIsWeb && Platform.isLinux;
+
+/// Columns for a grid of square cards: two on phones, as many as fit on desktop.
+int desktopGridColumns(BuildContext context) {
+  if (!isDesktop) return 2;
+  return (MediaQuery.sizeOf(context).width / 180).floor().clamp(2, 10);
+}
 
 /// The app font on desktop. Null leaves the system font, as on Android.
 String? get desktopFontFamily => isDesktop ? 'Poppins' : null;

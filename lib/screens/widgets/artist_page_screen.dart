@@ -71,6 +71,13 @@ final artistColorsProvider =
       }
     });
 
+/// Side margin of the shelves, which lines up with the header on desktop.
+final double _shelfGutter = isDesktop ? 24 : 16;
+
+/// Height of the banner on desktop: the whole 2.4:1 image at normal widths.
+double _desktopBannerHeight(BuildContext context) =>
+    (MediaQuery.sizeOf(context).width / 2.4).clamp(280.0, 520.0);
+
 // ============ ARTIST SCREEN ============
 
 /// OuterTune-style Artist/Channel screen
@@ -159,6 +166,26 @@ class _ArtistPageScreenState extends ConsumerState<ArtistPageScreen> {
             onPressed: () => Navigator.pop(context),
           ),
         ),
+        if (isDesktop)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                _shelfGutter,
+                _desktopBannerHeight(context) * 0.4,
+                _shelfGutter,
+                32,
+              ),
+              child: Text(
+                widget.artistName ?? l10n.loading,
+                style: TextStyle(
+                  color: isDark ? Colors.white : colorScheme.onSurface,
+                  fontSize: 48,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          )
+        else
         SliverToBoxAdapter(
           child: Column(
             children: [
@@ -317,20 +344,24 @@ class _ArtistContent extends ConsumerWidget {
     return Stack(
       children: [
         // Dynamic background gradient
-        _buildBackground(
-          context,
-          artistData.thumbnailUrl,
-          themeColor,
-          artistColors,
-        ),
+        if (!isDesktop)
+          _buildBackground(
+            context,
+            artistData.thumbnailUrl,
+            themeColor,
+            artistColors,
+          ),
 
         Column(
           children: [
             Expanded(
               child: CustomScrollView(
-                physics: const BouncingScrollPhysics(),
+                physics: isDesktop
+                    ? const ClampingScrollPhysics()
+                    : const BouncingScrollPhysics(),
                 slivers: [
-                  // App bar
+                  // App bar (on desktop these sit on the banner instead)
+                  if (!isDesktop)
                   SliverAppBar(
                     backgroundColor: Colors.transparent,
                     elevation: 0,
@@ -377,7 +408,9 @@ class _ArtistContent extends ConsumerWidget {
                     ..._buildShelfSection(context, ref, shelf, themeColor),
 
                   // Bottom padding
-                  const SliverPadding(padding: EdgeInsets.only(bottom: 120)),
+                  SliverPadding(
+                    padding: EdgeInsets.only(bottom: isDesktop ? 32 : 120),
+                  ),
                 ],
               ),
             ),
@@ -399,7 +432,7 @@ class _ArtistContent extends ConsumerWidget {
   String _localizedShelfTitle(BuildContext context, ArtistShelf shelf) {
     switch (shelf.type) {
       case ArtistShelfType.songs:
-        return context.l10n.songs;
+        return isDesktop ? 'Top songs' : context.l10n.songs;
       case ArtistShelfType.albums:
         return context.l10n.albums;
       case ArtistShelfType.singles:
@@ -493,6 +526,21 @@ class _ArtistContent extends ConsumerWidget {
         ThemeData.estimateBrightnessForColor(themeColor) == Brightness.dark
         ? Colors.white
         : Colors.black;
+
+    if (isDesktop) {
+      return _buildDesktopHeader(
+        context,
+        ref,
+        themeColor,
+        playIconColor,
+        isArtistPlaying,
+        isPlaying,
+        isLoggedIn,
+        isSubscribed,
+        subscribeBusy,
+        isDescriptionExpanded,
+      );
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -732,6 +780,279 @@ class _ArtistContent extends ConsumerWidget {
     );
   }
 
+  /// Desktop header, laid out like YT Music: the artist's banner runs across
+  /// the page and fades out, with everything else left aligned over it.
+  Widget _buildDesktopHeader(
+    BuildContext context,
+    WidgetRef ref,
+    Color themeColor,
+    Color playIconColor,
+    bool isArtistPlaying,
+    bool isPlaying,
+    bool isLoggedIn,
+    bool isSubscribed,
+    bool subscribeBusy,
+    bool isDescriptionExpanded,
+  ) {
+    final l10n = context.l10n;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final foreground = isDark
+        ? Colors.white
+        : Theme.of(context).colorScheme.onSurface;
+    final topTracks = artistData.topTracks;
+    final bannerHeight = _desktopBannerHeight(context);
+    final imageUrl = artistData.thumbnailUrl ?? initialThumbnail;
+    final description = artistData.description?.trim() ?? '';
+    final details = [
+      if (!artistData.isMusicArtist) l10n.channel,
+      if (artistData.subscriberCount != null)
+        l10n.subscribersCount(
+          _formatNumber(context, artistData.subscriberCount!),
+        ),
+    ].join(' • ');
+
+    return Stack(
+      children: [
+        if (imageUrl != null)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: bannerHeight,
+            child: ShaderMask(
+              blendMode: BlendMode.dstIn,
+              shaderCallback: (rect) => const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.white, Colors.white, Colors.transparent],
+                stops: [0, 0.3, 0.95],
+              ).createShader(rect),
+              child: CachedNetworkImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.cover,
+                alignment: const Alignment(0, -0.3),
+                memCacheWidth: 1920,
+                errorWidget: (_, _, _) => const SizedBox.shrink(),
+              ),
+            ),
+          ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            _shelfGutter,
+            bannerHeight * 0.52,
+            _shelfGutter,
+            24,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                artistData.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: foreground,
+                  fontSize: 48,
+                  height: 1.15,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                  shadows: [
+                    Shadow(
+                      color: (isDark ? Colors.black : Colors.white).withValues(
+                        alpha: 0.6,
+                      ),
+                      blurRadius: 18,
+                    ),
+                  ],
+                ),
+              ),
+              if (details.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  details,
+                  style: TextStyle(
+                    color: foreground.withValues(alpha: 0.8),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+              if (description.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 760),
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          ref
+                                  .read(
+                                    artistDescriptionExpandedProvider(
+                                      artistData.id,
+                                    ).notifier,
+                                  )
+                                  .state =
+                              !isDescriptionExpanded;
+                        },
+                        child: Text(
+                          description,
+                          maxLines: isDescriptionExpanded ? null : 2,
+                          overflow: isDescriptionExpanded
+                              ? TextOverflow.visible
+                              : TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: foreground.withValues(alpha: 0.7),
+                            fontSize: 14,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 18),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 42,
+                    height: 42,
+                    child: IconButton.filled(
+                      padding: EdgeInsets.zero,
+                      style: IconButton.styleFrom(
+                        backgroundColor: themeColor,
+                        foregroundColor: playIconColor,
+                        shape: const CircleBorder(),
+                      ),
+                      onPressed: () {
+                        if (topTracks.isEmpty) return;
+                        if (isArtistPlaying && isPlaying) {
+                          playerService.pause();
+                        } else {
+                          playerService.playQueue(
+                            topTracks,
+                            startIndex: 0,
+                            sourceId: artistData.id,
+                          );
+                        }
+                      },
+                      icon: Icon(
+                        isArtistPlaying && isPlaying
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
+                        size: 26,
+                      ),
+                    ),
+                  ),
+                  _buildDesktopPill(
+                    context,
+                    icon: const Icon(Icons.shuffle_rounded),
+                    label: l10n.shuffle,
+                    filled: true,
+                    onPressed: () {
+                      if (topTracks.isEmpty) return;
+                      playerService.playQueue(
+                        List<Track>.from(topTracks)..shuffle(),
+                        startIndex: 0,
+                        sourceId: artistData.id,
+                      );
+                    },
+                  ),
+                  _buildDesktopPill(
+                    context,
+                    icon: const Icon(Icons.radio),
+                    label: l10n.radio,
+                    onPressed: () {
+                      if (topTracks.isEmpty) return;
+                      playerService.startRadio(topTracks.first);
+                    },
+                  ),
+                  _buildDesktopPill(
+                    context,
+                    icon: subscribeBusy
+                        ? SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: foreground,
+                            ),
+                          )
+                        : Icon(
+                            isSubscribed
+                                ? Icons.check_rounded
+                                : Icons.add_rounded,
+                          ),
+                    label: isSubscribed ? 'Subscribed' : 'Subscribe',
+                    onPressed: subscribeBusy
+                        ? null
+                        : () => _toggleSubscription(
+                            context,
+                            ref,
+                            isLoggedIn: isLoggedIn,
+                            isSubscribed: isSubscribed,
+                          ),
+                  ),
+                  IconButton(
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).moreButtonTooltip,
+                    icon: Icon(Icons.more_vert, color: foreground),
+                    onPressed: () => _showOptionsSheet(context, ref),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        Positioned(
+          top: 8,
+          left: 8,
+          child: IconButton(
+            style: IconButton.styleFrom(backgroundColor: Colors.black38),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopPill(
+    BuildContext context, {
+    required Widget icon,
+    required String label,
+    required VoidCallback? onPressed,
+    bool filled = false,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final foreground = isDark
+        ? Colors.white
+        : Theme.of(context).colorScheme.onSurface;
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: icon,
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: filled
+            ? (isDark ? Colors.black : Colors.white)
+            : foreground,
+        backgroundColor: filled ? foreground : null,
+        side: filled
+            ? BorderSide.none
+            : BorderSide(color: foreground.withValues(alpha: 0.35)),
+        shape: const StadiumBorder(),
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        minimumSize: const Size(0, 42),
+        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+
   Future<void> _toggleSubscription(
     BuildContext context,
     WidgetRef ref, {
@@ -841,7 +1162,7 @@ class _ArtistContent extends ConsumerWidget {
     return [
       SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          padding: EdgeInsets.fromLTRB(_shelfGutter, 8, _shelfGutter, 8),
           child: Row(
             children: [
               Icon(Icons.download_done, size: 18, color: Colors.green[400]),
@@ -873,7 +1194,7 @@ class _ArtistContent extends ConsumerWidget {
       if (artistData.localTracks.length > 3)
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: _shelfGutter),
             child: TextButton(
               onPressed: () {
                 // Show all local tracks
@@ -933,7 +1254,7 @@ class _ArtistContent extends ConsumerWidget {
     return [
       SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          padding: EdgeInsets.fromLTRB(_shelfGutter, 8, _shelfGutter, 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -951,7 +1272,7 @@ class _ArtistContent extends ConsumerWidget {
                     // Navigate to full songs list
                     final songsShelf = HomeShelf(
                       id: shelf.browseId ?? artistData.id,
-                      title: '${artistData.name} - $displayTitle',
+                      title: '${artistData.name} - ${context.l10n.songs}',
                       type: HomeShelfType.unknown,
                       items: tracks
                           .map(
@@ -1003,9 +1324,25 @@ class _ArtistContent extends ConsumerWidget {
     final isTrackPlaying = currentTrack?.id == track.id;
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final mutedColor = isTrackPlaying
+        ? colorScheme.primary.withValues(alpha: 0.7)
+        : (isDark
+              ? Colors.white60
+              : colorScheme.onSurface.withValues(alpha: 0.6));
+    final moreButton = IconButton(
+      icon: Icon(
+        Icons.more_vert,
+        color: isDark
+            ? Colors.white54
+            : colorScheme.onSurface.withValues(alpha: 0.54),
+      ),
+      onPressed: () => TrackOptionsSheet.show(context, track),
+    );
 
     return ListTile(
-      contentPadding: const EdgeInsets.fromLTRB(16, 4, 4, 4),
+      contentPadding: isDesktop
+          ? EdgeInsets.fromLTRB(_shelfGutter, 4, 12, 4)
+          : const EdgeInsets.fromLTRB(16, 4, 4, 4),
       selected: isTrackPlaying,
       selectedTileColor: isDark
           ? Colors.white.withValues(alpha: 0.1)
@@ -1037,26 +1374,42 @@ class _ArtistContent extends ConsumerWidget {
         ),
       ),
       subtitle: Text(
-        context.trackSubtitle(track.artist, track.formattedDuration),
+        isDesktop
+            ? track.artist
+            : context.trackSubtitle(track.artist, track.formattedDuration),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          color: isTrackPlaying
-              ? colorScheme.primary.withValues(alpha: 0.7)
-              : (isDark
-                    ? Colors.white60
-                    : colorScheme.onSurface.withValues(alpha: 0.6)),
-        ),
+        style: TextStyle(color: mutedColor),
       ),
-      trailing: IconButton(
-        icon: Icon(
-          Icons.more_vert,
-          color: isDark
-              ? Colors.white54
-              : colorScheme.onSurface.withValues(alpha: 0.54),
-        ),
-        onPressed: () => TrackOptionsSheet.show(context, track),
-      ),
+      trailing: isDesktop
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Same columns as YT Music: plays, then the album on wide
+                // windows. Downloaded tracks have no play count.
+                SizedBox(
+                  width: 130,
+                  child: Text(
+                    track.playCountText ?? track.formattedDuration,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: mutedColor, fontSize: 13),
+                  ),
+                ),
+                if (MediaQuery.sizeOf(context).width >= 820)
+                  SizedBox(
+                    width: 220,
+                    child: Text(
+                      track.album ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: mutedColor, fontSize: 13),
+                    ),
+                  ),
+                moreButton,
+              ],
+            )
+          : moreButton,
       onTap: () {
         playerService.playQueue(
           queue,
@@ -1076,7 +1429,7 @@ class _ArtistContent extends ConsumerWidget {
     return [
       SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+          padding: EdgeInsets.fromLTRB(_shelfGutter, 24, _shelfGutter, 8),
           child: Text(
             displayTitle,
             style: TextStyle(
@@ -1091,7 +1444,7 @@ class _ArtistContent extends ConsumerWidget {
         child: SizedBox(
           height: 200,
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: _shelfGutter),
             scrollDirection: Axis.horizontal,
             itemCount: albums.length,
             itemBuilder: (context, index) {
@@ -1170,7 +1523,7 @@ class _ArtistContent extends ConsumerWidget {
     return [
       SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+          padding: EdgeInsets.fromLTRB(_shelfGutter, 24, _shelfGutter, 8),
           child: Text(
             displayTitle,
             style: TextStyle(
@@ -1185,6 +1538,9 @@ class _ArtistContent extends ConsumerWidget {
         delegate: SliverChildBuilderDelegate((context, index) {
           final playlist = playlists[index];
           return ListTile(
+            contentPadding: isDesktop
+                ? EdgeInsets.symmetric(horizontal: _shelfGutter)
+                : null,
             leading: ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: SizedBox(
@@ -1245,11 +1601,15 @@ class _ArtistContent extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final artists = shelf.artists;
     final displayTitle = _localizedShelfTitle(context, shelf);
+    // Six across on desktop, never narrower than the phone-sized card.
+    final sixAcross = (MediaQuery.sizeOf(context).width - 48 - 5 * 16) / 6;
+    final cardWidth = isDesktop && sixAcross > 120 ? sixAcross : 120.0;
+    final circleSize = isDesktop && sixAcross > 120 ? sixAcross : 100.0;
 
     return [
       SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+          padding: EdgeInsets.fromLTRB(_shelfGutter, 24, _shelfGutter, 8),
           child: Text(
             displayTitle,
             style: TextStyle(
@@ -1262,9 +1622,9 @@ class _ArtistContent extends ConsumerWidget {
       ),
       SliverToBoxAdapter(
         child: SizedBox(
-          height: 160,
+          height: circleSize + 60,
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: _shelfGutter),
             scrollDirection: Axis.horizontal,
             itemCount: artists.length,
             itemBuilder: (context, index) {
@@ -1277,14 +1637,14 @@ class _ArtistContent extends ConsumerWidget {
                   thumbnailUrl: artist.thumbnailUrl,
                 ),
                 child: Container(
-                  width: 120,
+                  width: cardWidth,
                   margin: const EdgeInsets.only(right: 16),
                   child: Column(
                     children: [
                       ClipOval(
                         child: SizedBox(
-                          width: 100,
-                          height: 100,
+                          width: circleSize,
+                          height: circleSize,
                           child: artist.thumbnailUrl != null
                               ? CachedNetworkImage(
                                   imageUrl: artist.thumbnailUrl!,

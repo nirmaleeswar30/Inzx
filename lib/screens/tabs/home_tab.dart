@@ -703,6 +703,7 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
 
   /// Loading state for shelves
   Widget _buildShelvesLoading(bool isDark) {
+    if (isDesktop) return const DesktopHomeSkeleton();
     return Skeletonizer(
       enabled: true,
       enableSwitchAnimation: true,
@@ -1196,10 +1197,6 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
         .whereType<Track>()
         .toList();
 
-    if (isDesktop && songs.isNotEmpty) {
-      return DesktopTrackGridShelf(shelf: shelf);
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1219,7 +1216,11 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: _textColors.tertiary,
+                        // The darkest grey disappears on the coloured
+                        // desktop backdrop.
+                        color: isDesktop
+                            ? _textColors.secondary
+                            : _textColors.tertiary,
                         letterSpacing: 0.5,
                       ),
                     ),
@@ -1265,7 +1266,9 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
 
         // Song cards grid
         if (songs.isNotEmpty)
-          _buildSongCardsGrid(songs, isDark, colorScheme)
+          isDesktop
+              ? DesktopTrackGridShelf(shelf: shelf)
+              : _buildSongCardsGrid(songs, isDark, colorScheme)
         else
           // Fallback if no songs found (e.g. mixed content), show standard carousel
           TrackListShelf(

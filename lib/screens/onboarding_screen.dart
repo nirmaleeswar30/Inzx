@@ -109,7 +109,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               // rather than in the space left between them.
               Padding(
                 padding: EdgeInsets.only(
-                  bottom: MediaQuery.sizeOf(context).height < 680 ? 150 : 0,
+                  // Sits a little above true centre, balancing the buttons.
+                  bottom: MediaQuery.sizeOf(context).height < 680 ? 150 : 90,
                 ),
                 child: _buildPages(),
               ),
