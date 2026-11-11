@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../core/l10n/app_localizations_x.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../core/utils/platform_utils.dart';
 import '../../providers/providers.dart';
 import '../../models/models.dart';
 import '../../services/local_music_scanner.dart';
@@ -376,10 +377,11 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(28),
                   child: BackdropFilter(
+                    enabled: !isDesktop,
                     filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: sheetBg,
+                        color: modalSheetBackground(context, sheetBg),
                         borderRadius: BorderRadius.circular(28),
                         border: Border.all(
                           color: liveAccent.withValues(alpha: 0.22),

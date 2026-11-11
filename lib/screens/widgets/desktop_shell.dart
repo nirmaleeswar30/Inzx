@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' show max;
 import 'dart:ui' show PointerDeviceKind;
 
@@ -100,14 +101,14 @@ class DesktopShortcuts extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final player = ref.read(audioPlayerServiceProvider);
     return CallbackShortcuts(
       bindings: {
-        const SingleActivator(LogicalKeyboardKey.space): player.togglePlayPause,
+        const SingleActivator(LogicalKeyboardKey.space): () =>
+            ref.read(audioPlayerServiceProvider).togglePlayPause(),
         const SingleActivator(LogicalKeyboardKey.arrowRight, control: true):
-            player.skipToNext,
+            () => ref.read(audioPlayerServiceProvider).skipToNext(),
         const SingleActivator(LogicalKeyboardKey.arrowLeft, control: true):
-            player.skipToPrevious,
+            () => ref.read(audioPlayerServiceProvider).skipToPrevious(),
         const SingleActivator(LogicalKeyboardKey.escape): () {
           if (desktopVideoFullScreen.value) {
             setDesktopVideoFullScreen(false);
@@ -118,7 +119,20 @@ class DesktopShortcuts extends ConsumerWidget {
           }
         },
       },
-      child: Focus(autofocus: true, child: child),
+      child: FocusScope(
+        autofocus: true,
+        onKeyEvent: (_, event) {
+          if (event.logicalKey == LogicalKeyboardKey.space) {
+            final focused = FocusManager.instance.primaryFocus?.context;
+            if (focused?.findAncestorWidgetOfExactType<EditableText>() != null) {
+              // Let platform text input insert the space.
+              return KeyEventResult.skipRemainingHandlers;
+            }
+          }
+          return KeyEventResult.ignored;
+        },
+        child: child,
+      ),
     );
   }
 }
@@ -136,6 +150,12 @@ class DesktopAppFrame extends StatefulWidget {
 
   final Widget child;
 
+  static void openSearch(BuildContext context, {required String query}) {
+    context.findAncestorStateOfType<_DesktopAppFrameState>()?._openSearch(
+      query: query,
+    );
+  }
+
   @override
   State<DesktopAppFrame> createState() => _DesktopAppFrameState();
 }
@@ -144,6 +164,53 @@ class _DesktopAppFrameState extends State<DesktopAppFrame> {
   // The navigator's overlay is inside the frame; tooltips and sliders up here
   // need one of their own.
   late final OverlayEntry _entry = OverlayEntry(builder: _buildFrame);
+  final _searchController = TextEditingController();
+  final _searchFocusNode = FocusNode();
+  MaterialPageRoute<void>? _searchRoute;
+
+  void _openSearch({String? query}) {
+    final navigator = rootNavigatorKey.currentState;
+    if (navigator == null) return;
+    if (query != null) {
+      _searchController.value = TextEditingValue(
+        text: query,
+        selection: TextSelection.collapsed(offset: query.length),
+      );
+      _searchFocusNode.unfocus();
+    }
+    final existing = _searchRoute;
+    if (existing != null && existing.isActive) {
+      if (!existing.isCurrent) {
+        navigator.popUntil((route) => route == existing);
+      }
+      return;
+    }
+    final route = MaterialPageRoute<void>(
+      requestFocus: false,
+      builder: (_) => SearchScreen(
+        desktopInput: (
+          controller: _searchController,
+          focusNode: _searchFocusNode,
+        ),
+      ),
+    );
+    _searchRoute = route;
+    unawaited(
+      navigator.push(route).then((_) {
+        if (!mounted || _searchRoute != route) return;
+        _searchRoute = null;
+        _searchFocusNode.unfocus();
+        _searchController.clear();
+      }),
+    );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
 
   @override
   void didUpdateWidget(DesktopAppFrame oldWidget) {
@@ -178,7 +245,15 @@ class _DesktopAppFrameState extends State<DesktopAppFrame> {
                     children: [
                       Column(
                         children: [
-                          if (showShell) const _DesktopTopBar(showShell: true),
+                          if (showShell)
+                            _DesktopTopBar(
+                              showShell: true,
+                              search: _SearchPill(
+                                controller: _searchController,
+                                focusNode: _searchFocusNode,
+                                onOpen: _openSearch,
+                              ),
+                            ),
                           Expanded(
                             child: Row(
                               children: [
@@ -328,9 +403,10 @@ class _CenterPane extends StatelessWidget {
 }
 
 class _DesktopTopBar extends ConsumerWidget {
-  const _DesktopTopBar({required this.showShell});
+  const _DesktopTopBar({required this.showShell, this.search});
 
   final bool showShell;
+  final Widget? search;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -384,18 +460,19 @@ class _DesktopTopBar extends ConsumerWidget {
               ),
           ],
           Expanded(
-            child: DragToMoveArea(
-              child: SizedBox.expand(
-                child: showShell
-                    ? Padding(
-                        padding: const EdgeInsets.only(left: 40, right: 24),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: _SearchPill(isDark: isDark),
-                        ),
-                      )
-                    : null,
-              ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                const DragToMoveArea(child: SizedBox.expand()),
+                if (showShell)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 40, right: 24),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: search,
+                    ),
+                  ),
+              ],
             ),
           ),
           if (showShell) ...[
@@ -415,40 +492,71 @@ class _DesktopTopBar extends ConsumerWidget {
   }
 }
 
-class _SearchPill extends StatelessWidget {
-  const _SearchPill({required this.isDark});
+class _SearchPill extends ConsumerWidget {
+  const _SearchPill({
+    required this.controller,
+    required this.focusNode,
+    required this.onOpen,
+  });
 
-  final bool isDark;
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final VoidCallback onOpen;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final muted = isDark ? Colors.white60 : Colors.black54;
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 520),
       child: Material(
         color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.09),
         borderRadius: BorderRadius.circular(8),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: () => rootNavigatorKey.currentState?.push(
-            MaterialPageRoute(builder: (_) => const SearchScreen()),
-          ),
-          child: SizedBox(
-            height: 38,
-            child: Row(
-              children: [
-                const SizedBox(width: 12),
-                Icon(Icons.search_rounded, size: 20, color: muted),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Search songs, albums, artists, podcasts',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: muted, fontSize: 14),
-                  ),
+        child: SizedBox(
+          height: 38,
+          child: ValueListenableBuilder(
+            valueListenable: controller,
+            builder: (context, value, _) => TextField(
+              controller: controller,
+              focusNode: focusNode,
+              textInputAction: TextInputAction.search,
+              textAlignVertical: TextAlignVertical.center,
+              style: const TextStyle(fontSize: 14),
+              onTap: onOpen,
+              onChanged: (_) => onOpen(),
+              onSubmitted: (query) {
+                if (query.trim().isNotEmpty) {
+                  ref
+                      .read(searchHistoryProvider.notifier)
+                      .addSearch(query.trim());
+                }
+              },
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                filled: false,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+                hintText: 'Search songs, albums, artists, podcasts',
+                hintStyle: TextStyle(color: muted, fontSize: 14),
+                prefixIconConstraints: const BoxConstraints(
+                  minWidth: 42,
+                  minHeight: 38,
                 ),
-              ],
+                prefixIcon: Icon(Icons.search_rounded, size: 20, color: muted),
+                suffixIcon: value.text.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: MaterialLocalizations.of(
+                          context,
+                        ).deleteButtonTooltip,
+                        icon: Icon(Icons.close, size: 18, color: muted),
+                        onPressed: () {
+                          controller.clear();
+                          focusNode.requestFocus();
+                          onOpen();
+                        },
+                      ),
+              ),
             ),
           ),
         ),
@@ -738,46 +846,53 @@ class _DesktopSidebar extends ConsumerWidget {
       width: collapsed ? _kSidebarCollapsedWidth : _kSidebarWidth,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(10, 14, 10, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final (index, tab) in tabs.indexed)
-              _SidebarTab(
-                icon: index == currentTab ? tab.$2 : tab.$1,
-                label: tab.$3,
-                selected: index == currentTab,
-                collapsed: collapsed,
-                accent: accent,
-                isDark: isDark,
-                onTap: () => _selectTab(ref, index),
-              ),
-            if (library.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Divider(
-                height: 1,
-                color: (isDark ? Colors.white : Colors.black).withValues(
-                  alpha: 0.14,
-                ),
-              ),
-              const SizedBox(height: 18),
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  itemCount: library.length,
-                  itemBuilder: (context, index) {
-                    final entry = library[index];
-                    return _LibraryTile(
-                      entry: entry,
-                      pinned: pinned.contains(entry.key),
-                      collapsed: collapsed,
-                      accent: accent,
-                      isDark: isDark,
-                    );
-                  },
-                ),
-              ),
-            ],
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // The expanded rows need room for the artwork and hover action.
+            // Keep the compact layout while the sidebar grows into that space.
+            final compact = collapsed || constraints.maxWidth < 120;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final (index, tab) in tabs.indexed)
+                  _SidebarTab(
+                    icon: index == currentTab ? tab.$2 : tab.$1,
+                    label: tab.$3,
+                    selected: index == currentTab,
+                    collapsed: compact,
+                    accent: accent,
+                    isDark: isDark,
+                    onTap: () => _selectTab(ref, index),
+                  ),
+                if (library.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Divider(
+                    height: 1,
+                    color: (isDark ? Colors.white : Colors.black).withValues(
+                      alpha: 0.14,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      itemCount: library.length,
+                      itemBuilder: (context, index) {
+                        final entry = library[index];
+                        return _LibraryTile(
+                          entry: entry,
+                          pinned: pinned.contains(entry.key),
+                          collapsed: compact,
+                          accent: accent,
+                          isDark: isDark,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ],
+            );
+          },
         ),
       ),
     );

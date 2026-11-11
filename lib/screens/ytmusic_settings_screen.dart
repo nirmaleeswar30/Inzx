@@ -37,7 +37,10 @@ import 'scrobbling_screen.dart';
 import 'equalizer_screen.dart';
 import 'auto_eq_screen.dart';
 import 'jams_screen.dart';
+import 'inzx_connect_screen.dart';
+import '../services/inzx_connect_service.dart';
 import 'import_playlist_screen.dart';
+import 'playlist_transfer_screen.dart';
 import 'statistics_screen.dart';
 import 'browse_moods_screen.dart';
 import 'downloads_screen.dart';
@@ -804,17 +807,37 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           'import playlist',
           'import playlists',
           'import',
-          'transfer',
           'playlists',
           'youtube music playlists',
           'fetch playlists',
-          'external playlists',
         ],
         title: 'Import Playlists',
         subtitle: 'Import playlists from your YouTube Music library',
         icon: Iconsax.import,
         screen: const ImportPlaylistScreen(),
       ),
+      const _SearchableItem(
+        tags: [
+          'transfer',
+          'import playlists',
+          'Spotify',
+          'Apple Music',
+          'TuneMyMusic',
+          'Soundiiz',
+        ],
+        title: PlaylistTransferScreen.title,
+        subtitle: PlaylistTransferScreen.subtitle,
+        icon: Icons.playlist_add_rounded,
+        screen: PlaylistTransferScreen(),
+      ),
+      if (InzxConnectService.isSupported)
+        _SearchableItem(
+          tags: const ['connect', 'devices', 'pair', 'qr'],
+          title: InzxConnectScreen.title,
+          subtitle: InzxConnectScreen.subtitle,
+          icon: InzxConnectScreen.icon,
+          onTap: () => InzxConnectScreen.open(Navigator.of(context)),
+        ),
       _SearchableItem(
         tags: [
           'statistics',
@@ -2316,6 +2339,33 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
             MaterialPageRoute(builder: (_) => const BackupRestoreScreen()),
           ),
         ),
+        Divider(
+          height: 1,
+          color: _isDark ? InzxColors.darkDivider : InzxColors.divider,
+        ),
+        _settingsTile(
+          icon: Icons.playlist_add_rounded,
+          iconBg: _accentColor,
+          title: PlaylistTransferScreen.title,
+          subtitle: PlaylistTransferScreen.subtitle,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const PlaylistTransferScreen()),
+          ),
+        ),
+        if (InzxConnectService.isSupported) ...[
+          Divider(
+            height: 1,
+            color: _isDark ? InzxColors.darkDivider : InzxColors.divider,
+          ),
+          _settingsTile(
+            icon: InzxConnectScreen.icon,
+            iconBg: _accentColor,
+            title: InzxConnectScreen.title,
+            subtitle: InzxConnectScreen.subtitle,
+            onTap: () => InzxConnectScreen.open(Navigator.of(context)),
+          ),
+        ],
         Divider(
           height: 1,
           color: _isDark ? InzxColors.darkDivider : InzxColors.divider,

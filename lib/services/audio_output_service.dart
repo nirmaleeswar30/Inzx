@@ -5,9 +5,7 @@ import '../core/utils/platform_utils.dart';
 import 'desktop/desktop_audio_dsp.dart';
 import 'desktop/desktop_loudness.dart';
 
-/// What the native output layer (android/.../audio/InzxAudioOutput.kt)
-/// reports about the last audio track: its format and whether it went to a
-/// USB DAC bit-perfect.
+/// The track and output formats reported by the platform audio backend.
 class AudioOutputStatus {
   const AudioOutputStatus({
     required this.bitPerfectSupported,
@@ -17,6 +15,8 @@ class AudioOutputStatus {
     this.trackSampleRate,
     this.trackEncoding,
     this.trackBitDepth,
+    this.outSampleRate,
+    this.outEncoding,
     this.bitPerfectActive = false,
     this.bitPerfectDevice,
     this.bitPerfectReason,
@@ -29,6 +29,8 @@ class AudioOutputStatus {
   final int? trackSampleRate;
   final String? trackEncoding;
   final int? trackBitDepth;
+  final int? outSampleRate;
+  final String? outEncoding;
   final bool bitPerfectActive;
   final String? bitPerfectDevice;
   final String? bitPerfectReason;
@@ -42,6 +44,8 @@ class AudioOutputStatus {
         trackSampleRate: m['trackSampleRate'] as int?,
         trackEncoding: m['trackEncoding'] as String?,
         trackBitDepth: m['trackBitDepth'] as int?,
+        outSampleRate: m['outSampleRate'] as int?,
+        outEncoding: m['outEncoding'] as String?,
         bitPerfectActive: m['bitPerfectActive'] == true,
         bitPerfectDevice: m['bitPerfectDevice'] as String?,
         bitPerfectReason: m['bitPerfectReason'] as String?,

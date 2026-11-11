@@ -183,6 +183,8 @@ class _DesktopAutomixHost implements DesktopAutomixHost {
     );
     s._positionController.add(player.position);
     s._syncAutomix();
+    final track = s._currentTrack;
+    if (track != null) unawaited(s._upgradeToLosslessIfPossible(track));
   }
 
   @override

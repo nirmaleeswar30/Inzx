@@ -85,13 +85,14 @@ dependencies:
   # Desktop (Windows & Linux). None of these touch the Android build.
   just_audio_media_kit: ^2.1.0 # libmpv backend for just_audio
   media_kit: ^1.2.6 # desktop Automix's blend player (pure Dart, already in the lock)
-  media_kit_libs_windows_audio: ^1.0.9
   media_kit_libs_linux: ^1.2.1
   audio_service_mpris: ^0.2.1 # Linux media keys / desktop player widgets
   audio_service_platform_interface: ^0.1.0
   window_manager: ^0.5.0
   desktop_webview_window: ^0.4.2 # YouTube Music sign-in window
   win32: ^5.15.0 # Windows named pipes for Discord Rich Presence
+  mobile_scanner: 7.2.1
+  qr_flutter: 4.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -12,10 +12,12 @@ import '../../services/desktop/desktop_bootstrap.dart'
 import '../../services/lyrics/lyrics_models.dart';
 import '../../services/lyrics/lyrics_service.dart';
 import '../../services/desktop/desktop_audio_dsp.dart';
+import '../inzx_connect_screen.dart';
 import 'artist_screen.dart';
 import 'automix_mix_pulse.dart';
 import 'desktop_shell.dart';
 import 'lyrics_view.dart';
+import 'lossless_badge.dart';
 import 'now_playing_screen.dart';
 import 'track_artwork_view.dart';
 
@@ -23,8 +25,9 @@ const double _kPlayerBarHeight = 84;
 const int _kUpNextTab = 0;
 const int _kLyricsTab = 1;
 
-/// Hides the volume bar and panel buttons when the window gets narrow.
+/// Hides the volume and secondary controls when the window gets narrow.
 const double _kPlayerBarCompactWidth = 980;
+const double _kRightControlWidth = 36;
 
 String _clock(Duration d) {
   final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
@@ -135,8 +138,7 @@ class _TrackDetails extends ConsumerWidget {
 
     final artistId = track.artistId;
 
-    // The text is loosely sized, so the + sits right after whichever of the
-    // title and artist is wider.
+    // The + sits right after the track details.
     return Row(
       children: [
         _ArtButton(track: track),
@@ -173,6 +175,11 @@ class _TrackDetails extends ConsumerWidget {
                           name: track.artist,
                         );
                       },
+              ),
+              LosslessBadge(
+                color: base.withValues(alpha: 0.75),
+                horizontalPadding: 0,
+                sheetContext: rootNavigatorKey.currentContext,
               ),
             ],
           ),
@@ -626,65 +633,113 @@ class _RightControls extends ConsumerWidget {
         Color panel(int index) =>
             open && tab == index ? accent : base.withValues(alpha: 0.75);
 
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            // Narrow windows only have room for three buttons; lyrics are
-            // still a tab away in the queue panel.
-            if (!compact)
-              IconButton(
-                iconSize: 20,
-                tooltip: 'Lyrics',
-                onPressed: () => _toggleNowPlaying(context, tab: _kLyricsTab),
-                icon: Icon(Icons.mic_none_rounded, color: panel(_kLyricsTab)),
-              ),
-            IconButton(
-              iconSize: 20,
-              tooltip: 'Queue',
-              onPressed: () => _toggleNowPlaying(context, tab: _kUpNextTab),
-              icon: Icon(Icons.queue_music_rounded, color: panel(_kUpNextTab)),
-            ),
-            if (!compact) ...[
-              _VolumeControl(base: base),
-              const SizedBox(width: 12),
-              IconButton(
-                iconSize: 20,
-                tooltip: 'Mini player',
-                onPressed: enterDesktopMiniMode,
-                icon: Icon(
-                  Icons.picture_in_picture_alt_rounded,
-                  color: base.withValues(alpha: 0.75),
+        final color = base.withValues(alpha: 0.75);
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            // Reserve room for all seven buttons before sizing the slider.
+            final sliderWidth = (constraints.maxWidth - 7 * _kRightControlWidth)
+                .clamp(0.0, 100.0);
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (!compact)
+                  _RightControlButton(
+                    tooltip: 'Lyrics',
+                    onPressed: () =>
+                        _toggleNowPlaying(context, tab: _kLyricsTab),
+                    icon: Icons.mic_none_rounded,
+                    color: panel(_kLyricsTab),
+                  ),
+                _RightControlButton(
+                  tooltip: 'Queue',
+                  onPressed: () => _toggleNowPlaying(context, tab: _kUpNextTab),
+                  icon: Icons.queue_music_rounded,
+                  color: panel(_kUpNextTab),
                 ),
-              ),
-            ],
-            const _FullscreenButton(),
-            IconButton(
-              iconSize: 20,
-              tooltip: 'Close player',
-              onPressed: () {
-                if (desktopNowPlayingOpen.value) {
-                  NowPlayingScreen.closeDesktop();
-                }
-                ref.read(audioPlayerServiceProvider).clearQueue();
-                // Nothing is playing now, so drop the closed song's colours.
-                ref.read(playerAlbumColorsProvider.notifier).reset();
-              },
-              icon: Icon(
-                Icons.close_rounded,
-                color: base.withValues(alpha: 0.75),
-              ),
-            ),
-          ],
+                _RightControlButton(
+                  tooltip: InzxConnectScreen.title,
+                  onPressed: () =>
+                      InzxConnectScreen.open(rootNavigatorKey.currentState),
+                  icon: InzxConnectScreen.icon,
+                  color: color,
+                ),
+                if (!compact) ...[
+                  _VolumeControl(
+                    base: base,
+                    sliderWidth: sliderWidth >= 44 ? sliderWidth : 0,
+                  ),
+                  _RightControlButton(
+                    tooltip: 'Mini player',
+                    onPressed: enterDesktopMiniMode,
+                    icon: Icons.picture_in_picture_alt_rounded,
+                    color: color,
+                  ),
+                ],
+                _RightControlButton(
+                  tooltip: 'Full screen',
+                  onPressed: () => setDesktopFullScreen(true),
+                  icon: Icons.fullscreen_rounded,
+                  color: color,
+                  iconSize: 22,
+                ),
+                _RightControlButton(
+                  tooltip: 'Close player',
+                  onPressed: () {
+                    if (desktopNowPlayingOpen.value) {
+                      NowPlayingScreen.closeDesktop();
+                    }
+                    ref.read(audioPlayerServiceProvider).clearQueue();
+                    // Nothing is playing now, so drop the closed song's colours.
+                    ref.read(playerAlbumColorsProvider.notifier).reset();
+                  },
+                  icon: Icons.close_rounded,
+                  color: color,
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
 }
 
+class _RightControlButton extends StatelessWidget {
+  const _RightControlButton({
+    required this.tooltip,
+    required this.onPressed,
+    required this.icon,
+    required this.color,
+    this.iconSize = 20,
+  });
+
+  final String tooltip;
+  final VoidCallback onPressed;
+  final IconData icon;
+  final Color color;
+  final double iconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: _kRightControlWidth,
+      height: 40,
+      child: IconButton(
+        padding: EdgeInsets.zero,
+        iconSize: iconSize,
+        tooltip: tooltip,
+        onPressed: onPressed,
+        icon: Icon(icon, color: color),
+      ),
+    );
+  }
+}
+
 class _VolumeControl extends ConsumerStatefulWidget {
-  const _VolumeControl({required this.base});
+  const _VolumeControl({required this.base, required this.sliderWidth});
 
   final Color base;
+  final double sliderWidth;
 
   @override
   ConsumerState<_VolumeControl> createState() => _VolumeControlState();
@@ -709,8 +764,7 @@ class _VolumeControlState extends ConsumerState<_VolumeControl> {
     final control = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton(
-          iconSize: 20,
+        _RightControlButton(
           tooltip: volume == 0 ? 'Unmute' : 'Mute',
           onPressed: () {
             if (volume > 0) _beforeMute = volume;
@@ -718,20 +772,22 @@ class _VolumeControlState extends ConsumerState<_VolumeControl> {
               player.setMasterVolume(volume > 0 ? 0 : _beforeMute);
             });
           },
-          icon: Icon(icon, color: widget.base.withValues(alpha: 0.75)),
+          icon: icon,
+          color: widget.base.withValues(alpha: 0.75),
         ),
-        SizedBox(
-          width: 100,
-          child: _ThinSlider(
-            value: volume,
-            max: 1,
-            base: widget.base,
-            onChanged: (value) => setState(() {
-              player.setMasterVolume(value, persist: false);
-            }),
-            onChangeEnd: player.setMasterVolume,
+        if (widget.sliderWidth > 0)
+          SizedBox(
+            width: widget.sliderWidth,
+            child: _ThinSlider(
+              value: volume,
+              max: 1,
+              base: widget.base,
+              onChanged: (value) => setState(() {
+                player.setMasterVolume(value, persist: false);
+              }),
+              onChangeEnd: player.setMasterVolume,
+            ),
           ),
-        ),
       ],
     );
     // Bit-perfect output plays at full scale; the level is the device's.
@@ -739,29 +795,12 @@ class _VolumeControlState extends ConsumerState<_VolumeControl> {
       listenable: DesktopAudioDsp.instance,
       builder: (context, child) => DesktopAudioDsp.instance.exclusive
           ? Tooltip(
-              message: 'Bit-perfect output is on: set the volume on your device',
+              message:
+                  'Bit-perfect output is on: set the volume on your device',
               child: IgnorePointer(child: Opacity(opacity: 0.35, child: child)),
             )
           : child!,
       child: control,
-    );
-  }
-}
-
-class _FullscreenButton extends StatelessWidget {
-  const _FullscreenButton();
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return IconButton(
-      iconSize: 22,
-      tooltip: 'Full screen',
-      onPressed: () => setDesktopFullScreen(true),
-      icon: Icon(
-        Icons.fullscreen_rounded,
-        color: (isDark ? Colors.white : Colors.black87).withValues(alpha: 0.75),
-      ),
     );
   }
 }

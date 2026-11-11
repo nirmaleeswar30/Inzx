@@ -38,6 +38,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     ::DispatchMessage(&msg);
   }
 
+  // window_manager can end the message loop without destroying the HWND.
+  // Release the Flutter view and media controls before uninitializing COM.
+  window.Destroy();
   ::CoUninitialize();
   return EXIT_SUCCESS;
 }

@@ -230,7 +230,7 @@ adb install app-release.apk
    ```
    | Variable | Purpose |
    |---|---|
-   | `SUPABASE_URL` / `SUPABASE_ANON_KEY` | Real-time backend for **Jams** |
+   | `SUPABASE_URL` / `SUPABASE_ANON_KEY` | Backend for **Jams** and **Inzx Connect** |
    | `GOOGLE_WEB_CLIENT_ID` | Google Sign-In for Jam profiles |
    | `GITHUB_RELEASE_REPO` | Repo checked for GitHub release updates |
 
@@ -239,6 +239,8 @@ adb install app-release.apk
 5. **(Optional) Configure Supabase** for Jams — create a project at [supabase.com](https://supabase.com), enable Realtime, and paste the URL and anon key into `.env`.
 
 6. **(Optional) Configure Google Sign-In** — create an OAuth 2.0 Web Client ID in the Google Cloud Console and set `GOOGLE_WEB_CLIENT_ID`.
+
+7. **(Optional) Enable Inzx Connect** — apply the [pairing migration](supabase/migrations/20261111000100_inzx_connect_pairing.sql) to the configured Supabase project and enable anonymous sign-ins in Supabase Auth. Open **Settings → Inzx Connect** on desktop and Android to pair. Each installation creates its device session automatically.
 
 ### Build Commands
 

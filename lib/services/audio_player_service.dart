@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show debugPrint, kDebugMode, kIsWeb;
 import 'dart:async';
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -3565,6 +3566,7 @@ class AudioPlayerService {
 
     final trackForLyrics = _currentTrack!;
     _currentPlaybackData = null;
+    _failedDesktopLosslessUrl = null;
     if (_pendingSeekTrackId != null &&
         _pendingSeekTrackId != _currentTrack!.id) {
       _pendingSeekPosition = null;
@@ -3702,20 +3704,32 @@ class AudioPlayerService {
         }
       }
 
-      // 0. A lossless copy already resolved (prefetched while the previous
-      // track played) starts straight away; otherwise the track starts on
-      // whatever answers first and is upgraded once lossless turns up.
+      // Give the desktop add-on a short window to finish a cold lookup
+      // before starting on a lossy stream.
       if (_startsOnLossless) {
-        final cachedLossless = AddonService.instance.cachedFor(_currentTrack!);
-        if (cachedLossless != null) {
+        final addons = AddonService.instance;
+        var lossless = addons.cachedFor(trackForLyrics);
+        if (lossless == null && isDesktop && addons.isEnabled) {
+          lossless = await addons.matchFor(trackForLyrics).timeout(
+            const Duration(seconds: 3),
+            onTimeout: () => null,
+          );
+          if (_currentTrack?.id != trackId) return;
+        }
+        if (lossless != null && _startsOnLossless) {
           try {
             await _playAddonStream(
-              cachedLossless,
-              _currentTrack!,
+              lossless,
+              trackForLyrics,
               resolveTimeMs: stopwatch.elapsedMilliseconds,
             );
             return;
           } catch (e) {
+            if (isDesktop &&
+                (e is PlayerInterruptedException ||
+                    _currentTrack?.id != trackId)) {
+              return;
+            }
             if (kDebugMode) {
               print('AudioPlayerService: Lossless start failed, falling back: $e');
             }
@@ -3852,7 +3866,9 @@ class AudioPlayerService {
             final lossless = await AddonService.instance
                 .matchFor(_currentTrack!)
                 .timeout(const Duration(seconds: 8));
-            if (lossless != null && _currentTrack?.id == trackId) {
+            if (lossless != null &&
+                lossless.stream.url != _failedDesktopLosslessUrl &&
+                _currentTrack?.id == trackId) {
               _logLossless('YouTube failed; playing the lossless copy instead');
               await _playAddonStream(
                 lossless,
@@ -4710,10 +4726,18 @@ class AudioPlayerService {
   }
 
   AudioSource _addonAudioSource(AddonMatch match, Track track) {
-    final uri = Uri.parse(match.stream.url);
-    return match.stream.isDash
-        ? DashAudioSource(uri, tag: track)
-        : AudioSource.uri(uri, tag: track);
+    var uri = Uri.parse(match.stream.url);
+    if (!match.stream.isDash) return AudioSource.uri(uri, tag: track);
+    final manifest = isDesktop ? uri.data : null;
+    if (manifest != null) {
+      // mpv requires :// to route an inline manifest to its data protocol.
+      uri = Uri(
+        scheme: 'data',
+        host: 'application',
+        path: '/dash+xml;base64,${base64Encode(manifest.contentAsBytes())}',
+      );
+    }
+    return DashAudioSource(uri, tag: track);
   }
 
   /// Starts [track] directly on its lossless copy.
@@ -4728,7 +4752,19 @@ class AudioPlayerService {
       );
     }
     final playbackData = _addonPlaybackData(match);
-    await _player.setAudioSource(_addonAudioSource(match, track), preload: true);
+    final player = _player;
+    try {
+      await player.setAudioSource(_addonAudioSource(match, track), preload: true);
+    } on PlayerException {
+      if (isDesktop && _currentTrack?.id == track.id) {
+        _failedDesktopLosslessUrl = match.stream.url;
+      }
+      rethrow;
+    }
+    if (isDesktop &&
+        (_currentTrack?.id != track.id || !identical(player, _player))) {
+      return;
+    }
     _currentPlaybackData = playbackData;
     _activeSourceQueueIndices = <int>[_currentIndex];
     _activeSourcePlaybackDataByQueueIndex = <int, PlaybackData>{
@@ -4816,6 +4852,7 @@ class AudioPlayerService {
 
   String? _losslessLookupTrackId;
   String? _losslessHandOverTrackId;
+  String? _failedDesktopLosslessUrl;
 
   /// The addon found a lossless copy of some song. If it's the one playing
   /// (on a lossy stream), move onto it now — whichever lookup asked, and
@@ -4835,6 +4872,11 @@ class AudioPlayerService {
       _logLossless('Not upgrading "${track.title}": the song changed');
       return;
     }
+    // During a desktop start the lookup can finish before a source is loaded.
+    // The start path will use the match or retry the upgrade once playing.
+    if (isDesktop && _currentPlaybackData == null) return;
+    // Keep the fallback playing if this URL already failed during startup.
+    if (match.stream.url == _failedDesktopLosslessUrl) return;
     if (_currentPlaybackData?.format.isLossless == true) return;
     if (_currentPlaybackData?.isLive == true) return;
     // The lookup may have started before Auto stepped down.

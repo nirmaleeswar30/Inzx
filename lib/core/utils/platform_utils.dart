@@ -1,7 +1,8 @@
 import 'dart:io' show Directory, Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/widgets.dart' show BuildContext, Color, MediaQuery;
+import 'package:flutter/material.dart'
+    show BuildContext, Color, MediaQuery, Theme;
 import 'package:path_provider/path_provider.dart';
 
 /// True on the desktop targets Inzx ships for (Windows and Linux).
@@ -23,6 +24,14 @@ String? get desktopFontFamily => isDesktop ? 'Poppins' : null;
 /// backdrop behind the whole window shows through them.
 Color desktopPageBackground(Color background) =>
     isDesktop ? const Color(0x00000000) : background;
+
+/// Keeps sheet content opaque over the desktop page backdrop.
+Color modalSheetBackground(BuildContext context, [Color? background]) {
+  final theme = Theme.of(context);
+  return isDesktop
+      ? (background ?? theme.colorScheme.surface).withValues(alpha: 1)
+      : background ?? theme.scaffoldBackgroundColor;
+}
 
 /// Where the app keeps its own data. On mobile the documents directory is
 /// private to the app; on desktop it's the user's Documents folder, so data

@@ -4,16 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../core/design_system/design_system.dart';
+import '../core/providers/theme_provider.dart';
 import '../core/utils/platform_utils.dart';
+import 'inzx_connect_screen.dart';
+import 'playlist_transfer_screen.dart';
 import 'ytmusic_login_screen.dart';
 
-/// First-launch onboarding: a slow, colour-shifting aurora behind three short
-/// pages that end with the app's single sign-in (or skipping it).
+/// First-launch onboarding with optional sign-in and setup guides.
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key, required this.onFinished});
 
-  /// Called once the user signs in or chooses to continue without signing in.
+  /// Called when the user finishes setup.
   final VoidCallback onFinished;
 
   static const String completedPrefKey = 'inzx_onboarding_complete';
@@ -34,7 +38,15 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   int _page = 0;
   bool _finishing = false;
 
-  static const int _pageCount = 3;
+  static const int _signInPage = 2;
+  static const int _transferPage = 3;
+  static const int _losslessPage = 4;
+  static const int _connectPage = 5;
+  static const int _pageCount = _connectPage + 1;
+  static final _losslessGuide = Uri.parse(
+    'https://inzx.nirmaleeswar.dev/docs/audio#lossless-addons',
+  );
+  bool get _hasInlineControls => _page >= _transferPage;
 
   @override
   void initState() {
@@ -70,7 +82,24 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   Future<void> _signIn() async {
     HapticFeedback.mediumImpact();
     final signedIn = await openSignIn(context);
-    if (signedIn) await _finish();
+    if (mounted && signedIn) _next();
+  }
+
+  Future<void> _openLosslessGuide() async {
+    try {
+      if (await launchUrl(
+        _losslessGuide,
+        mode: LaunchMode.externalApplication,
+      )) {
+        return;
+      }
+    } catch (_) {
+      // Some platforms throw when no browser is available.
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Couldn’t open the lossless guide.')),
+    );
   }
 
   @override
@@ -110,7 +139,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               Padding(
                 padding: EdgeInsets.only(
                   // Sits a little above true centre, balancing the buttons.
-                  bottom: MediaQuery.sizeOf(context).height < 680 ? 150 : 90,
+                  bottom: _hasInlineControls
+                      ? 0
+                      : (MediaQuery.sizeOf(context).height < 680 ? 150 : 90),
                 ),
                 child: _buildPages(),
               ),
@@ -118,10 +149,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 child: Stack(
                   children: [
                     Align(alignment: Alignment.topRight, child: _buildSkip()),
-                    Align(
-                      alignment: Alignment.bottomCenter,
-                      child: _buildBottomControls(padding),
-                    ),
+                    if (!_hasInlineControls)
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: _buildBottomControls(padding),
+                      ),
                   ],
                 ),
               ),
@@ -131,7 +163,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   children: [
                     Align(alignment: Alignment.topRight, child: _buildSkip()),
                     Expanded(child: _buildPages()),
-                    _buildBottomControls(padding),
+                    if (!_hasInlineControls) _buildBottomControls(padding),
                   ],
                 ),
               ),
@@ -143,12 +175,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   Widget _buildSkip() {
     return AnimatedOpacity(
-      opacity: _page < _pageCount - 1 ? 1 : 0,
+      opacity: _page < _signInPage ? 1 : 0,
       duration: const Duration(milliseconds: 250),
       child: TextButton(
-        onPressed: _page < _pageCount - 1
+        onPressed: _page < _signInPage
             ? () => _pages.animateToPage(
-                _pageCount - 1,
+                _signInPage,
                 duration: const Duration(milliseconds: 600),
                 curve: Curves.easeOutCubic,
               )
@@ -159,6 +191,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   Widget _buildPages() {
+    final theme = Theme.of(context);
     return PageView(
       controller: _pages,
       onPageChanged: (i) => setState(() => _page = i),
@@ -171,6 +204,50 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         ),
         const _FeaturesPage(),
         const _SignInPage(),
+        Theme(
+          data: theme.brightness == Brightness.dark
+              ? theme
+              : InzxTheme.darkWithAccent(theme.colorScheme.primary),
+          child: PlaylistTransferPage(
+            footer: _buildInlineControls(_transferPage, 'Continue', _next),
+          ),
+        ),
+        _OnboardingInfoPage(
+          icon: Iconsax.music_square,
+          title: 'Lossless add-ons',
+          description:
+              'Add a community source to play lossless FLAC '
+              'when a matching track is available.',
+          instructions:
+              'Open Settings → Audio, then choose Add under Lossless addon.',
+          linkLabel: 'Read the lossless guide',
+          onOpenLink: _openLosslessGuide,
+          footer: _buildInlineControls(_losslessPage, 'Continue', _next),
+        ),
+        _OnboardingInfoPage(
+          icon: InzxConnectScreen.icon,
+          title: InzxConnectScreen.title,
+          description:
+              'Inzx is also available for Windows and Linux. '
+              'Use Inzx Connect to pair your Android phone and computer with a QR code.',
+          instructions:
+              'Pair anytime from Settings → Inzx Connect, '
+              'or use the devices icon in the desktop player bar.',
+          footer: _buildInlineControls(_connectPage, 'Finish setup', _finish),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInlineControls(int index, String label, VoidCallback onPressed) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _PageDots(count: _pageCount, index: index),
+        const SizedBox(height: 14),
+        _DesktopWidth(
+          child: _PrimaryButton(label: label, onPressed: onPressed),
+        ),
       ],
     );
   }
@@ -186,13 +263,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           child: _DesktopWidth(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
-              child: _page < _pageCount - 1
-                  ? _PrimaryButton(
-                      key: const ValueKey('next'),
-                      label: 'Continue',
-                      onPressed: _next,
-                    )
-                  : Column(
+              child: _page == _signInPage
+                  ? Column(
                       key: const ValueKey('auth'),
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -203,7 +275,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         ),
                         const SizedBox(height: 10),
                         TextButton(
-                          onPressed: _finish,
+                          onPressed: _next,
                           style: TextButton.styleFrom(
                             foregroundColor: Colors.white70,
                             minimumSize: const Size.fromHeight(48),
@@ -217,11 +289,110 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           ),
                         ),
                       ],
+                    )
+                  : _PrimaryButton(
+                      key: const ValueKey('next'),
+                      label: 'Continue',
+                      onPressed: _next,
                     ),
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _OnboardingInfoPage extends StatelessWidget {
+  const _OnboardingInfoPage({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.instructions,
+    required this.footer,
+    this.linkLabel,
+    this.onOpenLink,
+  });
+
+  final IconData icon;
+  final String title;
+  final String description;
+  final String instructions;
+  final Widget footer;
+  final String? linkLabel;
+  final VoidCallback? onOpenLink;
+
+  @override
+  Widget build(BuildContext context) {
+    final red = getAccentColor(InzxAccentColor.red);
+    final accent = Color.lerp(red, Colors.white, 0.4)!;
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 20,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: red.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: red.withValues(alpha: 0.35)),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Icon(icon, size: 48, color: accent),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            color: accent,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      description,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white, height: 1.5),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      instructions,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        height: 1.5,
+                      ),
+                    ),
+                    if (linkLabel case final label?)
+                      TextButton.icon(
+                        onPressed: onOpenLink,
+                        style: TextButton.styleFrom(foregroundColor: accent),
+                        icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                        label: Text(label),
+                      ),
+                    const SizedBox(height: 20),
+                    footer,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -473,7 +644,9 @@ class _PrimaryButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (leading != null) ...[leading!, const SizedBox(width: 12)],
-            Text(label),
+            Flexible(
+              child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
           ],
         ),
       ),

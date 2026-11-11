@@ -71,6 +71,12 @@ class _CloseHandler with WindowListener {
   Future<void> onWindowClose() async {
     if (_closing) return;
     _closing = true;
+    // Hide the window before the updater or native teardown can hold it open.
+    try {
+      await windowManager.hide();
+    } catch (_) {
+      // Continue closing if the window is already gone.
+    }
     try {
       await DesktopUpdater.instance.applyOnExit().timeout(const Duration(seconds: 5));
     } catch (_) {

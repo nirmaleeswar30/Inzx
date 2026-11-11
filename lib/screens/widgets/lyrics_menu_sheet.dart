@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/utils/platform_utils.dart';
 import '../../services/lyrics/lyrics_service.dart';
 import '../../services/lyrics/lyrics_translation_service.dart';
 import '../../providers/music_providers.dart';
@@ -250,7 +251,7 @@ class _LyricsMenuSheetState extends ConsumerState<LyricsMenuSheet> {
       expand: false,
       builder: (context, scrollController) {
         return Material(
-          color: Theme.of(context).scaffoldBackgroundColor,
+          color: modalSheetBackground(context),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           child: Stack(
             children: [

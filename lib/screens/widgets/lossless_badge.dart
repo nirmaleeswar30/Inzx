@@ -6,16 +6,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/providers.dart';
 import 'signal_path_sheet.dart';
 
-/// "Lossless" / "Hi-Res Lossless" under the progress bar, shown only while
+/// "Lossless" / "Hi-Res Lossless", shown only while
 /// a lossless stream plays, whatever the stats-for-nerds setting — and
 /// "Upgrading" or "Downgrading" in its place while the song is being moved
 /// onto a better or (for a struggling network, in Auto) a lower copy mid-play.
 /// Tapping it opens the signal path.
 class LosslessBadge extends ConsumerWidget {
-  const LosslessBadge({super.key, required this.color, this.fontSize = 11});
+  const LosslessBadge({
+    super.key,
+    required this.color,
+    this.fontSize = 11,
+    this.horizontalPadding = 6,
+    this.sheetContext,
+  });
 
   final Color color;
   final double fontSize;
+  final double horizontalPadding;
+  final BuildContext? sheetContext;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -23,7 +31,8 @@ class LosslessBadge extends ConsumerWidget {
       currentPlaybackDataProvider.select((d) => d?.format.losslessTier),
     );
     final upgrading =
-        tier == null && (ref.watch(losslessUpgradingProvider).valueOrNull ?? false);
+        tier == null &&
+        (ref.watch(losslessUpgradingProvider).valueOrNull ?? false);
     // Ahead of the tier: stepping down from FLAC, the song is still lossless
     // until the switch lands.
     final downgrading =
@@ -47,23 +56,30 @@ class LosslessBadge extends ConsumerWidget {
               key: ValueKey(label),
               behavior: HitTestBehavior.opaque,
               onTap: () => SignalPathSheet.show(
-                context,
+                sheetContext ?? context,
                 accentColor: ref.read(playerAlbumColorsProvider).accent,
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
+                  vertical: 2,
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     glyph,
                     const SizedBox(width: 4),
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: fontSize,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.2,
-                        color: color,
+                    Flexible(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                          color: color,
+                        ),
                       ),
                     ),
                   ],
@@ -264,7 +280,8 @@ class _GlyphPainter extends CustomPainter {
     final t = clock.value;
     for (final bar in _bars) {
       // A bouncing length between 25% and 95% of the glyph's height.
-      final wave = 0.5 + 0.5 * math.sin(2 * math.pi * (t * bar.speed + bar.phase));
+      final wave =
+          0.5 + 0.5 * math.sin(2 * math.pi * (t * bar.speed + bar.phase));
       final moving = 0.25 + 0.7 * wave;
       final len = bar.rest + (moving - bar.rest) * m;
       final dx = size.width * bar.x;

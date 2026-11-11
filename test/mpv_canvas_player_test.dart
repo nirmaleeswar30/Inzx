@@ -5,12 +5,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:inzx/services/canvas/mpv_canvas_player.dart';
 
 /// Runs where a built libmpv is around (a Windows build of this repo, or a
-/// system libmpv on Linux). The audio-only Windows libmpv has no video
-/// decoders but does decode PNG, so a generated image stands in for the
-/// canvas: it exercises the render API, the frame hand-off between
-/// isolates, the byte order and the alpha fix.
+/// system libmpv on Linux). A generated image exercises the render API,
+/// the frame hand-off between isolates, the byte order and the alpha fix.
 void main() {
-  final dll = '${Directory.current.path}/build/windows/x64/libmpv/libmpv-2.dll';
+  final dll = '${Directory.current.path}/build/windows/x64/'
+      '_deps/inzx_libmpv-src/libmpv-2.dll';
   final library = Platform.isWindows ? dll : null;
   final skip = Platform.isWindows && !File(dll).existsSync();
 

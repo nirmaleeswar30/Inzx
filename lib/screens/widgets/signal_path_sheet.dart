@@ -4,18 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/design_system/design_system.dart';
+import '../../core/utils/platform_utils.dart';
 import '../../providers/providers.dart';
+import '../../services/audio_output_service.dart';
 import '../../services/audio_player_service.dart';
 import '../../services/audio_routing_service.dart';
-import '../../services/audio_output_service.dart';
+import '../../services/desktop/desktop_output_device.dart';
 import '../../services/playback/playback_data.dart';
 
 /// "Stats for nerds", opened: the path the audio takes from the stream to
 /// the speaker, stage by stage, and how healthy the stream is.
-///
-/// Everything here is read, not assumed. Inzx plays through Android's
-/// shared mixer, so the verdict never claims "bit-perfect"; it says whether
-/// the source is lossless and whether Android resamples it on the way out.
 class SignalPathSheet extends ConsumerStatefulWidget {
   const SignalPathSheet({super.key, required this.accentColor});
 
@@ -69,6 +67,16 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
   }
 
   Future<void> _readOutput() async {
+    if (isDesktop) {
+      final output = await AudioOutputService.describe();
+      if (!mounted) return;
+      setState(() {
+        _output = output;
+        _deviceName = DesktopOutputDevice.instance.current?.label;
+      });
+      return;
+    }
+
     final info = await AudioRoutingService.getOutputInfo();
     final device = await AudioRoutingService.getActiveDeviceName();
     final output = await AudioOutputService.describe();
@@ -91,7 +99,7 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
   Widget build(BuildContext context) {
     final data = ref.watch(currentPlaybackDataProvider);
     final quality = ref.watch(audioQualityProvider);
-    final player = AudioPlayerService.instance;
+    final player = ref.read(audioPlayerServiceProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = isDark ? Colors.white : InzxColors.textPrimary;
     final secondary = isDark ? Colors.white54 : InzxColors.textSecondary;
@@ -172,9 +180,12 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
     final bool good;
     if (tier != null && output != null && output.bitPerfectActive) {
       badge = 'BIT-PERFECT';
-      line = 'Sent to ${output.bitPerfectDevice ?? 'your USB DAC'} unchanged '
-          'at ${_khz(output.trackSampleRate ?? source ?? 0)}, '
-          '${output.trackEncoding ?? 'PCM'} — Android\'s mixer is bypassed';
+      final rate = _khz(output.trackSampleRate ?? source ?? 0);
+      final encoding = output.trackEncoding ?? 'PCM';
+      line = isDesktop
+          ? 'WASAPI exclusive output at $rate, $encoding'
+          : 'Sent to ${output.bitPerfectDevice ?? 'your USB DAC'} unchanged '
+                'at $rate, $encoding — Android\'s mixer is bypassed';
       good = true;
     } else if (tier != null && source != null && mixer != null && !resampled) {
       badge = tier.toUpperCase();
@@ -250,8 +261,9 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
     final volume = player.currentVolume;
     final crossfadeMs = player.crossfadeDurationMs;
     final source = format.sampleRate;
-    final mixer = _mixerRate;
     final output = _output;
+    final outputRate = isDesktop ? output?.outSampleRate : _mixerRate;
+    final inputRate = isDesktop ? output?.trackSampleRate ?? source : source;
     final bitPerfect = output?.bitPerfectActive == true;
 
     final stages = <_Stage>[
@@ -295,18 +307,25 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
       ),
       _Stage(
         icon: Icons.merge_type_rounded,
-        title: 'Android mixer',
-        value: bitPerfect
+        title: isDesktop
+            ? (isLinuxDesktop ? 'Linux audio output' : 'Windows audio output')
+            : 'Android mixer',
+        value: bitPerfect && !isDesktop
             ? 'Bypassed'
-            : (mixer == null ? 'Unknown' : _khz(mixer)),
+            : (outputRate == null ? 'Unknown' : _khz(outputRate)),
         rows: [
-          if (output?.trackSampleRate != null)
+          if (isDesktop && outputRate != null)
+            (
+              'Player output',
+              '${output?.outEncoding ?? 'PCM'} • ${_khz(outputRate)}',
+            ),
+          if (!isDesktop && output?.trackSampleRate != null)
             (
               'Sent to Android',
               '${output!.trackEncoding ?? 'PCM'} • '
                   '${_khz(output.trackSampleRate!)}',
             ),
-          if (bitPerfect)
+          if (bitPerfect && !isDesktop)
             (
               'Bit-perfect',
               'On — locked to the track\'s own format for '
@@ -314,36 +333,39 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
             )
           else ...[
             (
-              'Resampling',
-              source == null || mixer == null
+              isDesktop ? 'Player resampling' : 'Resampling',
+              inputRate == null || outputRate == null
                   ? 'Can\'t tell (rate unknown)'
-                  : source == mixer
-                  ? 'None — ${_khz(source)} in and out'
-                  : '${_khz(source)} → ${_khz(mixer)}',
+                  : inputRate == outputRate
+                  ? 'None — ${_khz(inputRate)} in and out'
+                  : '${_khz(inputRate)} → ${_khz(outputRate)}',
             ),
             if (output != null &&
                 output.bitPerfectRequested &&
                 output.bitPerfectReason != null)
               ('Bit-perfect', 'Not active: ${output.bitPerfectReason}'),
           ],
-          if (_framesPerBuffer != null && mixer != null)
+          if (_framesPerBuffer != null && outputRate != null)
             (
               'Buffer',
               '$_framesPerBuffer frames '
-                  '(${(_framesPerBuffer! / mixer * 1000).toStringAsFixed(1)} ms)',
+                  '(${(_framesPerBuffer! / outputRate * 1000).toStringAsFixed(1)} ms)',
             ),
-          (
-            'Mode',
-            bitPerfect
-                ? 'Exclusive to Inzx — other sounds are muted'
-                : 'Shared output — other apps\' sounds mix in',
-          ),
+          if (isDesktop) ...[
+            if (bitPerfect) ('Mode', 'WASAPI exclusive'),
+          ] else
+            (
+              'Mode',
+              bitPerfect
+                  ? 'Exclusive to Inzx — other sounds are muted'
+                  : 'Shared output — other apps\' sounds mix in',
+            ),
         ],
       ),
       _Stage(
         icon: _deviceIsSpeaker ? Icons.speaker_rounded : Icons.headphones_rounded,
         title: 'Output',
-        value: _deviceName ?? 'This phone',
+        value: _deviceName ?? (isDesktop ? 'System default' : 'This phone'),
         rows: [
           if (_systemVolume != null && _systemVolumeMax != null)
             (
@@ -352,7 +374,7 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
                   ? 'Max — no attenuation'
                   : '$_systemVolume / $_systemVolumeMax',
             ),
-          if (!_deviceIsSpeaker)
+          if (!isDesktop && !_deviceIsSpeaker)
             (
               'Note',
               'Bluetooth re-encodes audio (SBC/AAC/LDAC…), so what reaches '
@@ -389,7 +411,13 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
     final autoNote = player.autoQualityNote;
     final rows = <(String, String)>[
       ('Buffered ahead', '${ahead.inSeconds} s'),
-      ('Network', player.isOnUnmeteredNetwork ? 'Wi-Fi' : 'Mobile data'),
+      if (isDesktop)
+        (
+          'Network',
+          player.isOnUnmeteredNetwork ? 'Wi-Fi / Ethernet' : 'Other or offline',
+        )
+      else
+        ('Network', player.isOnUnmeteredNetwork ? 'Wi-Fi' : 'Mobile data'),
       ('Quality setting', _qualityName(quality)),
       if (autoNote != null) ('Auto', autoNote),
     ];

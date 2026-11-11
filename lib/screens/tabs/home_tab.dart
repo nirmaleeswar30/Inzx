@@ -18,6 +18,7 @@ import '../widgets/playlist_screen.dart';
 import '../widgets/podcast_screen.dart';
 import '../widgets/album_screen.dart' hide albumColorsProvider;
 import '../widgets/artist_screen.dart';
+import '../widgets/desktop_shell.dart';
 import '../widgets/now_playing_screen.dart';
 import '../search_screen.dart';
 
@@ -120,6 +121,10 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
 
   /// Navigate to search results screen with a query
   void _performSearch(String query) {
+    if (isDesktop) {
+      DesktopAppFrame.openSearch(context, query: query);
+      return;
+    }
     ref.read(searchQueryProvider.notifier).state = query;
     Navigator.of(
       context,

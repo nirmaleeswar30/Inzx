@@ -66,6 +66,60 @@ add_dependencies(${BINARY_NAME} inzx_automix)
 # them to the application.
 include(flutter/generated_plugins.cmake)
 
+# Keep Windows WebView shutdown fixes local to the build directory.
+function(patch_webview_source target source old_text new_text)
+  if(NOT TARGET ${target})
+    return()
+  endif()
+  get_target_property(source_dir ${target} SOURCE_DIR)
+  set(original "${source_dir}/${source}")
+  file(READ "${original}" code)
+  string(REPLACE "${old_text}" "${new_text}" fixed_code "${code}")
+  if(fixed_code STREQUAL code)
+    return()
+  endif()
+  get_filename_component(source_name "${source}" NAME)
+  get_filename_component(include_dir "${original}" DIRECTORY)
+  set(fixed_source "${CMAKE_CURRENT_BINARY_DIR}/fixed_${source_name}")
+  file(WRITE "${fixed_source}" "${fixed_code}")
+  get_target_property(sources ${target} SOURCES)
+  list(REMOVE_ITEM sources "${source}")
+  set_property(TARGET ${target} PROPERTY SOURCES "${sources};${fixed_source}")
+  target_include_directories(${target} PRIVATE "${include_dir}")
+endfunction()
+
+# The engine owns the handler and may already be gone at plugin destruction.
+patch_webview_source(desktop_webview_window_plugin "web_view_window_plugin.cc"
+  "  channel_->SetMethodCallHandler(nullptr);\n  lifetime_.reset();"
+  "  lifetime_.reset();")
+
+# Release composition objects on the UI thread before COM and DLL teardown.
+patch_webview_source(flutter_inappwebview_windows_plugin "in_app_webview/in_app_webview_manager.cpp"
+  "    windowWebViews.clear();\n    UnregisterClass"
+  [=[    windowWebViews.clear();
+    compositor_ = nullptr;
+    graphics_context_.reset();
+    dispatcher_queue_controller_ = nullptr;
+    rohelper_.reset();
+    valid_ = false;
+    UnregisterClass]=])
+
+# The media_kit Windows bundle's older FFmpeg can crash when the first DASH
+# fragment fails to load. Bundle a current libmpv alongside the runner.
+include(FetchContent)
+set(INZX_LIBMPV_VERSION "0.42.0")
+if(CMAKE_GENERATOR_PLATFORM STREQUAL "ARM64")
+  set(INZX_LIBMPV_ARCH "aarch64")
+  set(INZX_LIBMPV_SHA256 "e5092a8ec0878127fcac2c33d15c566c569bd9dcf13cee4829ae91a2770abbcb")
+else()
+  set(INZX_LIBMPV_ARCH "x86_64")
+  set(INZX_LIBMPV_SHA256 "8e5f77430efc53ef175804ba6618527e3af0448a0dcabf04d3cc72659d1a6fce")
+endif()
+set(INZX_LIBMPV_ARCHIVE "libmpv-v${INZX_LIBMPV_VERSION}-${INZX_LIBMPV_ARCH}-w64-mingw32-lgpl.zip")
+FetchContent_Declare(inzx_libmpv
+  URL "https://github.com/mpv-player/mpv/releases/download/v${INZX_LIBMPV_VERSION}/${INZX_LIBMPV_ARCHIVE}"
+  URL_HASH "SHA256=${INZX_LIBMPV_SHA256}")
+FetchContent_MakeAvailable(inzx_libmpv)
 
 # === Installation ===
 # Support files are copied into place next to the executable, so that it can
@@ -95,6 +149,12 @@ if(PLUGIN_BUNDLED_LIBRARIES)
     DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
     COMPONENT Runtime)
 endif()
+
+install(FILES "${inzx_libmpv_SOURCE_DIR}/libmpv-2.dll"
+  DESTINATION "${INSTALL_BUNDLE_LIB_DIR}" COMPONENT Runtime)
+install(FILES "${inzx_libmpv_SOURCE_DIR}/LICENSE.LGPL"
+  DESTINATION "${INSTALL_BUNDLE_LIB_DIR}" RENAME "LICENSE.libmpv.LGPL"
+  COMPONENT Runtime)
 
 install(FILES ${AUTOMIX_BUNDLED_LIBRARIES}
   DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"

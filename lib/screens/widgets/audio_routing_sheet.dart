@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:ui';
+import '../../core/utils/platform_utils.dart';
 import '../../services/audio_routing_service.dart';
 import '../../core/design_system/animations.dart';
 
@@ -73,10 +74,14 @@ class _AudioRoutingSheetState extends ConsumerState<AudioRoutingSheet> {
   @override
   Widget build(BuildContext context) {
     return BackdropFilter(
+      enabled: !isDesktop,
       filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.65),
+          color: modalSheetBackground(
+            context,
+            Colors.black.withValues(alpha: 0.65),
+          ),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
           border: Border(
             top: BorderSide(

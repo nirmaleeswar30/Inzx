@@ -83,7 +83,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
           ),
           Row(
             children: [
-              IconButton(
+              if (!isDesktop) IconButton(
                 onPressed: () {
                   // Navigate to search
                   Navigator.of(context).push(
@@ -343,10 +343,11 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(28),
                   child: BackdropFilter(
+                    enabled: !isDesktop,
                     filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: sheetBg,
+                        color: modalSheetBackground(context, sheetBg),
                         borderRadius: BorderRadius.circular(28),
                         border: Border.all(
                           color: liveAccent.withValues(alpha: 0.22),
