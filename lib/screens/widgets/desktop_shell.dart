@@ -47,7 +47,7 @@ final desktopNowPlayingOpen = ValueNotifier<bool>(false);
 /// Whether the window is currently the small always-on-top player.
 final desktopMiniMode = ValueNotifier<bool>(false);
 
-/// Whether the player has taken over the whole screen, in its landscape layout.
+/// Whether the player has taken over the whole screen, showing the lyrics.
 final desktopFullScreen = ValueNotifier<bool>(false);
 
 Future<void> setDesktopFullScreen(bool on) async {
@@ -92,8 +92,9 @@ class DesktopScrollBehavior extends MaterialScrollBehavior {
   ) => child;
 }
 
-/// Space plays and pauses, Ctrl+arrows change the track, Escape closes the now
-/// playing view. Text fields handle these keys first, so typing is unaffected.
+/// Space plays and pauses, Ctrl+arrows change the track, F11 toggles the full
+/// screen lyrics player and Escape closes the now playing view. Text fields
+/// handle these keys first, so typing is unaffected.
 class DesktopShortcuts extends ConsumerWidget {
   const DesktopShortcuts({super.key, required this.child});
 
@@ -116,6 +117,14 @@ class DesktopShortcuts extends ConsumerWidget {
             setDesktopFullScreen(false);
           } else {
             NowPlayingScreen.closeDesktop();
+          }
+        },
+        // F11 opens or leaves the full screen lyrics player.
+        const SingleActivator(LogicalKeyboardKey.f11): () {
+          if (desktopVideoFullScreen.value) {
+            setDesktopVideoFullScreen(false);
+          } else if (!desktopMiniMode.value) {
+            setDesktopFullScreen(!desktopFullScreen.value);
           }
         },
       },

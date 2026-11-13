@@ -50,6 +50,9 @@ import 'progress_bar_painters.dart';
 import 'share_sheet.dart';
 import '../../core/utils/platform_utils.dart';
 import '../../main.dart' show rootNavigatorKey;
+import 'desktop_player_bar.dart'
+    show DesktopTransportControls, DesktopVolumeControl;
+import '../../services/desktop/desktop_audio_dsp.dart';
 import 'desktop_shell.dart'
     show
         desktopFullScreen,
@@ -638,7 +641,13 @@ class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
 /// causing the parent NowPlayingScreen widget tree to rebuild on audio ticks.
 class _IsolatedLyricsView extends ConsumerWidget {
   final bool isActive;
-  const _IsolatedLyricsView({this.isActive = true});
+  final double fontScale;
+  final bool menuVisible;
+  const _IsolatedLyricsView({
+    this.isActive = true,
+    this.fontScale = 1.0,
+    this.menuVisible = true,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -660,7 +669,12 @@ class _IsolatedLyricsView extends ConsumerWidget {
     final position =
         ref.watch(positionStreamProvider).valueOrNull ?? Duration.zero;
     return RepaintBoundary(
-      child: LyricsView(currentPosition: position, isActive: isActive),
+      child: LyricsView(
+        currentPosition: position,
+        isActive: isActive,
+        fontScale: fontScale,
+        menuVisible: menuVisible,
+      ),
     );
   }
 }
@@ -1758,6 +1772,32 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
             );
           }
 
+          if (isDesktop) {
+            // Full screen on desktop is given over to the lyrics.
+            return Scaffold(
+              backgroundColor: Colors.transparent,
+              body: _DesktopLyricsStage(
+                track: track,
+                state: state,
+                textColor: textColor,
+                accentColor: accentColor,
+                backgroundColor: colors.backgroundPrimary,
+                art: _buildAlbumArtContent(
+                  track,
+                  accentColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                heartOverlay: _buildHeartOverlay(),
+                ambientArt: ref.watch(ambientReflectionsEnabledProvider)
+                    ? _buildAmbientArt(track)
+                    : null,
+                isLiked: ref.watch(isTrackLikedProvider(track.id)),
+                onToggleLike: () => _toggleLikeTrack(track),
+                onDoubleTapLike: () => _triggerDoubleTapLike(track),
+              ),
+            );
+          }
+
           if (isLandscape) {
             return Scaffold(
               backgroundColor: backgroundColor,
@@ -1773,33 +1813,14 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                     stops: const [0.0, 1.0],
                   ),
                 ),
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: _buildStageView(
-                        track,
-                        state,
-                        playerService,
-                        textColor,
-                        secondaryTextColor,
-                        accentColor,
-                        colors.surface,
-                      ),
-                    ),
-                    if (isDesktop)
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: IconButton(
-                          tooltip: 'Exit full screen',
-                          onPressed: () => setDesktopFullScreen(false),
-                          icon: Icon(
-                            Icons.fullscreen_exit_rounded,
-                            color: textColor,
-                          ),
-                        ),
-                      ),
-                  ],
+                child: _buildStageView(
+                  track,
+                  state,
+                  playerService,
+                  textColor,
+                  secondaryTextColor,
+                  accentColor,
+                  colors.surface,
                 ),
               ),
             );
@@ -5920,6 +5941,375 @@ class _DesktopArtStats extends ConsumerWidget {
               const IgnorePointer(
                 child: AutomixStatsLine(color: Colors.white54, fontSize: 10.5),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The desktop full screen player, given over to the lyrics: the artwork,
+/// song and controls on the left, the synced lyrics large on the right. The
+/// controls and the cursor fade out while the mouse is still.
+class _DesktopLyricsStage extends ConsumerStatefulWidget {
+  const _DesktopLyricsStage({
+    required this.track,
+    required this.state,
+    required this.textColor,
+    required this.accentColor,
+    required this.backgroundColor,
+    required this.art,
+    required this.heartOverlay,
+    required this.ambientArt,
+    required this.isLiked,
+    required this.onToggleLike,
+    required this.onDoubleTapLike,
+  });
+
+  final Track track;
+  final player.PlaybackState state;
+  final Color textColor;
+  final Color accentColor;
+  final Color backgroundColor;
+  final Widget art;
+  final Widget heartOverlay;
+
+  /// The blurred cover behind everything, or null with reflections off.
+  final Widget? ambientArt;
+  final bool isLiked;
+  final VoidCallback onToggleLike;
+  final VoidCallback onDoubleTapLike;
+
+  @override
+  ConsumerState<_DesktopLyricsStage> createState() =>
+      _DesktopLyricsStageState();
+}
+
+class _DesktopLyricsStageState extends ConsumerState<_DesktopLyricsStage> {
+  static const _idleDelay = Duration(seconds: 3);
+
+  /// The exit button, the lyrics menu and the cursor fade out after
+  /// [_idleDelay] without the mouse moving; the playback controls stay.
+  static const _autoHideChrome = true;
+  static const _seekStep = Duration(seconds: 5);
+  static const _volumeStep = 0.05;
+
+  bool _controlsVisible = true;
+  Timer? _idleTimer;
+  final FocusNode _focusNode = FocusNode(debugLabel: 'Full screen lyrics');
+
+  @override
+  void initState() {
+    super.initState();
+    _wake();
+    // Entering full screen swaps the view inside the same route, so the
+    // autofocus alone can lose to whatever had focus before.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _idleTimer?.cancel();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  /// Shows the controls, and hides them again once the mouse rests.
+  void _wake() {
+    if (!_controlsVisible) setState(() => _controlsVisible = true);
+    _idleTimer?.cancel();
+    if (!_autoHideChrome) return;
+    _idleTimer = Timer(_idleDelay, () {
+      if (mounted) setState(() => _controlsVisible = false);
+    });
+  }
+
+  void _seekBy(Duration step) {
+    if (widget.state.isLive) return;
+    final service = ref.read(audioPlayerServiceProvider);
+    final position =
+        ref.read(positionStreamProvider).valueOrNull ?? Duration.zero;
+    final length = widget.state.duration ?? widget.track.duration;
+    var target = position + step;
+    if (target < Duration.zero) target = Duration.zero;
+    if (length > Duration.zero && target > length) target = length;
+    service.seek(target);
+    _wake();
+  }
+
+  void _changeVolume(double delta) {
+    // Bit-perfect output plays at full scale; the level is the device's.
+    if (DesktopAudioDsp.instance.exclusive) return;
+    final service = ref.read(audioPlayerServiceProvider);
+    service.setMasterVolume(service.masterVolume + delta);
+    // The slider reads the level when it builds.
+    setState(() {});
+    _wake();
+  }
+
+  Widget _fade(Widget child) {
+    return IgnorePointer(
+      ignoring: !_controlsVisible,
+      child: AnimatedOpacity(
+        opacity: _controlsVisible ? 1 : 0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+        child: child,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = widget.textColor;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final controlColor = isDark ? Colors.white : Colors.black87;
+    final ambientArt = widget.ambientArt;
+
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.arrowLeft): () =>
+            _seekBy(-_seekStep),
+        const SingleActivator(LogicalKeyboardKey.arrowRight): () =>
+            _seekBy(_seekStep),
+        const SingleActivator(LogicalKeyboardKey.arrowUp): () =>
+            _changeVolume(_volumeStep),
+        const SingleActivator(LogicalKeyboardKey.arrowDown): () =>
+            _changeVolume(-_volumeStep),
+      },
+      child: Focus(
+        focusNode: _focusNode,
+        autofocus: true,
+        child: MouseRegion(
+          cursor: _controlsVisible
+              ? MouseCursor.defer
+              : SystemMouseCursors.none,
+          onHover: (_) => _wake(),
+          child: Listener(
+            onPointerDown: (_) => _wake(),
+            onPointerSignal: (_) => _wake(),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                final height = constraints.maxHeight;
+                // Sized from the screen, so a large display isn't left
+                // mostly empty.
+                final scale = (height / 900).clamp(1.0, 1.6);
+                final lyricScale = (height / 800).clamp(1.15, 1.9);
+                final artSize = math
+                    .min(height * 0.46, width * 0.3)
+                    .clamp(220.0, 720.0);
+                final gutter = width * 0.06;
+
+                return Stack(
+                  children: [
+                    if (ambientArt != null)
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: Opacity(
+                            opacity: 0.5,
+                            child: Transform.scale(
+                              scale: 1.3,
+                              child: ImageFiltered(
+                                imageFilter: ImageFilter.blur(
+                                  sigmaX: 40,
+                                  sigmaY: 40,
+                                ),
+                                child: ambientArt,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    // Settles the backdrop behind the lyrics so they read
+                    // over any cover.
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [
+                                widget.backgroundColor.withValues(alpha: 0.25),
+                                widget.backgroundColor.withValues(alpha: 0.55),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: gutter,
+                        vertical: height * 0.07,
+                      ),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: artSize,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox.square(
+                                  dimension: artSize,
+                                  child: _buildArt(),
+                                ),
+                                SizedBox(height: 28 * scale),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            widget.track.title,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              color: textColor,
+                                              fontSize: 26 * scale,
+                                              fontWeight: FontWeight.w800,
+                                              height: 1.2,
+                                              letterSpacing: -0.4,
+                                            ),
+                                          ),
+                                          SizedBox(height: 6 * scale),
+                                          Text(
+                                            widget.track.artist,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              color: textColor.withValues(
+                                                alpha: 0.7,
+                                              ),
+                                              fontSize: 17 * scale,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    IconButton(
+                                      iconSize: 26 * scale,
+                                      tooltip: widget.isLiked
+                                          ? 'Remove from Liked Songs'
+                                          : 'Add to Liked Songs',
+                                      onPressed: widget.onToggleLike,
+                                      icon: Icon(
+                                        widget.isLiked
+                                            ? Icons.favorite_rounded
+                                            : Icons.favorite_border_rounded,
+                                        color: textColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 20 * scale),
+                                DesktopTransportControls(
+                                  state: widget.state,
+                                  track: widget.track,
+                                  scale: scale * 1.25,
+                                  showProgress: false,
+                                ),
+                                SizedBox(height: 12 * scale),
+                                // The player's own seek bar, in whichever style
+                                // is chosen (Player appearance, or the lyrics
+                                // menu). Its time row carries the Lossless /
+                                // Hi-Res Lossless badge.
+                                _NowPlayingProgressBar(
+                                  duration:
+                                      widget.state.duration ??
+                                      widget.track.duration,
+                                  textColor: textColor,
+                                  secondaryColor: textColor.withValues(
+                                    alpha: 0.7,
+                                  ),
+                                  accentColor: widget.accentColor,
+                                  isLive: widget.state.isLive,
+                                  horizontalPadding: 0,
+                                  verticalPadding: 0,
+                                ),
+                                SizedBox(height: 10 * scale),
+                                Center(
+                                  child: DesktopVolumeControl(
+                                    base: controlColor,
+                                    sliderWidth: 140 * scale,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: gutter),
+                          Expanded(
+                            child: _IsolatedLyricsView(
+                              fontScale: lyricScale,
+                              menuVisible: _controlsVisible,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      top: 16,
+                      right: 16,
+                      child: _fade(
+                        IconButton(
+                          tooltip: 'Exit full screen (Esc)',
+                          onPressed: () => setDesktopFullScreen(false),
+                          icon: Icon(
+                            Icons.fullscreen_exit_rounded,
+                            color: textColor,
+                            size: 28,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildArt() {
+    return MouseRegion(
+      cursor: _controlsVisible
+          ? SystemMouseCursors.click
+          : SystemMouseCursors.none,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: ref.read(audioPlayerServiceProvider).togglePlayPause,
+        onDoubleTap: widget.onDoubleTapLike,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.35),
+                blurRadius: 40,
+                offset: const Offset(0, 16),
+              ),
+            ],
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: widget.art,
+              ),
+              widget.heartOverlay,
+              const _DesktopArtStats(),
             ],
           ),
         ),

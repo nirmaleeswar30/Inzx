@@ -299,11 +299,61 @@ class _LinkTextState extends State<_LinkText> {
   }
 }
 
-class _TransportControls extends ConsumerWidget {
-  const _TransportControls({required this.state, required this.track});
+/// The bar's transport buttons and seek bar, larger by [scale]: the full
+/// screen player uses them too, since the bar is hidden there.
+class DesktopTransportControls extends StatelessWidget {
+  const DesktopTransportControls({
+    super.key,
+    required this.state,
+    required this.track,
+    this.scale = 1,
+    this.showProgress = true,
+  });
 
   final player_service.PlaybackState state;
   final Track track;
+  final double scale;
+
+  /// Off when the caller draws its own seek bar under the buttons.
+  final bool showProgress;
+
+  @override
+  Widget build(BuildContext context) => _TransportControls(
+    state: state,
+    track: track,
+    scale: scale,
+    showProgress: showProgress,
+  );
+}
+
+/// The bar's mute button and volume slider, for the full screen player.
+class DesktopVolumeControl extends StatelessWidget {
+  const DesktopVolumeControl({
+    super.key,
+    required this.base,
+    this.sliderWidth = 120,
+  });
+
+  final Color base;
+  final double sliderWidth;
+
+  @override
+  Widget build(BuildContext context) =>
+      _VolumeControl(base: base, sliderWidth: sliderWidth);
+}
+
+class _TransportControls extends ConsumerWidget {
+  const _TransportControls({
+    required this.state,
+    required this.track,
+    this.scale = 1,
+    this.showProgress = true,
+  });
+
+  final player_service.PlaybackState state;
+  final Track track;
+  final double scale;
+  final bool showProgress;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -327,20 +377,20 @@ class _TransportControls extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
-              iconSize: 20,
+              iconSize: 20 * scale,
               tooltip: 'Shuffle',
               onPressed: player.toggleShuffle,
               icon: Icon(Icons.shuffle_rounded, color: toggled(shuffle)),
             ),
             IconButton(
-              iconSize: 26,
+              iconSize: 26 * scale,
               onPressed: player.skipToPrevious,
               icon: Icon(Icons.skip_previous_rounded, color: base),
             ),
-            const SizedBox(width: 4),
+            SizedBox(width: 4 * scale),
             SizedBox(
-              width: 34,
-              height: 34,
+              width: 34 * scale,
+              height: 34 * scale,
               child: IconButton.filled(
                 padding: EdgeInsets.zero,
                 style: IconButton.styleFrom(
@@ -351,8 +401,8 @@ class _TransportControls extends ConsumerWidget {
                 onPressed: player.togglePlayPause,
                 icon: loading
                     ? SizedBox(
-                        width: 16,
-                        height: 16,
+                        width: 16 * scale,
+                        height: 16 * scale,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           color: isDark ? Colors.black : Colors.white,
@@ -362,18 +412,18 @@ class _TransportControls extends ConsumerWidget {
                         playing
                             ? Icons.pause_rounded
                             : Icons.play_arrow_rounded,
-                        size: 22,
+                        size: 22 * scale,
                       ),
               ),
             ),
-            const SizedBox(width: 4),
+            SizedBox(width: 4 * scale),
             IconButton(
-              iconSize: 26,
+              iconSize: 26 * scale,
               onPressed: player.skipToNext,
               icon: Icon(Icons.skip_next_rounded, color: base),
             ),
             IconButton(
-              iconSize: 20,
+              iconSize: 20 * scale,
               tooltip: 'Repeat',
               onPressed: player.cycleLoopMode,
               icon: Icon(
@@ -385,18 +435,27 @@ class _TransportControls extends ConsumerWidget {
             ),
           ],
         ),
-        if (!live)
-          _ProgressRow(duration: duration ?? track.duration, base: base),
+        if (!live && showProgress)
+          _ProgressRow(
+            duration: duration ?? track.duration,
+            base: base,
+            scale: scale,
+          ),
       ],
     );
   }
 }
 
 class _ProgressRow extends ConsumerStatefulWidget {
-  const _ProgressRow({required this.duration, required this.base});
+  const _ProgressRow({
+    required this.duration,
+    required this.base,
+    this.scale = 1,
+  });
 
   final Duration duration;
   final Color base;
+  final double scale;
 
   @override
   ConsumerState<_ProgressRow> createState() => _ProgressRowState();
@@ -428,14 +487,14 @@ class _ProgressRowState extends ConsumerState<_ProgressRow>
     );
     final timeStyle = TextStyle(
       color: widget.base.withValues(alpha: 0.65),
-      fontSize: 12,
+      fontSize: 12 * widget.scale,
       fontFeatures: const [FontFeature.tabularFigures()],
     );
 
     return Row(
       children: [
         SizedBox(
-          width: 44,
+          width: 44 * widget.scale,
           child: Text(
             _clock(Duration(milliseconds: valueMs.toInt())),
             textAlign: TextAlign.right,
@@ -473,7 +532,7 @@ class _ProgressRowState extends ConsumerState<_ProgressRow>
         ),
         const SizedBox(width: 10),
         SizedBox(
-          width: 44,
+          width: 44 * widget.scale,
           child: Text(_clock(widget.duration), style: timeStyle),
         ),
       ],

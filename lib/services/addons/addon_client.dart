@@ -15,7 +15,7 @@ import 'addon_models.dart';
 const String kAddonClientSecret = String.fromEnvironment(
   'LASTWAVE_CLIENT_SECRET',
   defaultValue:
-      '36d96a751b12ee481c281a8a8e64c482d0c1634a22061ab72f40175017818b85',
+      '83f0d38ce35653ef70743cd8ca4ea9044d154af938c93cb64a616f2b1e9531ba',
 );
 
 bool get addonSigningConfigured => kAddonClientSecret.isNotEmpty;
@@ -108,7 +108,15 @@ class AddonClient {
   /// speaking the same protocol gets a plain request.
   bool get isLastWave => token != null && token!.isNotEmpty;
 
-  Map<String, String> _headers(Uri uri, {required bool download}) {
+  /// Headers for one request. The signed path is [Uri.path] alone: a query
+  /// or fragment in it breaks the signature and the server answers with a
+  /// decoy stream.
+  @visibleForTesting
+  Map<String, String> requestHeaders(
+    Uri uri, {
+    required bool download,
+    DateTime? now,
+  }) {
     if (!isLastWave) {
       return const {'Accept': 'application/json', 'User-Agent': 'Inzx/1.0'};
     }
@@ -120,6 +128,7 @@ class AddonClient {
         secret: kAddonClientSecret,
         path: uri.path,
         token: token,
+        now: now,
       ),
     };
   }
@@ -130,7 +139,7 @@ class AddonClient {
   Future<Object?> _getJson(Uri uri, {bool download = false}) async {
     for (var attempt = 0; ; attempt++) {
       final response = await _http
-          .get(uri, headers: _headers(uri, download: download))
+          .get(uri, headers: requestHeaders(uri, download: download))
           .timeout(_timeout);
       final code = response.statusCode;
       if (code >= 200 && code < 300) {

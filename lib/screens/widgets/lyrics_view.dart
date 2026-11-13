@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show ImageFilter, TileMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
@@ -11,7 +12,7 @@ import '../../services/audio_player_service.dart' as player;
 import '../../services/lyrics/lyrics_service.dart';
 import '../../services/lyrics/lyrics_models.dart';
 import '../../services/lyrics/instrumental_gaps.dart';
-import 'karaoke_word.dart';
+import 'swept_lyric_line.dart';
 import 'lyric_clock.dart';
 import 'lyrics_menu_sheet.dart';
 
@@ -43,6 +44,9 @@ const double _inactiveLineScale = 1.0;
 const List<double> _lineFalloffAlpha = [1.0, 0.5, 0.44, 0.38, 0.32, 0.28];
 const double _syncedFontSize = 26.0;
 
+/// BitChord's blur either side of the line being sung, by distance from it.
+const List<double> _lineFalloffBlur = [0, 1, 1, 1.7, 2.4];
+
 double _falloffAlpha(int dist) =>
     _lineFalloffAlpha[dist.clamp(0, _lineFalloffAlpha.length - 1)];
 
@@ -51,10 +55,19 @@ class LyricsView extends ConsumerStatefulWidget {
   final Duration currentPosition;
   final bool isActive;
 
+  /// Sizes the lyric lines up, for the desktop full screen player.
+  final double fontScale;
+
+  /// Whether the options menu button shows; the full screen player fades it
+  /// out while the mouse is idle.
+  final bool menuVisible;
+
   const LyricsView({
     super.key,
     required this.currentPosition,
     this.isActive = true,
+    this.fontScale = 1.0,
+    this.menuVisible = true,
   });
 
   @override
@@ -710,6 +723,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
                       line: line,
                       index: index,
                       isCurrentLine: isCurrentLine,
+                      isSung: currentIdx >= 0 && index < currentIdx,
                       dist: dist,
                       textColor: textColor,
                       accentColor: accentColor,
@@ -796,22 +810,30 @@ class _LyricsViewState extends ConsumerState<LyricsView>
             ),
           ),
         ),
-        // Options Menu
-        if (showNerdStats || ref.watch(aiLyricsTranslationEnabledProvider))
+        // Options menu: always there, since it also holds the seek bar style,
+        // refetch, copy and the sync offset.
           Positioned(
             top: 8,
             right: 16,
-            child: IconButton(
-              icon: const Icon(Iconsax.more),
-              color: textColor,
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) => const LyricsMenuSheet(),
-                );
-              },
+            child: IgnorePointer(
+              ignoring: !widget.menuVisible,
+              child: AnimatedOpacity(
+                opacity: widget.menuVisible ? 1 : 0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                child: IconButton(
+                  icon: const Icon(Iconsax.more),
+                  color: textColor,
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => const LyricsMenuSheet(),
+                    );
+                  },
+                ),
+              ),
             ),
           ),
       ],
@@ -821,6 +843,33 @@ class _LyricsViewState extends ConsumerState<LyricsView>
   /// Lets a row trail the list during a handover (see [_staggerOffset]).
   /// Only rows that actually fan out read the animation each frame.
   Widget _followHandover(int index, Widget row) {
+    // BitChord's depth: rows away from the one being sung go soft by their
+    // distance, easing with the handover. None while reading by hand.
+    final current = _currentLineIndex;
+    final distance = current >= 0 ? (index - current).abs() : 0;
+    final blurRadius = current < 0 || distance == 0 || !_isAutoScrollEnabled
+        ? 0.0
+        : _lineFalloffBlur[distance.clamp(0, _lineFalloffBlur.length - 1)] *
+              widget.fontScale;
+    row = TweenAnimationBuilder<double>(
+      tween: Tween<double>(end: blurRadius),
+      duration: _lyricSettle,
+      curve: _lyricEase,
+      builder: (context, radius, child) {
+        // A Compose blur radius, as Skia turns it into a sigma.
+        final sigma = radius > 0.01 ? radius * 0.57735 + 0.5 : 0.0;
+        return ImageFiltered(
+          enabled: sigma > 0,
+          imageFilter: ImageFilter.blur(
+            sigmaX: sigma,
+            sigmaY: sigma,
+            tileMode: TileMode.decal,
+          ),
+          child: child,
+        );
+      },
+      child: row,
+    );
     return AnimatedBuilder(
       animation: _handover,
       builder: (context, child) {
@@ -849,7 +898,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
             ? InstrumentalGapTexts.getIntroText(line.timeInMs)
             : InstrumentalGapTexts.getBreakText(line.timeInMs));
 
-    final double iconSize = isCurrentLine ? 24.0 : 18.0;
+    final double iconSize = (isCurrentLine ? 24.0 : 18.0) * widget.fontScale;
     final opacity = isCurrentLine ? 1.0 : _falloffAlpha(dist);
 
     final noteColor = isCurrentLine
@@ -893,7 +942,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
                 displayText,
                 style: TextStyle(
                   fontStyle: FontStyle.italic,
-                  fontSize: isCurrentLine ? 20.0 : 16.0,
+                  fontSize: (isCurrentLine ? 20.0 : 16.0) * widget.fontScale,
                   fontWeight: isCurrentLine ? FontWeight.w600 : FontWeight.w400,
                   color: noteColor,
                   letterSpacing: 0.3,
@@ -957,7 +1006,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     final isBg = line.isBackground;
     // Every line shares one size and weight: the handover is carried by
     // scale and opacity only, so neighbouring rows never reflow.
-    final fontSize = isBg ? 18.0 : _syncedFontSize;
+    final fontSize = (isBg ? 18.0 : _syncedFontSize) * widget.fontScale;
     const fontWeight = FontWeight.w800;
 
     // Distance-based falloff (symmetric around the playing line)
@@ -1083,6 +1132,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     required LyricLine line,
     required int index,
     required bool isCurrentLine,
+    required bool isSung,
     required int dist,
     required Color textColor,
     required Color accentColor,
@@ -1090,13 +1140,12 @@ class _LyricsViewState extends ConsumerState<LyricsView>
   }) {
     final isBg = line.isBackground;
     // Same type for every line; the handover is scale + opacity only.
-    final fontSize = isBg ? 18.0 : _syncedFontSize;
+    final fontSize = (isBg ? 18.0 : _syncedFontSize) * widget.fontScale;
 
     // Distance attenuation for inactive lines (applied once, on the layer)
     final lineAlpha = isCurrentLine ? 1.0 : _falloffAlpha(dist);
 
     final targetOpacity = isBg ? 0.35 : lineAlpha;
-    final dimColor = isBg ? textColor.withValues(alpha: 0.35) : textColor;
 
     Widget content = AnimatedContainer(
       key: _lineKeys[index],
@@ -1111,26 +1160,40 @@ class _LyricsViewState extends ConsumerState<LyricsView>
         crossAxisAlignment: isBg ? CrossAxisAlignment.center : CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Wrap(
-            alignment: isBg ? WrapAlignment.center : WrapAlignment.start,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: line.words!.asMap().entries.map((entry) {
-              final wordIdx = entry.key;
-              final word = entry.value;
-              final isLastWord = wordIdx == line.words!.length - 1;
-
-              return KaraokeWord(
-                word: word,
-                isLastWord: isLastWord,
-                isCurrentLine: isCurrentLine,
-                positionNotifier: _smoothPositionNotifier,
-                fontSize: fontSize,
-                isBg: isBg,
-                textColor: textColor,
-                accentColor: accentColor,
-                dimColor: dimColor,
-              );
-            }).toList(),
+          // BitChord's sweep: a dim copy with a lit one clipped to what has
+          // been sung, the word being sung lifted and held notes swelling a
+          // letter at a time. Every word-synced line goes through it, so a
+          // finished line closes up to full brightness as it dims away.
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(end: isSung ? 1.0 : kSweptUnsungAlpha),
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+            builder: (context, dimAlpha, _) => TweenAnimationBuilder<double>(
+              tween: Tween<double>(
+                end: isCurrentLine && !isBg ? kSweptGlowAlpha : 0.0,
+              ),
+              duration: const Duration(milliseconds: 420),
+              curve: Curves.fastOutSlowIn,
+              builder: (context, glowAlpha, _) => SweptLyricLine(
+                line: line,
+                position: _smoothPositionNotifier,
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.w800,
+                  fontStyle: isBg ? FontStyle.italic : FontStyle.normal,
+                  height: 1.3,
+                  letterSpacing: -0.4,
+                ),
+                color: textColor,
+                dimAlpha: dimAlpha,
+                glowAlpha: glowAlpha,
+                feather: isCurrentLine,
+                // Only the lead lifts; on the answering voice the movement
+                // competes with the line being read.
+                rise: !isBg,
+                textAlign: isBg ? TextAlign.center : TextAlign.start,
+              ),
+            ),
           ),
           if (line.translatedText != null && line.translatedText!.isNotEmpty)
             Padding(
@@ -1272,7 +1335,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
               child: Text(
                 displayLine,
                 style: TextStyle(
-                  fontSize: isSection ? 18 : 22,
+                  fontSize: (isSection ? 18 : 22) * widget.fontScale,
                   fontWeight: isSection ? FontWeight.w700 : FontWeight.w400,
                   letterSpacing: isSection ? 0.5 : 0.0,
                   color: textColor.withValues(alpha: isSection ? 0.75 : 0.95),
