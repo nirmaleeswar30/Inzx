@@ -48,6 +48,19 @@ import 'now_playing_bottom_bar.dart';
 import 'canvas_ambient_glow.dart';
 import 'progress_bar_painters.dart';
 import 'share_sheet.dart';
+import '../../core/utils/platform_utils.dart';
+import '../../main.dart' show rootNavigatorKey;
+import 'desktop_player_bar.dart'
+    show DesktopTransportControls, DesktopVolumeControl;
+import '../../services/desktop/desktop_audio_dsp.dart';
+import '../inzx_connect_screen.dart';
+import 'desktop_shell.dart'
+    show
+        desktopConnectPaneOpen,
+        desktopFullScreen,
+        desktopNowPlayingOpen,
+        desktopNowPlayingTab,
+        setDesktopFullScreen;
 import '../../services/download_service.dart';
 import 'explicit_badge.dart';
 
@@ -163,7 +176,7 @@ class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
   }
 
   void _onSeekEnd(double value) {
-    final playerService = ref.read(audioPlayerServiceProvider);
+    final playerService = ref.read(playbackTransportProvider);
     playerService.seek(Duration(milliseconds: value.toInt()));
     _lastSeekTargetMs = value;
     setState(() {
@@ -630,7 +643,13 @@ class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
 /// causing the parent NowPlayingScreen widget tree to rebuild on audio ticks.
 class _IsolatedLyricsView extends ConsumerWidget {
   final bool isActive;
-  const _IsolatedLyricsView({this.isActive = true});
+  final double fontScale;
+  final bool menuVisible;
+  const _IsolatedLyricsView({
+    this.isActive = true,
+    this.fontScale = 1.0,
+    this.menuVisible = true,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -652,7 +671,12 @@ class _IsolatedLyricsView extends ConsumerWidget {
     final position =
         ref.watch(positionStreamProvider).valueOrNull ?? Duration.zero;
     return RepaintBoundary(
-      child: LyricsView(currentPosition: position, isActive: isActive),
+      child: LyricsView(
+        currentPosition: position,
+        isActive: isActive,
+        fontScale: fontScale,
+        menuVisible: menuVisible,
+      ),
     );
   }
 }
@@ -724,10 +748,9 @@ class _SyncedLyricPreviewState extends ConsumerState<SyncedLyricPreview>
   /// One frame of the lyric clock: holds while the song is loading or
   /// buffering, and follows Automix's tempo changes (see LyricClock).
   int _stepClock() {
-    final service = player.AudioPlayerService.instance;
-    final playhead = service.playhead;
+    final playhead = ref.read(playbackTransportProvider).playhead;
     final offset = ref.read(lyricsSyncOffsetProvider);
-    final trackId = service.currentTrack?.id;
+    final trackId = ref.read(currentTrackIdProvider);
     if (_clock == null || trackId != _clockTrackId) {
       _clockTrackId = trackId;
       _clock = LyricClock(playhead.positionMs + offset);
@@ -1232,8 +1255,69 @@ class NowPlayingScreen extends ConsumerStatefulWidget {
 
   const NowPlayingScreen({super.key, this.onClose});
 
+  static Route<void>? _desktopRoute;
+
+  /// Opens the view that sits between the desktop sidebar and player bar.
+  static void showDesktop() {
+    final navigator = rootNavigatorKey.currentState;
+    if (navigator == null) return;
+
+    final existing = _desktopRoute;
+    if (existing != null) {
+      if (existing.isCurrent) return;
+      // Buried under a page opened from it: bring it back to the top.
+      navigator.removeRoute(existing);
+    }
+
+    final route = PageRouteBuilder<void>(
+      pageBuilder: (_, _, _) => const NowPlayingScreen(),
+      transitionsBuilder: (_, animation, _, child) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.04),
+            end: Offset.zero,
+          ).animate(
+            CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+          ),
+          child: child,
+        ),
+      ),
+      transitionDuration: const Duration(milliseconds: 220),
+      reverseTransitionDuration: const Duration(milliseconds: 160),
+    );
+    _desktopRoute = route;
+    desktopNowPlayingOpen.value = true;
+    route.popped.whenComplete(() {
+      if (identical(_desktopRoute, route)) {
+        _desktopRoute = null;
+        desktopNowPlayingOpen.value = false;
+        desktopConnectPaneOpen.value = false;
+      }
+    });
+    navigator.push(route);
+  }
+
+  static void closeDesktop() {
+    final navigator = rootNavigatorKey.currentState;
+    final route = _desktopRoute;
+    if (navigator == null || route == null) return;
+    _desktopRoute = null;
+    desktopNowPlayingOpen.value = false;
+    desktopConnectPaneOpen.value = false;
+    if (route.isCurrent) {
+      navigator.pop();
+    } else {
+      navigator.removeRoute(route);
+    }
+  }
+
   /// Show the Now Playing screen with Hero animation support
   static void show(BuildContext context) {
+    if (isDesktop) {
+      showDesktop();
+      return;
+    }
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false,
@@ -1336,12 +1420,20 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     // Tab controller for bottom tabs
     _tabController = TabController(length: 3, vsync: this);
     // Sheet tab state is driven by _selectSheetTab (no TabBar listens).
+    if (isDesktop) {
+      _tabController.index = desktopNowPlayingTab.value;
+      _showQueue = _tabController.index == 0;
+      _showLyrics = _tabController.index == 1;
+      desktopNowPlayingTab.addListener(_onDesktopTabChanged);
+      desktopConnectPaneOpen.addListener(_onDesktopTabChanged);
+      desktopFullScreen.addListener(_onDesktopTabChanged);
+    }
 
     // Page controller for swiping content
     _pageController = PageController(initialPage: 0);
 
     // Album art page controller follows actual queue index starting on active index
-    final initialQueueIndex = ref.read(audioPlayerServiceProvider).currentIndex;
+    final initialQueueIndex = (ref.read(playbackStateProvider).valueOrNull?.currentIndex ?? -1);
     final startPage = initialQueueIndex >= 0 ? initialQueueIndex : 0;
     _albumArtPageController = PageController(initialPage: startPage);
     _lastAlbumArtSyncedIndex = startPage;
@@ -1389,6 +1481,11 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   void dispose() {
     _sheetSnapshot.dispose();
     _colorAnimController.dispose();
+    if (isDesktop) {
+      desktopNowPlayingTab.removeListener(_onDesktopTabChanged);
+      desktopConnectPaneOpen.removeListener(_onDesktopTabChanged);
+      desktopFullScreen.removeListener(_onDesktopTabChanged);
+    }
     _tabController.dispose();
     _pageController.dispose();
     _albumArtPageController.dispose();
@@ -1412,7 +1509,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
       activeIndex = queue.indexWhere((t) => t.id == currentTrack.id);
     }
     if (activeIndex < 0) {
-      activeIndex = ref.read(audioPlayerServiceProvider).currentIndex;
+      activeIndex = (ref.read(playbackStateProvider).valueOrNull?.currentIndex ?? -1);
     }
 
     if (activeIndex <= 0) {
@@ -1454,10 +1551,10 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   @override
   Widget build(BuildContext context) {
     final playbackState = ref.watch(playbackStateProvider);
-    final playerService = ref.watch(audioPlayerServiceProvider);
+    final playerService = ref.watch(playbackTransportProvider);
     final albumColors = ref.watch(playerAlbumColorsProvider);
     final currentTrack = ref.watch(currentTrackProvider);
-    final currentQueueIndex = playerService.currentIndex;
+    final currentQueueIndex = playbackState.valueOrNull?.currentIndex ?? -1;
 
     ref.listen<Track?>(currentTrackProvider, (previous, next) {
       if (next != null && previous?.id != next.id) {
@@ -1487,7 +1584,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
         } catch (_) {}
       });
 
-      if (currentOrientation == Orientation.landscape) {
+      if (isDesktop) {
+        // Desktop's panel is chosen by its tabs, whatever the window's shape.
+      } else if (currentOrientation == Orientation.landscape) {
         // In landscape, ensure tabs are on Lyrics (index 1) without async post-frame jumps
         if (_tabController.index != 1) {
           _tabController.index = 1;
@@ -1664,6 +1763,46 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
               MediaQuery.of(context).orientation == Orientation.landscape;
           final nowPlayingStyle = ref.watch(nowPlayingStyleProvider);
 
+          if (isDesktop && !desktopFullScreen.value) {
+            // See-through: the window's album-coloured backdrop shows behind.
+            return Scaffold(
+              backgroundColor: Colors.transparent,
+              body: _buildDesktopView(
+                track,
+                textColor,
+                secondaryTextColor,
+                accentColor,
+                colors.surface,
+              ),
+            );
+          }
+
+          if (isDesktop) {
+            // Full screen on desktop is given over to the lyrics.
+            return Scaffold(
+              backgroundColor: Colors.transparent,
+              body: _DesktopLyricsStage(
+                track: track,
+                state: state,
+                textColor: textColor,
+                accentColor: accentColor,
+                backgroundColor: colors.backgroundPrimary,
+                art: _buildAlbumArtContent(
+                  track,
+                  accentColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                heartOverlay: _buildHeartOverlay(),
+                ambientArt: ref.watch(ambientReflectionsEnabledProvider)
+                    ? _buildAmbientArt(track)
+                    : null,
+                isLiked: ref.watch(isTrackLikedProvider(track.id)),
+                onToggleLike: () => _toggleLikeTrack(track),
+                onDoubleTapLike: () => _triggerDoubleTapLike(track),
+              ),
+            );
+          }
+
           if (isLandscape) {
             return Scaffold(
               backgroundColor: backgroundColor,
@@ -1812,8 +1951,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                             return;
                           }
                           final currentQueueIndex = ref
-                              .read(audioPlayerServiceProvider)
-                              .currentIndex;
+                              .read(playbackStateProvider).valueOrNull?.currentIndex ?? -1;
                           if (currentQueueIndex >= 0) {
                             final activePage = _safeAlbumArtPage(-1.0).round();
                             if (activePage != currentQueueIndex) {
@@ -1833,7 +1971,6 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                             child: EdgeNowPlayingView(
                               track: track,
                               state: state,
-                              playerService: playerService,
                               textColor: textColor,
                               secondaryTextColor: secondaryTextColor,
                               accentColor: accentColor,
@@ -2032,7 +2169,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   Widget _buildFullAlbumView(
     Track track,
     player.PlaybackState state,
-    player.AudioPlayerService playerService,
+    PlaybackTransport playerService,
     Color textColor,
     Color secondaryTextColor,
     Color accentColor, {
@@ -2117,10 +2254,151 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   }
 
   /// Stage View (Landscape Mode): Album Art & Controls on left, Live Lyrics / Queue on right
+  /// YouTube Music's desktop layout: the art filling the left, and the Up
+  /// Next, Lyrics and Related panel on the right.
+  Widget _buildDesktopView(
+    Track track,
+    Color textColor,
+    Color secondaryTextColor,
+    Color accentColor,
+    Color surfaceColor,
+  ) {
+    final tab = _tabController.index;
+    final labels = [context.l10n.upNext, 'LYRICS', 'RELATED'];
+    final connectOpen = desktopConnectPaneOpen.value;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final panelWidth = (constraints.maxWidth * 0.4).clamp(320.0, 520.0);
+        return Row(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(40),
+                child: Center(
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: ref
+                            .read(audioPlayerServiceProvider)
+                            .togglePlayPause,
+                        onDoubleTap: () => _triggerDoubleTapLike(track),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              // Animated canvases: video_player_win on
+                              // Windows, libmpv's software renderer on Linux.
+                              child: _buildAlbumArtContent(
+                                track,
+                                accentColor,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            _buildHeartOverlay(),
+                            // Stats for nerds on the art, as on Android.
+                            const _DesktopArtStats(),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(
+              width: panelWidth,
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      for (final (index, label) in labels.indexed)
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              desktopNowPlayingTab.value = index;
+                              desktopConnectPaneOpen.value = false;
+                            },
+                            child: Container(
+                              height: 52,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: !connectOpen && index == tab
+                                        ? textColor
+                                        : textColor.withValues(alpha: 0.15),
+                                    width: !connectOpen && index == tab ? 2 : 1,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                label,
+                                style: TextStyle(
+                                  color: !connectOpen && index == tab
+                                      ? textColor
+                                      : secondaryTextColor,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  Expanded(
+                    child: IndexedStack(
+                      index: connectOpen ? labels.length : tab,
+                      children: [
+                        _buildQueueContent(
+                          textColor,
+                          secondaryTextColor,
+                          surfaceColor,
+                        ),
+                        _buildLyricsView(isActive: !connectOpen && tab == 1),
+                        // Built only when asked for: it fetches on build.
+                        if (tab == 2)
+                          _buildRelatedContent(textColor, secondaryTextColor)
+                        else
+                          const SizedBox.shrink(),
+                        if (connectOpen)
+                          const InzxConnectPanel(compact: true),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 24),
+          ],
+        );
+      },
+    );
+  }
+
+  void _onDesktopTabChanged() {
+    if (!mounted) return;
+    setState(() {
+      _tabController.index = desktopNowPlayingTab.value;
+      _showQueue = !desktopConnectPaneOpen.value && _tabController.index == 0;
+      _showLyrics = !desktopConnectPaneOpen.value && _tabController.index == 1;
+    });
+    if (_showQueue) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _scrollToActiveTrack(animate: true);
+      });
+    }
+  }
+
   Widget _buildStageView(
     Track track,
     player.PlaybackState state,
-    player.AudioPlayerService playerService,
+    PlaybackTransport playerService,
     Color textColor,
     Color secondaryTextColor,
     Color accentColor,
@@ -2405,7 +2683,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
   Widget _buildMinimalControls(
     player.PlaybackState state,
-    player.AudioPlayerService playerService,
+    PlaybackTransport playerService,
     Color textColor,
     Color accentColor,
   ) {
@@ -2463,7 +2741,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   Widget _buildMiniPlayerHeader(
     Track track,
     player.PlaybackState state,
-    player.AudioPlayerService playerService,
+    PlaybackTransport playerService,
     Color textColor,
     Color accentColor,
   ) {
@@ -2577,6 +2855,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     final l10n = context.l10n;
     final queue = ref.watch(queueProvider);
     final currentTrack = ref.watch(currentTrackProvider);
+    final connectedDevice = ref.watch(
+      activeConnectPlaybackProvider.select((peer) => peer?.device),
+    );
     final isRadioMode = ref.watch(isRadioModeProvider);
     final isFetchingRadio = ref.watch(isFetchingRadioProvider);
     final isInJam = ref.watch(isInJamSessionProvider);
@@ -2591,6 +2872,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     if (isInJam) {
       queueLabel = l10n.jamQueue;
       queueIcon = Iconsax.profile_2user;
+    } else if (connectedDevice != null) {
+      queueLabel = connectedDevice.label;
+      queueIcon = Icons.computer_rounded;
     } else if (isRadioMode) {
       queueLabel = l10n.radioQueue;
       queueIcon = Icons.all_inclusive;
@@ -2623,31 +2907,38 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.playingFrom,
-                    style: TextStyle(fontSize: 12, color: secondaryColor),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Text(
-                        queueLabel,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.playingFrom,
+                      style: TextStyle(fontSize: 12, color: secondaryColor),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (queueIcon != null) ...[
+                          Icon(queueIcon, size: 16, color: secondaryColor),
+                          const SizedBox(width: 6),
+                        ],
+                        Flexible(
+                          child: Text(
+                            queueLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                            ),
+                          ),
                         ),
-                      ),
-                      if (queueIcon != null) ...[
-                        const SizedBox(width: 6),
-                        Icon(queueIcon, size: 16, color: secondaryColor),
                       ],
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -2709,6 +3000,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                 }
                 return ReorderableListView.builder(
                   scrollController: _queueScrollController,
+                  buildDefaultDragHandles: !isDesktop && connectedDevice == null,
                   physics: const BouncingScrollPhysics(
                     parent: AlwaysScrollableScrollPhysics(),
                   ),
@@ -2724,6 +3016,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                     );
                   },
                   onReorderItem: (oldIndex, newIndex) {
+                    if (connectedDevice != null) return;
                     // Don't allow reordering the loading indicator
                     if (oldIndex >= queue.length || newIndex >= queue.length) {
                       return;
@@ -2796,14 +3089,20 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                       secondaryColor: secondaryColor,
                       accentColor: ref.watch(playerAlbumColorsProvider).accent,
                       onTap: () {
+                        if (connectedDevice != null) {
+                          ref.read(playbackTransportProvider).skipToIndex(index);
+                          return;
+                        }
                         ref
                             .read(audioPlayerServiceProvider)
                             .playQueue(queue, startIndex: index);
                       },
-                      trailingWidget: ReorderableDragStartListener(
-                        index: index,
-                        child: Icon(Icons.drag_handle, color: secondaryColor),
-                      ),
+                      trailingWidget: connectedDevice == null
+                          ? ReorderableDragStartListener(
+                              index: index,
+                              child: Icon(Icons.drag_handle, color: secondaryColor),
+                            )
+                          : null,
                     );
                   },
                 );
@@ -3224,7 +3523,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   }
 
   Widget _buildQueueModeButtons(Color textColor) {
-    final playerService = ref.read(audioPlayerServiceProvider);
+    final playerService = ref.read(playbackTransportProvider);
     final shuffle = ref.watch(shuffleEnabledProvider);
     final loopMode = ref.watch(loopModeProvider);
     final accent = _targetColors.accent;
@@ -3317,12 +3616,15 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     Color accentColor, {
     EdgeInsetsGeometry? padding,
   }) {
+    final isConnected = ref.watch(
+      activeConnectPlaybackProvider.select((peer) => peer != null),
+    ) || (ref.watch(connectPlayingOnBothProvider).valueOrNull ?? false);
     return NowPlayingBottomBar(
       textColor: textColor,
       onOpenLyrics: _openLyricsSheet,
       onOpenQueue: _openQueueSheet,
       padding: padding,
-      center: ref.watch(showSmartAudioRoutingProvider)
+      center: ref.watch(showSmartAudioRoutingProvider) || isConnected
           ? AudioRoutingPill(textColor: textColor, accentColor: accentColor)
           : null,
     );
@@ -4405,7 +4707,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
   void _handleAlbumArtPageChanged(
     int pageIndex,
-    player.AudioPlayerService playerService, {
+    PlaybackTransport playerService, {
     required int currentIndex,
     required int queueLength,
   }) {
@@ -4734,13 +5036,14 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
   /// Swipeable album art widget for landscape Stage View
   Widget _buildSwipeableAlbumArt(Track track, Color accentColor) {
-    final playerService = ref.watch(audioPlayerServiceProvider);
-    final queue = playerService.queue;
-    final currentIndex = playerService.currentIndex;
+    final playerService = ref.watch(playbackTransportProvider);
+    final queue = ref.watch(queueProvider);
+    final currentIndex = ref.watch(playbackStateProvider).valueOrNull?.currentIndex ?? -1;
 
     if (queue.length <= 1) {
       return GestureDetector(
         behavior: HitTestBehavior.opaque,
+        onTap: isDesktop ? playerService.togglePlayPause : null,
         onDoubleTap: () => _triggerDoubleTapLike(track),
         onHorizontalDragEnd: (details) {
           if (details.primaryVelocity != null) {
@@ -4844,6 +5147,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                 child: Opacity(
                   opacity: opacity,
                   child: GestureDetector(
+                    onTap: isDesktop ? playerService.togglePlayPause : null,
                     onDoubleTap: () => _triggerDoubleTapLike(displayTrack),
                     child: Stack(
                       alignment: Alignment.center,
@@ -4904,9 +5208,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
   /// Swipeable album art widget for Ripple style (clean unclipped stack for RippleFlowerClipper)
   Widget _buildRippleSwipeableAlbumArt(Track track, Color accentColor) {
-    final playerService = ref.watch(audioPlayerServiceProvider);
-    final queue = playerService.queue;
-    final currentIndex = playerService.currentIndex;
+    final playerService = ref.watch(playbackTransportProvider);
+    final queue = ref.watch(queueProvider);
+    final currentIndex = ref.watch(playbackStateProvider).valueOrNull?.currentIndex ?? -1;
 
     if (queue.length <= 1) {
       return GestureDetector(
@@ -4993,9 +5297,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
   /// Swipeable full-width album art widget for Edge-to-Edge style
   Widget _buildEdgeSwipeableAlbumArt(Track track, Color accentColor) {
-    final playerService = ref.watch(audioPlayerServiceProvider);
-    final queue = playerService.queue;
-    final currentIndex = playerService.currentIndex;
+    final playerService = ref.watch(playbackTransportProvider);
+    final queue = ref.watch(queueProvider);
+    final currentIndex = ref.watch(playbackStateProvider).valueOrNull?.currentIndex ?? -1;
 
     if (queue.length <= 1) {
       return GestureDetector(
@@ -5478,7 +5782,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
   Widget _buildControls(
     player.PlaybackState state,
-    player.AudioPlayerService playerService,
+    PlaybackTransport playerService,
     Color textColor,
     Color accentColor, {
     bool isCompact = false,
@@ -5613,6 +5917,434 @@ class __QueuePlayingEqualizerBarsState extends State<_QueuePlayingEqualizerBars>
       decoration: BoxDecoration(
         color: widget.color,
         borderRadius: BorderRadius.circular(2),
+      ),
+    );
+  }
+}
+
+/// Stats for nerds over the desktop artwork, as the Android player shows
+/// them: the stream line (tap for the signal path) and Automix's under it,
+/// on a small scrim so they read over any cover.
+class _DesktopArtStats extends ConsumerWidget {
+  const _DesktopArtStats();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(playbackStateProvider).valueOrNull;
+    final stats = state?.qualityInfo;
+    if (!(state?.showNerdStats ?? false) || stats == null || stats.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Positioned(
+      left: 16,
+      right: 16,
+      bottom: 14,
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.45),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () => SignalPathSheet.show(
+                    context,
+                    accentColor: ref.read(playerAlbumColorsProvider).accent,
+                  ),
+                  child: Text(
+                    stats,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white70,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ),
+              ),
+              const IgnorePointer(
+                child: AutomixStatsLine(color: Colors.white54, fontSize: 10.5),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The desktop full screen player, given over to the lyrics: the artwork,
+/// song and controls on the left, the synced lyrics large on the right. The
+/// controls and the cursor fade out while the mouse is still.
+class _DesktopLyricsStage extends ConsumerStatefulWidget {
+  const _DesktopLyricsStage({
+    required this.track,
+    required this.state,
+    required this.textColor,
+    required this.accentColor,
+    required this.backgroundColor,
+    required this.art,
+    required this.heartOverlay,
+    required this.ambientArt,
+    required this.isLiked,
+    required this.onToggleLike,
+    required this.onDoubleTapLike,
+  });
+
+  final Track track;
+  final player.PlaybackState state;
+  final Color textColor;
+  final Color accentColor;
+  final Color backgroundColor;
+  final Widget art;
+  final Widget heartOverlay;
+
+  /// The blurred cover behind everything, or null with reflections off.
+  final Widget? ambientArt;
+  final bool isLiked;
+  final VoidCallback onToggleLike;
+  final VoidCallback onDoubleTapLike;
+
+  @override
+  ConsumerState<_DesktopLyricsStage> createState() =>
+      _DesktopLyricsStageState();
+}
+
+class _DesktopLyricsStageState extends ConsumerState<_DesktopLyricsStage> {
+  static const _idleDelay = Duration(seconds: 3);
+
+  /// The exit button, the lyrics menu and the cursor fade out after
+  /// [_idleDelay] without the mouse moving; the playback controls stay.
+  static const _autoHideChrome = true;
+  static const _seekStep = Duration(seconds: 5);
+  static const _volumeStep = 0.05;
+
+  bool _controlsVisible = true;
+  Timer? _idleTimer;
+  final FocusNode _focusNode = FocusNode(debugLabel: 'Full screen lyrics');
+
+  @override
+  void initState() {
+    super.initState();
+    _wake();
+    // Entering full screen swaps the view inside the same route, so the
+    // autofocus alone can lose to whatever had focus before.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _idleTimer?.cancel();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  /// Shows the controls, and hides them again once the mouse rests.
+  void _wake() {
+    if (!_controlsVisible) setState(() => _controlsVisible = true);
+    _idleTimer?.cancel();
+    if (!_autoHideChrome) return;
+    _idleTimer = Timer(_idleDelay, () {
+      if (mounted) setState(() => _controlsVisible = false);
+    });
+  }
+
+  void _seekBy(Duration step) {
+    if (widget.state.isLive) return;
+    final service = ref.read(playbackTransportProvider);
+    final position =
+        ref.read(positionStreamProvider).valueOrNull ?? Duration.zero;
+    final length = widget.state.duration ?? widget.track.duration;
+    var target = position + step;
+    if (target < Duration.zero) target = Duration.zero;
+    if (length > Duration.zero && target > length) target = length;
+    service.seek(target);
+    _wake();
+  }
+
+  void _changeVolume(double delta) {
+    // Bit-perfect output plays at full scale; the level is the device's.
+    if (DesktopAudioDsp.instance.exclusive) return;
+    final service = ref.read(audioPlayerServiceProvider);
+    service.setMasterVolume(service.masterVolume + delta);
+    // The slider reads the level when it builds.
+    setState(() {});
+    _wake();
+  }
+
+  Widget _fade(Widget child) {
+    return IgnorePointer(
+      ignoring: !_controlsVisible,
+      child: AnimatedOpacity(
+        opacity: _controlsVisible ? 1 : 0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+        child: child,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = widget.textColor;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final controlColor = isDark ? Colors.white : Colors.black87;
+    final ambientArt = widget.ambientArt;
+
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.arrowLeft): () =>
+            _seekBy(-_seekStep),
+        const SingleActivator(LogicalKeyboardKey.arrowRight): () =>
+            _seekBy(_seekStep),
+        const SingleActivator(LogicalKeyboardKey.arrowUp): () =>
+            _changeVolume(_volumeStep),
+        const SingleActivator(LogicalKeyboardKey.arrowDown): () =>
+            _changeVolume(-_volumeStep),
+      },
+      child: Focus(
+        focusNode: _focusNode,
+        autofocus: true,
+        child: MouseRegion(
+          cursor: _controlsVisible
+              ? MouseCursor.defer
+              : SystemMouseCursors.none,
+          onHover: (_) => _wake(),
+          child: Listener(
+            onPointerDown: (_) => _wake(),
+            onPointerSignal: (_) => _wake(),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                final height = constraints.maxHeight;
+                // Sized from the screen, so a large display isn't left
+                // mostly empty.
+                final scale = (height / 900).clamp(1.0, 1.6);
+                final lyricScale = (height / 800).clamp(1.15, 1.9);
+                final artSize = math
+                    .min(height * 0.46, width * 0.3)
+                    .clamp(220.0, 720.0);
+                final gutter = width * 0.06;
+
+                return Stack(
+                  children: [
+                    if (ambientArt != null)
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: Opacity(
+                            opacity: 0.5,
+                            child: Transform.scale(
+                              scale: 1.3,
+                              child: ImageFiltered(
+                                imageFilter: ImageFilter.blur(
+                                  sigmaX: 40,
+                                  sigmaY: 40,
+                                ),
+                                child: ambientArt,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    // Settles the backdrop behind the lyrics so they read
+                    // over any cover.
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [
+                                widget.backgroundColor.withValues(alpha: 0.25),
+                                widget.backgroundColor.withValues(alpha: 0.55),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: gutter,
+                        vertical: height * 0.07,
+                      ),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: artSize,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox.square(
+                                  dimension: artSize,
+                                  child: _buildArt(),
+                                ),
+                                SizedBox(height: 28 * scale),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            widget.track.title,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              color: textColor,
+                                              fontSize: 26 * scale,
+                                              fontWeight: FontWeight.w800,
+                                              height: 1.2,
+                                              letterSpacing: -0.4,
+                                            ),
+                                          ),
+                                          SizedBox(height: 6 * scale),
+                                          Text(
+                                            widget.track.artist,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              color: textColor.withValues(
+                                                alpha: 0.7,
+                                              ),
+                                              fontSize: 17 * scale,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    IconButton(
+                                      iconSize: 26 * scale,
+                                      tooltip: widget.isLiked
+                                          ? 'Remove from Liked Songs'
+                                          : 'Add to Liked Songs',
+                                      onPressed: widget.onToggleLike,
+                                      icon: Icon(
+                                        widget.isLiked
+                                            ? Icons.favorite_rounded
+                                            : Icons.favorite_border_rounded,
+                                        color: textColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 20 * scale),
+                                DesktopTransportControls(
+                                  state: widget.state,
+                                  track: widget.track,
+                                  scale: scale * 1.25,
+                                  showProgress: false,
+                                ),
+                                SizedBox(height: 12 * scale),
+                                // The player's own seek bar, in whichever style
+                                // is chosen (Player appearance, or the lyrics
+                                // menu). Its time row carries the Lossless /
+                                // Hi-Res Lossless badge.
+                                _NowPlayingProgressBar(
+                                  duration:
+                                      widget.state.duration ??
+                                      widget.track.duration,
+                                  textColor: textColor,
+                                  secondaryColor: textColor.withValues(
+                                    alpha: 0.7,
+                                  ),
+                                  accentColor: widget.accentColor,
+                                  isLive: widget.state.isLive,
+                                  horizontalPadding: 0,
+                                  verticalPadding: 0,
+                                ),
+                                SizedBox(height: 10 * scale),
+                                Center(
+                                  child: DesktopVolumeControl(
+                                    base: controlColor,
+                                    sliderWidth: 140 * scale,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: gutter),
+                          Expanded(
+                            child: _IsolatedLyricsView(
+                              fontScale: lyricScale,
+                              menuVisible: _controlsVisible,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      top: 16,
+                      right: 16,
+                      child: _fade(
+                        IconButton(
+                          tooltip: 'Exit full screen (Esc)',
+                          onPressed: () => setDesktopFullScreen(false),
+                          icon: Icon(
+                            Icons.fullscreen_exit_rounded,
+                            color: textColor,
+                            size: 28,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildArt() {
+    return MouseRegion(
+      cursor: _controlsVisible
+          ? SystemMouseCursors.click
+          : SystemMouseCursors.none,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: ref.read(audioPlayerServiceProvider).togglePlayPause,
+        onDoubleTap: widget.onDoubleTapLike,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.35),
+                blurRadius: 40,
+                offset: const Offset(0, 16),
+              ),
+            ],
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: widget.art,
+              ),
+              widget.heartOverlay,
+              const _DesktopArtStats(),
+            ],
+          ),
+        ),
       ),
     );
   }

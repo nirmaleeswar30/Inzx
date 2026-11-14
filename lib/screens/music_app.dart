@@ -3,15 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations_x.dart';
-import '../models/models.dart';
 import '../../../core/design_system/design_system.dart';
 import '../providers/providers.dart';
-import '../providers/bookmarks_and_stats_provider.dart';
 import '../../core/providers/theme_provider.dart';
 import 'tabs/home_tab.dart';
 import 'tabs/songs_tab.dart';
 import 'tabs/library_tab.dart';
 import 'tabs/folders_tab.dart';
+import 'tabs/desktop_explore_tab.dart';
+import '../core/utils/platform_utils.dart';
+import '../services/inzx_connect_remote.dart';
+import 'widgets/desktop_shell.dart';
 import 'widgets/mini_player.dart';
 import 'widgets/now_playing_screen.dart';
 import 'widgets/jiosaavn_notice_sheet.dart';
@@ -37,11 +39,11 @@ class _MusicAppState extends ConsumerState<MusicApp>
   static const double _hideThreshold = 25.0;
   static const double _showThreshold = 20.0;
 
-  final List<Widget> _tabs = const [
-    MusicHomeTab(),
-    MusicSongsTab(),
-    MusicLibraryTab(),
-    MusicFoldersTab(),
+  final List<Widget> _tabs = [
+    const MusicHomeTab(),
+    isDesktop ? const DesktopExploreTab() : const MusicSongsTab(),
+    const MusicLibraryTab(),
+    const MusicFoldersTab(),
   ];
 
   @override
@@ -144,14 +146,18 @@ class _MusicAppState extends ConsumerState<MusicApp>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(isInJamSessionProvider, (_, active) {
+      InzxConnectRemote.instance.setJamActive(active);
+    });
     // Keep stats and recent history in sync with real playback transitions.
-    ref.listen<Track?>(currentTrackProvider, (previous, next) {
+    ref.listen(localCurrentTrackProvider, (previous, value) {
+      final next = value.valueOrNull;
       if (next == null) return;
       if (_lastTrackedId == next.id) return;
       _lastTrackedId = next.id;
 
       ref.read(recentlyPlayedProvider.notifier).addTrack(next);
-      ref.read(playStatisticsProvider.notifier).recordPlay(next);
+      // Plays and listening time are counted by ListeningStatsService.
     });
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -179,6 +185,9 @@ class _MusicAppState extends ConsumerState<MusicApp>
         ? albumColors.accent
         : colorScheme.primary;
 
+    // Desktop's sidebar and player bar live in DesktopAppFrame.
+    final tabIndex = isDesktop ? ref.watch(desktopTabProvider) : _currentIndex;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -192,13 +201,14 @@ class _MusicAppState extends ConsumerState<MusicApp>
       },
       child: Scaffold(
         resizeToAvoidBottomInset: false,
-        backgroundColor: backgroundColor,
+        backgroundColor: desktopPageBackground(backgroundColor),
         body: NotificationListener<ScrollNotification>(
           onNotification: _handleScrollNotification,
           child: Stack(
             children: [
-              // Strong accent gradient at the very top (like YT Music)
-              Positioned(
+              // Strong accent gradient at the very top (like YT Music).
+              // Desktop's spans the whole window, in DesktopAppFrame.
+              if (!isDesktop) Positioned(
                 top: 0,
                 left: 0,
                 right: 0,
@@ -225,10 +235,10 @@ class _MusicAppState extends ConsumerState<MusicApp>
               ),
               // Main content (extends full screen behind floating nav)
               Positioned.fill(
-                child: IndexedStack(index: _currentIndex, children: _tabs),
+                child: IndexedStack(index: tabIndex, children: _tabs),
               ),
               // Mini player + nav bar positioned at bottom
-              Positioned(
+              if (!isDesktop) Positioned(
                 left: 0,
                 right: 0,
                 bottom: 0,

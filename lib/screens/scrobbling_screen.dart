@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/utils/platform_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -48,7 +49,7 @@ class _ScrobblingScreenState extends ConsumerState<ScrobblingScreen> {
         : (isDark ? InzxColors.darkBackground : InzxColors.background);
 
     return Scaffold(
-      backgroundColor: background,
+      backgroundColor: desktopPageBackground(background),
       appBar: AppBar(
         title: const Text('Scrobbling'),
         backgroundColor: Colors.transparent,

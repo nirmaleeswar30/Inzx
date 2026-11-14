@@ -30,7 +30,7 @@ import 'automix_stats_line.dart';
 class RippleNowPlayingView extends ConsumerStatefulWidget {
   final Track track;
   final player.PlaybackState state;
-  final player.AudioPlayerService playerService;
+  final PlaybackTransport playerService;
   final Color textColor;
   final Color secondaryTextColor;
   final Color accentColor;

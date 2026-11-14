@@ -1,0 +1,90 @@
+name: Desktop release
+
+# When a release is published, builds the desktop apps and attaches them to
+# it: Inzx-Setup-<version>.exe (Windows installer) and
+# Inzx-<version>-x86_64.AppImage. The in-app updater looks for exactly these
+# names on the latest release. Re-run by hand with the tag to rebuild.
+#
+# The release tag must match pubspec.yaml's version (v1.6.0 <-> 1.6.0):
+# otherwise installed copies would keep seeing an "update" to themselves.
+#
+# OFF for now: it doesn't run on releases. Only a manual "Run workflow" (with
+# a tag) starts it. To turn it on, restore the release trigger:
+#   release:
+#     types: [published]
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to build and attach to (e.g. v1.6.0)
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  TAG: ${{ github.event.release.tag_name || inputs.tag }}
+
+jobs:
+  windows:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - name: Check the tag matches pubspec.yaml
+        shell: bash
+        run: |
+          v="$(grep -E '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*//; s/\+.*//')"
+          [ "${TAG#v}" = "$v" ] || { echo "Tag $TAG doesn't match pubspec version $v"; exit 1; }
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.7
+          cache: true
+      - name: Write .env
+        shell: bash
+        run: printf '%s' "$ENV_FILE" > .env
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+      - name: Build and package
+        shell: pwsh
+        run: scripts/package_windows_installer.ps1
+      - name: Attach to the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" dist/windows/Inzx-Setup-*.exe --clobber
+
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - name: Install system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-12-dev libmpv-dev mpv \
+            libmimalloc-dev libsecret-1-dev libjsoncpp-dev \
+            libwebkit2gtk-4.1-dev libsoup-3.0-dev file
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.7
+          cache: true
+      - name: Write .env
+        run: printf '%s' "$ENV_FILE" > .env
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+      - name: Build the AppImage
+        run: bash scripts/build_appimage.sh
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" dist/Inzx-*-x86_64.AppImage --clobber

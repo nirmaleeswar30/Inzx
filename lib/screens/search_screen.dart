@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../core/utils/platform_utils.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -86,7 +87,9 @@ final searchSuggestionsEnhancedProvider =
 
 /// Glassmorphic dynamic Search screen
 class SearchScreen extends ConsumerStatefulWidget {
-  const SearchScreen({super.key});
+  const SearchScreen({super.key, this.desktopInput});
+
+  final ({TextEditingController controller, FocusNode focusNode})? desktopInput;
 
   @override
   ConsumerState<SearchScreen> createState() => _SearchScreenState();
@@ -94,8 +97,9 @@ class SearchScreen extends ConsumerStatefulWidget {
 
 class _SearchScreenState extends ConsumerState<SearchScreen>
     with SingleTickerProviderStateMixin {
-  final _searchController = TextEditingController();
-  final _searchFocusNode = FocusNode();
+  late final _searchController =
+      widget.desktopInput?.controller ?? TextEditingController();
+  late final _searchFocusNode = widget.desktopInput?.focusNode ?? FocusNode();
   Timer? _debounceTimer;
 
   late final AnimationController _headerAnimationController;
@@ -118,13 +122,27 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
       curve: Curves.easeInOutCubic,
     );
 
-    _searchFocusNode.addListener(_onFocusChange);
+    if (widget.desktopInput == null) {
+      _searchFocusNode.addListener(_onFocusChange);
+    } else {
+      _searchController.addListener(_onDesktopSearchChanged);
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(searchQueryProvider.notifier).state = '';
+      if (!mounted) return;
+      ref.read(searchQueryProvider.notifier).state = _searchController.text;
       ref.read(searchFilterProvider.notifier).state = SearchFilter.all;
-      _searchFocusNode.requestFocus();
+      if (widget.desktopInput == null) _searchFocusNode.requestFocus();
     });
+  }
+
+  void _onDesktopSearchChanged() {
+    final query = _searchController.text;
+    if (ref.read(searchQueryProvider) == query) return;
+    _onSearchChanged(query);
+    if (query.isEmpty) {
+      ref.read(searchFilterProvider.notifier).state = SearchFilter.all;
+    }
   }
 
   void _onFocusChange() {
@@ -137,14 +155,19 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
   @override
   void dispose() {
     _debounceTimer?.cancel();
-    _searchFocusNode.removeListener(_onFocusChange);
-    _searchController.dispose();
-    _searchFocusNode.dispose();
+    if (widget.desktopInput == null) {
+      _searchFocusNode.removeListener(_onFocusChange);
+      _searchController.dispose();
+      _searchFocusNode.dispose();
+    } else {
+      _searchController.removeListener(_onDesktopSearchChanged);
+    }
     _headerAnimationController.dispose();
     super.dispose();
   }
 
   bool _handleScrollNotification(ScrollNotification notification) {
+    if (widget.desktopInput != null) return false;
     if (notification.metrics.axis != Axis.vertical) return false;
 
     if (notification is ScrollUpdateNotification && notification.depth == 0) {
@@ -233,7 +256,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
     final secondaryTextColor = textColor.withValues(alpha: 0.6);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: desktopPageBackground(backgroundColor),
       body: Stack(
         children: [
           // Ambient dynamic top gradient
@@ -314,7 +337,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
               ),
             ),
           ),
-          Expanded(
+          if (widget.desktopInput == null) Expanded(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
               child: BackdropFilter(

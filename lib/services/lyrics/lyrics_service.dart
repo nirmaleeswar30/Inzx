@@ -495,8 +495,25 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
     return null;
   }
 
+  /// The line-synced lyrics cached for [videoId], or null. Read by desktop
+  /// Automix's loop mix, which keeps its loops off sung lines.
+  static List<LyricLine>? cachedSyncedLines(String videoId) {
+    if (videoId.isEmpty) return null;
+    try {
+      final cached = HiveService.lyricsBox.get(videoId);
+      if (cached == null || cached.isExpired || !cached.hasSyncedLyrics) return null;
+      var lines = _parseLrcToLines(cached.syncedLyrics!);
+      if (cached.hasWordSync && lines.isNotEmpty) {
+        lines = _restoreWordData(lines, cached.wordSyncData!);
+      }
+      return lines.withInstrumentalGaps();
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Parse LRC format string to list of LyricLines
-  List<LyricLine> _parseLrcToLines(String lrc) {
+  static List<LyricLine> _parseLrcToLines(String lrc) {
     final lines = <LyricLine>[];
     final regex = RegExp(r'\[(\d{2}):(\d{2})\.(\d{2,3})\](.*)');
     for (final line in lrc.split('\n')) {

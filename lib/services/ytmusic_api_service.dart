@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart' show compute, debugPrint, kDebugMode;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/providers/locale_provider.dart';
+import '../models/explore_page.dart';
 import '../models/models.dart';
 import 'playback/yt_playback_client.dart' show InnerTubeApi;
 
@@ -1372,6 +1373,133 @@ class InnerTubeService {
 
     if (response == null) return HomePageContent.empty;
     return _parseHomePageContinuation(response);
+  }
+
+  /// Explore, or a page linked from it (new releases, charts, a mood).
+  Future<ExplorePage?> getExplorePage({
+    String browseId = 'FEmusic_explore',
+    String? params,
+  }) async {
+    final response = await _request('browse', {
+      'browseId': browseId,
+      if (params != null) 'params': params,
+    }, authenticated: isAuthenticated);
+    if (response == null) return null;
+
+    final contents = _navigateJson(response, [
+      'contents',
+      'singleColumnBrowseResultsRenderer',
+      'tabs',
+      0,
+      'tabRenderer',
+      'content',
+      'sectionListRenderer',
+      'contents',
+    ]);
+    if (contents is! List) return null;
+
+    final topLinks = <ExploreLink>[];
+    final sections = <ExploreSection>[];
+    for (final section in contents) {
+      if (section is! Map<String, dynamic>) continue;
+      final parsed = _parseExploreSection(section);
+      if (parsed == null) continue;
+      // Explore's top buttons are the one section with no heading.
+      if (parsed.title.isEmpty && parsed.links.isNotEmpty) {
+        topLinks.addAll(parsed.links);
+      } else if (parsed.items.isNotEmpty || parsed.links.isNotEmpty) {
+        sections.add(parsed);
+      }
+    }
+    return ExplorePage(topLinks: topLinks, sections: sections);
+  }
+
+  ExploreSection? _parseExploreSection(Map<String, dynamic> section) {
+    final grid = section['gridRenderer'];
+    final carousel = section['musicCarouselShelfRenderer'];
+    final shelf = section['musicShelfRenderer'];
+
+    final String title;
+    String? browseId;
+    final List? contents;
+    if (grid is Map) {
+      title = _exploreText(grid['header']?['gridHeaderRenderer']?['title']);
+      contents = grid['items'] as List?;
+    } else if (carousel is Map) {
+      final header = carousel['header']?['musicCarouselShelfBasicHeaderRenderer'];
+      title = _exploreText(header?['title']);
+      browseId =
+          header?['moreContentButton']?['buttonRenderer']?['navigationEndpoint']?['browseEndpoint']?['browseId']
+              as String?;
+      contents = carousel['contents'] as List?;
+    } else if (shelf is Map) {
+      title = _exploreText(shelf['title']);
+      contents = shelf['contents'] as List?;
+    } else {
+      return null;
+    }
+
+    final items = <HomeShelfItem>[];
+    final links = <ExploreLink>[];
+    for (final raw in contents ?? const []) {
+      if (raw is! Map<String, dynamic>) continue;
+      final button = raw['musicNavigationButtonRenderer'];
+      if (button is Map) {
+        final link = _parseExploreLink(button);
+        if (link != null) links.add(link);
+        continue;
+      }
+      final item =
+          _parseCarouselItem(raw, HomeShelfType.unknown) ??
+          _parseExploreEpisode(raw['musicMultiRowListItemRenderer']);
+      if (item != null) items.add(item);
+    }
+    return ExploreSection(
+      title: title,
+      browseId: browseId,
+      items: items,
+      links: links,
+      isGrid: grid is Map,
+    );
+  }
+
+  String _exploreText(dynamic node) {
+    final runs = node?['runs'];
+    if (runs is! List) return '';
+    return runs.map((r) => r['text'] ?? '').join();
+  }
+
+  ExploreLink? _parseExploreLink(Map button) {
+    final title = _exploreText(button['buttonText']);
+    final endpoint = button['clickCommand']?['browseEndpoint'];
+    final browseId = endpoint?['browseId'] as String?;
+    if (title.isEmpty || browseId == null) return null;
+    return ExploreLink(
+      title: title,
+      browseId: browseId,
+      params: endpoint?['params'] as String?,
+      stripeColor: button['solid']?['leftStripeColor'] as int?,
+      iconType: button['iconStyle']?['icon']?['iconType'] as String?,
+    );
+  }
+
+  HomeShelfItem? _parseExploreEpisode(dynamic renderer) {
+    if (renderer is! Map) return null;
+    final videoId = renderer['onTap']?['watchEndpoint']?['videoId'] as String?;
+    final title = _exploreText(renderer['title']);
+    if (videoId == null || title.isEmpty) return null;
+    final thumbnails =
+        renderer['thumbnail']?['musicThumbnailRenderer']?['thumbnail']?['thumbnails'];
+    return HomeShelfItem(
+      id: videoId,
+      videoId: videoId,
+      title: title,
+      subtitle: _exploreText(renderer['subtitle']),
+      thumbnailUrl: thumbnails is List && thumbnails.isNotEmpty
+          ? thumbnails.last['url'] as String?
+          : null,
+      itemType: HomeShelfItemType.podcast,
+    );
   }
 
   /// Get raw home page response (for debugging)
@@ -5007,6 +5135,7 @@ class InnerTubeService {
       Duration? duration;
       String? album;
       String? albumId;
+      String? playCountText;
 
       if (flexColumns.length > 1) {
         final subtitleRuns =
@@ -5035,7 +5164,8 @@ class InnerTubeService {
             continue;
           }
 
-          if (RegExp(r'^\d+(\.\d+)?[kmb]?\s+(views|plays|view|play)$', caseSensitive: false).hasMatch(text)) {
+          if (RegExp(r'^[\d.,]+\s*[kmb]?\s+(views|plays|view|play)$', caseSensitive: false).hasMatch(text)) {
+            playCountText ??= text;
             continue;
           }
 
@@ -5139,6 +5269,7 @@ class InnerTubeService {
         isLiked: true,
         setVideoId: setVideoId,
         isExplicit: isExplicit,
+        playCountText: playCountText,
       );
     } catch (e) {
       return null;

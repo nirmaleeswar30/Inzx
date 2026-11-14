@@ -5,11 +5,11 @@
 <script>/* Relative links need /docs/ (with the slash) to resolve inside docs/. */if(location.pathname.slice(-5)==="/docs")location.replace(location.pathname+"/"+location.search+location.hash);</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Audio &amp; quality · Inzx Docs</title>
-<meta name="description" content="Streaming quality, JioSaavn 320 kbps, crossfade, caching and audio routing.">
+<meta name="description" content="Set streaming quality, add a community lossless source, and configure crossfade, caching and audio routing.">
 <link rel="canonical" href="https://inzx.nirmaleeswar.dev/docs/audio">
 <meta property="og:url" content="https://inzx.nirmaleeswar.dev/docs/audio">
 <meta property="og:title" content="Audio &amp; quality · Inzx Docs">
-<meta property="og:description" content="Streaming quality, JioSaavn 320 kbps, crossfade, caching and audio routing.">
+<meta property="og:description" content="Set streaming quality, add a community lossless source, and configure crossfade, caching and audio routing.">
 <meta property="og:image" content="https://inzx.nirmaleeswar.dev/assets/img/brand.png">
 <link rel="icon" type="image/png" href="../assets/img/logo_transparent.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,6 +37,20 @@
 
 <h2 id="quality">Streaming quality</h2>
 <p>Settings → Audio → Streaming quality. <b>Auto</b> adapts to your connection; <b>Max</b> always picks the best available stream.</p>
+
+<h2 id="lossless-addons">Lossless add-ons</h2>
+<p>Inzx can play lossless FLAC from a community add-on when the add-on has a matching copy of the track. Playback can start at normal quality and upgrade once the lossless stream is ready.</p>
+<ol>
+  <li>Get an add-on endpoint or manifest URL from the provider. Follow the provider’s setup instructions if it gives you a personal URL.</li>
+  <li>Open <b>Settings → Audio</b>. Under <b>High Quality Sources</b>, choose <b>Add</b> on the <b>Lossless addon</b> or <b>Lossless sources</b> card.</li>
+  <li>Paste the URL, select <b>Add addon</b>, and make sure the source is enabled.</li>
+  <li>Set <b>Streaming quality</b> to <b>Auto</b> or <b>Max</b>. Look for <b>Lossless</b> or <b>Hi-Res Lossless</b> during playback to confirm that Inzx found a lossless stream.</li>
+</ol>
+
+<h3 id="community-addons">Community add-ons</h3>
+<p>Links to community add-ons will be listed here as they’re added to the directory.</p>
+<p>These add-ons come from independent open-source communities, and this directory is built from links shared by the community. Thank you to the maintainers who build and support these projects, and to everyone who shares and tests sources with other Inzx listeners.</p>
+<p><a class="btn" href="https://github.com/nirmaleeswar30/Inzx" target="_blank" rel="noopener noreferrer">Star on GitHub</a></p>
 
 <h2 id="jiosaavn">High quality sources (JioSaavn)</h2>
 <p>With this on, Inzx looks for the same song on JioSaavn and, when it finds a match, plays its 320&nbsp;kbps stream instead of YouTube's.</p>

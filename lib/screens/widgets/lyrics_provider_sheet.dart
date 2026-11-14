@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/design_system/design_system.dart';
+import '../../core/utils/platform_utils.dart';
 import '../../providers/providers.dart';
 import '../../services/lyrics/lyrics_service.dart';
 import '../../services/lyrics/lyrics_models.dart';
@@ -33,13 +34,14 @@ class LyricsProviderSheet {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(28),
                   child: BackdropFilter(
+                    enabled: !isDesktop,
                     filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
                     child: Container(
                       constraints: BoxConstraints(
                         maxHeight: MediaQuery.of(context).size.height * 0.75,
                       ),
                       decoration: BoxDecoration(
-                        color: sheetBgColor,
+                        color: modalSheetBackground(context, sheetBgColor),
                         borderRadius: BorderRadius.circular(28),
                         border: Border.all(
                           color: accentColor.withValues(alpha: 0.22),

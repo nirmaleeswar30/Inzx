@@ -9,11 +9,14 @@ import 'playback/playback.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/services/cache/hive_service.dart';
+import '../core/utils/platform_utils.dart';
 import '../data/sources/music_local_source.dart';
 import 'ytmusic_api_service.dart';
 import 'ytmusic_auth_service.dart';
 import '../data/entities/track_entity.dart';
 import 'widget_sync_service.dart';
+import 'inzx_connect_remote.dart';
+import 'inzx_connect_service.dart';
 import 'local_artwork_service.dart';
 import 'discord/discord_rpc_service.dart';
 /// Audio handler for background playback and media controls
@@ -112,9 +115,14 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
         track: state.currentTrack,
         isPlaying: state.isPlaying,
         position: _currentPosition,
-        duration: effectiveDuration ?? state.duration,
+        duration: isDesktop
+            ? state.duration
+            : effectiveDuration ?? state.duration,
       );
     });
+    if (InzxConnectService.canScanQr) {
+      InzxConnectRemote.instance.addListener(_refreshWidget);
+    }
 
     // Separate position stream for system UI updates (more frequent)
     _positionSubscription = _playerService.positionStream.listen((position) {
@@ -148,6 +156,7 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
             isPlaying: true,
             position: position,
             duration: state.duration,
+            seekCount: isDesktop ? _playerService.playhead.seeks : null,
           );
         }
       }
@@ -361,6 +370,27 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
   Future<void> customAction(String name, [Map<String, dynamic>? extras]) async {
     if (name == 'toggle_like') {
       await _handleToggleLike();
+      return;
+    }
+    final id = _remotePlayback?.device.id;
+    if (id == null) return;
+    switch (name) {
+      case 'connect_previous':
+        await _connect.previous(id);
+      case 'connect_next':
+        await _connect.next(id);
+      case 'connect_play':
+        await _connect.setPlaying(id, true);
+      case 'connect_pause':
+        await _connect.setPlaying(id, false);
+      case 'connect_shuffle':
+        final shouldShuffle = extras?['enabled'];
+        if (shouldShuffle is bool &&
+            shouldShuffle != _remotePlayback?.playback.shuffleEnabled) {
+          await _connect.toggleShuffle(id);
+        }
+      case 'connect_like':
+        await _handleToggleLike(remoteTrack: _remotePlayback?.playback.track);
     }
   }
 
@@ -383,7 +413,10 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
     }
     if (_playerService.state.currentTrack?.id == trackId) {
       _updatePlaybackState(_playerService.state);
-      _syncWidget(_playerService.state);
+    }
+    if (_remotePlayback?.playback.track?.id == trackId ||
+        _playerService.state.currentTrack?.id == trackId) {
+      _refreshWidget();
     }
   }
 
@@ -392,13 +425,33 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
     _updatePlaybackState(_playerService.state);
   }
 
-  /// Home screen widgets: track, play state, liked and shuffle.
-  void _syncWidget(player.PlaybackState state) {
+  InzxConnectRemote get _connect => InzxConnectRemote.instance;
+
+  ({ConnectDevice device, ConnectPlayback playback})? get _remotePlayback =>
+      InzxConnectService.canScanQr ? _connect.activePlayback : null;
+
+  void _refreshWidget() => _syncWidget(_playerService.state);
+
+  /// Home screen widgets use the active output's playback state.
+  void _syncWidget(player.PlaybackState local) {
+    final remote = local.isPlaying || local.isLoading ? null : _remotePlayback;
+    final playback = remote?.playback;
+    final state = playback == null
+        ? local
+        : player.PlaybackState(
+            currentTrack: playback.track,
+            isPlaying: playback.isPlaying,
+            position: playback.position,
+            duration: Duration(milliseconds: playback.durationMs),
+            shuffleEnabled: playback.shuffleEnabled,
+          );
     final track = state.currentTrack;
     unawaited(
       WidgetSyncService.syncPlaybackState(
         state,
-        statusLabel: _playerService.isJamsModeEnabled ? 'INZX JAM' : null,
+        statusLabel: remote?.device.label ??
+            (_playerService.isJamsModeEnabled ? 'INZX JAM' : null),
+        outputDevice: remote?.device.label,
         isLiked: track != null && _isCurrentTrackLiked(track.id),
       ),
     );
@@ -429,8 +482,8 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
     } catch (_) {}
   }
 
-  Future<void> _handleToggleLike() async {
-    final track = _playerService.state.currentTrack;
+  Future<void> _handleToggleLike({Track? remoteTrack}) async {
+    final track = remoteTrack ?? _playerService.state.currentTrack;
     if (track == null) return;
 
     if (onToggleLike != null) {
@@ -458,6 +511,7 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
       } catch (_) {}
     }
     _updatePlaybackState(_playerService.state);
+    _refreshWidget();
   }
 
   /// Play a track
@@ -985,6 +1039,9 @@ class InzxAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   void dispose() {
+    if (InzxConnectService.canScanQr) {
+      _connect.removeListener(_refreshWidget);
+    }
     _stateSubscription?.cancel();
     _positionSubscription?.cancel();
     _bufferedPositionSubscription?.cancel();

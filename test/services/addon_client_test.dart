@@ -205,4 +205,47 @@ void main() {
       expect(m3.setting('quality')?.options, ['flac', 'mp3']);
     });
   });
+
+  group('LastWave request signing', () {
+    final now = DateTime.fromMillisecondsSinceEpoch(1700000000 * 1000);
+    // HMAC-SHA256 over "1700000000\nGET\n/a/tok123/stream/42\ntok123", keyed
+    // with the secret's UTF-8 text (not hex-decoded), as LastWave's client.
+    const expected =
+        '9cb48c1e52d357894c914e905a1c8c984f79c7f20be908c04adf03bf0d2a3039';
+
+    test('signs with the secret as UTF-8 text', () {
+      final headers = AddonClient.signatureHeaders(
+        secret:
+            '83f0d38ce35653ef70743cd8ca4ea9044d154af938c93cb64a616f2b1e9531ba',
+        path: '/a/tok123/stream/42',
+        token: 'tok123',
+        now: now,
+      );
+      expect(headers, {'X-LW-TS': '1700000000', 'X-LW-Sign': expected});
+    });
+
+    test('signs the path without its query or fragment', () {
+      final client = AddonClient('https://addon.example.com/a/tok123');
+      final plain = client.requestHeaders(
+        Uri.parse('https://addon.example.com/a/tok123/stream/42'),
+        download: false,
+        now: now,
+      );
+      final withQuery = client.requestHeaders(
+        Uri.parse(
+          'https://addon.example.com/a/tok123/stream/42'
+          '?quality=lossless&atmos=none#x',
+        ),
+        download: false,
+        now: now,
+      );
+      expect(withQuery['X-LW-Sign'], plain['X-LW-Sign']);
+      expect(withQuery['X-LW-Intent'], 'stream');
+      expect(withQuery['User-Agent'], 'LastWave-Player/1.0');
+      if (kAddonClientSecret ==
+          '83f0d38ce35653ef70743cd8ca4ea9044d154af938c93cb64a616f2b1e9531ba') {
+        expect(withQuery['X-LW-Sign'], expected);
+      }
+    });
+  });
 }

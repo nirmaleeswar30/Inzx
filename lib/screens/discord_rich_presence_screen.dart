@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/utils/platform_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -10,9 +11,7 @@ import 'widgets/discord_logo.dart';
 /// Discord's brand blurple.
 const Color _discordBlurple = Color(0xFF5865F2);
 
-/// Dedicated screen for Discord Rich Presence — connection and display
-/// preferences. Presence is connection-driven: connecting an account turns it
-/// on, disconnecting turns it off (no separate master toggle).
+/// Connection and display preferences for Discord Rich Presence.
 class DiscordRichPresenceScreen extends ConsumerStatefulWidget {
   const DiscordRichPresenceScreen({super.key});
 
@@ -49,7 +48,7 @@ class _DiscordRichPresenceScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _backgroundColor,
+      backgroundColor: desktopPageBackground(_backgroundColor),
       appBar: AppBar(
         title: const Text('Discord Rich Presence'),
         backgroundColor: Colors.transparent,
@@ -63,13 +62,17 @@ class _DiscordRichPresenceScreenState
         valueListenable: _service.stateNotifier,
         builder: (context, rpcState, _) {
           final hasToken = _service.isAuthorized;
+          final enabled = isDesktop ? _service.desktopEnabled : hasToken;
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
               _heroCard(),
               const SizedBox(height: 16),
-              _connectionCard(rpcState, hasToken),
-              if (hasToken) ...[
+              if (isDesktop)
+                _desktopConnectionCard(rpcState.status)
+              else
+                _connectionCard(rpcState, hasToken),
+              if (enabled) ...[
                 const SizedBox(height: 16),
                 _preferencesCard(),
               ],
@@ -128,6 +131,25 @@ class _DiscordRichPresenceScreenState
   }
 
   // ── Connection ────────────────────────────────────────────────────
+  Widget _desktopConnectionCard(DiscordRpcStatus status) {
+    final configured = _service.isConfigured;
+    final subtitle = switch (status) {
+      _ when !configured => 'Discord isn’t configured in this build.',
+      _ when !_service.desktopEnabled => 'Share through the Discord desktop app.',
+      DiscordRpcStatus.connecting => 'Connecting to the Discord app…',
+      DiscordRpcStatus.connected => 'Connected to the Discord app.',
+      _ => 'Waiting for Discord. Open the Discord desktop app to connect.',
+    };
+    return _card(
+      child: _prefTile(
+        title: 'Enable Rich Presence',
+        subtitle: subtitle,
+        value: _service.desktopEnabled,
+        onChanged: configured ? _service.setDesktopEnabled : null,
+      ),
+    );
+  }
+
   Widget _connectionCard(DiscordRpcState rpcState, bool hasToken) {
     if (!hasToken) {
       return _card(
@@ -325,7 +347,7 @@ class _DiscordRichPresenceScreenState
     required String title,
     required String subtitle,
     required bool value,
-    required ValueChanged<bool> onChanged,
+    required ValueChanged<bool>? onChanged,
   }) {
     return SwitchListTile.adaptive(
       contentPadding: EdgeInsets.zero,

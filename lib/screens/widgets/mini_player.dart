@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/providers/theme_provider.dart';
+import '../../core/utils/platform_utils.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import 'package:marquee/marquee.dart';
@@ -217,10 +218,16 @@ class _MusicMiniPlayerState extends ConsumerState<MusicMiniPlayer> {
 
   @override
   Widget build(BuildContext context) {
+    // Desktop's player bar is always on screen, under every page.
+    if (isDesktop) return const SizedBox.shrink();
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     final playbackState = ref.watch(playbackStateProvider);
-    final playerService = ref.watch(audioPlayerServiceProvider);
+    final playerService = ref.watch(playbackTransportProvider);
+    final remoteName = ref.watch(
+      activeConnectPlaybackProvider.select((peer) => peer?.device.label),
+    );
     final albumColors = ref.watch(albumColorsProvider);
 
     return playbackState.when(
@@ -358,9 +365,12 @@ class _MusicMiniPlayerState extends ConsumerState<MusicMiniPlayer> {
                                 height: 16,
                                 child: LayoutBuilder(
                                   builder: (context, constraints) {
+                                    final subtitle = remoteName == null
+                                        ? track.artist
+                                        : '${track.artist} · $remoteName';
                                     final textPainter = TextPainter(
                                       text: TextSpan(
-                                        text: track.artist,
+                                        text: subtitle,
                                         style: TextStyle(
                                           fontSize: 11.5,
                                           fontWeight: FontWeight.w500,
@@ -374,7 +384,7 @@ class _MusicMiniPlayerState extends ConsumerState<MusicMiniPlayer> {
                                     if (textPainter.width >
                                         (constraints.maxWidth - 2)) {
                                       return Marquee(
-                                        text: track.artist,
+                                        text: subtitle,
                                         style: TextStyle(
                                           fontSize: 11.5,
                                           fontWeight: FontWeight.w500,
@@ -397,7 +407,7 @@ class _MusicMiniPlayerState extends ConsumerState<MusicMiniPlayer> {
                                     }
 
                                     return Text(
-                                      track.artist,
+                                      subtitle,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
@@ -547,7 +557,9 @@ class _MusicMiniPlayerState extends ConsumerState<MusicMiniPlayer> {
                 _dismissedTrackId = track.id;
               });
               HapticFeedback.mediumImpact();
-              ref.read(audioPlayerServiceProvider).clearQueue();
+              if (remoteName == null) {
+                ref.read(audioPlayerServiceProvider).clearQueue();
+              }
             },
             child: Padding(
               padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
@@ -568,7 +580,9 @@ class _MusicMiniPlayerState extends ConsumerState<MusicMiniPlayer> {
               _dismissedTrackId = track.id;
             });
             HapticFeedback.mediumImpact();
-            ref.read(audioPlayerServiceProvider).clearQueue();
+            if (remoteName == null) {
+              ref.read(audioPlayerServiceProvider).clearQueue();
+            }
           },
           child: Padding(
             padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),

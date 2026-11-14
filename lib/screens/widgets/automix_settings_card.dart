@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:iconsax/iconsax.dart';
 
 import '../../core/design_system/design_system.dart';
+import '../../core/utils/platform_utils.dart';
 import '../../services/automix/automix_service.dart';
 
 /// Audio settings → Automix, as BitChord lays it out: the switch, and the
@@ -63,7 +64,8 @@ class AutomixSettingsCard extends StatelessWidget {
                         Text(
                           on
                               ? 'Times and blends every transition from the '
-                                    'tracks themselves. Turn it off if the phone '
+                                    'tracks themselves. Turn it off if the '
+                                    '${isDesktop ? 'computer' : 'phone'} '
                                     'gets hot or playback stutters.'
                               : 'Times and blends transitions automatically, '
                                     'without a slider. Performance may vary on '
@@ -144,9 +146,13 @@ class AutomixSettingsCard extends StatelessWidget {
     child: Icon(icon, size: 22, color: active ? accentColor : _secondary),
   );
 
-  static String _modeSubtitle(AutomixService automix, AutomixPerformanceMode m) {
+  static String _modeSubtitle(
+    AutomixService automix,
+    AutomixPerformanceMode m,
+  ) {
     final n = automix.threadsFor(m);
-    final threads = '$n thread${n == 1 ? '' : 's'}';
+    final threads =
+        '$n ${isDesktop ? 'analysis ' : ''}thread${n == 1 ? '' : 's'}';
     return switch (m) {
       AutomixPerformanceMode.efficient =>
         '$threads · lowest heat and battery use · analysis may take longer',
@@ -206,11 +212,15 @@ class AutomixSettingsCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '${automix.fastCores != null ? 'Sized for this phone: '
-                            '${automix.fastCores} fast cores of '
-                            '${automix.cores}. ' : ''}'
-                  'Higher performance analyses tracks faster, but can use more '
-                  'battery and make the phone warmer.',
+                  isDesktop
+                      ? 'Inzx detects ${automix.logicalProcessors} logical '
+                            'processors. Each mode limits how many threads '
+                            'AutoMix uses for background analysis.'
+                      : '${automix.fastCores != null ? 'Sized for this phone: '
+                                      '${automix.fastCores} fast cores of '
+                                      '${automix.cores}. ' : ''}'
+                            'Higher performance analyses tracks faster, but '
+                            'can use more battery and make the phone warmer.',
                   style: TextStyle(fontSize: 12.5, color: _secondary, height: 1.35),
                 ),
               ],

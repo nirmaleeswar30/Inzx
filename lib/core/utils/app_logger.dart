@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:path_provider/path_provider.dart';
+
+import 'platform_utils.dart';
 
 /// Severity level for application logs
 enum LogLevel {
@@ -85,7 +86,7 @@ class AppLogger {
     if (_initialized) return;
 
     try {
-      final dir = await getApplicationDocumentsDirectory();
+      final dir = await appDataDirectory();
       final logsDir = Directory('${dir.path}/logs');
       if (!await logsDir.exists()) {
         await logsDir.create(recursive: true);

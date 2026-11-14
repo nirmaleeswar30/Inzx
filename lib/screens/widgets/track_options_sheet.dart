@@ -6,6 +6,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:marquee/marquee.dart';
 import '../../core/design_system/design_system.dart';
 import '../../core/l10n/app_localizations_x.dart';
+import '../../core/utils/platform_utils.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../services/download_service.dart';
@@ -97,6 +98,7 @@ class _TrackOptionsSheetState extends ConsumerState<TrackOptionsSheet> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(28),
           child: BackdropFilter(
+            enabled: !isDesktop,
             filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
             child: AnimatedSlide(
               offset: Offset(0, _dragOffset / 400.0),
@@ -109,7 +111,7 @@ class _TrackOptionsSheetState extends ConsumerState<TrackOptionsSheet> {
                   maxHeight: MediaQuery.of(context).size.height * 0.85,
                 ),
                 decoration: BoxDecoration(
-                  color: sheetBg,
+                  color: modalSheetBackground(context, sheetBg),
                   borderRadius: BorderRadius.circular(28),
                   border: Border.all(
                     color: accentColor.withValues(alpha: 0.22),

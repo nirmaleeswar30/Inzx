@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import '../../core/utils/platform_utils.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
@@ -305,7 +306,7 @@ class _PlaylistEditScreenState extends ConsumerState<PlaylistEditScreen> {
     final reorderable = _sort == PlaylistTrackSort.defaultOrder;
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : colorScheme.surface,
+      backgroundColor: desktopPageBackground(isDark ? Colors.black : colorScheme.surface),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

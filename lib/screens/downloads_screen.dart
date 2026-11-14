@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/utils/platform_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/l10n/app_localizations_x.dart';
@@ -20,9 +21,9 @@ class DownloadsScreen extends ConsumerWidget {
     final l10n = context.l10n;
 
     return Scaffold(
-      backgroundColor: isDark
+      backgroundColor: desktopPageBackground(isDark
           ? InzxColors.darkBackground
-          : InzxColors.background,
+          : InzxColors.background),
       appBar: AppBar(
         title: Text(l10n.downloadsTitle),
         backgroundColor: Colors.transparent,

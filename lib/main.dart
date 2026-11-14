@@ -11,8 +11,10 @@ import 'core/providers/locale_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/services/cache/hive_service.dart';
 import 'core/utils/app_logger.dart';
+import 'core/utils/platform_utils.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'services/audio_handler.dart';
+import 'services/desktop/desktop_bootstrap.dart';
 import 'services/github_release_update_service.dart';
 import 'services/jams/jams_background_service_native.dart';
 import 'services/notification_service.dart';
@@ -29,7 +31,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'screens/widgets/whats_new_dialog.dart';
 import 'screens/widgets/update_dialog.dart';
+import 'screens/widgets/desktop_shell.dart';
 import 'services/scrobbling/scrobble_service.dart';
+import 'services/desktop/desktop_updater.dart';
+import 'services/inzx_connect_remote.dart';
+import 'services/listening_stats_service.dart';
+import 'services/inzx_connect_service.dart';
 
 InzxAudioHandler? audioHandler;
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
@@ -64,6 +71,14 @@ void main() async {
     return true;
   };
 
+  if (isDesktop) {
+    try {
+      await initDesktopPlatform();
+    } catch (e, stack) {
+      AppLogger.e('Desktop', 'Desktop startup failed', e, stack);
+    }
+  }
+
   // Initialize environment variables
   try {
     await dotenv.load(fileName: ".env");
@@ -80,12 +95,16 @@ void main() async {
     debugPrint('⚠️ Hive initialization failed: $e');
   }
 
+  // Listening statistics: follows the player from here on.
+  unawaited(ListeningStatsService.instance.start());
+
   try {
     final prefs = await SharedPreferences.getInstance();
     // Existing installs (they have already seen a changelog) skip onboarding.
     showOnboarding =
         !(prefs.getBool(OnboardingScreen.completedPrefKey) ?? false) &&
         prefs.getString('last_seen_changelog_version') == null;
+    desktopShellVisible.value = !showOnboarding;
   } catch (_) {}
 
   // Initialize Supabase for Jams feature
@@ -131,6 +150,12 @@ void main() async {
   // Last.fm / ListenBrainz: follows the player from here on (no-op until an
   // account is connected).
   unawaited(ScrobbleService.instance.start());
+
+  // Inzx Connect: listens for paired devices' commands (play here, play on,
+  // remote controls). A no-op on installs that never opened Connect.
+  if (InzxConnectService.isSupported) {
+    unawaited(InzxConnectRemote.instance.start());
+  }
 
   // Set preferred orientations & enable edge-to-edge
   SystemChrome.setPreferredOrientations([
@@ -256,6 +281,13 @@ class _InzxAppState extends ConsumerState<InzxApp> {
       return;
     }
 
+    // Desktop: the updater downloads it in the background and the top bar
+    // shows it; no dialog.
+    if (isDesktop) {
+      unawaited(DesktopUpdater.instance.check());
+      return;
+    }
+
     final releaseInfo = await GithubReleaseUpdateService.instance
         .checkForNewRelease(ignoreReleaseMode: true);
     if (!mounted || releaseInfo == null) return;
@@ -294,6 +326,7 @@ class _InzxAppState extends ConsumerState<InzxApp> {
 
   void _finishOnboarding() {
     showOnboarding = false;
+    desktopShellVisible.value = true;
     rootNavigatorKey.currentState?.pushReplacement(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
@@ -355,6 +388,7 @@ class _InzxAppState extends ConsumerState<InzxApp> {
       navigatorKey: rootNavigatorKey,
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,
+      scrollBehavior: isDesktop ? const DesktopScrollBehavior() : null,
       scaffoldMessengerKey: rootScaffoldMessengerKey,
       locale: locale,
       supportedLocales: supportedAppLocales,
@@ -394,7 +428,13 @@ class _InzxAppState extends ConsumerState<InzxApp> {
               MediaQuery.of(context).textScaler.scale(1.0).clamp(0.8, 1.2),
             ),
           ),
-          child: child ?? const SizedBox.shrink(),
+          child: isDesktop
+              ? DesktopShortcuts(
+                  child: DesktopAppFrame(
+                    child: child ?? const SizedBox.shrink(),
+                  ),
+                )
+              : child ?? const SizedBox.shrink(),
         );
       },
     );

@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../core/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -174,7 +175,7 @@ class _AppLogsScreenState extends ConsumerState<AppLogsScreen> {
     final filtered = _getFilteredEntries();
 
     return Scaffold(
-      backgroundColor: isDark ? InzxColors.darkBackground : InzxColors.background,
+      backgroundColor: desktopPageBackground(isDark ? InzxColors.darkBackground : InzxColors.background),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

@@ -5,6 +5,12 @@ import 'package:skeletonizer/skeletonizer.dart';
 import 'colors.dart';
 import 'typography.dart';
 import 'spacing.dart';
+import 'desktop_page_transitions.dart';
+import '../utils/platform_utils.dart';
+
+/// Adds the desktop font to a shared style; on mobile it's returned as is.
+TextStyle _font(TextStyle style) =>
+    style.copyWith(fontFamily: desktopFontFamily);
 
 /// Inzx app theme configuration
 /// Creates the complete ThemeData with our calm design system
@@ -48,12 +54,13 @@ class InzxTheme {
 
       // Typography
       textTheme: createMineTextTheme().apply(
+        fontFamily: desktopFontFamily,
         bodyColor: InzxColors.textPrimary,
         displayColor: InzxColors.textPrimary,
       ),
 
       // AppBar
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 0,
         backgroundColor: Colors.transparent,
@@ -63,7 +70,7 @@ class InzxTheme {
           statusBarIconBrightness: Brightness.dark,
           statusBarBrightness: Brightness.light,
         ),
-        titleTextStyle: InzxTypography.titleLarge,
+        titleTextStyle: _font(InzxTypography.titleLarge),
         centerTitle: false,
       ),
 
@@ -86,7 +93,7 @@ class InzxTheme {
             vertical: InzxSpacing.base,
           ),
           shape: RoundedRectangleBorder(borderRadius: InzxSpacing.buttonRadius),
-          textStyle: InzxTypography.labelLarge,
+          textStyle: _font(InzxTypography.labelLarge),
         ),
       ),
 
@@ -98,7 +105,7 @@ class InzxTheme {
             vertical: InzxSpacing.sm,
           ),
           shape: RoundedRectangleBorder(borderRadius: InzxSpacing.buttonRadius),
-          textStyle: InzxTypography.labelLarge,
+          textStyle: _font(InzxTypography.labelLarge),
         ),
       ),
 
@@ -111,7 +118,7 @@ class InzxTheme {
             vertical: InzxSpacing.base,
           ),
           shape: RoundedRectangleBorder(borderRadius: InzxSpacing.buttonRadius),
-          textStyle: InzxTypography.labelLarge,
+          textStyle: _font(InzxTypography.labelLarge),
         ),
       ),
 
@@ -164,10 +171,10 @@ class InzxTheme {
           borderRadius: InzxSpacing.inputRadius,
           borderSide: const BorderSide(color: InzxColors.error, width: 1.5),
         ),
-        hintStyle: InzxTypography.bodyMedium.copyWith(
+        hintStyle: _font(InzxTypography.bodyMedium).copyWith(
           color: InzxColors.textTertiary,
         ),
-        labelStyle: InzxTypography.bodyMedium.copyWith(
+        labelStyle: _font(InzxTypography.bodyMedium).copyWith(
           color: InzxColors.textSecondary,
         ),
       ),
@@ -180,8 +187,8 @@ class InzxTheme {
         unselectedItemColor: InzxColors.textTertiary,
         type: BottomNavigationBarType.fixed,
         showUnselectedLabels: true,
-        selectedLabelStyle: InzxTypography.labelSmall,
-        unselectedLabelStyle: InzxTypography.labelSmall,
+        selectedLabelStyle: _font(InzxTypography.labelSmall),
+        unselectedLabelStyle: _font(InzxTypography.labelSmall),
       ),
 
       // Navigation Bar (Material 3)
@@ -193,9 +200,9 @@ class InzxTheme {
         height: 80,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return InzxTypography.labelSmall.copyWith(color: accentColor);
+            return _font(InzxTypography.labelSmall).copyWith(color: accentColor);
           }
-          return InzxTypography.labelSmall.copyWith(
+          return _font(InzxTypography.labelSmall).copyWith(
             color: InzxColors.textTertiary,
           );
         }),
@@ -234,15 +241,15 @@ class InzxTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(InzxSpacing.radiusLg),
         ),
-        titleTextStyle: InzxTypography.titleLarge,
-        contentTextStyle: InzxTypography.bodyMedium,
+        titleTextStyle: _font(InzxTypography.titleLarge),
+        contentTextStyle: _font(InzxTypography.bodyMedium),
       ),
 
       // Snackbar
       snackBarTheme: SnackBarThemeData(
         elevation: 0,
         backgroundColor: InzxColors.textPrimary,
-        contentTextStyle: InzxTypography.bodyMedium.copyWith(
+        contentTextStyle: _font(InzxTypography.bodyMedium).copyWith(
           color: Colors.white,
         ),
         shape: RoundedRectangleBorder(
@@ -257,7 +264,7 @@ class InzxTheme {
         elevation: 0,
         backgroundColor: InzxColors.surfaceVariant,
         selectedColor: accentColor.withValues(alpha: 0.15),
-        labelStyle: InzxTypography.labelMedium,
+        labelStyle: _font(InzxTypography.labelMedium),
         padding: const EdgeInsets.symmetric(
           horizontal: InzxSpacing.md,
           vertical: InzxSpacing.sm,
@@ -324,15 +331,15 @@ class InzxTheme {
       ),
 
       // ListTile
-      listTileTheme: const ListTileThemeData(
+      listTileTheme: ListTileThemeData(
         contentPadding: EdgeInsets.symmetric(
           horizontal: InzxSpacing.base,
           vertical: InzxSpacing.sm,
         ),
         minVerticalPadding: InzxSpacing.sm,
         horizontalTitleGap: InzxSpacing.md,
-        titleTextStyle: InzxTypography.bodyLarge,
-        subtitleTextStyle: InzxTypography.bodySmall,
+        titleTextStyle: _font(InzxTypography.bodyLarge),
+        subtitleTextStyle: _font(InzxTypography.bodySmall),
         iconColor: InzxColors.textSecondary,
       ),
 
@@ -342,7 +349,7 @@ class InzxTheme {
           color: InzxColors.textPrimary,
           borderRadius: BorderRadius.circular(InzxSpacing.radiusSm),
         ),
-        textStyle: InzxTypography.bodySmall.copyWith(color: Colors.white),
+        textStyle: _font(InzxTypography.bodySmall).copyWith(color: Colors.white),
         padding: const EdgeInsets.symmetric(
           horizontal: InzxSpacing.md,
           vertical: InzxSpacing.sm,
@@ -355,8 +362,8 @@ class InzxTheme {
           TargetPlatform.android: CupertinoPageTransitionsBuilder(),
           TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
           TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
-          TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
-          TargetPlatform.linux: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.windows: DesktopPageTransitionsBuilder(),
+          TargetPlatform.linux: DesktopPageTransitionsBuilder(),
         },
       ),
 
@@ -417,12 +424,13 @@ class InzxTheme {
 
       // Typography
       textTheme: createMineTextTheme().apply(
+        fontFamily: desktopFontFamily,
         bodyColor: InzxColors.darkTextPrimary,
         displayColor: InzxColors.darkTextPrimary,
       ),
 
       // AppBar
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 0,
         backgroundColor: Colors.transparent,
@@ -433,6 +441,7 @@ class InzxTheme {
           statusBarBrightness: Brightness.dark,
         ),
         titleTextStyle: TextStyle(
+          fontFamily: desktopFontFamily,
           fontSize: 22,
           fontWeight: FontWeight.w500,
           letterSpacing: 0,
@@ -461,7 +470,7 @@ class InzxTheme {
             vertical: InzxSpacing.base,
           ),
           shape: RoundedRectangleBorder(borderRadius: InzxSpacing.buttonRadius),
-          textStyle: InzxTypography.labelLarge,
+          textStyle: _font(InzxTypography.labelLarge),
         ),
       ),
 
@@ -473,7 +482,7 @@ class InzxTheme {
             vertical: InzxSpacing.sm,
           ),
           shape: RoundedRectangleBorder(borderRadius: InzxSpacing.buttonRadius),
-          textStyle: InzxTypography.labelLarge,
+          textStyle: _font(InzxTypography.labelLarge),
         ),
       ),
 
@@ -486,7 +495,7 @@ class InzxTheme {
             vertical: InzxSpacing.base,
           ),
           shape: RoundedRectangleBorder(borderRadius: InzxSpacing.buttonRadius),
-          textStyle: InzxTypography.labelLarge,
+          textStyle: _font(InzxTypography.labelLarge),
         ),
       ),
 
@@ -539,10 +548,10 @@ class InzxTheme {
           borderRadius: InzxSpacing.inputRadius,
           borderSide: const BorderSide(color: InzxColors.error, width: 1.5),
         ),
-        hintStyle: InzxTypography.bodyMedium.copyWith(
+        hintStyle: _font(InzxTypography.bodyMedium).copyWith(
           color: InzxColors.darkTextTertiary,
         ),
-        labelStyle: InzxTypography.bodyMedium.copyWith(
+        labelStyle: _font(InzxTypography.bodyMedium).copyWith(
           color: InzxColors.darkTextSecondary,
         ),
       ),
@@ -555,8 +564,8 @@ class InzxTheme {
         unselectedItemColor: InzxColors.darkTextTertiary,
         type: BottomNavigationBarType.fixed,
         showUnselectedLabels: true,
-        selectedLabelStyle: InzxTypography.labelSmall,
-        unselectedLabelStyle: InzxTypography.labelSmall,
+        selectedLabelStyle: _font(InzxTypography.labelSmall),
+        unselectedLabelStyle: _font(InzxTypography.labelSmall),
       ),
 
       // Navigation Bar (Material 3)
@@ -568,9 +577,9 @@ class InzxTheme {
         height: 80,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return InzxTypography.labelSmall.copyWith(color: accentColor);
+            return _font(InzxTypography.labelSmall).copyWith(color: accentColor);
           }
-          return InzxTypography.labelSmall.copyWith(
+          return _font(InzxTypography.labelSmall).copyWith(
             color: InzxColors.darkTextTertiary,
           );
         }),
@@ -612,10 +621,10 @@ class InzxTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(InzxSpacing.radiusLg),
         ),
-        titleTextStyle: InzxTypography.titleLarge.copyWith(
+        titleTextStyle: _font(InzxTypography.titleLarge).copyWith(
           color: InzxColors.darkTextPrimary,
         ),
-        contentTextStyle: InzxTypography.bodyMedium.copyWith(
+        contentTextStyle: _font(InzxTypography.bodyMedium).copyWith(
           color: InzxColors.darkTextPrimary,
         ),
       ),
@@ -624,7 +633,7 @@ class InzxTheme {
       snackBarTheme: SnackBarThemeData(
         elevation: 0,
         backgroundColor: InzxColors.darkSurfaceElevated,
-        contentTextStyle: InzxTypography.bodyMedium.copyWith(
+        contentTextStyle: _font(InzxTypography.bodyMedium).copyWith(
           color: InzxColors.darkTextPrimary,
         ),
         shape: RoundedRectangleBorder(
@@ -639,7 +648,7 @@ class InzxTheme {
         elevation: 0,
         backgroundColor: InzxColors.darkSurfaceVariant,
         selectedColor: accentColor.withValues(alpha: 0.25),
-        labelStyle: InzxTypography.labelMedium.copyWith(
+        labelStyle: _font(InzxTypography.labelMedium).copyWith(
           color: InzxColors.darkTextPrimary,
         ),
         padding: const EdgeInsets.symmetric(
@@ -715,10 +724,10 @@ class InzxTheme {
         ),
         minVerticalPadding: InzxSpacing.sm,
         horizontalTitleGap: InzxSpacing.md,
-        titleTextStyle: InzxTypography.bodyLarge.copyWith(
+        titleTextStyle: _font(InzxTypography.bodyLarge).copyWith(
           color: InzxColors.darkTextPrimary,
         ),
-        subtitleTextStyle: InzxTypography.bodySmall.copyWith(
+        subtitleTextStyle: _font(InzxTypography.bodySmall).copyWith(
           color: InzxColors.darkTextSecondary,
         ),
         iconColor: InzxColors.darkTextSecondary,
@@ -730,7 +739,7 @@ class InzxTheme {
           color: InzxColors.darkSurfaceElevated,
           borderRadius: BorderRadius.circular(InzxSpacing.radiusSm),
         ),
-        textStyle: InzxTypography.bodySmall.copyWith(
+        textStyle: _font(InzxTypography.bodySmall).copyWith(
           color: InzxColors.darkTextPrimary,
         ),
         padding: const EdgeInsets.symmetric(
@@ -745,8 +754,8 @@ class InzxTheme {
           TargetPlatform.android: CupertinoPageTransitionsBuilder(),
           TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
           TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
-          TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
-          TargetPlatform.linux: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.windows: DesktopPageTransitionsBuilder(),
+          TargetPlatform.linux: DesktopPageTransitionsBuilder(),
         },
       ),
 

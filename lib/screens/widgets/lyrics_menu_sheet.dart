@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/providers/theme_provider.dart'
+    show ProgressBarStyle, getProgressBarStyleName, progressBarStyleProvider;
+import '../../core/utils/platform_utils.dart';
 import '../../services/lyrics/lyrics_service.dart';
 import '../../services/lyrics/lyrics_translation_service.dart';
 import '../../providers/music_providers.dart';
@@ -250,7 +253,7 @@ class _LyricsMenuSheetState extends ConsumerState<LyricsMenuSheet> {
       expand: false,
       builder: (context, scrollController) {
         return Material(
-          color: Theme.of(context).scaffoldBackgroundColor,
+          color: modalSheetBackground(context),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           child: Stack(
             children: [
@@ -352,6 +355,31 @@ class _LyricsMenuSheetState extends ConsumerState<LyricsMenuSheet> {
                               ref.read(lyricsSyncOffsetProvider.notifier).update((s) => s + 250);
                             },
                           ),
+                        ],
+                      ),
+                    ),
+                    const Divider(),
+                    // The same setting as Player appearance > Progress bar
+                    // style: it changes the seek bar everywhere it's drawn.
+                    const ListTile(
+                      leading: Icon(Icons.graphic_eq_rounded),
+                      title: Text('Progress Bar Style'),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final style in ProgressBarStyle.values)
+                            ChoiceChip(
+                              label: Text(getProgressBarStyleName(style)),
+                              selected:
+                                  ref.watch(progressBarStyleProvider) == style,
+                              onSelected: (_) => ref
+                                  .read(progressBarStyleProvider.notifier)
+                                  .setStyle(style),
+                            ),
                         ],
                       ),
                     ),

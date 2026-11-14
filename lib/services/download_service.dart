@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+
+import '../core/utils/platform_utils.dart';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show compute, kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -63,6 +65,17 @@ Future<String> _getDownloadsDirPath() async {
     if (kDebugMode) {
       print('DownloadService: Error reading custom download path: $e');
     }
+  }
+
+  // Desktop has no app-private external storage: use the Downloads folder,
+  // or Inzx's own data folder if the system reports none (never Documents).
+  if (isDesktop) {
+    final downloads = await getDownloadsDirectory();
+    final inzxDir = downloads != null
+        ? Directory('${downloads.path}/Inzx')
+        : Directory('${(await appDataDirectory()).path}/downloads');
+    await inzxDir.create(recursive: true);
+    return inzxDir.path;
   }
 
   // 2. Use app-private external storage (OuterTune style)

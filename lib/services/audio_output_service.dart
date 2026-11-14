@@ -1,9 +1,11 @@
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// What the native output layer (android/.../audio/InzxAudioOutput.kt)
-/// reports about the last audio track: its format and whether it went to a
-/// USB DAC bit-perfect.
+import '../core/utils/platform_utils.dart';
+import 'desktop/desktop_audio_dsp.dart';
+import 'desktop/desktop_loudness.dart';
+
+/// The track and output formats reported by the platform audio backend.
 class AudioOutputStatus {
   const AudioOutputStatus({
     required this.bitPerfectSupported,
@@ -13,6 +15,8 @@ class AudioOutputStatus {
     this.trackSampleRate,
     this.trackEncoding,
     this.trackBitDepth,
+    this.outSampleRate,
+    this.outEncoding,
     this.bitPerfectActive = false,
     this.bitPerfectDevice,
     this.bitPerfectReason,
@@ -25,6 +29,8 @@ class AudioOutputStatus {
   final int? trackSampleRate;
   final String? trackEncoding;
   final int? trackBitDepth;
+  final int? outSampleRate;
+  final String? outEncoding;
   final bool bitPerfectActive;
   final String? bitPerfectDevice;
   final String? bitPerfectReason;
@@ -38,6 +44,8 @@ class AudioOutputStatus {
         trackSampleRate: m['trackSampleRate'] as int?,
         trackEncoding: m['trackEncoding'] as String?,
         trackBitDepth: m['trackBitDepth'] as int?,
+        outSampleRate: m['outSampleRate'] as int?,
+        outEncoding: m['outEncoding'] as String?,
         bitPerfectActive: m['bitPerfectActive'] == true,
         bitPerfectDevice: m['bitPerfectDevice'] as String?,
         bitPerfectReason: m['bitPerfectReason'] as String?,
@@ -58,6 +66,9 @@ class AudioOutputService {
 
   static Future<AudioOutputStatus?> describe() async {
     try {
+      if (isDesktop) {
+        return AudioOutputStatus.fromMap(await DesktopAudioDsp.instance.describe());
+      }
       final m = await _channel.invokeMapMethod<dynamic, dynamic>('describe');
       return m == null ? null : AudioOutputStatus.fromMap(m);
     } catch (_) {
@@ -77,8 +88,8 @@ class AudioOutputService {
   static Future<void> setBitPerfectUsb(bool on) async =>
       (await SharedPreferences.getInstance()).setBool(bitPerfectKey, on);
 
-  // Loudness normalization (BitChord's, native: LoudnessGains.kt). Both on
-  // by default, as in BitChord; read live by the audio thread.
+  // Loudness normalization (BitChord's, native: LoudnessGains.kt; desktop:
+  // DesktopLoudness). Both on by default, as in BitChord; read live.
   static const loudnessKey = 'loudness_normalization';
   static const loudnessOffOnSpeakerKey = 'loudness_off_on_speaker';
 
@@ -89,9 +100,13 @@ class AudioOutputService {
       (await SharedPreferences.getInstance()).getBool(loudnessOffOnSpeakerKey) ??
       true;
 
-  static Future<void> setLoudnessNormalization(bool on) async =>
-      (await SharedPreferences.getInstance()).setBool(loudnessKey, on);
+  static Future<void> setLoudnessNormalization(bool on) async {
+    if (isDesktop) DesktopLoudness.instance.setEnabled(on);
+    await (await SharedPreferences.getInstance()).setBool(loudnessKey, on);
+  }
 
-  static Future<void> setLoudnessOffOnSpeaker(bool on) async =>
-      (await SharedPreferences.getInstance()).setBool(loudnessOffOnSpeakerKey, on);
+  static Future<void> setLoudnessOffOnSpeaker(bool on) async {
+    if (isDesktop) DesktopLoudness.instance.setOffOnSpeaker(on);
+    await (await SharedPreferences.getInstance()).setBool(loudnessOffOnSpeakerKey, on);
+  }
 }

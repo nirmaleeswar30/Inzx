@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/utils/platform_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -117,9 +118,9 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     final searchQuery = ref.watch(searchQueryProvider);
 
     return Scaffold(
-      backgroundColor: isDark
+      backgroundColor: desktopPageBackground(isDark
           ? InzxColors.darkBackground
-          : InzxColors.background,
+          : InzxColors.background),
       body: SafeArea(
         child: Column(
           children: [

@@ -10,7 +10,7 @@
     { title: 'Listening', pages: [
       { slug: 'player', title: 'Now playing', keys: 'player cinematic ripple og default lyrics up next queue related shuffle repeat like device output spectrum waveform liquid glass' },
       { slug: 'lyrics', title: 'Lyrics & AI translation', keys: 'synced karaoke word translation ai offset provider lrclib musixmatch ttml deepl gemini openrouter transliteration romanization' },
-      { slug: 'audio', title: 'Audio & quality', keys: 'quality 320kbps jiosaavn high quality sources crossfade cache streaming routing bluetooth' },
+      { slug: 'audio', title: 'Audio & quality', keys: 'quality lossless add-ons addons flac hi-res community sources 320kbps jiosaavn high quality sources crossfade cache streaming routing bluetooth' },
       { slug: 'downloads', title: 'Downloads & offline', keys: 'offline download local files folders storage' },
     ] },
     { title: 'Together', pages: [

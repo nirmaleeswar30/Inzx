@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/utils/platform_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,7 +39,7 @@ class _EqualizerScreenState extends ConsumerState<EqualizerScreen> {
     final secondary = isDark ? Colors.white54 : InzxColors.textSecondary;
 
     return Scaffold(
-      backgroundColor: background,
+      backgroundColor: desktopPageBackground(background),
       appBar: AppBar(
         title: const Text('Equalizer'),
         backgroundColor: Colors.transparent,
@@ -98,8 +99,11 @@ class _EqualizerScreenState extends ConsumerState<EqualizerScreen> {
               ),
               const SizedBox(height: 22),
               Text(
-                'Turned off automatically while bit-perfect USB output is on, '
-                'since any EQ changes the samples.',
+                isDesktop
+                    ? 'Turned off automatically while bit-perfect output is on, '
+                          'since any EQ changes the samples.'
+                    : 'Turned off automatically while bit-perfect USB output is on, '
+                          'since any EQ changes the samples.',
                 style: TextStyle(fontSize: 12.5, color: secondary, height: 1.35),
               ),
             ],

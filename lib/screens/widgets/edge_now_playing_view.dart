@@ -24,7 +24,6 @@ import 'automix_stats_line.dart';
 class EdgeNowPlayingView extends ConsumerStatefulWidget {
   final Track track;
   final player.PlaybackState state;
-  final player.AudioPlayerService playerService;
   final Color textColor;
   final Color secondaryTextColor;
   final Color accentColor;
@@ -47,7 +46,6 @@ class EdgeNowPlayingView extends ConsumerStatefulWidget {
     super.key,
     required this.track,
     required this.state,
-    required this.playerService,
     required this.textColor,
     required this.secondaryTextColor,
     required this.accentColor,

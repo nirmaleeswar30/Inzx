@@ -36,14 +36,14 @@ class NowPlayingBottomBar extends StatelessWidget {
             textColor: textColor,
             tooltip: 'Lyrics',
             onTap: onOpenLyrics,
-            glyph: _LyricsGlyph(color: textColor.withValues(alpha: 0.9)),
+            glyph: LyricsGlyph(color: textColor.withValues(alpha: 0.9)),
           ),
           Expanded(child: Center(child: center ?? const SizedBox.shrink())),
           _BubbleButton(
             textColor: textColor,
             tooltip: 'Up next',
             onTap: onOpenQueue,
-            glyph: _QueueGlyph(color: textColor.withValues(alpha: 0.9)),
+            glyph: QueueGlyph(color: textColor.withValues(alpha: 0.9)),
           ),
         ],
       ),
@@ -91,9 +91,10 @@ class _BubbleButton extends StatelessWidget {
   }
 }
 
-/// A rounded speech bubble holding a pair of closing quote marks.
-class _LyricsGlyph extends StatelessWidget {
-  const _LyricsGlyph({required this.color});
+/// The Lyrics glyph: a rounded speech bubble holding a pair of closing
+/// quote marks. Shared by the phone and desktop players.
+class LyricsGlyph extends StatelessWidget {
+  const LyricsGlyph({super.key, required this.color});
   final Color color;
 
   @override
@@ -140,9 +141,10 @@ class _LyricsGlyphPainter extends CustomPainter {
   bool shouldRepaint(covariant _LyricsGlyphPainter old) => old.color != color;
 }
 
-/// A bulleted list: three dots, three lines.
-class _QueueGlyph extends StatelessWidget {
-  const _QueueGlyph({required this.color});
+/// The Up next glyph: a bulleted list, three dots and three lines. Shared by
+/// the phone and desktop players.
+class QueueGlyph extends StatelessWidget {
+  const QueueGlyph({super.key, required this.color});
   final Color color;
 
   @override

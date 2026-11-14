@@ -24,6 +24,8 @@ import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../services/github_release_update_service.dart';
 import '../services/shorebird_update_service.dart';
+import '../services/desktop/desktop_updater.dart';
+import 'widgets/desktop_update_button.dart';
 import 'widgets/whats_new_dialog.dart';
 import 'widgets/update_dialog.dart';
 import 'widgets/color_picker_dialog.dart';
@@ -35,12 +37,18 @@ import 'scrobbling_screen.dart';
 import 'equalizer_screen.dart';
 import 'auto_eq_screen.dart';
 import 'jams_screen.dart';
+import 'inzx_connect_screen.dart';
+import '../services/inzx_connect_service.dart';
 import 'import_playlist_screen.dart';
+import 'playlist_transfer_screen.dart';
 import 'statistics_screen.dart';
+import 'widgets/listening_stats_view.dart' show formatListening;
+import '../services/listening_stats_service.dart';
 import 'browse_moods_screen.dart';
 import 'downloads_screen.dart';
 import 'widgets/sleep_timer_sheet.dart';
 import '../services/scrobbling/scrobble_service.dart';
+import '../core/utils/platform_utils.dart';
 
 /// Provider for sync service
 final ytMusicSyncServiceProvider = Provider<YTMusicSyncService>((ref) {
@@ -801,17 +809,37 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           'import playlist',
           'import playlists',
           'import',
-          'transfer',
           'playlists',
           'youtube music playlists',
           'fetch playlists',
-          'external playlists',
         ],
         title: 'Import Playlists',
         subtitle: 'Import playlists from your YouTube Music library',
         icon: Iconsax.import,
         screen: const ImportPlaylistScreen(),
       ),
+      const _SearchableItem(
+        tags: [
+          'transfer',
+          'import playlists',
+          'Spotify',
+          'Apple Music',
+          'TuneMyMusic',
+          'Soundiiz',
+        ],
+        title: PlaylistTransferScreen.title,
+        subtitle: PlaylistTransferScreen.subtitle,
+        icon: Icons.playlist_add_rounded,
+        screen: PlaylistTransferScreen(),
+      ),
+      if (InzxConnectService.isSupported)
+        _SearchableItem(
+          tags: const ['connect', 'devices', 'pair', 'qr'],
+          title: InzxConnectScreen.title,
+          subtitle: InzxConnectScreen.subtitle,
+          icon: InzxConnectScreen.icon,
+          onTap: () => InzxConnectScreen.open(Navigator.of(context)),
+        ),
       _SearchableItem(
         tags: [
           'statistics',
@@ -1215,37 +1243,54 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
     final l10n = context.l10n;
 
     return Scaffold(
-      backgroundColor: _backgroundColor,
+      backgroundColor: desktopPageBackground(_backgroundColor),
       body: authState.isLoading
           ? Center(child: CircularProgressIndicator(color: _accentColor))
           : CustomScrollView(
               slivers: [
                 // ── Collapsing App Bar ───────────────────────────────
-                SliverAppBar.large(
-                  expandedHeight: 120,
-                  backgroundColor: _backgroundColor,
-                  surfaceTintColor: Colors.transparent,
-                  scrolledUnderElevation: 0,
-                  elevation: 0,
-                  leading: IconButton(
-                    icon: Icon(Iconsax.arrow_left, color: _textPrimary),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: Container(color: _backgroundColor),
-                    title: Text(
-                      l10n.settings,
-                      style: TextStyle(
-                        color: _textPrimary,
-                        fontWeight: FontWeight.w700,
+                if (isDesktop)
+                  // The sidebar is the way out, so no back button or
+                  // collapsing bar: just the heading, level with the page.
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+                    sliver: SliverToBoxAdapter(
+                      child: Text(
+                        l10n.settings,
+                        style: TextStyle(
+                          color: _textPrimary,
+                          fontSize: 30,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                    titlePadding: const EdgeInsetsDirectional.only(
-                      start: 56,
-                      bottom: 16,
+                  )
+                else
+                  SliverAppBar.large(
+                    expandedHeight: 120,
+                    backgroundColor: _backgroundColor,
+                    surfaceTintColor: Colors.transparent,
+                    scrolledUnderElevation: 0,
+                    elevation: 0,
+                    leading: IconButton(
+                      icon: Icon(Iconsax.arrow_left, color: _textPrimary),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: Container(color: _backgroundColor),
+                      title: Text(
+                        l10n.settings,
+                        style: TextStyle(
+                          color: _textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      titlePadding: const EdgeInsetsDirectional.only(
+                        start: 56,
+                        bottom: 16,
+                      ),
                     ),
                   ),
-                ),
 
                 // ── Search bar ───────────────────────────────────────
                 SliverPadding(
@@ -1295,19 +1340,27 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
             setState(() => _searchQuery = value.toLowerCase()),
         style: TextStyle(fontSize: 14, color: _textPrimary),
         decoration: InputDecoration(
+          // The container above draws the field; the theme's solid fill
+          // would paint it black over the desktop backdrop.
+          filled: !isDesktop,
+          enabledBorder: isDesktop ? InputBorder.none : null,
+          focusedBorder: isDesktop ? InputBorder.none : null,
           hintText: context.l10n.searchSettingsHint,
-          hintStyle: TextStyle(fontSize: 14, color: _textTertiary),
+          hintStyle: TextStyle(
+            fontSize: 14,
+            color: isDesktop ? _textSecondary : _textTertiary,
+          ),
           prefixIcon: Icon(
             Iconsax.search_normal,
             size: 18,
-            color: _textTertiary,
+            color: isDesktop ? _textSecondary : _textTertiary,
           ),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
                   icon: Icon(
                     Icons.close_rounded,
                     size: 18,
-                    color: _textTertiary,
+                    color: isDesktop ? _textSecondary : _textTertiary,
                   ),
                   onPressed: () {
                     _searchController.clear();
@@ -1347,6 +1400,11 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
     // Search through deep-link items (Audio, Downloads, Backup settings)
     final matchedItems = _deepSearchItems
         .where((item) => _matchesSearchQuery(item.searchTerms))
+        .where(
+          (item) =>
+              !isDesktop ||
+              !(item.screen is EqualizerScreen || item.screen is AutoEqScreen),
+        )
         .toList();
 
     if (matchedSections.isEmpty && matchedItems.isEmpty) {
@@ -1878,7 +1936,8 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
-              textStyle: const TextStyle(
+              textStyle: TextStyle(
+                fontFamily: desktopFontFamily,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -2286,10 +2345,44 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           height: 1,
           color: _isDark ? InzxColors.darkDivider : InzxColors.divider,
         ),
+        _settingsTile(
+          icon: Icons.playlist_add_rounded,
+          iconBg: _accentColor,
+          title: PlaylistTransferScreen.title,
+          subtitle: PlaylistTransferScreen.subtitle,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const PlaylistTransferScreen()),
+          ),
+        ),
+        if (InzxConnectService.isSupported) ...[
+          Divider(
+            height: 1,
+            color: _isDark ? InzxColors.darkDivider : InzxColors.divider,
+          ),
+          _settingsTile(
+            icon: InzxConnectScreen.icon,
+            iconBg: _accentColor,
+            title: InzxConnectScreen.title,
+            subtitle: InzxConnectScreen.subtitle,
+            onTap: () => InzxConnectScreen.open(Navigator.of(context)),
+          ),
+        ],
+        Divider(
+          height: 1,
+          color: _isDark ? InzxColors.darkDivider : InzxColors.divider,
+        ),
         ValueListenableBuilder<DiscordRpcState>(
           valueListenable: DiscordRpcService.instance.stateNotifier,
           builder: (context, rpcState, _) {
-            final connected = DiscordRpcService.instance.isAuthorized;
+            final service = DiscordRpcService.instance;
+            final subtitle = isDesktop && service.desktopEnabled
+                ? rpcState.status == DiscordRpcStatus.connected
+                      ? 'Connected to the Discord app'
+                      : 'Waiting for the Discord app'
+                : service.isAuthorized
+                ? 'Connected as ${rpcState.displayName}'
+                : 'Show your listening activity on Discord';
             return ListTile(
               contentPadding: EdgeInsets.zero,
               leading: Container(
@@ -2312,9 +2405,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                 ),
               ),
               subtitle: Text(
-                connected
-                    ? 'Connected as ${rpcState.displayName}'
-                    : 'Show your listening activity on Discord',
+                subtitle,
                 style: TextStyle(fontSize: 12, color: _textSecondary),
               ),
               trailing: Icon(Iconsax.arrow_right_3, size: 18, color: _textTertiary),
@@ -2346,6 +2437,24 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                 context,
                 MaterialPageRoute(builder: (_) => const ScrobblingScreen()),
               ),
+            );
+          },
+        ),
+        ListenableBuilder(
+          listenable: ListeningStatsService.instance,
+          builder: (context, _) {
+            final week = ListeningStatsService.instance.summarize(
+              StatsPeriod.week,
+              limit: 0,
+            );
+            return _settingsTile(
+              icon: Iconsax.chart,
+              iconBg: _accentColor,
+              title: 'Listening Statistics',
+              subtitle: week.totalMs >= 60000
+                  ? '${formatListening(week.totalMs)} this week'
+                  : 'Your top artists, songs and listening time',
+              onTap: () => StatisticsScreen.open(context),
             );
           },
         ),
@@ -3700,6 +3809,23 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
           ),
           onTap: _handleCheckForUpdates,
         ),
+        // Desktop: background updates (DesktopUpdater), on by default.
+        if (isDesktop)
+          ListenableBuilder(
+            listenable: DesktopUpdater.instance,
+            builder: (context, _) => _switchTile(
+              icon: Icons.system_update_alt_rounded,
+              iconBg: _accentColor,
+              title: 'Update automatically',
+              subtitle: DesktopUpdater.canSelfUpdate
+                  ? 'Downloads new versions in the background and installs '
+                        'them when you close Inzx'
+                  : 'Only for Inzx installed with its installer or AppImage; '
+                        'this copy shows new versions instead',
+              value: DesktopUpdater.instance.autoUpdate,
+              onChanged: DesktopUpdater.instance.setAutoUpdate,
+            ),
+          ),
         Divider(color: _isDark ? Colors.white10 : Colors.black12, height: 16),
         // What's New & Changelog
         ListTile(
@@ -3926,7 +4052,32 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
       return;
     }
 
-    // 2. Check GitHub Releases API for new release build
+    // 2. Desktop: the updater checks, downloads and installs; its dialog
+    // explains where it stands.
+    if (isDesktop) {
+      await DesktopUpdater.instance.check(force: true);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      if (DesktopUpdater.instance.update != null) {
+        await DesktopUpdateButton.showDetails(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle_rounded, color: Colors.greenAccent),
+                SizedBox(width: 10),
+                Text('You are on the latest version!'),
+              ],
+            ),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+      return;
+    }
+
+    // 3. Check GitHub Releases API for new release build
     final releaseInfo = await GithubReleaseUpdateService.instance.checkForNewRelease(
       ignoreReleaseMode: true,
     );

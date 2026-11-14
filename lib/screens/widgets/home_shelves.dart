@@ -11,7 +11,28 @@ import '../../services/audio_player_service.dart' as player;
 import 'now_playing_screen.dart';
 import 'track_options_sheet.dart';
 import 'shelf_details_screen.dart';
+import '../../core/utils/platform_utils.dart';
 import 'explicit_badge.dart';
+
+/// A 16:9 video card on desktop, three across.
+double _desktopVideoCardWidth(BuildContext context) {
+  final threeAcross = (MediaQuery.sizeOf(context).width - 24) / 3 - 8;
+  return threeAcross < 260 ? 260 : threeAcross;
+}
+
+/// A large square "Daily discover" card on desktop, four across.
+double _desktopDailyCardSize(BuildContext context) {
+  final fourAcross = (MediaQuery.sizeOf(context).width - 24) / 4 - 12;
+  return fourAcross < 180 ? 180 : fourAcross;
+}
+
+/// A square shelf card: [mobile] on phones. On desktop, big enough that six
+/// fill the page, allowing for the 12 list padding and 4 card margins.
+double _squareCardSize(BuildContext context, double mobile) {
+  if (!isDesktop) return mobile;
+  final sixAcross = (MediaQuery.sizeOf(context).width - 24) / 6 - 8;
+  return sixAcross < mobile ? mobile : sixAcross;
+}
 
 // ============================================================================
 // HELPER: Determine which widget to use based on shelf title
@@ -482,7 +503,7 @@ class MixesShelf extends ConsumerWidget {
         const SizedBox(height: 16),
         // Horizontal carousel of mixes
         SizedBox(
-          height: 210,
+          height: _squareCardSize(context, 160) + 50,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -507,7 +528,7 @@ class MixesShelf extends ConsumerWidget {
         onMixTap?.call(item);
       },
       child: Container(
-        width: 160,
+        width: _squareCardSize(context, 160),
         margin: const EdgeInsets.symmetric(horizontal: 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -516,8 +537,8 @@ class MixesShelf extends ConsumerWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: SizedBox(
-                width: 160,
-                height: 160,
+                width: _squareCardSize(context, 160),
+                height: _squareCardSize(context, 160),
                 child: item.thumbnailUrl != null
                     ? CachedNetworkImage(
                         imageUrl: item.thumbnailUrl!,
@@ -673,7 +694,7 @@ class ContentCarouselShelf extends ConsumerWidget {
         const SizedBox(height: 16),
         // Horizontal carousel
         SizedBox(
-          height: _getShelfHeight(),
+          height: _getShelfHeight(context),
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -688,12 +709,14 @@ class ContentCarouselShelf extends ConsumerWidget {
     );
   }
 
-  double _getShelfHeight() {
+  double _getShelfHeight(BuildContext context) {
     // Artists have circular thumbnails, others square
     final hasArtists = shelf.items.any(
       (i) => i.itemType == HomeShelfItemType.artist,
     );
-    return hasArtists ? 195 : 220;
+    return hasArtists
+        ? _squareCardSize(context, 140) + 55
+        : _squareCardSize(context, 150) + 70;
   }
 
   Widget _buildContentCard(
@@ -702,7 +725,7 @@ class ContentCarouselShelf extends ConsumerWidget {
     WidgetRef ref,
   ) {
     final isArtist = item.itemType == HomeShelfItemType.artist;
-    final size = isArtist ? 140.0 : 150.0;
+    final size = _squareCardSize(context, isArtist ? 140.0 : 150.0);
 
     return GestureDetector(
       onTap: () => onItemTap?.call(item),
@@ -917,7 +940,7 @@ class ChartsShelf extends ConsumerWidget {
         const SizedBox(height: 16),
         // Chart cards
         SizedBox(
-          height: 200,
+          height: _squareCardSize(context, 150) + 50,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -936,7 +959,7 @@ class ChartsShelf extends ConsumerWidget {
     return GestureDetector(
       onTap: () => onItemTap?.call(item),
       child: Container(
-        width: 150,
+        width: _squareCardSize(context, 150),
         margin: const EdgeInsets.symmetric(horizontal: 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -945,8 +968,8 @@ class ChartsShelf extends ConsumerWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: SizedBox(
-                width: 150,
-                height: 150,
+                width: _squareCardSize(context, 150),
+                height: _squareCardSize(context, 150),
                 child: item.thumbnailUrl != null
                     ? CachedNetworkImage(
                         imageUrl: item.thumbnailUrl!,
@@ -1083,7 +1106,9 @@ class VideoShelf extends ConsumerWidget {
         const SizedBox(height: 16),
         // Full width video cards - taller than normal
         SizedBox(
-          height: 240, // Taller height for video cards
+          height: isDesktop
+              ? _desktopVideoCardWidth(context) * 9 / 16 + 64
+              : 240, // Taller height for video cards
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1105,7 +1130,9 @@ class VideoShelf extends ConsumerWidget {
   ) {
     final l10n = context.l10n;
     final screenWidth = MediaQuery.of(context).size.width;
-    final cardWidth = screenWidth - 48; // Full width with padding
+    final cardWidth = isDesktop
+        ? _desktopVideoCardWidth(context)
+        : screenWidth - 48; // Full width with padding
 
     return GestureDetector(
       onTap: () => onItemTap?.call(item),
@@ -1122,7 +1149,9 @@ class VideoShelf extends ConsumerWidget {
                 children: [
                   SizedBox(
                     width: cardWidth,
-                    height: 180, // 16:9 ratio for video
+                    height: isDesktop
+                        ? cardWidth * 9 / 16
+                        : 180, // 16:9 ratio for video
                     child: item.thumbnailUrl != null
                         ? CachedNetworkImage(
                             imageUrl: item.thumbnailUrl!,
@@ -1293,7 +1322,7 @@ class CommunityShelf extends ConsumerWidget {
         const SizedBox(height: 16),
         // Horizontal carousel of playlists/items
         SizedBox(
-          height: 200,
+          height: _squareCardSize(context, 150) + 50,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1316,7 +1345,7 @@ class CommunityShelf extends ConsumerWidget {
     return GestureDetector(
       onTap: () => onItemTap?.call(item),
       child: Container(
-        width: 150,
+        width: _squareCardSize(context, 150),
         margin: const EdgeInsets.symmetric(horizontal: 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1325,8 +1354,8 @@ class CommunityShelf extends ConsumerWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: SizedBox(
-                width: 150,
-                height: 150,
+                width: _squareCardSize(context, 150),
+                height: _squareCardSize(context, 150),
                 child: item.thumbnailUrl != null
                     ? CachedNetworkImage(
                         imageUrl: item.thumbnailUrl!,
@@ -1476,15 +1505,29 @@ class DailyDiscoverShelf extends ConsumerWidget {
         const SizedBox(height: 16),
         // Large horizontal cards
         SizedBox(
-          height: 325, // Large cards (increased to accommodate explicit badge + multi-line titles)
-          child: PageView.builder(
-            controller: PageController(viewportFraction: 0.85),
-            itemCount: shelf.items.length,
-            itemBuilder: (context, index) {
-              final item = shelf.items[index];
-              return _buildDailyCard(context, item, ref, index);
-            },
-          ),
+          height: isDesktop
+              ? _desktopDailyCardSize(context) + 90
+              : 325, // Large cards (increased to accommodate explicit badge + multi-line titles)
+          child: isDesktop
+              ? ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  itemCount: shelf.items.length,
+                  itemBuilder: (context, index) => _buildDailyCard(
+                    context,
+                    shelf.items[index],
+                    ref,
+                    index,
+                  ),
+                )
+              : PageView.builder(
+                  controller: PageController(viewportFraction: 0.85),
+                  itemCount: shelf.items.length,
+                  itemBuilder: (context, index) {
+                    final item = shelf.items[index];
+                    return _buildDailyCard(context, item, ref, index);
+                  },
+                ),
         ),
       ],
     );
@@ -1499,6 +1542,7 @@ class DailyDiscoverShelf extends ConsumerWidget {
     return GestureDetector(
       onTap: () => onItemTap?.call(item),
       child: Container(
+        width: isDesktop ? _desktopDailyCardSize(context) : null,
         margin: const EdgeInsets.symmetric(horizontal: 6),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1508,7 +1552,7 @@ class DailyDiscoverShelf extends ConsumerWidget {
               borderRadius: BorderRadius.circular(12),
               child: SizedBox(
                 width: double.infinity,
-                height: 240,
+                height: isDesktop ? _desktopDailyCardSize(context) : 240,
                 child: item.thumbnailUrl != null
                     ? CachedNetworkImage(
                         imageUrl: item.thumbnailUrl!,

@@ -40,9 +40,6 @@ class WidgetSyncService {
   /// Artwork found before the state for its song was sent: goes with it.
   static Uint8List? _pendingArt;
 
-  /// Whether [_pendingArt] is a low-res thumbnail (virtual trackId needed).
-  static bool _pendingIsThumbnail = false;
-
   /// How long a new song's state waits for its artwork, so a normal
   /// connection changes the title and cover together.
   @visibleForTesting
@@ -73,11 +70,13 @@ class WidgetSyncService {
 
   /// What the app's own screens already loaded, which needs no network.
   @visibleForTesting
-  static Future<Uint8List?> Function(String url) readCache = _readFromImageCache;
+  static Future<Uint8List?> Function(String url) readCache =
+      _readFromImageCache;
 
   static Future<void> syncPlaybackState(
     player.PlaybackState state, {
     String? statusLabel,
+    String? outputDevice,
     bool isLiked = false,
   }) async {
     final track = state.currentTrack;
@@ -93,7 +92,11 @@ class WidgetSyncService {
     final payload = <String, dynamic>{
       'trackId': track?.id,
       'title': track?.title ?? 'Not playing',
-      'artist': track?.artist ?? 'Open Inzx to start music',
+      'artist': track == null
+          ? 'Open Inzx to start music'
+          : outputDevice == null
+          ? track.artist
+          : '${track.artist} · $outputDevice',
       'isPlaying': state.isPlaying,
       'hasTrack': hasTrack,
       'positionMs': state.position.inMilliseconds,
@@ -102,10 +105,11 @@ class WidgetSyncService {
       'shuffle': state.shuffleEnabled,
     };
     payload['statusLabel'] = statusLabel?.trim() ?? '';
+    if (outputDevice != null) payload['remoteOutput'] = true;
 
     final fingerprint =
         '${_fingerprintFrom(track, state.isPlaying, hasTrack, statusLabel)}'
-        '|$isLiked|${state.shuffleEnabled}';
+        '|$isLiked|${state.shuffleEnabled}|$outputDevice';
     if (_lastFingerprint == fingerprint) return;
     _lastFingerprint = fingerprint;
     final generation = ++_syncGeneration;
@@ -120,26 +124,35 @@ class WidgetSyncService {
     }
 
     final art = _pendingArt;
-    if (art != null) {
-      payload['artBytes'] = art;
-      if (_pendingIsThumbnail) {
-        payload['trackId'] = '${track?.id}_thumb';
-      }
-      _pendingArt = null;
-      _pendingIsThumbnail = false;
-    }
-    _sentTrackId = track?.id;
+    if (art != null) payload['artBytes'] = art;
 
     try {
-      await _channel.invokeMethod('syncPlaybackState', payload);
+      final saved = await _channel.invokeMethod<bool>(
+        'syncPlaybackState',
+        payload,
+      );
+      if (generation != _syncGeneration) return;
+      _sentTrackId = track?.id;
+      final pending = _pendingArt;
+      if (pending == art && saved == true) {
+        _pendingArt = null;
+      } else if (pending != null && track != null) {
+        if (await _deliverArt(track.id, pending) && _pendingArt == pending) {
+          _pendingArt = null;
+        } else if (generation == _syncGeneration && _pendingArt == pending) {
+          _artSearchKey = null;
+        }
+      }
     } catch (_) {
       // Widget sync is best-effort and should never block playback controls.
+      if (generation == _syncGeneration) _lastFingerprint = null;
     }
   }
 
   static void _watchArtwork(Track? track) {
     if (track?.id != _artTrackId) {
       _artTrackId = track?.id;
+      _sentTrackId = null;
       _artSearchKey = null;
       _pendingArt = null;
       _firstAttempt = null;
@@ -176,17 +189,16 @@ class WidgetSyncService {
       final full = await _loadFullCover(track, attempt);
       if (searchId != _artSearchId) return;
       if (full != null) {
-        await _deliverArt(track.id, full);
+        final delivered = await _deliverArt(track.id, full);
         if (!firstAttempt.isCompleted) firstAttempt.complete();
-        return;
+        if (delivered) return;
       }
 
       if (!hasSmall) {
         final small = await _loadSmallCover(track);
         if (searchId != _artSearchId) return;
         if (small != null) {
-          hasSmall = true;
-          await _deliverArt(track.id, small, isThumbnail: true);
+          hasSmall = await _deliverArt(track.id, small);
         }
       }
       if (!firstAttempt.isCompleted) firstAttempt.complete();
@@ -226,23 +238,22 @@ class WidgetSyncService {
     return null;
   }
 
-  static Future<void> _deliverArt(
-    String trackId,
-    Uint8List bytes, {
-    bool isThumbnail = false,
-  }) async {
-    if (trackId != _artTrackId) return;
+  static Future<bool> _deliverArt(String trackId, Uint8List bytes) async {
+    if (trackId != _artTrackId) return false;
     if (_sentTrackId != trackId) {
       _pendingArt = bytes;
-      _pendingIsThumbnail = isThumbnail;
-      return;
+      return true;
     }
     try {
-      await _channel.invokeMethod('syncPlaybackState', <String, dynamic>{
-        'trackId': isThumbnail ? '${trackId}_thumb' : trackId,
+      final saved = await _channel.invokeMethod<bool>('syncPlaybackState', {
+        'trackId': trackId,
+        'artworkOnly': true,
         'artBytes': bytes,
       });
-    } catch (_) {}
+      return saved == true;
+    } catch (_) {
+      return false;
+    }
   }
 
   static String _fingerprintFrom(
@@ -297,6 +308,5 @@ class WidgetSyncService {
     _firstAttempt = null;
     _sentTrackId = null;
     _pendingArt = null;
-    _pendingIsThumbnail = false;
   }
 }

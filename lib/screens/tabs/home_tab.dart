@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/utils/platform_utils.dart';
+import '../widgets/listening_stats_shelf.dart';
+import '../widgets/desktop_track_grid.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../../../../core/design_system/design_system.dart';
@@ -16,6 +19,7 @@ import '../widgets/playlist_screen.dart';
 import '../widgets/podcast_screen.dart';
 import '../widgets/album_screen.dart' hide albumColorsProvider;
 import '../widgets/artist_screen.dart';
+import '../widgets/desktop_shell.dart';
 import '../widgets/now_playing_screen.dart';
 import '../search_screen.dart';
 
@@ -118,6 +122,10 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
 
   /// Navigate to search results screen with a query
   void _performSearch(String query) {
+    if (isDesktop) {
+      DesktopAppFrame.openSearch(context, query: query);
+      return;
+    }
     ref.read(searchQueryProvider.notifier).state = query;
     Navigator.of(
       context,
@@ -283,8 +291,9 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
         onNotification: _handleScrollNotification,
         child: Column(
           children: [
-            // Search bar / topbar with smooth hide/show animation on scroll
-            ClipRect(
+            // Search bar / topbar with smooth hide/show animation on scroll.
+            // Desktop has these in the window's top bar.
+            if (!isDesktop) ClipRect(
               child: SizeTransition(
                 sizeFactor: _headerAnimation,
                 alignment: Alignment.topCenter,
@@ -575,6 +584,12 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
       widgets.add(const SizedBox(height: 24));
     }
 
+    // Your week in music: listening time and top picks, near the top where
+    // it's seen. Hidden until there's a week's listening to show.
+    widgets.add(
+      const ListeningStatsShelf(padding: EdgeInsets.fromLTRB(16, 0, 16, 24)),
+    );
+
     // Render other shelves
     for (final shelf in shelves) {
       // Skip the one we used for welcome
@@ -596,11 +611,13 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
 
       switch (layout) {
         case ShelfLayout.quickPicksStyle:
-          shelfWidget = TrackListShelf(
-            shelf: shelf,
-            isDark: isDark,
-            colorScheme: colorScheme,
-          );
+          shelfWidget = isDesktop
+              ? DesktopTrackGridShelf(shelf: shelf)
+              : TrackListShelf(
+                  shelf: shelf,
+                  isDark: isDark,
+                  colorScheme: colorScheme,
+                );
           break;
 
         case ShelfLayout.videoStyle:
@@ -685,6 +702,8 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
   Widget _buildFallbackShelves(bool isDark, ColorScheme colorScheme) {
     return Column(
       children: [
+        const ListeningStatsShelf(padding: EdgeInsets.fromLTRB(16, 0, 16, 24)),
+
         // Forgotten favorites (horizontal albums)
         _buildForgottenFavorites(isDark, colorScheme),
 
@@ -698,6 +717,7 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
 
   /// Loading state for shelves
   Widget _buildShelvesLoading(bool isDark) {
+    if (isDesktop) return const DesktopHomeSkeleton();
     return Skeletonizer(
       enabled: true,
       enableSwitchAnimation: true,
@@ -1210,7 +1230,11 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: _textColors.tertiary,
+                        // The darkest grey disappears on the coloured
+                        // desktop backdrop.
+                        color: isDesktop
+                            ? _textColors.secondary
+                            : _textColors.tertiary,
                         letterSpacing: 0.5,
                       ),
                     ),
@@ -1226,8 +1250,8 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
                   ],
                 ),
               ),
-              // Jams button - minimalist
-              GestureDetector(
+              // Jams button - minimalist (in the window's top bar on desktop)
+              if (!isDesktop) GestureDetector(
                 onTap: () => JamsScreen.open(context),
                 child: Container(
                   width: 44,
@@ -1256,7 +1280,9 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
 
         // Song cards grid
         if (songs.isNotEmpty)
-          _buildSongCardsGrid(songs, isDark, colorScheme)
+          isDesktop
+              ? DesktopTrackGridShelf(shelf: shelf)
+              : _buildSongCardsGrid(songs, isDark, colorScheme)
         else
           // Fallback if no songs found (e.g. mixed content), show standard carousel
           TrackListShelf(

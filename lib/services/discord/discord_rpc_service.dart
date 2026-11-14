@@ -1,14 +1,22 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
+import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:win32/win32.dart' as win32;
+import '../../core/utils/platform_utils.dart';
 import '../../models/models.dart';
 import 'discord_oauth.dart';
+
+part 'discord_desktop_rpc.dart';
+part 'discord_desktop_ipc.dart';
 
 enum DiscordRpcStatus {
   disconnected,
@@ -66,13 +74,7 @@ class DiscordRpcState {
   }
 }
 
-/// Discord Rich Presence via OAuth2 (Metrolist-style).
-///
-/// Instead of scraping a user token in an embedded WebView (which blocks
-/// passkeys and violates Discord's ToS), the user authorizes through the system
-/// browser and the app receives an OAuth access token with the
-/// `sdk.social_layer_presence` scope. That token drives presence over the
-/// Gateway, exactly like a first-party client.
+/// Discord Rich Presence through local IPC on desktop and OAuth2 on Android.
 class DiscordRpcService {
   static final DiscordRpcService _instance = DiscordRpcService._internal();
   factory DiscordRpcService() => _instance;
@@ -81,6 +83,7 @@ class DiscordRpcService {
   DiscordRpcService._internal();
 
   // Preference keys
+  static const _prefDesktopEnabledKey = 'inzx_discord_rpc_desktop_enabled';
   static const String _prefClearOnPauseKey = 'inzx_discord_rpc_clear_on_pause';
   static const String _prefShowTimestampsKey =
       'inzx_discord_rpc_show_timestamps';
@@ -98,6 +101,8 @@ class DiscordRpcService {
   static const String _gatewayUrl =
       'wss://gateway.discord.gg/?v=10&encoding=json';
   static const String _apiBase = 'https://discord.com/api/v10';
+  static const String _presenceLogoUrl =
+      'https://raw.githubusercontent.com/nirmaleeswar30/Inzx/main/assets/icon/logo_dark.png';
 
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
@@ -108,9 +113,26 @@ class DiscordRpcService {
 
   DiscordRpcState get state => stateNotifier.value;
 
-  /// Discord application (client) ID — the OAuth client_id.
-  String? get clientId => dotenv.env['DISCORD_CLIENT_ID']?.trim();
-  bool get isConfigured => clientId != null && clientId!.isNotEmpty;
+  /// The Inzx application ID used by both IPC and OAuth.
+  String? get clientId =>
+      dotenv.isInitialized ? dotenv.env['DISCORD_CLIENT_ID']?.trim() : null;
+  bool get isConfigured => isDesktop
+      ? _desktopClientId != null
+      : clientId?.isNotEmpty == true;
+
+  static final _clientIdPattern = RegExp(r'^\d+$');
+  String? get _desktopClientId {
+    final id = clientId;
+    return id != null && _clientIdPattern.hasMatch(id) ? id : null;
+  }
+
+  late final _desktop = _DesktopDiscordRpc(
+    onStatus: (status) => stateNotifier.value = DiscordRpcState(status: status),
+    onConnected: _triggerPresenceUpdate,
+  );
+  bool _desktopEnabled = false;
+  bool get desktopEnabled => _desktopEnabled;
+  int? _desktopSeekCount;
 
   // Display preferences
   bool _clearOnPause = true;
@@ -149,13 +171,22 @@ class DiscordRpcService {
   // Resolved external asset cache (source url -> "mp:..." ref)
   final Map<String, String> _assetCache = {};
 
-  /// Restore preferences + tokens and connect if signed in.
+  /// Restore preferences and start the appropriate connection.
   Future<void> init() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       _clearOnPause = prefs.getBool(_prefClearOnPauseKey) ?? true;
       _showTimestamps = prefs.getBool(_prefShowTimestampsKey) ?? true;
       _showAlbumArt = prefs.getBool(_prefShowAlbumArtKey) ?? true;
+
+      if (isDesktop) {
+        final id = _desktopClientId;
+        if (id != null && prefs.getBool(_prefDesktopEnabledKey) == true) {
+          _desktopEnabled = true;
+          _desktop.enable(id);
+        }
+        return;
+      }
 
       final cachedUsername = prefs.getString(_prefCachedUsernameKey);
       final cachedGlobalName = prefs.getString(_prefCachedGlobalNameKey);
@@ -185,6 +216,22 @@ class DiscordRpcService {
     } catch (e) {
       _debug('init error: $e');
     }
+  }
+
+  Future<void> setDesktopEnabled(bool enabled) async {
+    final id = _desktopClientId;
+    if (!isDesktop || id == null || enabled == _desktopEnabled) {
+      return;
+    }
+    _desktopEnabled = enabled;
+    if (enabled) {
+      _desktop.enable(id);
+    } else {
+      _presenceDebounceTimer?.cancel();
+      _desktop.disable();
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_prefDesktopEnabledKey, _desktopEnabled);
   }
 
   /// Start the browser OAuth flow, then connect. Returns true on success.
@@ -576,17 +623,29 @@ class DiscordRpcService {
     bool isPlaying = false,
     Duration position = Duration.zero,
     Duration? duration,
+    int? seekCount,
   }) {
     final trackChanged = _currentTrack?.id != track?.id;
     final playStateChanged = _isPlaying != isPlaying;
+    final effectiveDuration = isDesktop && duration == Duration.zero
+        ? track?.duration
+        : duration ?? track?.duration;
+    final desktopActivityChanged =
+        isDesktop &&
+        (!identical(_currentTrack, track) ||
+            _currentDuration != effectiveDuration ||
+            (seekCount != null && seekCount != _desktopSeekCount));
+    if (seekCount != null) _desktopSeekCount = seekCount;
 
     _currentTrack = track;
     _isPlaying = isPlaying;
     _currentPosition = position;
-    _currentDuration = duration ?? track?.duration;
+    _currentDuration = effectiveDuration;
 
     if (state.status != DiscordRpcStatus.connected) return;
-    if (trackChanged || playStateChanged) _triggerPresenceUpdate();
+    if (trackChanged || playStateChanged || desktopActivityChanged) {
+      _triggerPresenceUpdate();
+    }
   }
 
   void _triggerPresenceUpdate() {
@@ -596,6 +655,10 @@ class DiscordRpcService {
   }
 
   Future<void> _sendPresenceUpdate() async {
+    if (isDesktop) {
+      if (_desktopEnabled) _desktop.publish(_buildDesktopActivity);
+      return;
+    }
     if (_webSocket == null || _webSocket!.readyState != WebSocket.open) return;
 
     final activities = await _buildActivityPayload();
@@ -613,6 +676,47 @@ class DiscordRpcService {
     } catch (e) {
       _debug('Error sending presence: $e');
     }
+  }
+
+  Map<String, Object?>? _buildDesktopActivity() {
+    final track = _currentTrack;
+    if (track == null || (!_isPlaying && _clearOnPause)) return null;
+
+    Map<String, int>? timestamps;
+    if (_isPlaying && _showTimestamps) {
+      final start =
+          DateTime.now().millisecondsSinceEpoch -
+          _currentPosition.inMilliseconds;
+      final duration = _currentDuration ?? track.duration;
+      timestamps = {
+        'start': start ~/ 1000,
+        if (duration > Duration.zero)
+          'end': (start + duration.inMilliseconds) ~/ 1000,
+      };
+    }
+
+    final artwork = _showAlbumArt ? track.systemArtworkUrl : null;
+    final uri = artwork == null ? null : Uri.tryParse(artwork);
+    return {
+      'type': 2, // Listening
+      'details': _activityText(track.title, 'Unknown Track'),
+      'state': _activityText(track.artist, 'Inzx Music'),
+      if (timestamps != null) 'timestamps': timestamps,
+      if (uri != null &&
+          uri.host.isNotEmpty &&
+          (uri.scheme == 'https' || uri.scheme == 'http'))
+        'assets': {
+          'large_image': artwork,
+          'large_text': _activityText(track.album ?? '', track.title),
+          'small_image': _presenceLogoUrl,
+          'small_text': 'Inzx Music',
+        },
+    };
+  }
+
+  String _activityText(String value, String fallback) {
+    final text = value.trim();
+    return String.fromCharCodes((text.isEmpty ? fallback : text).runes.take(128));
   }
 
   Future<List<Map<String, dynamic>>> _buildActivityPayload() async {
@@ -662,9 +766,7 @@ class DiscordRpcService {
                 : track.title;
       }
     }
-    final small = await _resolveAsset(
-      'https://raw.githubusercontent.com/nirmaleeswar30/Inzx/main/assets/icon/logo_dark.png',
-    );
+    final small = await _resolveAsset(_presenceLogoUrl);
     if (small != null) {
       assets['small_image'] = small;
       assets['small_text'] = 'Inzx Music';

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iconsax/iconsax.dart';
 
+import '../../core/utils/platform_utils.dart';
+
 /// Glassmorphic modal sheet to pick a custom accent color using a color wheel, sliders, and HEX input.
 class ColorPickerDialog extends StatefulWidget {
   final Color initialColor;
@@ -121,10 +123,11 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(28),
           child: BackdropFilter(
+            enabled: !isDesktop,
             filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
             child: Container(
               decoration: BoxDecoration(
-                color: sheetBg,
+                color: modalSheetBackground(context, sheetBg),
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(
                   color: borderColor,

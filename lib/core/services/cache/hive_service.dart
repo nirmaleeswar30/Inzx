@@ -1,5 +1,6 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:inzx/core/services/cache/cache_config.dart';
+import 'package:inzx/core/utils/platform_utils.dart';
 import 'package:inzx/data/entities/cache_metadata_entity.dart';
 import 'package:inzx/data/entities/download_entity.dart';
 import 'package:inzx/data/entities/playback_entity.dart';
@@ -50,6 +51,7 @@ class HiveService {
   static Future<void> init() async {
     // Initialize Hive with Flutter support
     await Hive.initFlutter();
+    if (isDesktop) Hive.init((await appDataDirectory()).path);
 
     // Register adapters
     if (!Hive.isAdapterRegistered(1)) {

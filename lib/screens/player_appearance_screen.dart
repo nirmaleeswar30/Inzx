@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/utils/platform_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/design_system/design_system.dart';
@@ -59,7 +60,7 @@ class _PlayerAppearanceScreenState
     final l10n = context.l10n;
 
     return Scaffold(
-      backgroundColor: _backgroundColor,
+      backgroundColor: desktopPageBackground(_backgroundColor),
       appBar: AppBar(
         title: Text(l10n.playerAndNowPlaying),
         backgroundColor: Colors.transparent,

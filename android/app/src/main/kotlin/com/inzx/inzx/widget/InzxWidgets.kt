@@ -67,6 +67,7 @@ object InzxWidgets {
     const val KEY_IS_PLAYING = "is_playing"
     const val KEY_IS_LIKED = "is_liked"
     const val KEY_SHUFFLE = "shuffle"
+    const val KEY_REMOTE_OUTPUT = "remote_output"
     private const val KEY_TRACK_ID = "track_id"
     private const val KEY_TITLE = "title"
     private const val KEY_ARTIST = "artist"
@@ -85,11 +86,13 @@ object InzxWidgets {
 
     // ── State ────────────────────────────────────────────────────────────
 
-    fun saveState(context: Context, args: Map<*, *>) {
+    fun saveState(context: Context, args: Map<*, *>): Boolean {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val editor = prefs.edit()
         val previousTrackId = prefs.getString(KEY_TRACK_ID, null)
         val incomingTrackId = args["trackId"] as? String
+        val artworkOnly = args["artworkOnly"] == true
+        if (artworkOnly && incomingTrackId != previousTrackId) return false
         if (args.containsKey("trackId") && incomingTrackId != previousTrackId) {
             prefs.getString(KEY_ARTWORK_PATH, null)?.let { runCatching { File(it).delete() } }
             editor.remove(KEY_ARTWORK_PATH)
@@ -102,11 +105,19 @@ object InzxWidgets {
         (args["hasTrack"] as? Boolean)?.let { editor.putBoolean(KEY_HAS_TRACK, it) }
         (args["isLiked"] as? Boolean)?.let { editor.putBoolean(KEY_IS_LIKED, it) }
         (args["shuffle"] as? Boolean)?.let { editor.putBoolean(KEY_SHUFFLE, it) }
-        (args["artBytes"] as? ByteArray)?.takeIf { it.isNotEmpty() }?.let { bytes ->
-            saveArtwork(context, incomingTrackId ?: previousTrackId ?: "current", bytes)
-                ?.let { editor.putString(KEY_ARTWORK_PATH, it) }
+        if (!artworkOnly) {
+            editor.putBoolean(KEY_REMOTE_OUTPUT, args["remoteOutput"] == true)
+        }
+        val bytes = args["artBytes"] as? ByteArray
+        val artworkPath = bytes?.let {
+            saveArtwork(context, incomingTrackId ?: previousTrackId ?: "current", it)
+        }
+        if (artworkPath != null) {
+            editor.putString(KEY_ARTWORK_PATH, artworkPath)
+            InzxWidgetArt.clear()
         }
         editor.apply()
+        return bytes == null || artworkPath != null
     }
 
     private fun saveArtwork(context: Context, trackId: String, bytes: ByteArray): String? = runCatching {

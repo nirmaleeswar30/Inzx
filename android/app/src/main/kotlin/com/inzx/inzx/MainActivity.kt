@@ -13,6 +13,7 @@ import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import com.nirmal.inzx.audio.InzxAudioOutput
 import com.nirmal.inzx.automix.AutomixBridge
+import com.nirmal.inzx.connect.ConnectForegroundService
 import com.nirmal.inzx.jams.JamsForegroundService
 import com.nirmal.inzx.share.ShareBridge
 import com.nirmal.inzx.widget.InzxWidgets
@@ -37,6 +38,8 @@ class MainActivity : AudioServiceFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        ConnectForegroundService.attach(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
 
         // Automix analysis (BitChord's engine) <-> Dart.
         AutomixBridge.attach(this, flutterEngine.dartExecutor.binaryMessenger)
@@ -365,11 +368,9 @@ class MainActivity : AudioServiceFragmentActivity() {
                 "syncPlaybackState" -> {
                     try {
                         val args = call.arguments as? Map<*, *>
-                        if (args != null) {
-                            InzxWidgets.saveState(this, args)
-                        }
+                        val saved = args != null && InzxWidgets.saveState(this, args)
                         InzxWidgets.updateAll(this)
-                        result.success(true)
+                        result.success(saved)
                     } catch (e: Exception) {
                         result.error("WIDGET_SYNC_ERROR", e.message, null)
                     }

@@ -113,8 +113,8 @@ a{color:inherit}
 .prose ul,.prose ol{margin:0 0 1.2em;padding-left:1.3em}
 .prose li{margin:.3em 0}
 .prose li::marker{color:var(--amber)}
-.prose a{color:var(--ink);text-decoration:underline;text-decoration-color:rgba(255,74,54,.5);text-underline-offset:3px}
-.prose a:hover{text-decoration-color:var(--amber)}
+.prose a:not(.btn){color:var(--ink);text-decoration:underline;text-decoration-color:rgba(255,74,54,.5);text-underline-offset:3px}
+.prose a:not(.btn):hover{text-decoration-color:var(--amber)}
 .prose strong{color:var(--ink)}
 .prose code{font-family:var(--font-m);font-size:.88em;background:var(--surface-2);border:1px solid var(--line);
   border-radius:6px;padding:.1em .4em}

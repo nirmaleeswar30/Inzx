@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/utils/platform_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/design_system/design_system.dart';
@@ -283,9 +284,9 @@ class BrowseMoodsScreen extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: isDark
+      backgroundColor: desktopPageBackground(isDark
           ? InzxColors.darkBackground
-          : InzxColors.background,
+          : InzxColors.background),
       appBar: AppBar(
         title: Text(context.l10n.browseMoodsGenresTitle),
         backgroundColor: Colors.transparent,
@@ -497,9 +498,9 @@ class MoodPlaylistsScreen extends ConsumerWidget {
     final playerService = ref.watch(audioPlayerServiceProvider);
 
     return Scaffold(
-      backgroundColor: isDark
+      backgroundColor: desktopPageBackground(isDark
           ? InzxColors.darkBackground
-          : InzxColors.background,
+          : InzxColors.background),
       appBar: AppBar(
         title: Text(_localizedMoodItemTitle(context, mood.key)),
         backgroundColor: Colors.transparent,
@@ -516,8 +517,8 @@ class MoodPlaylistsScreen extends ConsumerWidget {
             )
           : GridView.builder(
               padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: desktopGridColumns(context),
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
                 childAspectRatio: 0.85,

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:path_provider/path_provider.dart';
+
+import '../../core/utils/platform_utils.dart';
 
 /// Simple file logger for Jams debugging
 class JamsLogger {
@@ -20,7 +21,7 @@ class JamsLogger {
     if (_initialized) return;
 
     try {
-      final dir = await getApplicationDocumentsDirectory();
+      final dir = await appDataDirectory();
       final logsDir = Directory('${dir.path}/logs');
       if (!await logsDir.exists()) {
         await logsDir.create(recursive: true);

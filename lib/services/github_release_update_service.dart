@@ -5,6 +5,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../core/utils/platform_utils.dart';
+
 class GithubReleaseInfo {
   const GithubReleaseInfo({
     required this.latestVersion,
@@ -150,6 +152,36 @@ class GithubReleaseUpdateService {
     }
   }
 
+  /// The latest release as GitHub returns it (tag, notes, assets with their
+  /// sizes and digests), or null. The desktop updater picks its installer
+  /// from the assets.
+  Future<Map<String, dynamic>?> fetchLatestReleaseJson() async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse(_latestReleaseApi),
+            headers: const {
+              'Accept': 'application/vnd.github+json',
+              'X-GitHub-Api-Version': '2022-11-28',
+              'User-Agent': 'Inzx-App-Update-Checker',
+            },
+          )
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode != 200) return null;
+      final decoded = jsonDecode(response.body);
+      return decoded is Map<String, dynamic> ? decoded : null;
+    } catch (e) {
+      if (kDebugMode) print('GitHubRelease: fetchLatestReleaseJson failed: $e');
+      return null;
+    }
+  }
+
+  /// [value] without a leading v or any -suffix / +build, e.g. "1.6.0".
+  String normalizeVersion(String value) => _normalizeVersion(value);
+
+  /// Positive when [a] is newer than [b] (numeric, dot-separated).
+  int compareVersions(String a, String b) => _compareSemver(a, b);
+
   String _normalizeVersion(String value) {
     var v = value.trim();
     if (v.isEmpty) return '';
@@ -184,7 +216,8 @@ class GithubReleaseUpdateService {
   }
 
   String? _pickInzxApkDownloadUrl(dynamic assetsRaw) {
-    if (assetsRaw is! List) return null;
+    // Desktop users get the release page, not an APK.
+    if (assetsRaw is! List || isDesktop) return null;
 
     for (final item in assetsRaw) {
       if (item is! Map<String, dynamic>) continue;

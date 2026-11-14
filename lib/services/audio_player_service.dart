@@ -1,10 +1,13 @@
 import 'package:flutter/foundation.dart' show debugPrint, kDebugMode, kIsWeb;
 import 'dart:async';
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_media_kit/just_audio_media_kit.dart' show JustAudioMediaKit;
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,6 +17,11 @@ import 'playback/playback.dart';
 import 'jiosaavn/jiosaavn_service.dart';
 import 'addons/addon_service.dart';
 import 'automix/automix_service.dart';
+import 'automix/desktop/desktop_automix_engine.dart';
+import 'desktop/desktop_audio_dsp.dart';
+import 'desktop/desktop_loudness.dart';
+import 'automix/desktop/loop_mix.dart' show LoopLyricLine;
+import '../core/utils/platform_utils.dart' show isDesktop;
 import 'ytmusic_api_service.dart';
 import 'ytmusic_auth_service.dart';
 import 'queue_persistence_service.dart';
@@ -27,6 +35,8 @@ import '../data/entities/download_entity.dart';
 import '../data/entities/track_entity.dart';
 import 'audio_routing_service.dart';
 
+part 'audio_player_service_desktop_automix.dart';
+
 /// Key for persisting streaming quality preference
 const String kStreamingQualityKey = 'streaming_quality';
 const String kStreamCacheWifiOnlyKey = 'stream_cache_wifi_only';
@@ -35,6 +45,7 @@ const String kStreamCacheMaxConcurrentKey = 'stream_cache_max_concurrent';
 const String kCrossfadeDurationMsKey = 'crossfade_duration_ms';
 const String kShowNerdStatsKey = 'show_nerd_stats';
 const String kJioSaavnEnabledKey = 'jiosaavn_enabled';
+const String kMasterVolumeKey = 'desktop_master_volume';
 const int kDefaultStreamCacheSizeLimitMb = 1024;
 const int kMinStreamCacheSizeLimitMb = 128;
 const int kMaxStreamCacheSizeLimitMb = 4096;
@@ -296,6 +307,11 @@ class AudioPlayerService {
     unawaited(AutomixService.instance.load());
     AutomixService.instance.fetchAudio = fetchAnalysisAudio;
     _wireAutomixEngine();
+    // Desktop renders its blends in Dart; it drives these two players.
+    if (isDesktop) {
+      unawaited(AutomixService.instance.attachDesktopHost(_DesktopAutomixHost(this)));
+      _attachDesktopLoudness();
+    }
     unawaited(_watchNetworkType());
     // Load persisted queue from previous session
     _loadPersistedQueue();
@@ -380,6 +396,7 @@ class AudioPlayerService {
       0; // Incremented on every queue change to force UI updates
   int _currentIndex = -1;
   bool _shuffleEnabled = false;
+  double _masterVolume = 1.0;
   LoopMode _loopMode = LoopMode.off;
   Track? _currentTrack;
   PlaybackData? _currentPlaybackData;
@@ -509,6 +526,9 @@ class AudioPlayerService {
         );
       }
 
+      _masterVolume = prefs.getDouble(kMasterVolumeKey) ?? 1.0;
+      unawaited(_player.setVolume(_masterVolume));
+
       _updateState(
         streamCacheWifiOnly: _streamCacheWifiOnly,
         streamCacheSizeLimitMb: _streamCacheSizeLimitMb,
@@ -525,6 +545,19 @@ class AudioPlayerService {
     }
   }
 
+  /// The app's own volume, 0..1, for the desktop player bar. Crossfades scale
+  /// against it. Phones use the system volume, so it stays at 1 there.
+  double get masterVolume => _masterVolume;
+
+  Future<void> setMasterVolume(double volume, {bool persist = true}) async {
+    _masterVolume = volume.clamp(0.0, 1.0);
+    await _player.setVolume(_masterVolume);
+    if (persist) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble(kMasterVolumeKey, _masterVolume);
+    }
+  }
+
   bool get streamCacheWifiOnly => _streamCacheWifiOnly;
   int get streamCacheSizeLimitMb => _streamCacheSizeLimitMb;
   int get streamCacheMaxConcurrent => _streamCacheMaxConcurrent;
@@ -536,8 +569,8 @@ class AudioPlayerService {
     try {
       if (_crossfadeDurationMs <= 0) {
         _crossfadeTriggeredForTrack = false;
-        await _player.setVolume(1.0);
-        await _inactivePlayer.setVolume(1.0);
+        await _player.setVolume(_masterVolume);
+        await _inactivePlayer.setVolume(_masterVolume);
       }
       if (kDebugMode) {
         print(
@@ -685,6 +718,10 @@ class AudioPlayerService {
   Duration get _crossfadeDuration =>
       Duration(milliseconds: _crossfadeDurationMs);
 
+  /// Desktop bit-perfect output holds the device for one stream, so tracks
+  /// change without overlapping.
+  bool get _exclusiveOutput => isDesktop && DesktopAudioDsp.instance.exclusive;
+
   Future<void> _setVolumeSafely(
     AudioPlayer player,
     double volume, {
@@ -692,7 +729,7 @@ class AudioPlayerService {
   }) async {
     try {
       await player
-          .setVolume(volume)
+          .setVolume(volume * _masterVolume)
           .timeout(const Duration(milliseconds: 1200));
     } catch (e) {
       if (kDebugMode) {
@@ -1004,12 +1041,21 @@ class AudioPlayerService {
     return null;
   }
 
-  Future<void> _crossfadeToIndex(int targetIndex) async {
+  /// Fades from the song playing into queue entry [targetIndex]. [startAt]
+  /// starts the incoming song partway in, and [fade] overrides the crossfade
+  /// setting (Inzx Connect follows its leader's transition with these).
+  Future<void> _crossfadeToIndex(
+    int targetIndex, {
+    Duration? startAt,
+    Duration? fade,
+  }) async {
     if (_isCrossfading) return;
-    if (_crossfadeDurationMs <= 0) {
+    final fadeDuration = fade ?? _crossfadeDuration;
+    if (fadeDuration <= Duration.zero || _exclusiveOutput) {
       _currentIndex = targetIndex;
       _currentTrack = _queue[targetIndex];
       await _loadAndPlayCurrent();
+      if (startAt != null && startAt > Duration.zero) await _player.seek(startAt);
       return;
     }
     if (targetIndex < 0 || targetIndex >= _queue.length) return;
@@ -1033,7 +1079,11 @@ class AudioPlayerService {
       await incomingPlayer.stop();
       await incomingPlayer.setLoopMode(_nativeLoopModeFor(_loopMode));
       await incomingPlayer.setSpeed(outgoingPlayer.speed);
-      await incomingPlayer.setAudioSource(built.source, preload: true);
+      await incomingPlayer.setAudioSource(
+        built.source,
+        initialPosition: startAt,
+        preload: true,
+      );
       await _setVolumeSafely(
         incomingPlayer,
         0.12,
@@ -1114,13 +1164,13 @@ class AudioPlayerService {
       await Future.delayed(const Duration(milliseconds: 90));
       if (kDebugMode) {
         print(
-          'AudioPlayerService: Crossfade started $sourceTrackId -> ${targetTrack.id} (${_crossfadeDurationMs}ms)',
+          'AudioPlayerService: Crossfade started $sourceTrackId -> ${targetTrack.id} (${fadeDuration.inMilliseconds}ms)',
         );
       }
       await _runOverlapFade(
         outgoing: outgoingPlayer,
         incoming: incomingPlayer,
-        duration: _crossfadeDuration,
+        duration: fadeDuration,
       );
 
       await outgoingPlayer.stop();
@@ -1171,9 +1221,13 @@ class AudioPlayerService {
 
   void _maybeTriggerAutoCrossfade(Duration currentPosition) {
     if (_jamsModeEnabled) return;
+    // Playing in sync with a Connect leader: the leader's transition is the
+    // cue (see [connectFadeTo]). Fading here as well raced it, and the
+    // leader's next song then reloaded over this fade mid-way.
+    if (followsConnectLeader) return;
     // With Automix on, the engine plans and runs every transition.
     if (_automixOn) return;
-    if (_crossfadeDurationMs <= 0) return;
+    if (_crossfadeDurationMs <= 0 || _exclusiveOutput) return;
     if (_isCrossfading) return;
     if (_crossfadeTriggeredForTrack) return;
     if (_loopMode == LoopMode.one) return;
@@ -2349,6 +2403,33 @@ class AudioPlayerService {
 
   int _seekCount = 0;
 
+  /// When set, transport commands are handled by the Connect group leader.
+  Future<void> Function(Map<String, dynamic>)? connectTransport;
+  bool followsConnectLeader = false;
+
+  /// Whether a crossfade or Automix blend is running: the playhead belongs
+  /// to two songs for a moment, so Connect doesn't correct drift then.
+  bool get isTransitioning => _isCrossfading || _automixMixing;
+
+  /// Inzx Connect, following a leader: the leader has moved on to queue
+  /// entry [index] (its crossfade, or an Automix blend's handoff). Fades into
+  /// it here too, starting where the leader is, instead of reloading it, which
+  /// cut the song off. False when that isn't possible (nothing playing here,
+  /// the queue doesn't line up, a transition already running), and the
+  /// caller loads it the ordinary way.
+  Future<bool> connectFadeTo(int index, Duration startAt) async {
+    if (index < 0 || index >= _queue.length) return false;
+    if (index == _currentIndex || isTransitioning) return false;
+    if (!_player.playing || _currentTrack == null) return false;
+    // At least a short fade, even with crossfade off here: a hard cut from
+    // the middle of the old song is the click this replaces.
+    final fade = _crossfadeDurationMs >= 1500
+        ? _crossfadeDuration
+        : const Duration(milliseconds: 1500);
+    await _crossfadeToIndex(index, startAt: startAt, fade: fade);
+    return true;
+  }
+
   /// The active player's latest reading of the playhead, dated by when the
   /// native player took it — what the lyrics clock steers by (see
   /// LyricClock). Read every frame rather than streamed, so it follows the
@@ -2434,6 +2515,7 @@ class AudioPlayerService {
 
     player.playerStateStream.listen((playerState) {
       if (!identical(player, _player)) return;
+      if (_automixClipActive) return;
       _watchForStall(playerState);
       _updateState(
         isPlaying: playerState.playing,
@@ -2507,6 +2589,7 @@ class AudioPlayerService {
 
     player.positionStream.listen((position) {
       if (!identical(player, _player)) return;
+      if (_automixClipActive) return;
 
       // Avoid overwriting restored position while idle.
       if (player.processingState == ProcessingState.idle &&
@@ -2543,6 +2626,7 @@ class AudioPlayerService {
 
     player.durationStream.listen((duration) {
       if (!identical(player, _player)) return;
+      if (_automixClipActive) return;
       final isLive = _currentPlaybackData?.isLive == true;
       final didUpdateDuration =
           duration != null && _applyDurationToCurrentTrack(duration);
@@ -2573,7 +2657,7 @@ class AudioPlayerService {
 
   void _init() {
     _player = _primaryPlayer;
-    unawaited(_player.setVolume(1.0));
+    unawaited(_player.setVolume(_masterVolume));
     unawaited(_applyCrossfadeDurationToPlayer());
     _bindPlayerEventStreams(_primaryPlayer);
     _bindPlayerEventStreams(_secondaryPlayer);
@@ -3203,6 +3287,9 @@ class AudioPlayerService {
   Future<void> playQueue(
     List<Track> tracks, {
     int startIndex = 0,
+    Duration? startPosition,
+    bool startPaused = false,
+    bool fromConnect = false,
     bool isRadioQueue = false,
     String? sourceId,
     String? sourceTitle,
@@ -3213,10 +3300,25 @@ class AudioPlayerService {
       );
     }
     if (tracks.isEmpty) return;
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) {
+      return transport({
+        'action': 'group_queue',
+        'tracks': tracks
+            .skip(startIndex.clamp(0, tracks.length - 1))
+            .take(100)
+            .map((track) => track.toJson())
+            .toList(),
+        'index': 0,
+        'position_ms': startPosition?.inMilliseconds ?? 0,
+      });
+    }
+    _holdPlayback = startPaused;
+    if (startPaused) await pause(fromConnect: true);
 
     // Disable radio mode when playing from a playlist/album (unless it's a radio queue extension)
     if (!isRadioQueue) {
-      _isRadioMode = tracks.length == 1; // Only enable radio for single tracks
+      _isRadioMode = tracks.length == 1 && !followsConnectLeader;
       _radioSourceTrackId = tracks.length == 1 ? tracks.first.id : null;
       if (kDebugMode) {
         print(
@@ -3230,11 +3332,15 @@ class AudioPlayerService {
     _queueSourceTitle = isRadioQueue ? _queueSourceTitle : sourceTitle;
 
     _originalQueue = List.from(tracks);
-    _queue = _shuffleEnabled
+    _queue = _shuffleEnabled && !followsConnectLeader
         ? _shuffleList(tracks, startIndex)
         : List.from(tracks);
-    _currentIndex = _shuffleEnabled ? 0 : startIndex;
+    _currentIndex = _shuffleEnabled && !followsConnectLeader ? 0 : startIndex;
     _currentTrack = _queue[_currentIndex];
+    if (startPosition != null) {
+      _pendingSeekPosition = startPosition;
+      _pendingSeekTrackId = _currentTrack!.id;
+    }
     _queueRevision++; // Force update
 
     // IMPORTANT: Update state with queue immediately so UI shows queue
@@ -3324,6 +3430,13 @@ class AudioPlayerService {
 
   /// Add tracks to the end of the queue
   void addToQueue(List<Track> tracks) {
+    if (followsConnectLeader) {
+      unawaited(connectTransport!({
+        'action': 'queue_add',
+        'tracks': tracks.take(100).map((track) => track.toJson()).toList(),
+      }));
+      return;
+    }
     _queue.addAll(tracks);
     _originalQueue.addAll(tracks);
     _queueRevision++;
@@ -3351,6 +3464,13 @@ class AudioPlayerService {
 
   /// Insert track to play next
   void playNext(Track track) {
+    if (followsConnectLeader) {
+      unawaited(connectTransport!({
+        'action': 'queue_next',
+        'tracks': [track.toJson()],
+      }));
+      return;
+    }
     if (_currentIndex >= 0 && _currentIndex < _queue.length - 1) {
       _queue.insert(_currentIndex + 1, track);
       _originalQueue.insert(_currentIndex + 1, track);
@@ -3377,6 +3497,14 @@ class AudioPlayerService {
   /// Remove track from queue
   void removeFromQueue(int index) {
     if (index < 0 || index >= _queue.length) return;
+    if (followsConnectLeader) {
+      unawaited(connectTransport!({
+        'action': 'queue_remove',
+        'index': index,
+        'track_id': _queue[index].id,
+      }));
+      return;
+    }
 
     final track = _queue[index];
     _queue.removeAt(index);
@@ -3408,6 +3536,15 @@ class AudioPlayerService {
     if (oldIndex < 0 || oldIndex >= _queue.length) return;
     if (newIndex < 0 || newIndex >= _queue.length) return;
     if (oldIndex == newIndex) return;
+    if (followsConnectLeader) {
+      unawaited(connectTransport!({
+        'action': 'queue_reorder',
+        'index': oldIndex,
+        'track_id': _queue[oldIndex].id,
+        'to': newIndex,
+      }));
+      return;
+    }
 
     final track = _queue.removeAt(oldIndex);
     _queue.insert(newIndex, track);
@@ -3431,17 +3568,28 @@ class AudioPlayerService {
   }
 
   /// Jump to specific index in queue
-  void skipToIndex(int index) {
+  void skipToIndex(int index, {bool fromConnect = false}) {
     if (index < 0 || index >= _queue.length) return;
     if (index == _currentIndex) return;
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) {
+      unawaited(transport({'action': 'skip_to', 'track_id': _queue[index].id}));
+      return;
+    }
 
     _currentIndex = index;
+    _holdPlayback = false;
     _currentTrack = _queue[index];
     unawaited(_loadAndPlayCurrent());
   }
 
   /// Clear the queue
-  void clearQueue() {
+  void clearQueue({bool fromConnect = false}) {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) {
+      unawaited(transport({'action': 'queue_clear'}));
+      return;
+    }
     unawaited(_sendYoutubeWatchtime(state: 'paused', force: true));
     _stopYoutubeWatchtimeTimer();
     _queue.clear();
@@ -3455,7 +3603,7 @@ class AudioPlayerService {
     _isCrossfading = false;
     _crossfadeTriggeredForTrack = false;
     _isRadioMode = false;
-    stop();
+    stop(fromConnect: fromConnect);
     _queueRevision++;
     _updateState(
       queue: _queue,
@@ -3507,6 +3655,9 @@ class AudioPlayerService {
                 // Ensure it's roughly the same song length (prevent swapping with extended remixes)
                 if (diff <= 30) {
                   if (kDebugMode) print('AudioPlayerService: Swapped ${t.id} for ${best.id}');
+                  if (_pendingSeekTrackId == t.id) {
+                    _pendingSeekTrackId = best.id;
+                  }
                   _currentTrack = best.copyWith(setVideoId: t.setVideoId);
                   _queue[_currentIndex] = _currentTrack!;
                   
@@ -3526,6 +3677,7 @@ class AudioPlayerService {
 
     final trackForLyrics = _currentTrack!;
     _currentPlaybackData = null;
+    _failedDesktopLosslessUrl = null;
     if (_pendingSeekTrackId != null &&
         _pendingSeekTrackId != _currentTrack!.id) {
       _pendingSeekPosition = null;
@@ -3558,7 +3710,7 @@ class AudioPlayerService {
       final trackId = _currentTrack!.id;
       final stopwatch = Stopwatch()..start();
       await _inactivePlayer.stop();
-      await _player.setVolume(1.0);
+      await _player.setVolume(_masterVolume);
 
       if (kDebugMode) {
         print(
@@ -3637,7 +3789,7 @@ class AudioPlayerService {
                 _pendingSeekPosition = null;
                 _pendingSeekTrackId = null;
               }
-              _player.play();
+              _startPlayback();
               _updateState(
                 isLoading: false,
                 currentPlaybackData: localPlaybackData,
@@ -3663,20 +3815,32 @@ class AudioPlayerService {
         }
       }
 
-      // 0. A lossless copy already resolved (prefetched while the previous
-      // track played) starts straight away; otherwise the track starts on
-      // whatever answers first and is upgraded once lossless turns up.
+      // Give the desktop add-on a short window to finish a cold lookup
+      // before starting on a lossy stream.
       if (_startsOnLossless) {
-        final cachedLossless = AddonService.instance.cachedFor(_currentTrack!);
-        if (cachedLossless != null) {
+        final addons = AddonService.instance;
+        var lossless = addons.cachedFor(trackForLyrics);
+        if (lossless == null && isDesktop && addons.isEnabled) {
+          lossless = await addons.matchFor(trackForLyrics).timeout(
+            const Duration(seconds: 3),
+            onTimeout: () => null,
+          );
+          if (_currentTrack?.id != trackId) return;
+        }
+        if (lossless != null && _startsOnLossless) {
           try {
             await _playAddonStream(
-              cachedLossless,
-              _currentTrack!,
+              lossless,
+              trackForLyrics,
               resolveTimeMs: stopwatch.elapsedMilliseconds,
             );
             return;
           } catch (e) {
+            if (isDesktop &&
+                (e is PlayerInterruptedException ||
+                    _currentTrack?.id != trackId)) {
+              return;
+            }
             if (kDebugMode) {
               print('AudioPlayerService: Lossless start failed, falling back: $e');
             }
@@ -3813,7 +3977,9 @@ class AudioPlayerService {
             final lossless = await AddonService.instance
                 .matchFor(_currentTrack!)
                 .timeout(const Duration(seconds: 8));
-            if (lossless != null && _currentTrack?.id == trackId) {
+            if (lossless != null &&
+                lossless.stream.url != _failedDesktopLosslessUrl &&
+                _currentTrack?.id == trackId) {
               _logLossless('YouTube failed; playing the lossless copy instead');
               await _playAddonStream(
                 lossless,
@@ -3989,7 +4155,7 @@ class AudioPlayerService {
         unawaited(_upgradeToLosslessIfPossible(_currentTrack!));
       }
     } catch (e) {
-      unawaited(_player.setVolume(1.0));
+      unawaited(_player.setVolume(_masterVolume));
       if (kDebugMode) {
         print('AudioPlayerService: Error: $e');
       }
@@ -4433,7 +4599,18 @@ class AudioPlayerService {
   int _automixIncomingIndex = -1;
   bool _automixSyncScheduled = false;
 
-  bool get _automixOn => AutomixService.instance.enabled && !_jamsModeEnabled;
+  bool get _automixOn =>
+      AutomixService.instance.enabled && !_jamsModeEnabled && !followsConnectLeader;
+
+  /// Desktop: a rendered blend is playing on Automix's own player, and the
+  /// UI follows it rather than either of these two (see
+  /// audio_player_service_desktop_automix.dart).
+  bool _automixClipActive = false;
+  bool _automixClipPlaying = false;
+  DateTime? _automixClipStateAt;
+
+  /// The listener's own playback speed, under any Automix stretch.
+  double _listenerSpeed = 1.0;
 
   AudioPlayer _playerById(String id) =>
       _primaryPlayer.playerId == id ? _primaryPlayer : _secondaryPlayer;
@@ -4468,6 +4645,7 @@ class AudioPlayerService {
       final db = _ytPlayerUtils.loudnessDbFor(t.id);
       if (db != null) loudness[t.id] = db;
     }
+    if (isDesktop) DesktopLoudness.instance.update(loudness);
     unawaited(
       AutomixService.instance.sync(
         primary: _primaryPlayer.playerId,
@@ -4627,6 +4805,7 @@ class AudioPlayerService {
   /// Opus while the ones after it (already playing → instant return)
   /// upgraded.
   void _startPlayback() {
+    if (_holdPlayback) return;
     unawaited(
       _player.play().catchError((Object e) {
         if (kDebugMode) print('AudioPlayerService: play() failed: $e');
@@ -4660,10 +4839,18 @@ class AudioPlayerService {
   }
 
   AudioSource _addonAudioSource(AddonMatch match, Track track) {
-    final uri = Uri.parse(match.stream.url);
-    return match.stream.isDash
-        ? DashAudioSource(uri, tag: track)
-        : AudioSource.uri(uri, tag: track);
+    var uri = Uri.parse(match.stream.url);
+    if (!match.stream.isDash) return AudioSource.uri(uri, tag: track);
+    final manifest = isDesktop ? uri.data : null;
+    if (manifest != null) {
+      // mpv requires :// to route an inline manifest to its data protocol.
+      uri = Uri(
+        scheme: 'data',
+        host: 'application',
+        path: '/dash+xml;base64,${base64Encode(manifest.contentAsBytes())}',
+      );
+    }
+    return DashAudioSource(uri, tag: track);
   }
 
   /// Starts [track] directly on its lossless copy.
@@ -4678,7 +4865,19 @@ class AudioPlayerService {
       );
     }
     final playbackData = _addonPlaybackData(match);
-    await _player.setAudioSource(_addonAudioSource(match, track), preload: true);
+    final player = _player;
+    try {
+      await player.setAudioSource(_addonAudioSource(match, track), preload: true);
+    } on PlayerException {
+      if (isDesktop && _currentTrack?.id == track.id) {
+        _failedDesktopLosslessUrl = match.stream.url;
+      }
+      rethrow;
+    }
+    if (isDesktop &&
+        (_currentTrack?.id != track.id || !identical(player, _player))) {
+      return;
+    }
     _currentPlaybackData = playbackData;
     _activeSourceQueueIndices = <int>[_currentIndex];
     _activeSourcePlaybackDataByQueueIndex = <int, PlaybackData>{
@@ -4766,6 +4965,7 @@ class AudioPlayerService {
 
   String? _losslessLookupTrackId;
   String? _losslessHandOverTrackId;
+  String? _failedDesktopLosslessUrl;
 
   /// The addon found a lossless copy of some song. If it's the one playing
   /// (on a lossy stream), move onto it now — whichever lookup asked, and
@@ -4785,6 +4985,11 @@ class AudioPlayerService {
       _logLossless('Not upgrading "${track.title}": the song changed');
       return;
     }
+    // During a desktop start the lookup can finish before a source is loaded.
+    // The start path will use the match or retry the upgrade once playing.
+    if (isDesktop && _currentPlaybackData == null) return;
+    // Keep the fallback playing if this URL already failed during startup.
+    if (match.stream.url == _failedDesktopLosslessUrl) return;
     if (_currentPlaybackData?.format.isLossless == true) return;
     if (_currentPlaybackData?.isLive == true) return;
     // The lookup may have started before Auto stepped down.
@@ -5344,6 +5549,7 @@ class AudioPlayerService {
 
   /// Handle track completion
   void _onTrackComplete() {
+    if (followsConnectLeader) return;
     // Emit track complete event (for Jams integration)
     if (_currentTrack != null) {
       _trackCompleteController.add(_currentTrack!);
@@ -5549,8 +5755,18 @@ class AudioPlayerService {
   }
 
   /// Play
-  Future<void> play() async {
+  bool _holdPlayback = false;
+
+  Future<void> play({bool fromConnect = false}) async {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) return transport({'action': 'play'});
+    _holdPlayback = false;
+    if (state.isLoading && fromConnect) return;
     if (_currentTrack == null) return;
+    if (_automixClipActive) {
+      await AutomixService.instance.desktopEngine?.clipPlay();
+      return;
+    }
 
     // If no source is loaded (e.g., app restarted), load and play current track.
     if (_player.processingState == ProcessingState.idle ||
@@ -5609,7 +5825,14 @@ class AudioPlayerService {
   }
 
   /// Pause
-  Future<void> pause() async {
+  Future<void> pause({bool fromConnect = false}) async {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) return transport({'action': 'pause'});
+    if (fromConnect) _holdPlayback = true;
+    if (_automixClipActive) {
+      await AutomixService.instance.desktopEngine?.clipPause();
+      return;
+    }
     await _player.pause();
     await _inactivePlayer.pause();
     _persistQueueNow(position: _player.position);
@@ -5617,7 +5840,9 @@ class AudioPlayerService {
 
   /// Toggle play/pause
   Future<void> togglePlayPause() async {
-    if (_player.playing) {
+    final transport = connectTransport;
+    if (transport != null) return transport({'action': 'toggle'});
+    if (_automixClipActive ? _automixClipPlaying : _player.playing) {
       await pause();
     } else {
       await play();
@@ -5625,7 +5850,10 @@ class AudioPlayerService {
   }
 
   /// Stop playback
-  Future<void> stop() async {
+  Future<void> stop({bool fromConnect = false}) async {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) return transport({'action': 'pause'});
+    if (_automixClipActive) await AutomixService.instance.skip();
     final position = _player.position;
     unawaited(_sendYoutubeWatchtime(state: 'paused', force: true));
     _stopYoutubeWatchtimeTimer();
@@ -5636,12 +5864,23 @@ class AudioPlayerService {
     _activeSourcePlaybackDataByQueueIndex = const <int, PlaybackData>{};
     _isCrossfading = false;
     _crossfadeTriggeredForTrack = false;
-    await _player.setVolume(1.0);
-    await _inactivePlayer.setVolume(1.0);
+    await _player.setVolume(_masterVolume);
+    await _inactivePlayer.setVolume(_masterVolume);
   }
 
   /// Seek to position
-  Future<void> seek(Duration position) async {
+  Future<void> seek(Duration position, {bool fromConnect = false}) async {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) {
+      return transport({'action': 'seek', 'position_ms': position.inMilliseconds});
+    }
+    if (fromConnect && state.isLoading && _currentTrack != null) {
+      _pendingSeekPosition = position;
+      _pendingSeekTrackId = _currentTrack!.id;
+      return;
+    }
+    // A seek during a rendered blend lands on whichever song is current.
+    if (_automixClipActive) await AutomixService.instance.desktopEngine?.leaveClip();
     if (_youtubeWatchtimeTimer != null && _player.playing) {
       unawaited(_sendYoutubeWatchtime(state: 'playing', force: true));
       _youtubeTrackingLastPosition = position;
@@ -5653,15 +5892,26 @@ class AudioPlayerService {
 
   /// Seek by offset
   Future<void> seekBy(Duration offset) async {
+    final transport = connectTransport;
+    if (transport != null) {
+      return transport({'action': 'seek_by', 'offset_ms': offset.inMilliseconds});
+    }
     final newPosition = _player.position + offset;
     await seek(newPosition);
   }
 
   /// Skip to next track
   /// Uses pre-built playlist for instant skip if available (OuterTune approach)
-  Future<void> skipToNext() async {
+  Future<void> skipToNext({bool fromConnect = false}) async {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) return transport({'action': 'next'});
+    _holdPlayback = false;
     // A skip is never blended: drop any Automix blend in flight first.
-    unawaited(AutomixService.instance.skip());
+    if (_automixClipActive) {
+      await AutomixService.instance.skip();
+    } else {
+      unawaited(AutomixService.instance.skip());
+    }
     // In Jams mode, emit track complete event and let sync controller handle it
     if (_jamsModeEnabled) {
       if (kDebugMode) {
@@ -5692,8 +5942,14 @@ class AudioPlayerService {
   }
 
   /// Skip to previous track
-  Future<void> skipToPrevious() async {
-    unawaited(AutomixService.instance.skip());
+  Future<void> skipToPrevious({bool fromConnect = false}) async {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) return transport({'action': 'previous'});
+    if (_automixClipActive) {
+      await AutomixService.instance.skip();
+    } else {
+      unawaited(AutomixService.instance.skip());
+    }
     if (_queue.isEmpty) return;
 
     // If more than 3 seconds in, restart current track
@@ -5713,11 +5969,16 @@ class AudioPlayerService {
     }
 
     _currentIndex = newIndex;
+    _holdPlayback = false;
     await _loadAndPlayCurrent();
   }
 
   /// Set loop mode
-  Future<void> setLoopMode(LoopMode mode) async {
+  Future<void> setLoopMode(LoopMode mode, {bool fromConnect = false}) async {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) {
+      return transport({'action': 'set_repeat', 'loop_mode': mode.index});
+    }
     _loopMode = mode;
     final nativeMode = _nativeLoopModeFor(mode);
     await _player.setLoopMode(nativeMode);
@@ -5736,11 +5997,15 @@ class AudioPlayerService {
   LoopMode _nativeLoopModeFor(LoopMode mode) {
     // Playback usually runs on a single-track source, so native "repeat all"
     // would just loop that one item. Playlist repeat is handled in app logic.
-    return mode == LoopMode.one ? LoopMode.one : LoopMode.off;
+    return mode == LoopMode.one && !followsConnectLeader
+        ? LoopMode.one
+        : LoopMode.off;
   }
 
   /// Toggle shuffle
-  Future<void> toggleShuffle() async {
+  Future<void> toggleShuffle({bool fromConnect = false}) async {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) return transport({'action': 'shuffle'});
     _shuffleEnabled = !_shuffleEnabled;
 
     if (_shuffleEnabled && _queue.isNotEmpty) {
@@ -5765,12 +6030,23 @@ class AudioPlayerService {
     _updateState(
       shuffleEnabled: _shuffleEnabled,
       queue: _queue,
+      queueRevision: ++_queueRevision,
       currentIndex: _currentIndex,
     );
   }
 
+  void setConnectShuffle(bool enabled) {
+    _shuffleEnabled = enabled;
+    _updateState(shuffleEnabled: enabled);
+  }
+
   /// Set playback speed
-  Future<void> setSpeed(double speed) async {
+  Future<void> setSpeed(double speed, {bool fromConnect = false}) async {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) {
+      return transport({'action': 'speed', 'speed': speed});
+    }
+    _listenerSpeed = speed;
     await _player.setSpeed(speed);
     await _inactivePlayer.setSpeed(speed);
     _updateState(speed: speed);
