@@ -4,11 +4,15 @@ import 'dart:ui' show Color;
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart' show LoopMode;
-import 'package:rxdart/rxdart.dart' show Rx;
+import 'package:rxdart/rxdart.dart'
+    show BehaviorSubject, Rx, SwitchMapExtension;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/models.dart';
 import '../services/services.dart';
 import '../services/audio_player_service.dart' as player;
+import '../services/inzx_connect_remote.dart';
+import '../services/inzx_connect_service.dart';
+import 'jams_provider.dart' show isInJamSessionProvider;
 import '../core/providers/theme_provider.dart'
     show dynamicColorsEnabledProvider, staticAccentColorProvider;
 import '../services/album_color_extractor.dart';
@@ -62,27 +66,204 @@ final audioPlayerServiceProvider = Provider<player.AudioPlayerService>((ref) {
   return playerService;
 });
 
-/// Provider for current playback state
-/// WARNING: This updates frequently (every 500ms for position).
-/// For better performance, use specific providers below instead.
+final localCurrentTrackProvider = StreamProvider<Track?>((ref) {
+  return ref
+      .watch(audioPlayerServiceProvider)
+      .stateStream
+      .map((state) => state.currentTrack)
+      .distinct();
+});
+
+typedef ConnectPeerPlayback = ({
+  ConnectDevice device,
+  ConnectPlayback playback,
+});
+
+final connectPlayingOnBothProvider = StreamProvider<bool>((ref) {
+  final remote = InzxConnectRemote.instance;
+  final updates = StreamController<bool>();
+  void update() => updates.add(remote.isPlayingOnBoth);
+  remote.addListener(update);
+  update();
+  ref.onDispose(() {
+    remote.removeListener(update);
+    unawaited(updates.close());
+  });
+  return updates.stream.distinct();
+});
+
+final connectPeerPlaybackProvider = StreamProvider<ConnectPeerPlayback?>((ref) {
+  if (!InzxConnectService.canScanQr) return Stream.value(null);
+  final remote = InzxConnectRemote.instance;
+  final updates = StreamController<ConnectPeerPlayback?>();
+  void update() => updates.add(remote.followedPlayback);
+  remote.addListener(update);
+  update();
+  ref.onDispose(() {
+    remote.removeListener(update);
+    unawaited(updates.close());
+  });
+  return updates.stream.distinct();
+});
+
+/// Current playback metadata. The progress bar uses [positionStreamProvider].
 final playbackStateProvider = StreamProvider<player.PlaybackState>((ref) {
   final playerService = ref.watch(audioPlayerServiceProvider);
-  // Use distinct() to only emit when state actually changes (based on == override)
-  return playerService.stateStream.distinct();
+  // Keep the stream subscribed across Connect updates. Recreating it on
+  // every report briefly puts Riverpod back into loading and unmounts the player.
+  final followed = BehaviorSubject<ConnectPeerPlayback?>.seeded(
+    ref.read(activeConnectPlaybackProvider),
+  );
+  ref.listen(activeConnectPlaybackProvider, (_, state) => followed.add(state));
+  ref.onDispose(() => unawaited(followed.close()));
+
+  return Rx.combineLatest2(playerService.stateStream, followed.stream, (
+    local,
+    peer,
+  ) {
+    if (peer == null || local.isPlaying || local.isLoading) return local;
+    final remote = peer.playback;
+    return player.PlaybackState(
+      currentTrack: remote.track,
+      queue: remote.queue,
+      currentIndex: remote.currentIndex,
+      queueRevision: remote.queueRevision,
+      isPlaying: remote.isPlaying,
+      isBuffering: remote.isBuffering,
+      position: remote.position,
+      duration: Duration(milliseconds: remote.durationMs),
+      loopMode: remote.loopMode,
+      shuffleEnabled: remote.shuffleEnabled,
+      speed: remote.speed,
+      queueTitle: peer.device.label,
+      streamCacheWifiOnly: local.streamCacheWifiOnly,
+      streamCacheSizeLimitMb: local.streamCacheSizeLimitMb,
+      streamCacheMaxConcurrent: local.streamCacheMaxConcurrent,
+      crossfadeDurationMs: local.crossfadeDurationMs,
+      jioSaavnEnabled: local.jioSaavnEnabled,
+      audioQuality: local.audioQuality,
+    );
+  }).distinct();
+});
+
+final activeConnectPlaybackProvider = Provider<ConnectPeerPlayback?>((ref) {
+  final followed = ref.watch(connectPeerPlaybackProvider).valueOrNull;
+  if (followed == null || ref.watch(isInJamSessionProvider)) return null;
+  final service = ref.watch(audioPlayerServiceProvider);
+  final localPlaying =
+      ref.watch(_localPlaybackActiveProvider).valueOrNull ??
+      (service.state.isPlaying || service.state.isLoading);
+  return localPlaying ? null : followed;
+});
+
+final _localPlaybackActiveProvider = StreamProvider<bool>((ref) {
+  return ref
+      .watch(audioPlayerServiceProvider)
+      .stateStream
+      .map((state) => state.isPlaying || state.isLoading)
+      .distinct();
 });
 
 /// Provider for position stream (for progress bars only)
 /// Use this instead of playbackStateProvider when you only need position
 final positionStreamProvider = StreamProvider<Duration>((ref) {
   final playerService = ref.watch(audioPlayerServiceProvider);
-  return playerService.positionStream;
+  final playback = activeConnectPlaybackProvider.select(
+    (peer) => peer?.playback,
+  );
+  final samples = BehaviorSubject<ConnectPlayback?>.seeded(ref.read(playback));
+  ref.listen(playback, (_, sample) => samples.add(sample));
+  ref.onDispose(() => unawaited(samples.close()));
+
+  return samples.switchMap((remote) {
+    if (remote == null) return playerService.positionStream;
+    return Stream<Duration>.multi((controller) {
+      controller.add(remote.position);
+      if (!remote.isPlaying || remote.isBuffering) {
+        controller.close();
+        return;
+      }
+      final timer = Timer.periodic(const Duration(milliseconds: 250), (_) {
+        controller.add(remote.position);
+      });
+      controller.onCancel = timer.cancel;
+    });
+  }).distinct();
 });
 
 /// Provider for buffered position stream
 final bufferedPositionStreamProvider = StreamProvider<Duration>((ref) {
+  if (ref.watch(activeConnectPlaybackProvider.select((peer) => peer != null))) {
+    return Stream.value(Duration.zero);
+  }
   final playerService = ref.watch(audioPlayerServiceProvider);
   return playerService.bufferedPositionStream;
 });
+
+final playbackTransportProvider = Provider<PlaybackTransport>((ref) {
+  final service = ref.watch(audioPlayerServiceProvider);
+  return PlaybackTransport(
+    service,
+    () => ref.read(activeConnectPlaybackProvider),
+  );
+});
+
+/// Routes the on-screen transport to the device shown in the player.
+class PlaybackTransport {
+  PlaybackTransport(this._local, this._followed);
+
+  final player.AudioPlayerService _local;
+  final ConnectPeerPlayback? Function() _followed;
+  InzxConnectRemote get _remote => InzxConnectRemote.instance;
+  String? get _peer => _followed()?.device.id;
+
+  Future<void> play() =>
+      _onDevice(_local.play, (id) => _remote.setPlaying(id, true));
+  Future<void> pause() =>
+      _onDevice(_local.pause, (id) => _remote.setPlaying(id, false));
+  Future<void> togglePlayPause() =>
+      _onDevice(_local.togglePlayPause, _remote.togglePlay);
+  Future<void> skipToPrevious() =>
+      _onDevice(_local.skipToPrevious, _remote.previous);
+  Future<void> skipToNext() => _onDevice(_local.skipToNext, _remote.next);
+  Future<void> seek(Duration position) => _onDevice(
+    () => _local.seek(position),
+    (id) => _remote.seek(id, position),
+  );
+  Future<void> toggleShuffle() =>
+      _onDevice(_local.toggleShuffle, _remote.toggleShuffle);
+  Future<void> cycleLoopMode() =>
+      _onDevice(_local.cycleLoopMode, _remote.cycleLoopMode);
+
+  void skipToIndex(int index) {
+    final id = _peer;
+    if (id == null) {
+      _local.skipToIndex(index);
+    } else {
+      unawaited(_remote.skipTo(id, index));
+    }
+  }
+
+  Future<void> _onDevice(
+    Future<void> Function() local,
+    Future<void> Function(String) remote,
+  ) {
+    final id = _peer;
+    return id == null ? local() : remote(id);
+  }
+
+  ({int positionMs, double sampledAtMs, bool advancing, int seeks})
+  get playhead {
+    final playback = _followed()?.playback;
+    if (playback == null) return _local.playhead;
+    return (
+      positionMs: playback.positionMs,
+      sampledAtMs: playback.receivedAt.microsecondsSinceEpoch / 1000,
+      advancing: playback.isPlaying && !playback.isBuffering,
+      seeks: playback.seeks,
+    );
+  }
+}
 
 /// Provider for current track ID only (very lightweight, for checking if a track is playing)
 final currentTrackIdProvider = Provider<String?>((ref) {
@@ -556,7 +737,8 @@ Future<void> toggleTrackLike({
     ref
         .read(explicitlyUnlikedIdsProvider.notifier)
         .update(
-          (state) => (state as Set<String>).where((id) => id != track.id).toSet(),
+          (state) =>
+              (state as Set<String>).where((id) => id != track.id).toSet(),
         );
   }
 

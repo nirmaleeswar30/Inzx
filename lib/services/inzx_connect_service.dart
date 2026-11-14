@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'audio_routing_service.dart';
 import 'supabase_config.dart';
 
 class ConnectDevice {
@@ -124,15 +125,44 @@ class InzxConnectService {
     await _saveToken(token);
     await client.rpc(
       'inzx_connect_register',
-      params: {
-        'device_label': Platform.isWindows
-            ? 'Windows PC'
-            : Platform.isLinux
-            ? 'Linux PC'
-            : 'Android device',
-      },
+      params: {'device_label': await deviceLabel()},
     );
     _registered = true;
+  }
+
+  /// What this device is called on the other end: the computer's name on
+  /// desktop, and on Android the phone's Bluetooth name (what the phone calls
+  /// itself in Settings, e.g. "OnePlus 15"), read through the smart routing
+  /// channel. Re-sent on every start, so a rename shows up on the next launch.
+  static Future<String> deviceLabel() async {
+    String? name;
+    if (Platform.isAndroid) {
+      final routing = await AudioRoutingService.getActiveDeviceName();
+      final devices = routing['all'];
+      if (devices is List) {
+        for (final device in devices) {
+          if (device is Map && device['isSpeaker'] == true) {
+            name = device['name']?.toString();
+            break;
+          }
+        }
+      }
+      // Without Bluetooth access the speaker keeps its placeholder name.
+      if (name == 'Internal Speaker') name = null;
+    } else {
+      try {
+        name = Platform.localHostname;
+      } catch (_) {}
+    }
+    name = name?.trim();
+    if (name == null || name.isEmpty) {
+      return Platform.isWindows
+          ? 'Windows PC'
+          : Platform.isLinux
+          ? 'Linux PC'
+          : 'Android phone';
+    }
+    return name.length > 48 ? name.substring(0, 48) : name;
   }
 
   Future<dynamic> _call(String name, [Map<String, dynamic>? params]) async {
@@ -141,6 +171,26 @@ class InzxConnectService {
     final token = client.auth.currentSession?.refreshToken;
     if (token != null && _savedToken != token) await _saveToken(token);
     return client.rpc('inzx_connect_$name', params: params);
+  }
+
+  /// The signed-in client, once this device has a Connect session.
+  Future<SupabaseClient> client() async {
+    await _ensureReady();
+    return _client!;
+  }
+
+  /// This device's Connect id (its anonymous user id), once signed in.
+  String? get deviceId => _client?.auth.currentUser?.id;
+
+  /// Whether this install has ever opened Inzx Connect. Installs that never
+  /// did stay off the server entirely.
+  Future<bool> hasSession() async {
+    if (_client?.auth.currentSession != null) return true;
+    try {
+      return await _storage.read(key: _sessionKey) != null;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<ConnectStatus> status() async =>

@@ -41,6 +41,9 @@ final desktopShellVisible = ValueNotifier<bool>(true);
 /// Which tab the player's right-hand panel shows: Up Next, Lyrics or Related.
 final desktopNowPlayingTab = ValueNotifier<int>(0);
 
+/// Whether Connect is covering the selected tab in the player's side pane.
+final desktopConnectPaneOpen = ValueNotifier<bool>(false);
+
 /// Whether the now playing view is open between the sidebar and player bar.
 final desktopNowPlayingOpen = ValueNotifier<bool>(false);
 
@@ -53,7 +56,7 @@ final desktopFullScreen = ValueNotifier<bool>(false);
 Future<void> setDesktopFullScreen(bool on) async {
   if (on) NowPlayingScreen.showDesktop();
   desktopFullScreen.value = on;
-  await windowManager.setFullScreen(on);
+  await _setWindowFullScreen(on, () => desktopFullScreen.value);
 }
 
 /// Whether a video (a podcast episode) has taken over the whole screen. Like
@@ -64,7 +67,57 @@ final desktopVideoFullScreen = ValueNotifier<bool>(false);
 Future<void> setDesktopVideoFullScreen(bool on) async {
   if (desktopVideoFullScreen.value == on) return;
   desktopVideoFullScreen.value = on;
-  await windowManager.setFullScreen(on);
+  await _setWindowFullScreen(on, () => desktopVideoFullScreen.value);
+}
+
+/// The window's full screen switches, one at a time: two quick presses must
+/// not run the native restyle and resize over each other.
+Future<void> _fullScreenQueue = Future<void>.value();
+
+/// What the native window actually is, as opposed to what was last asked
+/// for. Leaving a full screen that never happened would have the plugin
+/// restore a frame it never saved.
+bool _windowFullScreen = false;
+
+Future<void> _setWindowFullScreen(bool on, bool Function() stillWanted) {
+  return _fullScreenQueue = _fullScreenQueue
+      .catchError((Object _) {})
+      .then((_) async {
+        if (stillWanted() != on) return; // a later press already undid it
+        if (_windowFullScreen == on) return;
+        await windowManager.setFullScreen(on);
+        _windowFullScreen = on;
+        if (on) await _healFullScreenView(stillWanted);
+      });
+}
+
+/// Now and then the switch leaves Flutter drawing at a size that isn't the
+/// window's (the page comes out zoomed and cut off until full screen is left
+/// and entered again). Checks once the window has settled, and if Flutter's
+/// view disagrees with the real window, does that leave-and-enter itself.
+Future<void> _healFullScreenView(bool Function() stillWanted) async {
+  for (final wait in const [
+    Duration(milliseconds: 200),
+    Duration(milliseconds: 800),
+  ]) {
+    await Future<void>.delayed(wait);
+    if (!stillWanted()) return;
+    final view = WidgetsBinding.instance.platformDispatcher.views.first;
+    final bounds = await windowManager.getBounds();
+    final expected = bounds.size * view.devicePixelRatio;
+    final actual = view.physicalSize;
+    if ((expected.width - actual.width).abs() <= 2 &&
+        (expected.height - actual.height).abs() <= 2) {
+      return;
+    }
+    debugPrint(
+      'Full screen: view ${actual.width}x${actual.height} != window '
+      '${expected.width}x${expected.height}; switching again',
+    );
+    await windowManager.setFullScreen(false);
+    if (!stillWanted()) return;
+    await windowManager.setFullScreen(true);
+  }
 }
 
 final desktopTabProvider = StateProvider<int>((ref) => 0);

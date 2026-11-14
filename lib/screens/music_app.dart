@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations_x.dart';
-import '../models/models.dart';
 import '../../../core/design_system/design_system.dart';
 import '../providers/providers.dart';
 import '../providers/bookmarks_and_stats_provider.dart';
@@ -14,6 +13,7 @@ import 'tabs/library_tab.dart';
 import 'tabs/folders_tab.dart';
 import 'tabs/desktop_explore_tab.dart';
 import '../core/utils/platform_utils.dart';
+import '../services/inzx_connect_remote.dart';
 import 'widgets/desktop_shell.dart';
 import 'widgets/mini_player.dart';
 import 'widgets/now_playing_screen.dart';
@@ -147,8 +147,12 @@ class _MusicAppState extends ConsumerState<MusicApp>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(isInJamSessionProvider, (_, active) {
+      InzxConnectRemote.instance.setJamActive(active);
+    });
     // Keep stats and recent history in sync with real playback transitions.
-    ref.listen<Track?>(currentTrackProvider, (previous, next) {
+    ref.listen(localCurrentTrackProvider, (previous, value) {
+      final next = value.valueOrNull;
       if (next == null) return;
       if (_lastTrackedId == next.id) return;
       _lastTrackedId = next.id;

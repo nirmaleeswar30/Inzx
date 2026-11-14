@@ -53,8 +53,10 @@ import '../../main.dart' show rootNavigatorKey;
 import 'desktop_player_bar.dart'
     show DesktopTransportControls, DesktopVolumeControl;
 import '../../services/desktop/desktop_audio_dsp.dart';
+import '../inzx_connect_screen.dart';
 import 'desktop_shell.dart'
     show
+        desktopConnectPaneOpen,
         desktopFullScreen,
         desktopNowPlayingOpen,
         desktopNowPlayingTab,
@@ -174,7 +176,7 @@ class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
   }
 
   void _onSeekEnd(double value) {
-    final playerService = ref.read(audioPlayerServiceProvider);
+    final playerService = ref.read(playbackTransportProvider);
     playerService.seek(Duration(milliseconds: value.toInt()));
     _lastSeekTargetMs = value;
     setState(() {
@@ -746,10 +748,9 @@ class _SyncedLyricPreviewState extends ConsumerState<SyncedLyricPreview>
   /// One frame of the lyric clock: holds while the song is loading or
   /// buffering, and follows Automix's tempo changes (see LyricClock).
   int _stepClock() {
-    final service = player.AudioPlayerService.instance;
-    final playhead = service.playhead;
+    final playhead = ref.read(playbackTransportProvider).playhead;
     final offset = ref.read(lyricsSyncOffsetProvider);
-    final trackId = service.currentTrack?.id;
+    final trackId = ref.read(currentTrackIdProvider);
     if (_clock == null || trackId != _clockTrackId) {
       _clockTrackId = trackId;
       _clock = LyricClock(playhead.positionMs + offset);
@@ -1291,6 +1292,7 @@ class NowPlayingScreen extends ConsumerStatefulWidget {
       if (identical(_desktopRoute, route)) {
         _desktopRoute = null;
         desktopNowPlayingOpen.value = false;
+        desktopConnectPaneOpen.value = false;
       }
     });
     navigator.push(route);
@@ -1302,6 +1304,7 @@ class NowPlayingScreen extends ConsumerStatefulWidget {
     if (navigator == null || route == null) return;
     _desktopRoute = null;
     desktopNowPlayingOpen.value = false;
+    desktopConnectPaneOpen.value = false;
     if (route.isCurrent) {
       navigator.pop();
     } else {
@@ -1422,6 +1425,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
       _showQueue = _tabController.index == 0;
       _showLyrics = _tabController.index == 1;
       desktopNowPlayingTab.addListener(_onDesktopTabChanged);
+      desktopConnectPaneOpen.addListener(_onDesktopTabChanged);
       desktopFullScreen.addListener(_onDesktopTabChanged);
     }
 
@@ -1429,7 +1433,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     _pageController = PageController(initialPage: 0);
 
     // Album art page controller follows actual queue index starting on active index
-    final initialQueueIndex = ref.read(audioPlayerServiceProvider).currentIndex;
+    final initialQueueIndex = (ref.read(playbackStateProvider).valueOrNull?.currentIndex ?? -1);
     final startPage = initialQueueIndex >= 0 ? initialQueueIndex : 0;
     _albumArtPageController = PageController(initialPage: startPage);
     _lastAlbumArtSyncedIndex = startPage;
@@ -1479,6 +1483,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     _colorAnimController.dispose();
     if (isDesktop) {
       desktopNowPlayingTab.removeListener(_onDesktopTabChanged);
+      desktopConnectPaneOpen.removeListener(_onDesktopTabChanged);
       desktopFullScreen.removeListener(_onDesktopTabChanged);
     }
     _tabController.dispose();
@@ -1504,7 +1509,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
       activeIndex = queue.indexWhere((t) => t.id == currentTrack.id);
     }
     if (activeIndex < 0) {
-      activeIndex = ref.read(audioPlayerServiceProvider).currentIndex;
+      activeIndex = (ref.read(playbackStateProvider).valueOrNull?.currentIndex ?? -1);
     }
 
     if (activeIndex <= 0) {
@@ -1546,10 +1551,10 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   @override
   Widget build(BuildContext context) {
     final playbackState = ref.watch(playbackStateProvider);
-    final playerService = ref.watch(audioPlayerServiceProvider);
+    final playerService = ref.watch(playbackTransportProvider);
     final albumColors = ref.watch(playerAlbumColorsProvider);
     final currentTrack = ref.watch(currentTrackProvider);
-    final currentQueueIndex = playerService.currentIndex;
+    final currentQueueIndex = playbackState.valueOrNull?.currentIndex ?? -1;
 
     ref.listen<Track?>(currentTrackProvider, (previous, next) {
       if (next != null && previous?.id != next.id) {
@@ -1946,8 +1951,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                             return;
                           }
                           final currentQueueIndex = ref
-                              .read(audioPlayerServiceProvider)
-                              .currentIndex;
+                              .read(playbackStateProvider).valueOrNull?.currentIndex ?? -1;
                           if (currentQueueIndex >= 0) {
                             final activePage = _safeAlbumArtPage(-1.0).round();
                             if (activePage != currentQueueIndex) {
@@ -1967,7 +1971,6 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                             child: EdgeNowPlayingView(
                               track: track,
                               state: state,
-                              playerService: playerService,
                               textColor: textColor,
                               secondaryTextColor: secondaryTextColor,
                               accentColor: accentColor,
@@ -2166,7 +2169,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   Widget _buildFullAlbumView(
     Track track,
     player.PlaybackState state,
-    player.AudioPlayerService playerService,
+    PlaybackTransport playerService,
     Color textColor,
     Color secondaryTextColor,
     Color accentColor, {
@@ -2262,6 +2265,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   ) {
     final tab = _tabController.index;
     final labels = [context.l10n.upNext, 'LYRICS', 'RELATED'];
+    final connectOpen = desktopConnectPaneOpen.value;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -2315,24 +2319,27 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                       for (final (index, label) in labels.indexed)
                         Expanded(
                           child: InkWell(
-                            onTap: () => desktopNowPlayingTab.value = index,
+                            onTap: () {
+                              desktopNowPlayingTab.value = index;
+                              desktopConnectPaneOpen.value = false;
+                            },
                             child: Container(
                               height: 52,
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
                                 border: Border(
                                   bottom: BorderSide(
-                                    color: index == tab
+                                    color: !connectOpen && index == tab
                                         ? textColor
                                         : textColor.withValues(alpha: 0.15),
-                                    width: index == tab ? 2 : 1,
+                                    width: !connectOpen && index == tab ? 2 : 1,
                                   ),
                                 ),
                               ),
                               child: Text(
                                 label,
                                 style: TextStyle(
-                                  color: index == tab
+                                  color: !connectOpen && index == tab
                                       ? textColor
                                       : secondaryTextColor,
                                   fontSize: 14,
@@ -2346,19 +2353,21 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                   ),
                   Expanded(
                     child: IndexedStack(
-                      index: tab,
+                      index: connectOpen ? labels.length : tab,
                       children: [
                         _buildQueueContent(
                           textColor,
                           secondaryTextColor,
                           surfaceColor,
                         ),
-                        _buildLyricsView(isActive: tab == 1),
+                        _buildLyricsView(isActive: !connectOpen && tab == 1),
                         // Built only when asked for: it fetches on build.
                         if (tab == 2)
                           _buildRelatedContent(textColor, secondaryTextColor)
                         else
                           const SizedBox.shrink(),
+                        if (connectOpen)
+                          const InzxConnectPanel(compact: true),
                       ],
                     ),
                   ),
@@ -2376,8 +2385,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     if (!mounted) return;
     setState(() {
       _tabController.index = desktopNowPlayingTab.value;
-      _showQueue = _tabController.index == 0;
-      _showLyrics = _tabController.index == 1;
+      _showQueue = !desktopConnectPaneOpen.value && _tabController.index == 0;
+      _showLyrics = !desktopConnectPaneOpen.value && _tabController.index == 1;
     });
     if (_showQueue) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -2389,7 +2398,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   Widget _buildStageView(
     Track track,
     player.PlaybackState state,
-    player.AudioPlayerService playerService,
+    PlaybackTransport playerService,
     Color textColor,
     Color secondaryTextColor,
     Color accentColor,
@@ -2674,7 +2683,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
   Widget _buildMinimalControls(
     player.PlaybackState state,
-    player.AudioPlayerService playerService,
+    PlaybackTransport playerService,
     Color textColor,
     Color accentColor,
   ) {
@@ -2732,7 +2741,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   Widget _buildMiniPlayerHeader(
     Track track,
     player.PlaybackState state,
-    player.AudioPlayerService playerService,
+    PlaybackTransport playerService,
     Color textColor,
     Color accentColor,
   ) {
@@ -2846,6 +2855,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     final l10n = context.l10n;
     final queue = ref.watch(queueProvider);
     final currentTrack = ref.watch(currentTrackProvider);
+    final connectedDevice = ref.watch(
+      activeConnectPlaybackProvider.select((peer) => peer?.device),
+    );
     final isRadioMode = ref.watch(isRadioModeProvider);
     final isFetchingRadio = ref.watch(isFetchingRadioProvider);
     final isInJam = ref.watch(isInJamSessionProvider);
@@ -2860,6 +2872,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     if (isInJam) {
       queueLabel = l10n.jamQueue;
       queueIcon = Iconsax.profile_2user;
+    } else if (connectedDevice != null) {
+      queueLabel = connectedDevice.label;
+      queueIcon = Icons.computer_rounded;
     } else if (isRadioMode) {
       queueLabel = l10n.radioQueue;
       queueIcon = Icons.all_inclusive;
@@ -2892,31 +2907,38 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.playingFrom,
-                    style: TextStyle(fontSize: 12, color: secondaryColor),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Text(
-                        queueLabel,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.playingFrom,
+                      style: TextStyle(fontSize: 12, color: secondaryColor),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (queueIcon != null) ...[
+                          Icon(queueIcon, size: 16, color: secondaryColor),
+                          const SizedBox(width: 6),
+                        ],
+                        Flexible(
+                          child: Text(
+                            queueLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                            ),
+                          ),
                         ),
-                      ),
-                      if (queueIcon != null) ...[
-                        const SizedBox(width: 6),
-                        Icon(queueIcon, size: 16, color: secondaryColor),
                       ],
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -2978,7 +3000,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                 }
                 return ReorderableListView.builder(
                   scrollController: _queueScrollController,
-                  buildDefaultDragHandles: !isDesktop,
+                  buildDefaultDragHandles: !isDesktop && connectedDevice == null,
                   physics: const BouncingScrollPhysics(
                     parent: AlwaysScrollableScrollPhysics(),
                   ),
@@ -2994,6 +3016,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                     );
                   },
                   onReorderItem: (oldIndex, newIndex) {
+                    if (connectedDevice != null) return;
                     // Don't allow reordering the loading indicator
                     if (oldIndex >= queue.length || newIndex >= queue.length) {
                       return;
@@ -3066,14 +3089,20 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                       secondaryColor: secondaryColor,
                       accentColor: ref.watch(playerAlbumColorsProvider).accent,
                       onTap: () {
+                        if (connectedDevice != null) {
+                          ref.read(playbackTransportProvider).skipToIndex(index);
+                          return;
+                        }
                         ref
                             .read(audioPlayerServiceProvider)
                             .playQueue(queue, startIndex: index);
                       },
-                      trailingWidget: ReorderableDragStartListener(
-                        index: index,
-                        child: Icon(Icons.drag_handle, color: secondaryColor),
-                      ),
+                      trailingWidget: connectedDevice == null
+                          ? ReorderableDragStartListener(
+                              index: index,
+                              child: Icon(Icons.drag_handle, color: secondaryColor),
+                            )
+                          : null,
                     );
                   },
                 );
@@ -3494,7 +3523,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   }
 
   Widget _buildQueueModeButtons(Color textColor) {
-    final playerService = ref.read(audioPlayerServiceProvider);
+    final playerService = ref.read(playbackTransportProvider);
     final shuffle = ref.watch(shuffleEnabledProvider);
     final loopMode = ref.watch(loopModeProvider);
     final accent = _targetColors.accent;
@@ -3587,12 +3616,15 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     Color accentColor, {
     EdgeInsetsGeometry? padding,
   }) {
+    final isConnected = ref.watch(
+      activeConnectPlaybackProvider.select((peer) => peer != null),
+    ) || (ref.watch(connectPlayingOnBothProvider).valueOrNull ?? false);
     return NowPlayingBottomBar(
       textColor: textColor,
       onOpenLyrics: _openLyricsSheet,
       onOpenQueue: _openQueueSheet,
       padding: padding,
-      center: ref.watch(showSmartAudioRoutingProvider)
+      center: ref.watch(showSmartAudioRoutingProvider) || isConnected
           ? AudioRoutingPill(textColor: textColor, accentColor: accentColor)
           : null,
     );
@@ -4675,7 +4707,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
   void _handleAlbumArtPageChanged(
     int pageIndex,
-    player.AudioPlayerService playerService, {
+    PlaybackTransport playerService, {
     required int currentIndex,
     required int queueLength,
   }) {
@@ -5004,9 +5036,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
   /// Swipeable album art widget for landscape Stage View
   Widget _buildSwipeableAlbumArt(Track track, Color accentColor) {
-    final playerService = ref.watch(audioPlayerServiceProvider);
-    final queue = playerService.queue;
-    final currentIndex = playerService.currentIndex;
+    final playerService = ref.watch(playbackTransportProvider);
+    final queue = ref.watch(queueProvider);
+    final currentIndex = ref.watch(playbackStateProvider).valueOrNull?.currentIndex ?? -1;
 
     if (queue.length <= 1) {
       return GestureDetector(
@@ -5176,9 +5208,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
   /// Swipeable album art widget for Ripple style (clean unclipped stack for RippleFlowerClipper)
   Widget _buildRippleSwipeableAlbumArt(Track track, Color accentColor) {
-    final playerService = ref.watch(audioPlayerServiceProvider);
-    final queue = playerService.queue;
-    final currentIndex = playerService.currentIndex;
+    final playerService = ref.watch(playbackTransportProvider);
+    final queue = ref.watch(queueProvider);
+    final currentIndex = ref.watch(playbackStateProvider).valueOrNull?.currentIndex ?? -1;
 
     if (queue.length <= 1) {
       return GestureDetector(
@@ -5265,9 +5297,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
   /// Swipeable full-width album art widget for Edge-to-Edge style
   Widget _buildEdgeSwipeableAlbumArt(Track track, Color accentColor) {
-    final playerService = ref.watch(audioPlayerServiceProvider);
-    final queue = playerService.queue;
-    final currentIndex = playerService.currentIndex;
+    final playerService = ref.watch(playbackTransportProvider);
+    final queue = ref.watch(queueProvider);
+    final currentIndex = ref.watch(playbackStateProvider).valueOrNull?.currentIndex ?? -1;
 
     if (queue.length <= 1) {
       return GestureDetector(
@@ -5750,7 +5782,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
   Widget _buildControls(
     player.PlaybackState state,
-    player.AudioPlayerService playerService,
+    PlaybackTransport playerService,
     Color textColor,
     Color accentColor, {
     bool isCompact = false,
@@ -6029,7 +6061,7 @@ class _DesktopLyricsStageState extends ConsumerState<_DesktopLyricsStage> {
 
   void _seekBy(Duration step) {
     if (widget.state.isLive) return;
-    final service = ref.read(audioPlayerServiceProvider);
+    final service = ref.read(playbackTransportProvider);
     final position =
         ref.read(positionStreamProvider).valueOrNull ?? Duration.zero;
     final length = widget.state.duration ?? widget.track.duration;

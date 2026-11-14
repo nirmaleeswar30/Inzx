@@ -16,6 +16,7 @@
 #define MyAppPublisher "Inzx"
 #define MyAppURL "https://inzx.nirmaleeswar.dev"
 #define MyAppExeName "inzx.exe"
+#define MyAppUserModelID "Inzx.Inzx"
 
 #ifndef AppVersion
   #define AppVersion "1.0.0"
@@ -90,8 +91,8 @@ Source: "{#CrtDir}\*.dll"; DestDir: "{app}"; Flags: ignoreversion
 #endif
 
 [Icons]
-Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; AppUserModelID: "{#MyAppUserModelID}"
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; AppUserModelID: "{#MyAppUserModelID}"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent

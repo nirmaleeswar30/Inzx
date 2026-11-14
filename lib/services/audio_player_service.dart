@@ -2386,6 +2386,10 @@ class AudioPlayerService {
 
   int _seekCount = 0;
 
+  /// When set, transport commands are handled by the Connect group leader.
+  Future<void> Function(Map<String, dynamic>)? connectTransport;
+  bool followsConnectLeader = false;
+
   /// The active player's latest reading of the playhead, dated by when the
   /// native player took it — what the lyrics clock steers by (see
   /// LyricClock). Read every frame rather than streamed, so it follows the
@@ -3243,6 +3247,9 @@ class AudioPlayerService {
   Future<void> playQueue(
     List<Track> tracks, {
     int startIndex = 0,
+    Duration? startPosition,
+    bool startPaused = false,
+    bool fromConnect = false,
     bool isRadioQueue = false,
     String? sourceId,
     String? sourceTitle,
@@ -3253,10 +3260,25 @@ class AudioPlayerService {
       );
     }
     if (tracks.isEmpty) return;
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) {
+      return transport({
+        'action': 'group_queue',
+        'tracks': tracks
+            .skip(startIndex.clamp(0, tracks.length - 1))
+            .take(100)
+            .map((track) => track.toJson())
+            .toList(),
+        'index': 0,
+        'position_ms': startPosition?.inMilliseconds ?? 0,
+      });
+    }
+    _holdPlayback = startPaused;
+    if (startPaused) await pause(fromConnect: true);
 
     // Disable radio mode when playing from a playlist/album (unless it's a radio queue extension)
     if (!isRadioQueue) {
-      _isRadioMode = tracks.length == 1; // Only enable radio for single tracks
+      _isRadioMode = tracks.length == 1 && !followsConnectLeader;
       _radioSourceTrackId = tracks.length == 1 ? tracks.first.id : null;
       if (kDebugMode) {
         print(
@@ -3270,11 +3292,15 @@ class AudioPlayerService {
     _queueSourceTitle = isRadioQueue ? _queueSourceTitle : sourceTitle;
 
     _originalQueue = List.from(tracks);
-    _queue = _shuffleEnabled
+    _queue = _shuffleEnabled && !followsConnectLeader
         ? _shuffleList(tracks, startIndex)
         : List.from(tracks);
-    _currentIndex = _shuffleEnabled ? 0 : startIndex;
+    _currentIndex = _shuffleEnabled && !followsConnectLeader ? 0 : startIndex;
     _currentTrack = _queue[_currentIndex];
+    if (startPosition != null) {
+      _pendingSeekPosition = startPosition;
+      _pendingSeekTrackId = _currentTrack!.id;
+    }
     _queueRevision++; // Force update
 
     // IMPORTANT: Update state with queue immediately so UI shows queue
@@ -3364,6 +3390,13 @@ class AudioPlayerService {
 
   /// Add tracks to the end of the queue
   void addToQueue(List<Track> tracks) {
+    if (followsConnectLeader) {
+      unawaited(connectTransport!({
+        'action': 'queue_add',
+        'tracks': tracks.take(100).map((track) => track.toJson()).toList(),
+      }));
+      return;
+    }
     _queue.addAll(tracks);
     _originalQueue.addAll(tracks);
     _queueRevision++;
@@ -3391,6 +3424,13 @@ class AudioPlayerService {
 
   /// Insert track to play next
   void playNext(Track track) {
+    if (followsConnectLeader) {
+      unawaited(connectTransport!({
+        'action': 'queue_next',
+        'tracks': [track.toJson()],
+      }));
+      return;
+    }
     if (_currentIndex >= 0 && _currentIndex < _queue.length - 1) {
       _queue.insert(_currentIndex + 1, track);
       _originalQueue.insert(_currentIndex + 1, track);
@@ -3417,6 +3457,14 @@ class AudioPlayerService {
   /// Remove track from queue
   void removeFromQueue(int index) {
     if (index < 0 || index >= _queue.length) return;
+    if (followsConnectLeader) {
+      unawaited(connectTransport!({
+        'action': 'queue_remove',
+        'index': index,
+        'track_id': _queue[index].id,
+      }));
+      return;
+    }
 
     final track = _queue[index];
     _queue.removeAt(index);
@@ -3448,6 +3496,15 @@ class AudioPlayerService {
     if (oldIndex < 0 || oldIndex >= _queue.length) return;
     if (newIndex < 0 || newIndex >= _queue.length) return;
     if (oldIndex == newIndex) return;
+    if (followsConnectLeader) {
+      unawaited(connectTransport!({
+        'action': 'queue_reorder',
+        'index': oldIndex,
+        'track_id': _queue[oldIndex].id,
+        'to': newIndex,
+      }));
+      return;
+    }
 
     final track = _queue.removeAt(oldIndex);
     _queue.insert(newIndex, track);
@@ -3471,17 +3528,28 @@ class AudioPlayerService {
   }
 
   /// Jump to specific index in queue
-  void skipToIndex(int index) {
+  void skipToIndex(int index, {bool fromConnect = false}) {
     if (index < 0 || index >= _queue.length) return;
     if (index == _currentIndex) return;
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) {
+      unawaited(transport({'action': 'skip_to', 'track_id': _queue[index].id}));
+      return;
+    }
 
     _currentIndex = index;
+    _holdPlayback = false;
     _currentTrack = _queue[index];
     unawaited(_loadAndPlayCurrent());
   }
 
   /// Clear the queue
-  void clearQueue() {
+  void clearQueue({bool fromConnect = false}) {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) {
+      unawaited(transport({'action': 'queue_clear'}));
+      return;
+    }
     unawaited(_sendYoutubeWatchtime(state: 'paused', force: true));
     _stopYoutubeWatchtimeTimer();
     _queue.clear();
@@ -3495,7 +3563,7 @@ class AudioPlayerService {
     _isCrossfading = false;
     _crossfadeTriggeredForTrack = false;
     _isRadioMode = false;
-    stop();
+    stop(fromConnect: fromConnect);
     _queueRevision++;
     _updateState(
       queue: _queue,
@@ -3547,6 +3615,9 @@ class AudioPlayerService {
                 // Ensure it's roughly the same song length (prevent swapping with extended remixes)
                 if (diff <= 30) {
                   if (kDebugMode) print('AudioPlayerService: Swapped ${t.id} for ${best.id}');
+                  if (_pendingSeekTrackId == t.id) {
+                    _pendingSeekTrackId = best.id;
+                  }
                   _currentTrack = best.copyWith(setVideoId: t.setVideoId);
                   _queue[_currentIndex] = _currentTrack!;
                   
@@ -3678,7 +3749,7 @@ class AudioPlayerService {
                 _pendingSeekPosition = null;
                 _pendingSeekTrackId = null;
               }
-              _player.play();
+              _startPlayback();
               _updateState(
                 isLoading: false,
                 currentPlaybackData: localPlaybackData,
@@ -4488,7 +4559,8 @@ class AudioPlayerService {
   int _automixIncomingIndex = -1;
   bool _automixSyncScheduled = false;
 
-  bool get _automixOn => AutomixService.instance.enabled && !_jamsModeEnabled;
+  bool get _automixOn =>
+      AutomixService.instance.enabled && !_jamsModeEnabled && !followsConnectLeader;
 
   /// Desktop: a rendered blend is playing on Automix's own player, and the
   /// UI follows it rather than either of these two (see
@@ -4693,6 +4765,7 @@ class AudioPlayerService {
   /// Opus while the ones after it (already playing → instant return)
   /// upgraded.
   void _startPlayback() {
+    if (_holdPlayback) return;
     unawaited(
       _player.play().catchError((Object e) {
         if (kDebugMode) print('AudioPlayerService: play() failed: $e');
@@ -5436,6 +5509,7 @@ class AudioPlayerService {
 
   /// Handle track completion
   void _onTrackComplete() {
+    if (followsConnectLeader) return;
     // Emit track complete event (for Jams integration)
     if (_currentTrack != null) {
       _trackCompleteController.add(_currentTrack!);
@@ -5641,7 +5715,13 @@ class AudioPlayerService {
   }
 
   /// Play
-  Future<void> play() async {
+  bool _holdPlayback = false;
+
+  Future<void> play({bool fromConnect = false}) async {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) return transport({'action': 'play'});
+    _holdPlayback = false;
+    if (state.isLoading && fromConnect) return;
     if (_currentTrack == null) return;
     if (_automixClipActive) {
       await AutomixService.instance.desktopEngine?.clipPlay();
@@ -5705,7 +5785,10 @@ class AudioPlayerService {
   }
 
   /// Pause
-  Future<void> pause() async {
+  Future<void> pause({bool fromConnect = false}) async {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) return transport({'action': 'pause'});
+    if (fromConnect) _holdPlayback = true;
     if (_automixClipActive) {
       await AutomixService.instance.desktopEngine?.clipPause();
       return;
@@ -5717,6 +5800,8 @@ class AudioPlayerService {
 
   /// Toggle play/pause
   Future<void> togglePlayPause() async {
+    final transport = connectTransport;
+    if (transport != null) return transport({'action': 'toggle'});
     if (_automixClipActive ? _automixClipPlaying : _player.playing) {
       await pause();
     } else {
@@ -5725,7 +5810,9 @@ class AudioPlayerService {
   }
 
   /// Stop playback
-  Future<void> stop() async {
+  Future<void> stop({bool fromConnect = false}) async {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) return transport({'action': 'pause'});
     if (_automixClipActive) await AutomixService.instance.skip();
     final position = _player.position;
     unawaited(_sendYoutubeWatchtime(state: 'paused', force: true));
@@ -5742,7 +5829,16 @@ class AudioPlayerService {
   }
 
   /// Seek to position
-  Future<void> seek(Duration position) async {
+  Future<void> seek(Duration position, {bool fromConnect = false}) async {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) {
+      return transport({'action': 'seek', 'position_ms': position.inMilliseconds});
+    }
+    if (fromConnect && state.isLoading && _currentTrack != null) {
+      _pendingSeekPosition = position;
+      _pendingSeekTrackId = _currentTrack!.id;
+      return;
+    }
     // A seek during a rendered blend lands on whichever song is current.
     if (_automixClipActive) await AutomixService.instance.desktopEngine?.leaveClip();
     if (_youtubeWatchtimeTimer != null && _player.playing) {
@@ -5756,13 +5852,20 @@ class AudioPlayerService {
 
   /// Seek by offset
   Future<void> seekBy(Duration offset) async {
+    final transport = connectTransport;
+    if (transport != null) {
+      return transport({'action': 'seek_by', 'offset_ms': offset.inMilliseconds});
+    }
     final newPosition = _player.position + offset;
     await seek(newPosition);
   }
 
   /// Skip to next track
   /// Uses pre-built playlist for instant skip if available (OuterTune approach)
-  Future<void> skipToNext() async {
+  Future<void> skipToNext({bool fromConnect = false}) async {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) return transport({'action': 'next'});
+    _holdPlayback = false;
     // A skip is never blended: drop any Automix blend in flight first.
     if (_automixClipActive) {
       await AutomixService.instance.skip();
@@ -5799,7 +5902,9 @@ class AudioPlayerService {
   }
 
   /// Skip to previous track
-  Future<void> skipToPrevious() async {
+  Future<void> skipToPrevious({bool fromConnect = false}) async {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) return transport({'action': 'previous'});
     if (_automixClipActive) {
       await AutomixService.instance.skip();
     } else {
@@ -5824,11 +5929,16 @@ class AudioPlayerService {
     }
 
     _currentIndex = newIndex;
+    _holdPlayback = false;
     await _loadAndPlayCurrent();
   }
 
   /// Set loop mode
-  Future<void> setLoopMode(LoopMode mode) async {
+  Future<void> setLoopMode(LoopMode mode, {bool fromConnect = false}) async {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) {
+      return transport({'action': 'set_repeat', 'loop_mode': mode.index});
+    }
     _loopMode = mode;
     final nativeMode = _nativeLoopModeFor(mode);
     await _player.setLoopMode(nativeMode);
@@ -5847,11 +5957,15 @@ class AudioPlayerService {
   LoopMode _nativeLoopModeFor(LoopMode mode) {
     // Playback usually runs on a single-track source, so native "repeat all"
     // would just loop that one item. Playlist repeat is handled in app logic.
-    return mode == LoopMode.one ? LoopMode.one : LoopMode.off;
+    return mode == LoopMode.one && !followsConnectLeader
+        ? LoopMode.one
+        : LoopMode.off;
   }
 
   /// Toggle shuffle
-  Future<void> toggleShuffle() async {
+  Future<void> toggleShuffle({bool fromConnect = false}) async {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) return transport({'action': 'shuffle'});
     _shuffleEnabled = !_shuffleEnabled;
 
     if (_shuffleEnabled && _queue.isNotEmpty) {
@@ -5876,12 +5990,22 @@ class AudioPlayerService {
     _updateState(
       shuffleEnabled: _shuffleEnabled,
       queue: _queue,
+      queueRevision: ++_queueRevision,
       currentIndex: _currentIndex,
     );
   }
 
+  void setConnectShuffle(bool enabled) {
+    _shuffleEnabled = enabled;
+    _updateState(shuffleEnabled: enabled);
+  }
+
   /// Set playback speed
-  Future<void> setSpeed(double speed) async {
+  Future<void> setSpeed(double speed, {bool fromConnect = false}) async {
+    final transport = connectTransport;
+    if (!fromConnect && transport != null) {
+      return transport({'action': 'speed', 'speed': speed});
+    }
     _listenerSpeed = speed;
     await _player.setSpeed(speed);
     await _inactivePlayer.setSpeed(speed);

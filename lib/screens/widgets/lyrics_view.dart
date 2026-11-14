@@ -8,7 +8,6 @@ import 'package:iconsax/iconsax.dart';
 import '../../core/l10n/app_localizations_x.dart';
 import '../../providers/music_providers.dart';
 import '../../providers/providers.dart';
-import '../../services/audio_player_service.dart' as player;
 import '../../services/lyrics/lyrics_service.dart';
 import '../../services/lyrics/lyrics_models.dart';
 import '../../services/lyrics/instrumental_gaps.dart';
@@ -145,10 +144,9 @@ class _LyricsViewState extends ConsumerState<LyricsView>
   /// it learns the real playback rate, so Automix tempo matching stays in
   /// step.
   int _stepClock() {
-    final service = player.AudioPlayerService.instance;
-    final playhead = service.playhead;
+    final playhead = ref.read(playbackTransportProvider).playhead;
     final offset = ref.read(lyricsSyncOffsetProvider);
-    final trackId = service.currentTrack?.id;
+    final trackId = ref.read(currentTrackIdProvider);
     if (_clock == null || trackId != _clockTrackId) {
       _clockTrackId = trackId;
       _clock = LyricClock(playhead.positionMs + offset);
@@ -396,7 +394,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
 
   /// Seek to a specific position when a lyric line is tapped
   void _seekToLyric(int timeInMs) {
-    ref.read(audioPlayerServiceProvider).seek(Duration(milliseconds: timeInMs));
+    ref.read(playbackTransportProvider).seek(Duration(milliseconds: timeInMs));
     _resumeAutoScroll();
   }
 

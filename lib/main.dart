@@ -34,6 +34,8 @@ import 'screens/widgets/update_dialog.dart';
 import 'screens/widgets/desktop_shell.dart';
 import 'services/scrobbling/scrobble_service.dart';
 import 'services/desktop/desktop_updater.dart';
+import 'services/inzx_connect_remote.dart';
+import 'services/inzx_connect_service.dart';
 
 InzxAudioHandler? audioHandler;
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
@@ -144,6 +146,12 @@ void main() async {
   // Last.fm / ListenBrainz: follows the player from here on (no-op until an
   // account is connected).
   unawaited(ScrobbleService.instance.start());
+
+  // Inzx Connect: listens for paired devices' commands (play here, play on,
+  // remote controls). A no-op on installs that never opened Connect.
+  if (InzxConnectService.isSupported) {
+    unawaited(InzxConnectRemote.instance.start());
+  }
 
   // Set preferred orientations & enable edge-to-edge
   SystemChrome.setPreferredOrientations([

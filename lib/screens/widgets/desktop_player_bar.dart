@@ -18,6 +18,7 @@ import 'automix_mix_pulse.dart';
 import 'desktop_shell.dart';
 import 'lyrics_view.dart';
 import 'lossless_badge.dart';
+import 'now_playing_bottom_bar.dart' show LyricsGlyph, QueueGlyph;
 import 'now_playing_screen.dart';
 import 'track_artwork_view.dart';
 
@@ -44,9 +45,9 @@ bool _wasMaximizedBeforeMini = false;
 /// Shrinks the window into a small always-on-top player.
 Future<void> enterDesktopMiniMode() async {
   if (desktopMiniMode.value) return;
-  if (await windowManager.isFullScreen()) {
-    await windowManager.setFullScreen(false);
-  }
+  // Through the shell, so it keeps track of the window's real state.
+  if (desktopVideoFullScreen.value) await setDesktopVideoFullScreen(false);
+  if (desktopFullScreen.value) await setDesktopFullScreen(false);
   _wasMaximizedBeforeMini = await windowManager.isMaximized();
   if (_wasMaximizedBeforeMini) await windowManager.unmaximize();
   _boundsBeforeMini = await windowManager.getBounds();
@@ -71,11 +72,15 @@ Future<void> exitDesktopMiniMode() async {
 /// Opens the now playing view on [tab], or closes it if it's already there.
 void _toggleNowPlaying(BuildContext context, {int? tab}) {
   if (desktopNowPlayingOpen.value &&
-      (tab == null || desktopNowPlayingTab.value == tab)) {
+      (tab == null ||
+          (!desktopConnectPaneOpen.value && desktopNowPlayingTab.value == tab))) {
     NowPlayingScreen.closeDesktop();
     return;
   }
-  if (tab != null) desktopNowPlayingTab.value = tab;
+  if (tab != null) {
+    desktopNowPlayingTab.value = tab;
+    desktopConnectPaneOpen.value = false;
+  }
   NowPlayingScreen.showDesktop();
 }
 
@@ -685,12 +690,16 @@ class _RightControls extends ConsumerWidget {
       listenable: Listenable.merge([
         desktopNowPlayingOpen,
         desktopNowPlayingTab,
+        desktopConnectPaneOpen,
       ]),
       builder: (context, _) {
         final open = desktopNowPlayingOpen.value;
         final tab = desktopNowPlayingTab.value;
+        final connectOpen = open && desktopConnectPaneOpen.value;
         Color panel(int index) =>
-            open && tab == index ? accent : base.withValues(alpha: 0.75);
+            open && !connectOpen && tab == index
+            ? accent
+            : base.withValues(alpha: 0.75);
 
         final color = base.withValues(alpha: 0.75);
         return LayoutBuilder(
@@ -706,21 +715,24 @@ class _RightControls extends ConsumerWidget {
                     tooltip: 'Lyrics',
                     onPressed: () =>
                         _toggleNowPlaying(context, tab: _kLyricsTab),
-                    icon: Icons.mic_none_rounded,
                     color: panel(_kLyricsTab),
+                    // The phone player's lyrics and up next glyphs.
+                    glyph: (color) => LyricsGlyph(color: color),
                   ),
                 _RightControlButton(
-                  tooltip: 'Queue',
+                  tooltip: 'Up next',
                   onPressed: () => _toggleNowPlaying(context, tab: _kUpNextTab),
-                  icon: Icons.queue_music_rounded,
                   color: panel(_kUpNextTab),
+                  glyph: (color) => QueueGlyph(color: color),
                 ),
                 _RightControlButton(
                   tooltip: InzxConnectScreen.title,
-                  onPressed: () =>
-                      InzxConnectScreen.open(rootNavigatorKey.currentState),
+                  onPressed: () {
+                    desktopConnectPaneOpen.value = !connectOpen;
+                    if (!open) NowPlayingScreen.showDesktop();
+                  },
                   icon: InzxConnectScreen.icon,
-                  color: color,
+                  color: connectOpen ? accent : color,
                 ),
                 if (!compact) ...[
                   _VolumeControl(
@@ -767,14 +779,18 @@ class _RightControlButton extends StatelessWidget {
   const _RightControlButton({
     required this.tooltip,
     required this.onPressed,
-    required this.icon,
+    this.icon,
+    this.glyph,
     required this.color,
     this.iconSize = 20,
-  });
+  }) : assert(icon != null || glyph != null);
 
   final String tooltip;
   final VoidCallback onPressed;
-  final IconData icon;
+  final IconData? icon;
+
+  /// A drawn glyph in place of [icon], given the colour to draw in.
+  final Widget Function(Color color)? glyph;
   final Color color;
   final double iconSize;
 
@@ -788,7 +804,9 @@ class _RightControlButton extends StatelessWidget {
         iconSize: iconSize,
         tooltip: tooltip,
         onPressed: onPressed,
-        icon: Icon(icon, color: color),
+        icon: glyph != null
+            ? SizedBox.square(dimension: iconSize, child: glyph!(color))
+            : Icon(icon, color: color),
       ),
     );
   }
@@ -1000,13 +1018,16 @@ class _DesktopPopoutPlayerState extends ConsumerState<DesktopPopoutPlayer> {
                       tooltip: showLyrics ? 'Show artwork' : 'Show lyrics',
                       onPressed: () =>
                           desktopMiniLyrics.value = !desktopMiniLyrics.value,
-                      icon: Icon(
-                        showLyrics
-                            ? Icons.album_rounded
-                            : Icons.lyrics_outlined,
-                        color: Colors.white,
-                        size: 20,
-                      ),
+                      icon: showLyrics
+                          ? const Icon(
+                              Icons.album_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            )
+                          : const SizedBox.square(
+                              dimension: 20,
+                              child: LyricsGlyph(color: Colors.white),
+                            ),
                     ),
                   ),
                   Positioned(
@@ -1115,7 +1136,9 @@ class _MiniLyrics extends ConsumerWidget {
       data: MediaQuery.of(
         context,
       ).copyWith(textScaler: const TextScaler.linear(0.75)),
-      child: RepaintBoundary(child: LyricsView(currentPosition: position)),
+      child: RepaintBoundary(
+        child: LyricsView(currentPosition: position, menuVisible: false),
+      ),
     );
   }
 }

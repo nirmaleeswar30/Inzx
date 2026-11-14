@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:inzx/main.dart' show rootNavigatorKey;
+import 'package:inzx/l10n/generated/app_localizations.dart';
 import 'package:inzx/models/models.dart';
 import 'package:inzx/providers/providers.dart';
 import 'package:inzx/screens/inzx_connect_screen.dart';
 import 'package:inzx/screens/widgets/desktop_player_bar.dart';
+import 'package:inzx/screens/widgets/now_playing_screen.dart';
 import 'package:inzx/services/audio_player_service.dart';
 import 'package:inzx/services/playback/playback_data.dart';
 
@@ -53,6 +55,8 @@ void main() {
         ],
         child: MaterialApp(
           navigatorKey: rootNavigatorKey,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           builder: (context, child) => Overlay(
             initialEntries: [
               OverlayEntry(
@@ -78,14 +82,29 @@ void main() {
     expect(tester.getCenter(connect).dx, greaterThan(720 / 2));
     expect(find.text('Lossless'), findsNothing);
     expect(tester.takeException(), isNull);
+
+    NowPlayingScreen.showDesktop();
+    await tester.pumpAndSettle();
+    final nowPlaying = find.byType(NowPlayingScreen);
+    expect(nowPlaying, findsOneWidget);
+
     await tester.tap(connect);
     await tester.pumpAndSettle();
-    expect(find.byType(InzxConnectScreen), findsOneWidget);
-    await tester.tap(connect);
-    await tester.pumpAndSettle();
-    rootNavigatorKey.currentState!.pop();
-    await tester.pumpAndSettle();
+    final pane = find.descendant(
+      of: nowPlaying,
+      matching: find.byType(InzxConnectPanel),
+    );
+    expect(pane, findsOneWidget);
+    expect(tester.getTopLeft(pane).dx, greaterThan(720 / 2));
+    expect(find.text('CONNECT'), findsNothing);
     expect(find.byType(InzxConnectScreen), findsNothing);
+
+    await tester.tap(connect);
+    await tester.pumpAndSettle();
+    expect(pane, findsNothing);
+    expect(nowPlaying, findsOneWidget);
+    NowPlayingScreen.closeDesktop();
+    await tester.pumpAndSettle();
 
     upgrading.add(true);
     await tester.pump();
