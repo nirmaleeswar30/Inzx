@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/utils/platform_utils.dart';
+import '../widgets/listening_stats_shelf.dart';
 import '../widgets/desktop_track_grid.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -583,6 +584,12 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
       widgets.add(const SizedBox(height: 24));
     }
 
+    // Your week in music: listening time and top picks, near the top where
+    // it's seen. Hidden until there's a week's listening to show.
+    widgets.add(
+      const ListeningStatsShelf(padding: EdgeInsets.fromLTRB(16, 0, 16, 24)),
+    );
+
     // Render other shelves
     for (final shelf in shelves) {
       // Skip the one we used for welcome
@@ -695,6 +702,8 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
   Widget _buildFallbackShelves(bool isDark, ColorScheme colorScheme) {
     return Column(
       children: [
+        const ListeningStatsShelf(padding: EdgeInsets.fromLTRB(16, 0, 16, 24)),
+
         // Forgotten favorites (horizontal albums)
         _buildForgottenFavorites(isDark, colorScheme),
 

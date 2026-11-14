@@ -128,6 +128,11 @@ class InzxConnectRemote extends ChangeNotifier {
   ConnectPlayback? _pendingGroupPlayback;
   ConnectPlayback? _appliedGroupPlayback;
   Future<void> _groupCommands = Future<void>.value();
+
+  /// After following the leader's fade, drift isn't corrected until this
+  /// passes, so the fade isn't interrupted by a seek.
+  DateTime _settleUntil = DateTime.fromMillisecondsSinceEpoch(0);
+  static const _settleAfterFade = Duration(milliseconds: 1500);
   bool get isPlayingOnBoth => _groupId != null;
   bool get isLocalOutputSelected =>
       _selectedOutput != null && _selectedOutput == _deviceId;
@@ -290,10 +295,34 @@ class InzxConnectRemote extends ChangeNotifier {
     if (_player.state.shuffleEnabled != peer.shuffleEnabled) {
       _player.setConnectShuffle(peer.shuffleEnabled);
     }
-    if (queueChanged ||
-        _player.currentTrack == null ||
-        previous.track?.id != track.id ||
-        previous.currentIndex != peer.currentIndex) {
+    // The leader moved on to the next song in the same queue: a crossfade,
+    // or an Automix blend handing over. Fade into it here as well, from
+    // where the leader is, rather than reloading it over the song still
+    // playing (that cut was the hiccup in every transition).
+    final index = peer.currentIndex;
+    final lines = !queueChanged &&
+        index >= 0 &&
+        index < _player.queue.length &&
+        _player.queue[index].id == track.id;
+    if (lines &&
+        previous.track?.id != track.id &&
+        _player.currentTrack?.id != track.id &&
+        peer.isPlaying) {
+      if (await _player.connectFadeTo(index, peer.position)) {
+        _settleUntil = DateTime.now().add(_settleAfterFade);
+        return;
+      }
+    }
+    // Already on the leader's song (its own fade got there): nothing to load.
+    final alreadyThere =
+        lines &&
+        _player.currentTrack?.id == track.id &&
+        _player.state.currentIndex == index;
+    if (!alreadyThere &&
+        (queueChanged ||
+            _player.currentTrack == null ||
+            previous.track?.id != track.id ||
+            previous.currentIndex != peer.currentIndex)) {
       final tracks = peer.queue.isEmpty ? [track] : peer.queue;
       await _player.playQueue(
         tracks,
@@ -304,11 +333,17 @@ class InzxConnectRemote extends ChangeNotifier {
       );
       return;
     }
-    if (peer.seeks != previous.seeks ||
-        (!_player.state.isLoading &&
-            !peer.isBuffering &&
-            (_player.currentPosition - peer.position).abs() >
-                const Duration(milliseconds: 900))) {
+    // Mid-fade the playhead belongs to two songs, and seeking then is
+    // audible; drift is put right once the transition has settled.
+    final settling =
+        _player.isTransitioning ||
+        peer.isBuffering ||
+        DateTime.now().isBefore(_settleUntil);
+    if (!settling &&
+        (peer.seeks != previous.seeks ||
+            (!_player.state.isLoading &&
+                (_player.currentPosition - peer.position).abs() >
+                    const Duration(milliseconds: 900)))) {
       await _player.seek(peer.position, fromConnect: true);
     }
     if (!peer.isBuffering) {

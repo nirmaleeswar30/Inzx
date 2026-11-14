@@ -35,6 +35,7 @@ import 'screens/widgets/desktop_shell.dart';
 import 'services/scrobbling/scrobble_service.dart';
 import 'services/desktop/desktop_updater.dart';
 import 'services/inzx_connect_remote.dart';
+import 'services/listening_stats_service.dart';
 import 'services/inzx_connect_service.dart';
 
 InzxAudioHandler? audioHandler;
@@ -93,6 +94,9 @@ void main() async {
   } catch (e) {
     debugPrint('⚠️ Hive initialization failed: $e');
   }
+
+  // Listening statistics: follows the player from here on.
+  unawaited(ListeningStatsService.instance.start());
 
   try {
     final prefs = await SharedPreferences.getInstance();

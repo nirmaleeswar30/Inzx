@@ -261,7 +261,9 @@ class _LyricsViewState extends ConsumerState<LyricsView>
       final newMs = _heldPositionMs;
       if (_smoothPositionNotifier.value != newMs) {
         _smoothPositionNotifier.value = newMs;
-        _checkLineIndexChange(newMs);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _checkLineIndexChange(newMs);
+        });
       }
     }
   }
@@ -626,9 +628,11 @@ class _LyricsViewState extends ConsumerState<LyricsView>
       _lineKeys = List.generate(lines.length, (_) => GlobalKey());
       _currentLineIndex = -1;
       _focusLineIndex = -1;
-      if (_scrollController.hasClients) {
-        _scrollController.jumpTo(0);
-      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _scrollController.hasClients) {
+          _scrollController.jumpTo(0);
+        }
+      });
     }
 
     final currentIdx = _currentLineIndex;
@@ -991,6 +995,16 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     );
   }
 
+bool _isComplexScript(String text) {
+  for (final unit in text.codeUnits) {
+    if (unit >= 0x0900 && unit <= 0x0DFF) return true; // Indic (Tamil, etc.)
+    if (unit >= 0x0590 && unit <= 0x08FF) return true; // Arabic, Hebrew
+    if (unit >= 0x0E00 && unit <= 0x109F) return true; // Thai, Myanmar
+    if (unit >= 0x2E80 && unit <= 0x9FFF) return true; // CJK
+  }
+  return false;
+}
+
   /// Line-level synced row with distance attenuation and smooth fade transitions
   Widget _buildLineSyncRow({
     required LyricLine line,
@@ -1031,7 +1045,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
           fontStyle: isBg ? FontStyle.italic : FontStyle.normal,
           color: lyricColor,
           height: 1.3,
-          letterSpacing: -0.4,
+          letterSpacing: _isComplexScript(line.text) ? 0.0 : -0.4,
           shadows: isCurrentLine
               ? [
                   Shadow(
@@ -1180,7 +1194,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
                   fontWeight: FontWeight.w800,
                   fontStyle: isBg ? FontStyle.italic : FontStyle.normal,
                   height: 1.3,
-                  letterSpacing: -0.4,
+                  letterSpacing: _isComplexScript(line.text) ? 0.0 : -0.4,
                 ),
                 color: textColor,
                 dimAlpha: dimAlpha,

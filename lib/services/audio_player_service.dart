@@ -1041,12 +1041,21 @@ class AudioPlayerService {
     return null;
   }
 
-  Future<void> _crossfadeToIndex(int targetIndex) async {
+  /// Fades from the song playing into queue entry [targetIndex]. [startAt]
+  /// starts the incoming song partway in, and [fade] overrides the crossfade
+  /// setting (Inzx Connect follows its leader's transition with these).
+  Future<void> _crossfadeToIndex(
+    int targetIndex, {
+    Duration? startAt,
+    Duration? fade,
+  }) async {
     if (_isCrossfading) return;
-    if (_crossfadeDurationMs <= 0 || _exclusiveOutput) {
+    final fadeDuration = fade ?? _crossfadeDuration;
+    if (fadeDuration <= Duration.zero || _exclusiveOutput) {
       _currentIndex = targetIndex;
       _currentTrack = _queue[targetIndex];
       await _loadAndPlayCurrent();
+      if (startAt != null && startAt > Duration.zero) await _player.seek(startAt);
       return;
     }
     if (targetIndex < 0 || targetIndex >= _queue.length) return;
@@ -1070,7 +1079,11 @@ class AudioPlayerService {
       await incomingPlayer.stop();
       await incomingPlayer.setLoopMode(_nativeLoopModeFor(_loopMode));
       await incomingPlayer.setSpeed(outgoingPlayer.speed);
-      await incomingPlayer.setAudioSource(built.source, preload: true);
+      await incomingPlayer.setAudioSource(
+        built.source,
+        initialPosition: startAt,
+        preload: true,
+      );
       await _setVolumeSafely(
         incomingPlayer,
         0.12,
@@ -1151,13 +1164,13 @@ class AudioPlayerService {
       await Future.delayed(const Duration(milliseconds: 90));
       if (kDebugMode) {
         print(
-          'AudioPlayerService: Crossfade started $sourceTrackId -> ${targetTrack.id} (${_crossfadeDurationMs}ms)',
+          'AudioPlayerService: Crossfade started $sourceTrackId -> ${targetTrack.id} (${fadeDuration.inMilliseconds}ms)',
         );
       }
       await _runOverlapFade(
         outgoing: outgoingPlayer,
         incoming: incomingPlayer,
-        duration: _crossfadeDuration,
+        duration: fadeDuration,
       );
 
       await outgoingPlayer.stop();
@@ -1208,6 +1221,10 @@ class AudioPlayerService {
 
   void _maybeTriggerAutoCrossfade(Duration currentPosition) {
     if (_jamsModeEnabled) return;
+    // Playing in sync with a Connect leader: the leader's transition is the
+    // cue (see [connectFadeTo]). Fading here as well raced it, and the
+    // leader's next song then reloaded over this fade mid-way.
+    if (followsConnectLeader) return;
     // With Automix on, the engine plans and runs every transition.
     if (_automixOn) return;
     if (_crossfadeDurationMs <= 0 || _exclusiveOutput) return;
@@ -2389,6 +2406,29 @@ class AudioPlayerService {
   /// When set, transport commands are handled by the Connect group leader.
   Future<void> Function(Map<String, dynamic>)? connectTransport;
   bool followsConnectLeader = false;
+
+  /// Whether a crossfade or Automix blend is running: the playhead belongs
+  /// to two songs for a moment, so Connect doesn't correct drift then.
+  bool get isTransitioning => _isCrossfading || _automixMixing;
+
+  /// Inzx Connect, following a leader: the leader has moved on to queue
+  /// entry [index] (its crossfade, or an Automix blend's handoff). Fades into
+  /// it here too, starting where the leader is, instead of reloading it, which
+  /// cut the song off. False when that isn't possible (nothing playing here,
+  /// the queue doesn't line up, a transition already running), and the
+  /// caller loads it the ordinary way.
+  Future<bool> connectFadeTo(int index, Duration startAt) async {
+    if (index < 0 || index >= _queue.length) return false;
+    if (index == _currentIndex || isTransitioning) return false;
+    if (!_player.playing || _currentTrack == null) return false;
+    // At least a short fade, even with crossfade off here: a hard cut from
+    // the middle of the old song is the click this replaces.
+    final fade = _crossfadeDurationMs >= 1500
+        ? _crossfadeDuration
+        : const Duration(milliseconds: 1500);
+    await _crossfadeToIndex(index, startAt: startAt, fade: fade);
+    return true;
+  }
 
   /// The active player's latest reading of the playhead, dated by when the
   /// native player took it — what the lyrics clock steers by (see

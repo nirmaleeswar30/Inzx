@@ -3,18 +3,20 @@ import '../../core/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../core/l10n/app_localizations_x.dart';
 import '../../providers/providers.dart';
-import '../../providers/bookmarks_and_stats_provider.dart';
 import '../../models/models.dart';
 import '../../services/ytmusic_api_service.dart';
 import '../../services/download_service.dart';
+import '../../services/listening_stats_service.dart';
 import '../widgets/playlist_screen.dart';
 import '../widgets/podcast_screen.dart';
 import '../widgets/now_playing_screen.dart';
 import '../widgets/history_screen.dart';
+import '../widgets/listening_stats_view.dart';
 import '../widgets/artist_page_screen.dart';
 import '../widgets/album_screen.dart';
 import '../widgets/track_options_sheet.dart';
@@ -42,6 +44,32 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
   bool _isArtistsGridView = false;
   PlaylistSortOption _sortOption = PlaylistSortOption.recents;
   PlaylistSortOption _albumSortOption = PlaylistSortOption.recents;
+
+  // Each section remembers list or grid until it's switched again.
+  static const _playlistsGridKey = 'library_playlists_grid_view';
+  static const _albumsGridKey = 'library_albums_grid_view';
+  static const _artistsGridKey = 'library_artists_grid_view';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadViewModes();
+  }
+
+  Future<void> _loadViewModes() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _isGridView = prefs.getBool(_playlistsGridKey) ?? _isGridView;
+      _isAlbumsGridView = prefs.getBool(_albumsGridKey) ?? _isAlbumsGridView;
+      _isArtistsGridView = prefs.getBool(_artistsGridKey) ?? _isArtistsGridView;
+    });
+  }
+
+  Future<void> _saveViewMode(String key, bool grid) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(key, grid);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,6 +157,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
       l10n.artists,
       l10n.downloads,
       l10n.history,
+      'Stats',
     ];
 
     return SingleChildScrollView(
@@ -239,6 +268,11 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
         return _buildDownloadsView(isDark, colorScheme);
       case 4:
         return const HistoryView();
+      case 5:
+        // Your listening, the same view as the Statistics page.
+        return const ListeningStatsView(
+          padding: EdgeInsets.fromLTRB(16, 8, 16, 120),
+        );
       default:
         return const SizedBox.shrink();
     }
@@ -532,6 +566,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
           IconButton(
             onPressed: () {
               setState(() => _isGridView = !_isGridView);
+              _saveViewMode(_playlistsGridKey, _isGridView);
             },
             icon: Icon(
               _isGridView ? Icons.view_list_rounded : Icons.grid_view_rounded,
@@ -1149,18 +1184,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
         tracks = [...likedSongs, ...ytLikedSongs];
         break;
       case 'most_played':
-        final mostPlayedStats = ref.read(mostPlayedTracksProvider);
-        tracks = mostPlayedStats
-            .map(
-              (s) => Track(
-                id: s.trackId,
-                title: s.title,
-                artist: s.artist,
-                duration: Duration.zero,
-                thumbnailUrl: s.thumbnailUrl,
-              ),
-            )
-            .toList();
+        tracks = ListeningStatsService.instance.mostPlayed();
         break;
       case 'recent':
         tracks = ref.read(recentlyPlayedProvider);
@@ -1381,7 +1405,10 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
               ),
               IconButton(
                 onPressed: () =>
-                    setState(() => _isAlbumsGridView = !_isAlbumsGridView),
+                    setState(() {
+                      _isAlbumsGridView = !_isAlbumsGridView;
+                      _saveViewMode(_albumsGridKey, _isAlbumsGridView);
+                    }),
                 icon: Icon(
                   _isAlbumsGridView
                       ? Icons.view_list_rounded
@@ -1759,7 +1786,10 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
               ),
               IconButton(
                 onPressed: () =>
-                    setState(() => _isArtistsGridView = !_isArtistsGridView),
+                    setState(() {
+                      _isArtistsGridView = !_isArtistsGridView;
+                      _saveViewMode(_artistsGridKey, _isArtistsGridView);
+                    }),
                 icon: Icon(
                   _isArtistsGridView
                       ? Icons.view_list_rounded

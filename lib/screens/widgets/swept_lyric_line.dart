@@ -285,6 +285,8 @@ class _LineLayout {
         left = m.left;
         right = m.left + m.width;
       }
+      left = math.min(left, m.left);
+      right = math.max(right, m.left + m.width);
       rows.add(
         _Row(start, endAll, endVisible, left, right, m.baseline - m.ascent,
             m.baseline + m.descent),
@@ -306,6 +308,18 @@ class _LineLayout {
 
   int rowOf(int offset) =>
       offset < charRow.length ? charRow[offset] : rows.length - 1;
+
+  double rowClipTop(int r, double vPad) {
+    if (r <= 0) return rows.isEmpty ? -vPad : rows[0].top - vPad;
+    return (rows[r - 1].bottom + rows[r].top) / 2;
+  }
+
+  double rowClipBottom(int r, double vPad) {
+    if (r >= rows.length - 1) {
+      return rows.isEmpty ? vPad : rows.last.bottom + vPad;
+    }
+    return (rows[r].bottom + rows[r + 1].top) / 2;
+  }
 
   /// Where a character offset sits across [row], in pixels, row-aware at
   /// both ends (BitChord's `xOn`).
@@ -452,7 +466,10 @@ class _SweptPainter extends CustomPainter {
       return;
     }
     final rtl = layout.rtl;
-    for (final row in layout.rows) {
+    final vPad = math.max(16.0, fontSize * 0.5);
+    final margin = math.max(32.0, fontSize * 0.8);
+    for (var r = 0; r < layout.rows.length; r++) {
+      final row = layout.rows[r];
       if (revealed <= row.start) return;
       final cut = revealed < row.endAll;
       final charPos = cut
@@ -468,21 +485,24 @@ class _SweptPainter extends CustomPainter {
       final lead = rtl
           ? math.max(safe - featherPx, row.left)
           : math.min(safe + featherPx, row.right);
-      final clipLeft = rtl ? lead : row.left;
-      final clipRight = rtl ? row.right : lead;
+      final clipLeft = rtl ? lead : (row.left - margin);
+      final clipRight = rtl ? (row.right + margin) : (cut ? lead : (row.right + margin));
       if (clipLeft >= clipRight) continue;
 
+      final rowTop = layout.rowClipTop(r, vPad);
+      final rowBottom = layout.rowClipBottom(r, vPad);
+
       canvas.save();
-      canvas.clipRect(Rect.fromLTRB(clipLeft, row.top, clipRight, row.bottom));
+      canvas.clipRect(Rect.fromLTRB(clipLeft, rowTop, clipRight, rowBottom));
       _drawText(canvas);
       canvas.restore();
 
       if (featherPx < 0.5) continue;
       final band = Rect.fromLTRB(
         -1e5,
-        row.top,
+        rowTop,
         1e5,
-        row.bottom,
+        rowBottom,
       );
       canvas.drawRect(
         band,
@@ -510,11 +530,14 @@ class _SweptPainter extends CustomPainter {
       return;
     }
     final peak = _peak;
-    for (final row in layout.rows) {
-      final top = row.top;
-      final bottom = row.bottom;
+    final vPad = math.max(16.0, fontSize * 0.5);
+    final margin = math.max(32.0, fontSize * 0.8);
+    for (var r = 0; r < layout.rows.length; r++) {
+      final row = layout.rows[r];
+      final top = layout.rowClipTop(r, vPad);
+      final bottom = layout.rowClipBottom(r, vPad);
       var at = row.start;
-      var edge = row.left;
+      var edge = row.left - margin;
       for (var index = 0; index < timing.words.length; index++) {
         final (spanStart, spanEnd) = timing.wordSpans[index];
         final start = math.max(spanStart, row.start);
@@ -543,7 +566,7 @@ class _SweptPainter extends CustomPainter {
         edge = to;
       }
       if (at < row.endVisible) {
-        _slice(canvas, drawContent, edge, top, row.right, bottom, 0);
+        _slice(canvas, drawContent, edge, top, row.right + margin, bottom, 0);
       }
     }
   }
@@ -562,8 +585,12 @@ class _SweptPainter extends CustomPainter {
   ) {
     final fall = timing.wordFall(word.index, position);
     final first = timing.wordSpans[word.index].$1;
-    final ceiling = row.top - peak * _growHeadroom;
-    final middle = (row.top + row.bottom) / 2;
+    final vPad = math.max(16.0, fontSize * 0.5);
+    final r = layout.rows.indexOf(row);
+    final top = layout.rowClipTop(r, vPad);
+    final bottom = layout.rowClipBottom(r, vPad);
+    final ceiling = top - peak * _growHeadroom;
+    final middle = (top + bottom) / 2;
     for (var char = start; char < end; char++) {
       word.sampleInto(char - first, position, _growth);
       final from = layout.xOn(char, row);
@@ -572,7 +599,7 @@ class _SweptPainter extends CustomPainter {
       final dx = _growth.shift * fontSize;
       final dy = -_growth.rise * peak * fall;
       final growScale = _growth.scale;
-      final overhang = (to - from) * (growScale - 1) / 2;
+      final overhang = (to - from) * (growScale - 1) / 2 + math.max(3.0, fontSize * 0.08);
       final centre = Offset((from + to) / 2, middle);
       _slice(
         canvas,
@@ -586,7 +613,7 @@ class _SweptPainter extends CustomPainter {
         from - overhang + dx,
         ceiling,
         to + overhang + dx,
-        row.bottom,
+        bottom,
         dy,
       );
     }
@@ -597,6 +624,7 @@ class _SweptPainter extends CustomPainter {
   void _glowGrown(Canvas canvas, int position) {
     final peak = _peak;
     final length = layout.text.length;
+    final vPad = math.max(16.0, fontSize * 0.5);
     for (final word in timing.growingWords) {
       if (position < word.startMs || position > word.restsAtMs) continue;
       final (spanStart, spanEnd) = timing.wordSpans[word.index];
@@ -604,7 +632,10 @@ class _SweptPainter extends CustomPainter {
       for (var char = spanStart; char < math.min(spanEnd, length); char++) {
         word.sampleInto(char - spanStart, position, _growth);
         if (_growth.bloom <= 0.01) continue;
-        final row = layout.rows[layout.rowOf(char)];
+        final r = layout.rowOf(char);
+        final top = layout.rowClipTop(r, vPad);
+        final bottom = layout.rowClipBottom(r, vPad);
+        final row = layout.rows[r];
         final from = layout.xOn(char, row);
         final to = layout.xOn(char + 1, row);
         if (to <= from) continue;
@@ -613,9 +644,9 @@ class _SweptPainter extends CustomPainter {
         final overhang = (to - from) * (_growth.scale - 1) / 2;
         final clip = Rect.fromLTRB(
           from - overhang + dx,
-          row.top - peak * _growHeadroom,
+          top - peak * _growHeadroom,
           to + overhang + dx,
-          row.bottom,
+          bottom,
         );
         final centre = Offset((from + to) / 2, (row.top + row.bottom) / 2);
         canvas.save();

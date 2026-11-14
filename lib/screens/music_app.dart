@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations_x.dart';
 import '../../../core/design_system/design_system.dart';
 import '../providers/providers.dart';
-import '../providers/bookmarks_and_stats_provider.dart';
 import '../../core/providers/theme_provider.dart';
 import 'tabs/home_tab.dart';
 import 'tabs/songs_tab.dart';
@@ -158,7 +157,7 @@ class _MusicAppState extends ConsumerState<MusicApp>
       _lastTrackedId = next.id;
 
       ref.read(recentlyPlayedProvider.notifier).addTrack(next);
-      ref.read(playStatisticsProvider.notifier).recordPlay(next);
+      // Plays and listening time are counted by ListeningStatsService.
     });
 
     final isDark = Theme.of(context).brightness == Brightness.dark;

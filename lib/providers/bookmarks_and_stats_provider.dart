@@ -3,11 +3,11 @@ import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/models.dart';
+import '../services/listening_stats_service.dart';
 
 /// Storage keys
 const _bookmarkedAlbumsKey = 'bookmarked_albums';
 const _bookmarkedArtistsKey = 'bookmarked_artists';
-const _playStatsKey = 'play_statistics';
 
 /// Bookmarked albums notifier
 class BookmarkedAlbumsNotifier extends StateNotifier<List<Album>> {
@@ -89,152 +89,6 @@ class BookmarkedArtistsNotifier extends StateNotifier<List<Artist>> {
   }
 }
 
-/// Play statistics for a track
-class TrackPlayStats {
-  final String trackId;
-  final String title;
-  final String artist;
-  final String? thumbnailUrl;
-  final int playCount;
-  final Duration totalPlayTime;
-  final DateTime lastPlayed;
-
-  const TrackPlayStats({
-    required this.trackId,
-    required this.title,
-    required this.artist,
-    this.thumbnailUrl,
-    required this.playCount,
-    required this.totalPlayTime,
-    required this.lastPlayed,
-  });
-
-  TrackPlayStats copyWith({
-    int? playCount,
-    Duration? totalPlayTime,
-    DateTime? lastPlayed,
-  }) => TrackPlayStats(
-    trackId: trackId,
-    title: title,
-    artist: artist,
-    thumbnailUrl: thumbnailUrl,
-    playCount: playCount ?? this.playCount,
-    totalPlayTime: totalPlayTime ?? this.totalPlayTime,
-    lastPlayed: lastPlayed ?? this.lastPlayed,
-  );
-
-  Map<String, dynamic> toJson() => {
-    'trackId': trackId,
-    'title': title,
-    'artist': artist,
-    'thumbnailUrl': thumbnailUrl,
-    'playCount': playCount,
-    'totalPlayTimeMs': totalPlayTime.inMilliseconds,
-    'lastPlayed': lastPlayed.toIso8601String(),
-  };
-
-  factory TrackPlayStats.fromJson(Map<String, dynamic> json) => TrackPlayStats(
-    trackId: json['trackId'] as String,
-    title: json['title'] as String,
-    artist: json['artist'] as String,
-    thumbnailUrl: json['thumbnailUrl'] as String?,
-    playCount: json['playCount'] as int,
-    totalPlayTime: Duration(milliseconds: json['totalPlayTimeMs'] as int),
-    lastPlayed: DateTime.parse(json['lastPlayed'] as String),
-  );
-}
-
-/// Play statistics notifier
-class PlayStatisticsNotifier
-    extends StateNotifier<Map<String, TrackPlayStats>> {
-  PlayStatisticsNotifier() : super({}) {
-    _load();
-  }
-
-  Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final json = prefs.getString(_playStatsKey);
-    if (json == null) return;
-
-    try {
-      state = await compute(_parsePlayStatsIsolate, json);
-    } catch (_) {
-      state = {};
-    }
-  }
-
-  Future<void> _save() async {
-    final prefs = await SharedPreferences.getInstance();
-    final dataToEncode = state.map((k, v) => MapEntry(k, v.toJson()));
-    final json = await compute(_encodePlayStatsIsolate, dataToEncode);
-    await prefs.setString(_playStatsKey, json);
-  }
-
-  /// Record a play for a track
-  void recordPlay(Track track, {Duration playedDuration = Duration.zero}) {
-    final existing = state[track.id];
-
-    if (existing != null) {
-      state = {
-        ...state,
-        track.id: existing.copyWith(
-          playCount: existing.playCount + 1,
-          totalPlayTime: existing.totalPlayTime + playedDuration,
-          lastPlayed: DateTime.now(),
-        ),
-      };
-    } else {
-      state = {
-        ...state,
-        track.id: TrackPlayStats(
-          trackId: track.id,
-          title: track.title,
-          artist: track.artist,
-          thumbnailUrl: track.thumbnailUrl,
-          playCount: 1,
-          totalPlayTime: playedDuration,
-          lastPlayed: DateTime.now(),
-        ),
-      };
-    }
-    _save();
-  }
-
-  /// Get most played tracks
-  List<TrackPlayStats> getMostPlayed({int limit = 20}) {
-    final sorted = state.values.toList()
-      ..sort((a, b) => b.playCount.compareTo(a.playCount));
-    return sorted.take(limit).toList();
-  }
-
-  /// Get recently played (different from history - this is stats-based)
-  List<TrackPlayStats> getRecentlyPlayed({int limit = 20}) {
-    final sorted = state.values.toList()
-      ..sort((a, b) => b.lastPlayed.compareTo(a.lastPlayed));
-    return sorted.take(limit).toList();
-  }
-
-  /// Get total listen time
-  Duration get totalListenTime {
-    return state.values.fold(
-      Duration.zero,
-      (sum, stats) => sum + stats.totalPlayTime,
-    );
-  }
-
-  /// Get total play count
-  int get totalPlayCount {
-    return state.values.fold(0, (sum, stats) => sum + stats.playCount);
-  }
-
-  /// Clear all statistics
-  Future<void> clear() async {
-    state = {};
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_playStatsKey);
-  }
-}
-
 /// Providers
 final bookmarkedAlbumsProvider =
     StateNotifierProvider<BookmarkedAlbumsNotifier, List<Album>>((ref) {
@@ -246,12 +100,10 @@ final bookmarkedArtistsProvider =
       return BookmarkedArtistsNotifier();
     });
 
-final playStatisticsProvider =
-    StateNotifierProvider<PlayStatisticsNotifier, Map<String, TrackPlayStats>>((
-      ref,
-    ) {
-      return PlayStatisticsNotifier();
-    });
+/// Listening statistics: rebuilds what watches it as listening is recorded.
+final listeningStatsProvider = ChangeNotifierProvider<ListeningStatsService>(
+  (ref) => ListeningStatsService.instance,
+);
 
 /// Check if album is bookmarked
 final isAlbumBookmarkedProvider = Provider.family<bool, String>((ref, albumId) {
@@ -266,14 +118,6 @@ final isArtistBookmarkedProvider = Provider.family<bool, String>((
 ) {
   final artists = ref.watch(bookmarkedArtistsProvider);
   return artists.any((a) => a.id == artistId);
-});
-
-/// Most played tracks provider
-final mostPlayedTracksProvider = Provider<List<TrackPlayStats>>((ref) {
-  final stats = ref.watch(playStatisticsProvider);
-  final sorted = stats.values.toList()
-    ..sort((a, b) => b.playCount.compareTo(a.playCount));
-  return sorted.take(20).toList();
 });
 
 // ============ ISOLATE FUNCTIONS ============
@@ -296,15 +140,4 @@ List<Artist> _parseArtistListIsolate(List<String> jsonList) {
 /// Encode list of artists to JSON strings
 List<String> _encodeArtistListIsolate(List<Map<String, dynamic>> artists) {
   return artists.map((a) => jsonEncode(a)).toList();
-}
-
-/// Parse play statistics JSON
-Map<String, TrackPlayStats> _parsePlayStatsIsolate(String json) {
-  final map = jsonDecode(json) as Map<String, dynamic>;
-  return map.map((k, v) => MapEntry(k, TrackPlayStats.fromJson(v)));
-}
-
-/// Encode play statistics to JSON
-String _encodePlayStatsIsolate(Map<String, Map<String, dynamic>> data) {
-  return jsonEncode(data);
 }

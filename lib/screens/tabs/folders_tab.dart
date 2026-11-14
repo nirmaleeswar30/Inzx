@@ -793,12 +793,87 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
       return;
     }
 
-    final folderPath = await LocalMusicScanner.pickFolder();
-    if (folderPath != null && mounted) {
-      ref.read(localMusicFoldersProvider.notifier).addFolder(folderPath);
-      // Scan immediately without showing extra popup dialog
-      _scanFolder(folderPath);
+    var folderPath = await LocalMusicScanner.pickFolder();
+    // Linux's folder dialog comes from zenity, kdialog or qarma; without one
+    // there's no dialog at all, so ask for the path instead.
+    if (folderPath == null &&
+        LocalMusicScanner.lastPickerError != null &&
+        Platform.isLinux &&
+        mounted) {
+      folderPath = await _askForFolderPath();
     }
+    if (folderPath == null || !mounted) return;
+    final added = ref
+        .read(localMusicFoldersProvider.notifier)
+        .addFolder(folderPath);
+    if (!added) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('That folder is already in your library.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    // Scan immediately without showing extra popup dialog
+    _scanFolder(folderPath);
+  }
+
+  /// A folder typed in, for when there's no folder dialog to pick one with.
+  Future<String?> _askForFolderPath() async {
+    final controller = TextEditingController();
+    final path = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add a music folder'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'The folder picker needs zenity or kdialog installed. You can '
+              'type the folder’s path instead.',
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              decoration: const InputDecoration(
+                hintText: '/home/you/Music',
+                border: OutlineInputBorder(),
+              ),
+              onSubmitted: (value) => Navigator.pop(context, value),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    var trimmed = path?.trim();
+    if (trimmed == null || trimmed.isEmpty) return null;
+    if (trimmed.startsWith('~/')) {
+      final home = Platform.environment['HOME'];
+      if (home != null) trimmed = '$home${trimmed.substring(1)}';
+    }
+    if (!Directory(trimmed).existsSync()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No folder at $trimmed')),
+        );
+      }
+      return null;
+    }
+    return trimmed;
   }
 
   void _showPermissionDialog({bool isPermanentlyDenied = false}) {
@@ -907,8 +982,14 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
       );
     }
 
+    // A folder that isn't there right now (an unplugged drive) is left
+    // alone: scanning it would find nothing and drop its songs.
+    final present = [
+      for (final folder in folders)
+        if (Directory(folder).existsSync()) folder,
+    ];
     final allTracks = <Track>[];
-    for (final folder in folders) {
+    for (final folder in present) {
       final tracks = await LocalMusicScanner.scanDirectory(folder);
       allTracks.addAll(tracks);
     }
@@ -917,7 +998,7 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
       setState(() => _isSyncing = false);
       await ref
           .read(localTracksProvider.notifier)
-          .syncAllFolders(folders, allTracks);
+          .syncAllFolders(present, allTracks);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

@@ -44,7 +44,29 @@ class _GroupPlayer extends _LocalPlayer {
   @override
   Track? get currentTrack => state.currentTrack;
   @override
+  List<Track> get queue => state.queue;
+  @override
   Duration get currentPosition => position;
+
+  bool transitioning = false;
+  @override
+  bool get isTransitioning => transitioning;
+
+  /// Each fade into a queue entry: (index, where it started).
+  final fades = <(int, Duration)>[];
+  int reloads = 0;
+  final seeks = <Duration>[];
+
+  @override
+  Future<bool> connectFadeTo(int index, Duration startAt) async {
+    if (!state.isPlaying || index == state.currentIndex) return false;
+    fades.add((index, startAt));
+    position = startAt;
+    states.add(
+      state.copyWith(currentTrack: state.queue[index], currentIndex: index),
+    );
+    return true;
+  }
 
   @override
   Future<void> play({bool fromConnect = false}) async {
@@ -61,6 +83,7 @@ class _GroupPlayer extends _LocalPlayer {
   @override
   Future<void> seek(Duration value, {bool fromConnect = false}) async {
     expect(fromConnect, true);
+    seeks.add(value);
     position = value;
   }
 
@@ -76,6 +99,7 @@ class _GroupPlayer extends _LocalPlayer {
     String? sourceTitle,
   }) async {
     expect(fromConnect, true);
+    reloads++;
     position = startPosition ?? Duration.zero;
     states.add(
       state.copyWith(
@@ -169,6 +193,91 @@ void main() {
       await receive('group_end', {'pause': true});
       expect(leader.isPlayingOnBoth, false);
       expect(desktop.state.isPlaying, false);
+    },
+  );
+
+  test(
+    'a crossfade on the leader fades the follower too, with no reload or seek',
+    () async {
+      final desktop = _GroupPlayer();
+      final phone = _GroupPlayer();
+      final leader = InzxConnectRemote.forTest(desktop);
+      final follower = InzxConnectRemote.forTest(phone);
+      addTearDown(() async {
+        leader.dispose();
+        follower.dispose();
+        await desktop.states.close();
+        await phone.states.close();
+      });
+      const first = Track(
+        id: 'first',
+        title: 'First',
+        artist: 'Artist',
+        duration: Duration(minutes: 2),
+      );
+      final second = first.copyWith(id: 'second');
+      const group = 'group';
+
+      ConnectPlayback leaderState({required int positionMs}) => ConnectPlayback(
+        track: desktop.state.currentTrack,
+        queue: desktop.state.queue,
+        queueStart: 0,
+        currentIndex: desktop.state.currentIndex,
+        queueRevision: 1,
+        isPlaying: desktop.state.isPlaying,
+        isBuffering: false,
+        positionMs: positionMs,
+        durationMs: 120000,
+        receivedAt: DateTime.now(),
+        shuffleEnabled: false,
+        loopMode: LoopMode.off,
+        speed: 1,
+        seeks: 0,
+      );
+
+      await leader.receiveGroupCommandForTest({
+        'from': 'phone',
+        'action': 'group_start',
+        'group': group,
+        'tracks': [first.toJson(), second.toJson()],
+      });
+      await follower.followGroupForTest(
+        'pc',
+        group,
+        leaderState(positionMs: 110000),
+      );
+      expect(phone.currentTrack, first);
+      final reloadsBefore = phone.reloads;
+
+      // The leader's crossfade (or Automix handoff) moves it to the second
+      // song, already 8 s in.
+      desktop.states.add(
+        desktop.state.copyWith(currentTrack: second, currentIndex: 1),
+      );
+      await follower.followGroupForTest(
+        'pc',
+        group,
+        leaderState(positionMs: 8000),
+      );
+
+      expect(phone.currentTrack, second);
+      expect(phone.fades, hasLength(1));
+      expect(phone.fades.single.$1, 1);
+      expect(
+        phone.fades.single.$2.inMilliseconds,
+        inInclusiveRange(8000, 8500),
+      );
+      expect(phone.reloads, reloadsBefore, reason: 'no reload over the fade');
+
+      // Right after, a drifted reading doesn't seek into the settling fade.
+      phone.position = const Duration(seconds: 5);
+      await follower.followGroupForTest(
+        'pc',
+        group,
+        leaderState(positionMs: 9000),
+      );
+      expect(phone.seeks, isEmpty);
+      expect(phone.reloads, reloadsBefore);
     },
   );
 

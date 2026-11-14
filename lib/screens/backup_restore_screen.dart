@@ -20,6 +20,7 @@ import '../../providers/search_history_provider.dart';
 import '../../providers/providers.dart'
     hide searchHistoryProvider, recentlyPlayedProvider;
 import '../../models/models.dart';
+import '../services/listening_stats_service.dart';
 import '../services/audio_player_service.dart';
 import '../services/download_service.dart';
 import '../services/playback/playback_data.dart';
@@ -429,6 +430,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
       await HiveService.streamCacheBox.clear();
       await HiveService.localMusicFoldersBox.clear();
       await HiveService.localMusicTracksBox.clear();
+      await ListeningStatsService.instance.clear();
 
       // Keep downloaded files untouched, but clear stream byte-cache files.
       await playerService.clearStreamAudioCache();
@@ -485,6 +487,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
       'downloaded_playlists': HiveService.downloadedPlaylistsBox.values
           .map(_downloadedPlaylistToJson)
           .toList(),
+      'listening_stats': ListeningStatsService.instance.export(),
     };
   }
 
@@ -599,6 +602,15 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
     final settingsRaw = backup['settings'];
     if (settingsRaw is Map) {
       await _restoreSettings(Map<String, dynamic>.from(settingsRaw));
+    }
+
+    // Listening statistics (backups from before they were included have
+    // none, and leave the current ones alone).
+    final statsRaw = backup['listening_stats'];
+    if (statsRaw is Map && statsRaw.isNotEmpty) {
+      await ListeningStatsService.instance.restore(
+        Map<String, dynamic>.from(statsRaw),
+      );
     }
 
     // Restore downloaded-playlist snapshots (metadata only).

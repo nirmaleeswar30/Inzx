@@ -53,14 +53,10 @@ class LocalMusicFoldersNotifier extends StateNotifier<List<String>> {
 
   Future<void> _loadPersisted() async {
     try {
-      final box = HiveService.localMusicFoldersBox;
-      final rawFolders = box.values.toList();
-      final validFolders =
-          rawFolders.where((p) => Directory(p).existsSync()).toList();
-      state = validFolders;
-      if (validFolders.length != rawFolders.length) {
-        await _persist();
-      }
+      // Folders that aren't there right now (an unplugged drive, a network
+      // share that isn't up yet) are kept: scanning skips them until they're
+      // back. Only the user removes a folder.
+      state = HiveService.localMusicFoldersBox.values.toList();
     } catch (e) {
       if (kDebugMode) {
         print('LocalMusicFoldersNotifier: Load error: $e');
@@ -83,11 +79,28 @@ class LocalMusicFoldersNotifier extends StateNotifier<List<String>> {
     }
   }
 
-  void addFolder(String path) {
-    if (!state.contains(path)) {
-      state = [...state, path];
-      _persist();
+  /// Adds [path]. Returns false when it's already covered: the same folder
+  /// (spelt differently on Windows, where case doesn't matter) or one inside a
+  /// folder already added. Folders inside the new one are folded into it.
+  bool addFolder(String path) {
+    final key = folderKey(path);
+    for (final existing in state) {
+      final other = folderKey(existing);
+      if (other == key || key.startsWith('$other/')) return false;
     }
+    state = [
+      ...state.where((existing) => !folderKey(existing).startsWith('$key/')),
+      path,
+    ];
+    _persist();
+    return true;
+  }
+
+  /// How two folder paths compare: forward slashes, no trailing slash, and
+  /// case-insensitive on Windows.
+  static String folderKey(String path) {
+    final normal = _normalizePath(path);
+    return Platform.isWindows ? normal.toLowerCase() : normal;
   }
 
   void removeFolder(String path) {
@@ -164,9 +177,12 @@ class LocalTracksNotifier extends StateNotifier<List<Track>> {
 
     for (final track in state) {
       final filePath = track.localFilePath;
+      // Only a file whose folder is still there was really deleted. When
+      // the folder itself is gone (an unplugged drive, a share that isn't
+      // mounted) the song is kept for when it's back.
       if (filePath != null &&
           filePath.isNotEmpty &&
-          File(filePath).existsSync()) {
+          (File(filePath).existsSync() || !File(filePath).parent.existsSync())) {
         validTracks.add(track);
       } else {
         missingIds.add(track.id);
@@ -461,7 +477,7 @@ class LocalTracksNotifier extends StateNotifier<List<Track>> {
 
 /// Local music scanner service
 class LocalMusicScanner {
-  static const _audioExtensions = [
+  static const _phoneExtensions = [
     '.mp3',
     '.m4a',
     '.flac',
@@ -470,6 +486,28 @@ class LocalMusicScanner {
     '.aac',
     '.opus',
   ];
+
+  /// The desktop player (libmpv) also plays these.
+  static const _desktopExtensions = [
+    '.aiff',
+    '.aif',
+    '.wma',
+    '.ape',
+    '.wv',
+    '.dsf',
+    '.dff',
+    '.mka',
+    '.oga',
+    '.alac',
+  ];
+
+  static List<String> get _audioExtensions => Platform.isAndroid
+      ? _phoneExtensions
+      : [..._phoneExtensions, ..._desktopExtensions];
+
+  /// Why the last [pickFolder] couldn't open a folder dialog, if it couldn't.
+  /// On Linux the dialog needs zenity, kdialog or qarma installed.
+  static String? lastPickerError;
 
   /// Request storage permission
   /// Returns: 'granted', 'denied', or 'permanentlyDenied'
@@ -554,10 +592,12 @@ class LocalMusicScanner {
 
   /// Pick a folder to add
   static Future<String?> pickFolder() async {
+    lastPickerError = null;
     try {
       final result = await FilePicker.platform.getDirectoryPath();
       return result;
     } catch (e) {
+      lastPickerError = e.toString();
       if (kDebugMode) {
         print('Error picking folder: $e');
       }
@@ -705,28 +745,47 @@ class _ScanRequest {
 
 /// Top-level function for compute() - discovers audio files in a directory
 /// Must be top-level to work with compute()
+///
+/// Walks one folder at a time. A recursive listSync gives up at the first
+/// folder it can't open (Windows' "System Volume Information" at a drive's
+/// root, another user's folder, a locked app folder) and everything after it
+/// was lost; here an unreadable folder is skipped and the walk goes on.
 List<String> _discoverAudioFilesIsolate(_ScanRequest request) {
   final filePaths = <String>[];
-  final directory = Directory(request.path);
+  final pending = <Directory>[Directory(request.path)];
 
-  try {
-    // Synchronous recursive listing (runs in isolate, won't block UI)
-    for (final entity in directory.listSync(
-      recursive: true,
-      followLinks: false,
-    )) {
-      if (entity is File) {
+  while (pending.isNotEmpty) {
+    final directory = pending.removeLast();
+    final List<FileSystemEntity> entries;
+    try {
+      entries = directory.listSync(followLinks: false);
+    } catch (_) {
+      continue; // can't be read: skip just this folder
+    }
+    for (final entity in entries) {
+      if (entity is Directory) {
+        if (!_skipFolder(entity.path)) pending.add(entity);
+      } else if (entity is File) {
         final ext = entity.path.toLowerCase();
         if (request.extensions.any((e) => ext.endsWith(e))) {
           filePaths.add(entity.path);
         }
       }
     }
-  } catch (e) {
-    // Silently handle permission errors for inaccessible directories
   }
 
+  filePaths.sort();
   return filePaths;
+}
+
+/// System and trash folders, which never hold anyone's music library.
+bool _skipFolder(String path) {
+  final name = path.split(RegExp(r'[\\/]')).last.toLowerCase();
+  return name == r'$recycle.bin' ||
+      name == 'system volume information' ||
+      name == '.trashes' ||
+      name.startsWith('.trash-') ||
+      name == '.trash';
 }
 
 /// Isolate-safe representation of downloaded track metadata

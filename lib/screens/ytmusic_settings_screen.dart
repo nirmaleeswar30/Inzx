@@ -42,6 +42,8 @@ import '../services/inzx_connect_service.dart';
 import 'import_playlist_screen.dart';
 import 'playlist_transfer_screen.dart';
 import 'statistics_screen.dart';
+import 'widgets/listening_stats_view.dart' show formatListening;
+import '../services/listening_stats_service.dart';
 import 'browse_moods_screen.dart';
 import 'downloads_screen.dart';
 import 'widgets/sleep_timer_sheet.dart';
@@ -2435,6 +2437,24 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                 context,
                 MaterialPageRoute(builder: (_) => const ScrobblingScreen()),
               ),
+            );
+          },
+        ),
+        ListenableBuilder(
+          listenable: ListeningStatsService.instance,
+          builder: (context, _) {
+            final week = ListeningStatsService.instance.summarize(
+              StatsPeriod.week,
+              limit: 0,
+            );
+            return _settingsTile(
+              icon: Iconsax.chart,
+              iconBg: _accentColor,
+              title: 'Listening Statistics',
+              subtitle: week.totalMs >= 60000
+                  ? '${formatListening(week.totalMs)} this week'
+                  : 'Your top artists, songs and listening time',
+              onTap: () => StatisticsScreen.open(context),
             );
           },
         ),
