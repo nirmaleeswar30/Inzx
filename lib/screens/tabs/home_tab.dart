@@ -20,6 +20,7 @@ import '../widgets/podcast_screen.dart';
 import '../widgets/album_screen.dart' hide albumColorsProvider;
 import '../widgets/artist_screen.dart';
 import '../widgets/desktop_shell.dart';
+import 'desktop_explore_tab.dart' show DesktopExploreMoodScreen;
 import '../widgets/now_playing_screen.dart';
 import '../search_screen.dart';
 
@@ -1211,6 +1212,39 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
         .whereType<Track>()
         .toList();
 
+    final welcome = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.musicToGetYouStarted,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            // The darkest grey disappears on the coloured
+            // desktop backdrop.
+            color: isDesktop
+                ? _textColors.secondary
+                : _textColors.tertiary,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          displayTitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: _textColors.primary,
+          ),
+        ),
+      ],
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1221,105 +1255,85 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
               // Profile avatar
               _buildProfileAvatar(isDark, colorScheme, size: 40),
               const SizedBox(width: 12),
-              ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: isDesktop ? 320 : 160),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.musicToGetYouStarted,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        // The darkest grey disappears on the coloured
-                        // desktop backdrop.
-                        color: isDesktop
-                            ? _textColors.secondary
-                            : _textColors.tertiary,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      displayTitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: _textColors.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              // YTM mood / activity bubbles & chips in the same row
-              // Flush right when they fit; when they don't, the row scrolls
-              // from the first chip (pinned right, the first ones would start
-              // hidden off the left edge).
-              Expanded(
-                child: SizedBox(
-                  height: 34,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      // Desktop keeps open space beside the welcome: the
-                      // chips get a box that scales with the window, about
-                      // four chips wide in the default 1280 x 800 window and
-                      // more as it grows. Phones use the whole row.
-                      final width = isDesktop
-                          ? constraints.maxWidth * _kDesktopChipsShare
-                          : constraints.maxWidth;
-                      final chips = SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        physics: const BouncingScrollPhysics(),
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(minWidth: width),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              for (final (index, chip)
-                                  in _kHomeMoodChips.indexed) ...[
-                                if (index > 0) const SizedBox(width: 8),
-                                _HomeMoodChip(
-                                  label: chip.label,
-                                  isDark: isDark,
-                                  textColor: _textColors.primary,
-                                  onTap: () => _performSearch(chip.query),
-                                ),
+              // Phones have no room for the mood chips: the welcome takes
+              // the row, with Jams at its end.
+              if (isDesktop)
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 320),
+                  child: welcome,
+                )
+              else
+                Expanded(child: welcome),
+              if (isDesktop) ...[
+                const SizedBox(width: 16),
+                // YTM mood / activity bubbles & chips in the same row
+                // Flush right when they fit; when they don't, the row scrolls
+                // from the first chip (pinned right, the first ones would start
+                // hidden off the left edge).
+                Expanded(
+                  child: SizedBox(
+                    height: 34,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Open space stays beside the welcome: the chips get
+                        // a box that scales with the window, about four chips
+                        // wide in the default 1280 x 800 window and more as
+                        // it grows.
+                        final width =
+                            constraints.maxWidth * _kDesktopChipsShare;
+                        final chips = SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(minWidth: width),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                for (final (index, chip)
+                                    in _kHomeMoodChips.indexed) ...[
+                                  if (index > 0) const SizedBox(width: 8),
+                                  _HomeMoodChip(
+                                    label: chip.label,
+                                    isDark: isDark,
+                                    textColor: _textColors.primary,
+                                    onTap: () => DesktopExploreMoodScreen.open(
+                                      context,
+                                      title: chip.label,
+                                      linkName: chip.explore,
+                                      onSearch: () =>
+                                          _performSearch(chip.query),
+                                    ),
+                                  ),
+                                ],
                               ],
-                            ],
+                            ),
                           ),
-                        ),
-                      );
-                      if (!isDesktop) return chips;
-                      return Align(
-                        alignment: Alignment.centerRight,
-                        child: SizedBox(
-                          width: width,
-                          // The chip cut off at the box's edge fades out
-                          // rather than ending on a hard line.
-                          child: ShaderMask(
-                            blendMode: BlendMode.dstIn,
-                            shaderCallback: (bounds) => const LinearGradient(
-                              colors: [
-                                Colors.white,
-                                Colors.white,
-                                Colors.transparent,
-                              ],
-                              stops: [0, 0.9, 1],
-                            ).createShader(bounds),
-                            child: chips,
+                        );
+                        return Align(
+                          alignment: Alignment.centerRight,
+                          child: SizedBox(
+                            width: width,
+                            // The chip cut off at the box's edge fades out
+                            // rather than ending on a hard line.
+                            child: ShaderMask(
+                              blendMode: BlendMode.dstIn,
+                              shaderCallback: (bounds) => const LinearGradient(
+                                colors: [
+                                  Colors.white,
+                                  Colors.white,
+                                  Colors.transparent,
+                                ],
+                                stops: [0, 0.9, 1],
+                              ).createShader(bounds),
+                              child: chips,
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                 ),
-              ),
+              ],
               // Jams button - minimalist (in the window's top bar on desktop)
               if (!isDesktop) ...[
                 const SizedBox(width: 8),
@@ -1420,18 +1434,21 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
 const double _kDesktopChipsShare = 0.41;
 
 /// Mood & category filter chips matching YouTube Music
-const _kHomeMoodChips = <({String label, String query})>[
-  (label: 'Podcasts', query: 'Podcasts'),
-  (label: 'Feel good', query: 'Feel good'),
-  (label: 'Romance', query: 'Romance'),
-  (label: 'Relax', query: 'Relax'),
-  (label: 'Energize', query: 'Energize'),
-  (label: 'Party', query: 'Party'),
-  (label: 'Commute', query: 'Commute'),
-  (label: 'Workout', query: 'Workout'),
-  (label: 'Sad', query: 'Sad'),
-  (label: 'Focus', query: 'Focus'),
-  (label: 'Sleep', query: 'Sleep'),
+/// Each chip opens its page on Explore, found by [explore] (the link's name
+/// there, when it differs from the label); [query] is the search it falls
+/// back to if Explore has no such page.
+const _kHomeMoodChips = <({String label, String query, String? explore})>[
+  (label: 'Podcasts', query: 'Podcasts', explore: null),
+  (label: 'Feel good', query: 'Feel good', explore: null),
+  (label: 'Romance', query: 'Romance', explore: null),
+  (label: 'Relax', query: 'Relax', explore: 'Chill'),
+  (label: 'Energize', query: 'Energize', explore: null),
+  (label: 'Party', query: 'Party', explore: null),
+  (label: 'Commute', query: 'Commute', explore: null),
+  (label: 'Workout', query: 'Workout', explore: null),
+  (label: 'Sad', query: 'Sad', explore: null),
+  (label: 'Focus', query: 'Focus', explore: null),
+  (label: 'Sleep', query: 'Sleep', explore: null),
 ];
 
 class _HomeMoodChip extends StatefulWidget {

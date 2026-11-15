@@ -137,6 +137,126 @@ class DesktopExploreDetailScreen extends StatelessWidget {
   }
 }
 
+/// Finds an Explore link by its name ("Feel good", "Podcasts") among the
+/// links on Explore and on Moods & genres, ignoring case and punctuation.
+final _exploreLinkByNameProvider = FutureProvider.family<ExploreLink?, String>((
+  ref,
+  name,
+) async {
+  String norm(String s) => s.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+  final wanted = norm(name);
+  for (final browseId in const [
+    'FEmusic_explore',
+    'FEmusic_moods_and_genres',
+  ]) {
+    final page = await ref.watch(
+      _explorePageProvider((browseId: browseId, params: null)).future,
+    );
+    if (page == null) continue;
+    for (final link in [
+      ...page.topLinks,
+      for (final section in page.sections) ...section.links,
+    ]) {
+      if (norm(link.title) == wanted) return link;
+    }
+  }
+  return null;
+});
+
+/// The Explore page behind one of the home's mood chips, the same page its
+/// tile on Explore opens. If Explore has no link by that name, offers a
+/// search instead.
+class DesktopExploreMoodScreen extends ConsumerWidget {
+  const DesktopExploreMoodScreen({
+    super.key,
+    required this.title,
+    required this.linkName,
+    required this.onSearch,
+  });
+
+  /// The chip's label, shown as the page title.
+  final String title;
+
+  /// The link's name on Explore, where it differs ("Relax" is "Chill").
+  final String linkName;
+
+  /// Runs the search the chip used to, when Explore has no such page.
+  final VoidCallback onSearch;
+
+  static Future<void> open(
+    BuildContext context, {
+    required String title,
+    String? linkName,
+    required VoidCallback onSearch,
+  }) {
+    return Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DesktopExploreMoodScreen(
+          title: title,
+          linkName: linkName ?? title,
+          onSearch: onSearch,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final link = ref.watch(_exploreLinkByNameProvider(linkName));
+    final found = link.valueOrNull;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(found?.title ?? title),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: link.isLoading
+          ? const SingleChildScrollView(
+              physics: NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: DesktopHomeSkeleton(),
+            )
+          : found != null
+          ? _ExploreBody(browseId: found.browseId, params: found.params)
+          : Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextButton.icon(
+                    onPressed: () {
+                      // A failed load stays cached, so reload the pages too.
+                      for (final browseId in const [
+                        'FEmusic_explore',
+                        'FEmusic_moods_and_genres',
+                      ]) {
+                        ref.invalidate(
+                          _explorePageProvider((
+                            browseId: browseId,
+                            params: null,
+                          )),
+                        );
+                      }
+                      ref.invalidate(_exploreLinkByNameProvider(linkName));
+                    },
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Try again'),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      onSearch();
+                    },
+                    icon: const Icon(Icons.search_rounded),
+                    label: Text('Search for $title'),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+}
+
 class _ExploreBody extends ConsumerWidget {
   const _ExploreBody({super.key, required this.browseId, this.params});
 
