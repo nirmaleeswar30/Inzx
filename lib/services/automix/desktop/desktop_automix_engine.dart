@@ -270,10 +270,16 @@ class DesktopAutomixEngine {
     _schedule();
   }
 
+  /// A Jam, or "Play on both" over Inzx Connect: nothing mixes or analyses.
   set inJam(bool value) {
+    if (_inJam == value) return;
     _inJam = value;
     analyzer.stopped = value;
-    if (value) _abort('jam');
+    if (value) {
+      _abort('paused: Jam or playing on both');
+    } else {
+      _schedule();
+    }
   }
 
   bool _exclusive = false;

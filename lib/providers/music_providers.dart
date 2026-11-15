@@ -92,8 +92,10 @@ final connectPlayingOnBothProvider = StreamProvider<bool>((ref) {
   return updates.stream.distinct();
 });
 
+/// The paired device the player shows and controls. Phones follow a
+/// computer that's playing; a computer follows the device its playback was
+/// handed to (see [InzxConnectRemote.followedPlayback]).
 final connectPeerPlaybackProvider = StreamProvider<ConnectPeerPlayback?>((ref) {
-  if (!InzxConnectService.canScanQr) return Stream.value(null);
   final remote = InzxConnectRemote.instance;
   final updates = StreamController<ConnectPeerPlayback?>();
   void update() => updates.add(remote.followedPlayback);

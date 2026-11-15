@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart' show debugPrint, kDebugMode, kIsWeb;
+import 'package:flutter/foundation.dart'
+    show ValueListenable, ValueNotifier, debugPrint, kDebugMode, kIsWeb;
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
@@ -527,6 +528,7 @@ class AudioPlayerService {
       }
 
       _masterVolume = prefs.getDouble(kMasterVolumeKey) ?? 1.0;
+      _masterVolumeNotifier.value = _masterVolume;
       unawaited(_player.setVolume(_masterVolume));
 
       _updateState(
@@ -549,8 +551,14 @@ class AudioPlayerService {
   /// against it. Phones use the system volume, so it stays at 1 there.
   double get masterVolume => _masterVolume;
 
+  /// [masterVolume] as it changes, from the player bar or from a paired
+  /// device over Inzx Connect.
+  ValueListenable<double> get masterVolumeListenable => _masterVolumeNotifier;
+  final _masterVolumeNotifier = ValueNotifier<double>(1.0);
+
   Future<void> setMasterVolume(double volume, {bool persist = true}) async {
     _masterVolume = volume.clamp(0.0, 1.0);
+    _masterVolumeNotifier.value = _masterVolume;
     await _player.setVolume(_masterVolume);
     if (persist) {
       final prefs = await SharedPreferences.getInstance();
@@ -2404,8 +2412,34 @@ class AudioPlayerService {
   int _seekCount = 0;
 
   /// When set, transport commands are handled by the Connect group leader.
-  Future<void> Function(Map<String, dynamic>)? connectTransport;
+  /// It is set on both devices for as long as they play on both, and Automix
+  /// pauses meanwhile (see [AutomixService.pausedForConnect]): the leader's
+  /// ordinary crossfade carries each song change, and the follower fades
+  /// along with it.
+  Future<void> Function(Map<String, dynamic>)? get connectTransport =>
+      _connectTransport;
+  set connectTransport(Future<void> Function(Map<String, dynamic>)? value) {
+    _connectTransport = value;
+    final grouped = value != null;
+    if (grouped == _inConnectGroup) return;
+    _inConnectGroup = grouped;
+    unawaited(AutomixService.instance.setInConnectGroup(grouped));
+  }
+
+  Future<void> Function(Map<String, dynamic>)? _connectTransport;
+  bool _inConnectGroup = false;
   bool followsConnectLeader = false;
+
+  /// Inzx Connect: when this device is controlling another one (the player
+  /// shows that device's song), returns a sender for commands to it; returns
+  /// null when playback is here. Songs started or queued here then go to that
+  /// device, as the play, pause and skip buttons already do.
+  Future<void> Function(Map<String, dynamic>)? Function()? connectRemoteOutput;
+
+  /// Where a song queued here belongs instead: the group leader this device
+  /// follows, or the device it is controlling. Null when it's queued here.
+  Future<void> Function(Map<String, dynamic>)? get _connectQueueTarget =>
+      followsConnectLeader ? connectTransport : connectRemoteOutput?.call();
 
   /// Whether a crossfade or Automix blend is running: the playhead belongs
   /// to two songs for a moment, so Connect doesn't correct drift then.
@@ -3259,6 +3293,11 @@ class AudioPlayerService {
   /// Play a single track (enables YouTube Radio mode by default)
   /// When radio mode is on, related tracks are auto-fetched when queue runs low
   Future<void> playTrack(Track track, {bool enableRadio = true}) async {
+    // Controlling another device over Connect: the song, and its radio, start
+    // there (see playQueue), so this device's own radio state is left alone.
+    if (connectTransport == null && connectRemoteOutput?.call() != null) {
+      return playQueue([track]);
+    }
     _isRadioMode = enableRadio;
     _radioSourceTrackId = enableRadio ? track.id : null;
     // Reset radio state for new session
@@ -3300,7 +3339,7 @@ class AudioPlayerService {
       );
     }
     if (tracks.isEmpty) return;
-    final transport = connectTransport;
+    final transport = connectTransport ?? connectRemoteOutput?.call();
     if (!fromConnect && transport != null) {
       return transport({
         'action': 'group_queue',
@@ -3430,8 +3469,9 @@ class AudioPlayerService {
 
   /// Add tracks to the end of the queue
   void addToQueue(List<Track> tracks) {
-    if (followsConnectLeader) {
-      unawaited(connectTransport!({
+    final target = _connectQueueTarget;
+    if (target != null) {
+      unawaited(target({
         'action': 'queue_add',
         'tracks': tracks.take(100).map((track) => track.toJson()).toList(),
       }));
@@ -3464,8 +3504,9 @@ class AudioPlayerService {
 
   /// Insert track to play next
   void playNext(Track track) {
-    if (followsConnectLeader) {
-      unawaited(connectTransport!({
+    final target = _connectQueueTarget;
+    if (target != null) {
+      unawaited(target({
         'action': 'queue_next',
         'tracks': [track.toJson()],
       }));
@@ -4600,7 +4641,7 @@ class AudioPlayerService {
   bool _automixSyncScheduled = false;
 
   bool get _automixOn =>
-      AutomixService.instance.enabled && !_jamsModeEnabled && !followsConnectLeader;
+      AutomixService.instance.enabled && !_jamsModeEnabled && !_inConnectGroup;
 
   /// Desktop: a rendered blend is playing on Automix's own player, and the
   /// UI follows it rather than either of these two (see

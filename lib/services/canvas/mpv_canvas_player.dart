@@ -327,7 +327,18 @@ void _canvasWorker(_WorkerArgs args) {
   ]) {
     option(k, v);
   }
-  args.options.forEach(option);
+  // List appends ("audio-files-append", ...) only exist on mpv's command
+  // line: mpv_set_option_string rejects them (MPV_ERROR_OPTION_NOT_FOUND),
+  // and the plain list options split on ':', which breaks URLs. They go
+  // through change-list once mpv is up, before anything is loaded.
+  final appends = <(String, String)>[];
+  args.options.forEach((k, v) {
+    if (k.endsWith('-append')) {
+      appends.add((k.substring(0, k.length - '-append'.length), v));
+    } else {
+      option(k, v);
+    }
+  });
   if (initialize(handle) < 0) {
     destroy(handle);
     out.send(['error', 'mpv_initialize failed']);
@@ -382,6 +393,10 @@ void _canvasWorker(_WorkerArgs args) {
       calloc.free(arr[i]);
     }
     calloc.free(arr);
+  }
+
+  for (final (list, value) in appends) {
+    run(['change-list', list, 'append', value]);
   }
 
   bool sized() {

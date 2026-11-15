@@ -11,10 +11,10 @@ abstract interface class PodcastPlayerHandle {
 }
 
 /// Plays a podcast episode in the app on Linux, straight from YouTube's
-/// streams through libmpv ([MpvCanvasPlayer]): the HLS manifest (every
-/// quality, with sound; the variant is capped near 720p since frames are
-/// decoded on the CPU), else the separate video and audio streams, else a
-/// muxed file. Linux has no web view the YouTube embed could run in.
+/// streams through libmpv ([MpvCanvasPlayer]): the separate video and audio
+/// streams (up to 720p, since frames are decoded on the CPU), else a muxed
+/// file, else the HLS manifest (see [_startMpv] for the order). Linux has
+/// no web view the YouTube embed could run in.
 ///
 /// (Windows keeps the embed in WebView2: Media Foundation can't play
 /// YouTube's HLS, and the bundled libmpv decodes audio only.)
@@ -76,36 +76,47 @@ class DesktopPodcastPlayerState extends State<DesktopPodcastPlayer>
     _scheduleHide();
   }
 
+  /// Tries each source the stream offers until one opens: the separate
+  /// video and audio streams first (they open in a second or two), then the
+  /// muxed file, then HLS. HLS is last because YouTube's master playlists
+  /// now list dozens of auto-dubbed audio renditions, and FFmpeg's HLS
+  /// demuxer opens every one of them before the first frame, which can take
+  /// longer than any sensible timeout.
   Future<bool> _startMpv(VideoStream stream) async {
-    final String source;
-    final options = <String, String>{
+    final base = <String, String>{
       'aid': 'auto',
       'loop-file': 'no',
       'cache': 'yes',
       // mpv's volume is cubic (see DesktopAudioDsp): this matches the slider.
       'volume': (widget.volume * 100).toStringAsFixed(1),
     };
-    if (stream.hls != null) {
-      source = stream.hls!;
+    final attempts = <(String, Map<String, String>, Duration)>[
+      if (stream.video != null && stream.audio != null)
+        (stream.video!, {...base, 'audio-files-append': stream.audio!}, const Duration(seconds: 15)),
+      if (stream.muxed != null) (stream.muxed!, base, const Duration(seconds: 15)),
       // The best variant up to ~720p (frames are decoded and scaled on the
       // CPU here).
-      options['hls-bitrate'] = '3500000';
-    } else if (stream.video != null) {
-      source = stream.video!;
-      options['audio-files-append'] = stream.audio!;
-    } else if (stream.muxed != null) {
-      source = stream.muxed!;
-    } else {
-      return false;
+      if (stream.hls != null)
+        (stream.hls!, {...base, 'hls-bitrate': '3500000'}, const Duration(seconds: 25)),
+    ];
+    MpvCanvasPlayer? player;
+    for (final (source, options, timeout) in attempts) {
+      final candidate = MpvCanvasPlayer(maxSide: 1280, options: options);
+      final ok = await candidate.open(source, timeout: timeout);
+      if (!mounted) {
+        candidate.dispose();
+        return false;
+      }
+      if (ok) {
+        player = candidate;
+        break;
+      }
+      candidate.dispose();
     }
-    final player = MpvCanvasPlayer(maxSide: 1280, options: options);
-    final ok = await player.open(source, timeout: const Duration(seconds: 25));
-    if (!mounted || !ok) {
-      player.dispose();
-      return false;
-    }
-    player.playback.addListener(() {
-      final s = player.playback.value;
+    if (player == null) return false;
+    final opened = player;
+    opened.playback.addListener(() {
+      final s = opened.playback.value;
       _position.value = _Playback(
         position: s.position,
         duration: s.duration,
@@ -113,8 +124,8 @@ class DesktopPodcastPlayerState extends State<DesktopPodcastPlayer>
         buffering: s.buffering,
       );
     });
-    player.play();
-    _mpv = player;
+    opened.play();
+    _mpv = opened;
     return true;
   }
 

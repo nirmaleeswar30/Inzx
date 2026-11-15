@@ -120,7 +120,8 @@ class AutomixService extends ChangeNotifier {
     );
     _desktop = DesktopAutomixEngine(host: host, analyzer: analyzer)
       ..enabled = _enabled
-      ..exclusiveOutput = DesktopAudioDsp.instance.exclusive;
+      ..exclusiveOutput = DesktopAudioDsp.instance.exclusive
+      ..inJam = _paused;
   }
 
   /// Logical processors available to the desktop app.
@@ -248,13 +249,38 @@ class AutomixService extends ChangeNotifier {
     }
   }
 
+  bool _inJam = false;
+  bool _inConnectGroup = false;
+
+  /// Automix is on, but paused while this device plays in sync with another
+  /// over Inzx Connect ("Play on both"): each device would plan its own
+  /// transition from its own analysis and blend at a different moment. The
+  /// group leader's crossfade carries each song change instead.
+  bool get pausedForConnect => _enabled && _inConnectGroup;
+
   Future<void> setInJam(bool inJam) async {
+    _inJam = inJam;
+    await _pushPaused();
+  }
+
+  /// Joining or leaving "Play on both", on either device.
+  Future<void> setInConnectGroup(bool grouped) async {
+    if (_inConnectGroup == grouped) return;
+    _inConnectGroup = grouped;
+    notifyListeners();
+    await _pushPaused();
+  }
+
+  /// Jams and "Play on both" both stop the engine mixing (and analysing).
+  bool get _paused => _inJam || _inConnectGroup;
+
+  Future<void> _pushPaused() async {
     if (isDesktop) {
-      _desktop?.inJam = inJam;
+      _desktop?.inJam = _paused;
       return;
     }
     try {
-      await _channel.invokeMethod('setInJam', {'inJam': inJam});
+      await _channel.invokeMethod('setInJam', {'inJam': _paused});
     } catch (_) {}
   }
 

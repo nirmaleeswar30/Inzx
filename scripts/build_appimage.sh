@@ -5,8 +5,9 @@
 #   scripts/build_appimage.sh              # flutter build linux --release, then pack
 #   SKIP_FLUTTER_BUILD=1 scripts/build_appimage.sh
 #
-# Needs: flutter, libmpv (Debian/Ubuntu: libmpv-dev), python3, and
-# appimagetool (downloaded on first use, or APPIMAGETOOL=/path).
+# Needs: flutter, libmpv (Debian/Ubuntu: libmpv-dev), python3, readelf
+# (binutils), and appimagetool (downloaded on first use, or
+# APPIMAGETOOL=/path).
 #
 # The AppImage carries its own libmpv and everything it links (FFmpeg, libass,
 # ...), so a host mpv update can't change playback, and a user's ~/.config/mpv
@@ -71,20 +72,54 @@ appdir = os.environ["APPDIR"]
 libdir = os.path.join(appdir, "lib")
 # From the host, always: glibc, GPU/display drivers, audio and session
 # daemons, X11/Wayland, the GTK/GLib stack (themes, settings) and WebKitGTK
-# (its helper processes live at fixed host paths).
+# (its helper processes live at fixed host paths), plus the low-level
+# libraries the AppImage project's excludelist keeps on the host: the C++
+# runtime, compression, TLS and the like. They are ABI-stable, and a copy
+# from the (older) build host would be loaded by the host's own GTK and
+# WebKit too, through LD_LIBRARY_PATH, which also reaches WebKit's helper
+# processes.
 HOST = (
-    "libc.so", "libm.so", "libpthread.so", "libdl.so", "librt.so", "ld-linux", "libresolv.so",
-    "libGL.so", "libGLX.so", "libEGL.so", "libGLdispatch.so", "libdrm.so", "libgbm.so", "libvulkan.so",
-    "libsystemd.so", "libudev.so", "libdbus-1.so", "libasound.so", "libpulse", "libpipewire",
+    "libc.so", "libm.so", "libmvec.so", "libpthread.so", "libdl.so", "librt.so", "ld-linux",
+    "libresolv.so", "libutil.so", "libanl.so", "libnss_", "libBrokenLocale.so", "libthread_db.so",
+    "libstdc++.so", "libgcc_s.so", "libatomic.so", "libgomp.so",
+    "libGL.so", "libGLX.so", "libEGL.so", "libGLdispatch.so", "libOpenGL.so", "libdrm.so", "libgbm.so",
+    "libvulkan.so", "libglapi.so", "libepoxy.so", "libOpenCL.so", "libva.so", "libva-drm.so",
+    "libva-x11.so", "libva-wayland.so", "libvdpau.so",
+    "libsystemd.so", "libudev.so", "libdbus-1.so", "libasound.so", "libpulse", "libpipewire", "libjack.so",
     "libX11.so", "libX11-xcb.so", "libXau.so", "libXdmcp.so", "libXext.so", "libXfixes.so", "libXi.so",
-    "libXrender.so", "libxcb", "libwayland-",
+    "libXrender.so", "libXrandr.so", "libXcursor.so", "libXinerama.so", "libXcomposite.so",
+    "libXdamage.so", "libXss.so", "libXv.so", "libXpresent.so", "libXtst.so", "libICE.so", "libSM.so",
+    "libxcb", "libwayland-", "libxkbcommon",
     "libgtk-3.so", "libgdk-3.so", "libgdk_pixbuf-2.0.so", "libgio-2.0.so", "libglib-2.0.so",
-    "libgobject-2.0.so", "libgmodule-2.0.so", "libpango", "libcairo", "libatk", "libharfbuzz.so",
-    "libfontconfig.so", "libfreetype.so",
-    "libwebkit2gtk", "libjavascriptcoregtk", "libsoup-", "libsecret-1.so",
+    "libgobject-2.0.so", "libgmodule-2.0.so", "libgthread-2.0.so", "libpango", "libcairo", "libatk",
+    "libatspi.so", "libharfbuzz", "libfontconfig.so", "libfreetype.so", "libfribidi.so", "libthai.so",
+    "libdatrie.so", "libgraphite2.so", "libpixman-1.so", "libpng16.so",
+    "libwebkit2gtk", "libjavascriptcoregtk", "libsoup-", "libsecret-1.so", "libgst",
+    "libz.so", "libexpat.so", "libffi.so", "libpcre2-", "libmount.so", "libblkid.so", "libuuid.so",
+    "libselinux.so", "libcom_err.so", "libgpg-error.so", "libgcrypt.so", "libkeyutils.so",
+    "libgnutls.so", "libnettle.so", "libhogweed.so", "libgmp.so", "libtasn1.so", "libp11-kit.so",
+    "libidn2.so", "libunistring.so", "libgssapi_krb5.so", "libkrb5", "libk5crypto.so",
 )
 host = lambda soname: soname.startswith(HOST)
 
+def needed(path):
+    """The DT_NEEDED entries of an ELF file: its direct dependencies only."""
+    try:
+        out = subprocess.check_output(["readelf", "-dW", path], stderr=subprocess.DEVNULL).decode()
+    except subprocess.CalledProcessError:
+        return []
+    return re.findall(r"\(NEEDED\)\s+Shared library: \[([^\]]+)\]", out)
+
+def resolved(path):
+    """Where the dynamic linker finds each library [path] loads."""
+    try:
+        out = subprocess.check_output(["ldd", path], stderr=subprocess.DEVNULL, env={**os.environ, "LD_LIBRARY_PATH": libdir}).decode()
+    except subprocess.CalledProcessError:
+        return {}
+    return dict(re.findall(r"^\s*(\S+)\s+=>\s+(\S+)\s+\(", out, re.M))
+
+# Walk direct dependencies only: a library reached solely through a host
+# library (GTK's, WebKit's) is the host's business and must not be copied.
 todo, seen, copy = [], set(), {}
 for root, _, files in os.walk(appdir):
     for f in files:
@@ -102,16 +137,10 @@ while todo:
     if cur in seen:
         continue
     seen.add(cur)
-    try:
-        out = subprocess.check_output(["ldd", cur], stderr=subprocess.DEVNULL, env={**os.environ, "LD_LIBRARY_PATH": libdir}).decode()
-    except subprocess.CalledProcessError:
-        continue
-    for line in out.splitlines():
-        m = re.match(r"\s*(\S+)\s+=>\s+(\S+)\s+\(", line)
-        if not m:
-            continue
-        soname, real = m.groups()
-        if host(soname) or not os.path.isfile(real) or real.startswith(appdir):
+    where = resolved(cur)
+    for soname in needed(cur):
+        real = where.get(soname)
+        if host(soname) or not real or not os.path.isfile(real) or real.startswith(appdir):
             continue
         if soname not in copy and not os.path.exists(os.path.join(libdir, soname)):
             copy[soname] = real

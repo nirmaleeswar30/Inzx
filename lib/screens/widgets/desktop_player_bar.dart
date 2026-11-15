@@ -365,7 +365,9 @@ class _TransportControls extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final base = isDark ? Colors.white : Colors.black87;
     final accent = ref.watch(effectiveAccentColorProvider);
-    final player = ref.read(audioPlayerServiceProvider);
+    // The device the player shows: this one, or a paired one it follows
+    // over Inzx Connect.
+    final player = ref.read(playbackTransportProvider);
     final bool shuffle = state.shuffleEnabled;
     final LoopMode loop = state.loopMode;
     final bool playing = state.isPlaying;
@@ -527,7 +529,7 @@ class _ProgressRowState extends ConsumerState<_ProgressRow>
                 onChanged: (value) => setState(() => _dragMs = value),
                 onChangeEnd: (value) {
                   ref
-                      .read(audioPlayerServiceProvider)
+                      .read(playbackTransportProvider)
                       .seek(Duration(milliseconds: value.toInt()));
                   setState(() => _dragMs = null);
                 },
@@ -825,6 +827,26 @@ class _VolumeControl extends ConsumerStatefulWidget {
 class _VolumeControlState extends ConsumerState<_VolumeControl> {
   double _beforeMute = 1;
 
+  // The volume can also change from a paired phone over Inzx Connect.
+  late final Listenable _volume;
+
+  @override
+  void initState() {
+    super.initState();
+    _volume = ref.read(audioPlayerServiceProvider).masterVolumeListenable
+      ..addListener(_onVolume);
+  }
+
+  void _onVolume() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _volume.removeListener(_onVolume);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final player = ref.read(audioPlayerServiceProvider);
@@ -940,7 +962,9 @@ class _DesktopPopoutPlayerState extends ConsumerState<DesktopPopoutPlayer> {
   Widget build(BuildContext context) {
     final state = ref.watch(playbackStateProvider).valueOrNull;
     final track = state?.currentTrack;
-    final player = ref.read(audioPlayerServiceProvider);
+    // The device the player shows: this one, or a paired one it follows
+    // over Inzx Connect.
+    final player = ref.read(playbackTransportProvider);
     if (state == null || track == null) {
       return const ColoredBox(color: Colors.black);
     }

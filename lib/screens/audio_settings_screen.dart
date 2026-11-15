@@ -241,10 +241,12 @@ class AudioSettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           // Automix decides its own length from each pair of tracks, so the
-          // slider only shows while Automix is off (as in BitChord).
+          // slider only shows while Automix is off (as in BitChord), or
+          // paused for "Play on both", when the crossfade is what's used.
           ListenableBuilder(
             listenable: AutomixService.instance,
-            builder: (context, _) => AutomixService.instance.enabled
+            builder: (context, _) => AutomixService.instance.enabled &&
+                    !AutomixService.instance.pausedForConnect
                 ? const SizedBox.shrink()
                 : Padding(
                     padding: const EdgeInsets.only(bottom: 12),

@@ -423,6 +423,25 @@ class ConnectDeviceCard extends StatefulWidget {
 class _ConnectDeviceCardState extends State<ConnectDeviceCard> {
   bool _startingBoth = false;
 
+  // The volume slider while it's moved, and for a moment after, until the
+  // device's own report catches up (so it doesn't jump back meanwhile).
+  double? _volume;
+  DateTime _volumeHeldUntil = DateTime.fromMillisecondsSinceEpoch(0);
+  DateTime _volumeSentAt = DateTime.fromMillisecondsSinceEpoch(0);
+
+  void _moveVolume(double value, {bool done = false}) {
+    final now = DateTime.now();
+    setState(() {
+      _volume = value;
+      _volumeHeldUntil = now.add(const Duration(seconds: 2));
+    });
+    if (done ||
+        now.difference(_volumeSentAt) >= const Duration(milliseconds: 120)) {
+      _volumeSentAt = now;
+      unawaited(widget.remote.setVolume(widget.device.id, value));
+    }
+  }
+
   Future<void> _playBoth() async {
     setState(() => _startingBoth = true);
     var started = false;
@@ -458,6 +477,9 @@ class _ConnectDeviceCardState extends State<ConnectDeviceCard> {
     final active = mobile && remote.isOutputSelected(device.id);
     final colors = theme.colorScheme;
     final secondary = theme.colorScheme.onSurface.withValues(alpha: 0.65);
+    final volume = DateTime.now().isBefore(_volumeHeldUntil)
+        ? _volume
+        : playback?.volume;
 
     final String status;
     if (!online) {
@@ -623,6 +645,32 @@ class _ConnectDeviceCardState extends State<ConnectDeviceCard> {
                 ],
               ),
             ],
+            if (volume != null)
+              Semantics(
+                label: 'Volume on ${device.label}',
+                child: Row(
+                  children: [
+                    Icon(
+                      volume <= 0.01
+                          ? Icons.volume_off_rounded
+                          : Icons.volume_down_rounded,
+                      size: 20,
+                      color: secondary,
+                    ),
+                    Expanded(
+                      child: Slider(
+                        value: volume,
+                        onChanged: _moveVolume,
+                        onChangeEnd: (value) => _moveVolume(value, done: true),
+                        semanticFormatterCallback: (value) =>
+                            '${(value * 100).round()}%',
+                      ),
+                    ),
+                    Icon(Icons.volume_up_rounded, size: 20, color: secondary),
+                    const SizedBox(width: 8),
+                  ],
+                ),
+              ),
             if (online && (track != null || hasLocal)) ...[
               const SizedBox(height: 8),
               Wrap(

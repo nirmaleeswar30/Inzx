@@ -158,11 +158,11 @@ class DesktopShortcuts extends ConsumerWidget {
     return CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.space): () =>
-            ref.read(audioPlayerServiceProvider).togglePlayPause(),
+            ref.read(playbackTransportProvider).togglePlayPause(),
         const SingleActivator(LogicalKeyboardKey.arrowRight, control: true):
-            () => ref.read(audioPlayerServiceProvider).skipToNext(),
+            () => ref.read(playbackTransportProvider).skipToNext(),
         const SingleActivator(LogicalKeyboardKey.arrowLeft, control: true):
-            () => ref.read(audioPlayerServiceProvider).skipToPrevious(),
+            () => ref.read(playbackTransportProvider).skipToPrevious(),
         const SingleActivator(LogicalKeyboardKey.escape): () {
           if (desktopVideoFullScreen.value) {
             setDesktopVideoFullScreen(false);

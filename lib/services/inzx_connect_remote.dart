@@ -9,8 +9,11 @@ import 'package:just_audio/just_audio.dart' show LoopMode;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../core/utils/platform_utils.dart' show isDesktop;
 import '../models/models.dart';
 import 'audio_player_service.dart';
+import 'audio_routing_service.dart';
+import 'desktop/desktop_audio_dsp.dart';
 import 'inzx_connect_service.dart';
 
 /// What a paired device is playing, as it last said.
@@ -30,6 +33,8 @@ class ConnectPlayback {
     required this.speed,
     required this.isBuffering,
     required this.seeks,
+    this.volume,
+    this.isTransitioning,
   });
 
   final Track? track;
@@ -46,6 +51,17 @@ class ConnectPlayback {
   final double speed;
   final bool isBuffering;
   final int seeks;
+
+  /// The device's own volume, 0..1: the app's volume on a computer, the
+  /// media volume on a phone. Null when it doesn't say (an older build, or
+  /// bit-perfect output, where the level is the hardware's).
+  final double? volume;
+
+  /// Whether the device was crossfading (or blending) into its song when it
+  /// reported: a song change it makes then is a transition to fade along
+  /// with, while one without is a skip, to cut to. Null from older builds,
+  /// which don't say; those song changes are faded as before.
+  final bool? isTransitioning;
 
   /// Where the song has got to now, running on from the last report while
   /// it plays.
@@ -141,6 +157,11 @@ class InzxConnectRemote extends ChangeNotifier {
   @visibleForTesting
   Future<void> receiveGroupCommandForTest(Map<String, dynamic> command) =>
       _onCommand({'payload': command});
+
+  /// A state report from [deviceId], as its broadcast would deliver it.
+  @visibleForTesting
+  void receiveStateForTest(String deviceId, Map<String, dynamic> state) =>
+      _onState(deviceId, {'payload': state});
 
   @visibleForTesting
   Future<void> followGroupForTest(
@@ -304,10 +325,13 @@ class InzxConnectRemote extends ChangeNotifier {
         index >= 0 &&
         index < _player.queue.length &&
         _player.queue[index].id == track.id;
+    // A skip on the leader (no transition running there) cuts straight to
+    // the song below instead, as it did on the leader.
     if (lines &&
         previous.track?.id != track.id &&
         _player.currentTrack?.id != track.id &&
-        peer.isPlaying) {
+        peer.isPlaying &&
+        peer.isTransitioning != false) {
       if (await _player.connectFadeTo(index, peer.position)) {
         _settleUntil = DateTime.now().add(_settleAfterFade);
         return;
@@ -416,6 +440,27 @@ class InzxConnectRemote extends ChangeNotifier {
         ?.id;
   }
 
+  @override
+  void notifyListeners() {
+    _syncFollowWatch();
+    super.notifyListeners();
+  }
+
+  /// Phones run a discovery loop that keeps paired devices reporting. A
+  /// computer has none, so while its playback is out on a paired device
+  /// (its "Play on …" button, or "Play here" on that device), it keeps that
+  /// device reporting the same way, and its player follows it. Without this
+  /// the device stopped reporting 25 seconds later (see [_watchedFor]).
+  void _syncFollowWatch() {
+    if (InzxConnectService.canScanQr || !_started) return;
+    final following = _selectedOutput != null && _selectedOutput != _deviceId;
+    if (following && _discoveryTimer == null) {
+      _startDiscovery();
+    } else if (!following && _discoveryTimer != null) {
+      _pauseDiscovery();
+    }
+  }
+
   void _resumeDiscovery() {
     _inForeground = true;
     if (_discoveryPausedByUser) return;
@@ -503,6 +548,8 @@ class InzxConnectRemote extends ChangeNotifier {
       if (id == null) return;
       _client = client;
       _deviceId = id;
+      _player.connectRemoteOutput = _remoteOutput;
+      _player.masterVolumeListenable.addListener(_onLocalVolume);
       final token = client.auth.currentSession?.accessToken;
       if (token != null) await client.realtime.setAuth(token);
 
@@ -590,6 +637,9 @@ class InzxConnectRemote extends ChangeNotifier {
     _followedId = null;
     _clearGroup();
     _selectedOutput = null;
+    _player.connectRemoteOutput = null;
+    _player.masterVolumeListenable.removeListener(_onLocalVolume);
+    _volumePublish?.cancel();
     _started = false;
     if (InzxConnectService.canScanQr) {
       _backgroundChannel.setMethodCallHandler(null);
@@ -801,6 +851,40 @@ class InzxConnectRemote extends ChangeNotifier {
     }
   }
 
+  /// The device the player is showing and controlling, as a command sender,
+  /// or null when playback is on this device (or in a Jam). Songs started
+  /// or queued here go to it: see [AudioPlayerService.connectRemoteOutput].
+  Future<void> Function(Map<String, dynamic>)? _remoteOutput() {
+    if (_player.isJamsModeEnabled) return null;
+    final id = activePlayback?.device.id;
+    if (id == null) return null;
+    return (body) => _command(id, body);
+  }
+
+  /// Shows [deviceId] as playing [playback] and online, as its reports would,
+  /// with this device controlling it; [send] receives the commands.
+  @visibleForTesting
+  void controlForTest(
+    ConnectDevice device,
+    ConnectPlayback playback,
+    Future<void> Function(Map<String, dynamic>) send,
+  ) {
+    _devices = [device];
+    _playback[device.id] = playback;
+    _lastSeen[device.id] = DateTime.now();
+    _selectedOutput = device.id;
+    _testSend = send;
+    _player.connectRemoteOutput = _remoteOutput;
+  }
+
+  /// Takes the place of the Realtime channel in tests.
+  Future<void> Function(Map<String, dynamic>)? _testSend;
+
+  /// What this device reports about its own player, as its state stream
+  /// would set it.
+  @visibleForTesting
+  set localPlayingForTest(bool playing) => _localPlaying = playing;
+
   Future<void> _command(String deviceId, Map<String, dynamic> body) async {
     if (isGroupedWith(deviceId) && body['action'] != 'hello') {
       await _groupCommand(body);
@@ -810,6 +894,11 @@ class InzxConnectRemote extends ChangeNotifier {
   }
 
   Future<bool> _sendTo(String deviceId, Map<String, dynamic> body) async {
+    final testSend = _testSend;
+    if (testSend != null) {
+      await testSend(body);
+      return true;
+    }
     final channel = _peers[deviceId];
     if (channel != null && channel.canPush) return _send(channel, body);
     final client = _client;
@@ -852,6 +941,45 @@ class InzxConnectRemote extends ChangeNotifier {
       'track_id': playback.queue[index].id,
     });
   }
+
+  /// Sets [deviceId]'s own volume, 0..1 (see [ConnectPlayback.volume]).
+  /// Sent straight to that device, also while playing on both: each device
+  /// keeps its own level.
+  Future<void> setVolume(String deviceId, double volume) =>
+      _sendTo(deviceId, {'action': 'volume', 'volume': volume.clamp(0.0, 1.0)});
+
+  /// This device's volume, as peers are told it: the app's volume on a
+  /// computer (none with bit-perfect output, where the level is the
+  /// hardware's), the media volume on a phone.
+  Future<double?> _localVolume() async {
+    if (isDesktop) {
+      return DesktopAudioDsp.instance.exclusive ? null : _player.masterVolume;
+    }
+    return AudioRoutingService.getVolume();
+  }
+
+  Future<void> _setLocalVolume(double volume) async {
+    final level = volume.clamp(0.0, 1.0);
+    if (isDesktop) {
+      if (!DesktopAudioDsp.instance.exclusive) {
+        await _player.setMasterVolume(level);
+      }
+    } else {
+      await AudioRoutingService.setVolume(level);
+    }
+  }
+
+  /// The computer's volume moved (its player bar): peers' sliders follow,
+  /// once a drag has paused rather than on every step of it.
+  void _onLocalVolume() {
+    _volumePublish?.cancel();
+    _volumePublish = Timer(const Duration(milliseconds: 150), () {
+      _sentSignature = null;
+      _publishIfWatched();
+    });
+  }
+
+  Timer? _volumePublish;
 
   Future<void> toggleShuffle(String deviceId) =>
       _command(deviceId, {'action': 'shuffle'});
@@ -1024,6 +1152,11 @@ class InzxConnectRemote extends ChangeNotifier {
       speed: (body['speed'] as num?)?.toDouble() ?? 1,
       isBuffering: body['buffering'] == true,
       seeks: (body['seeks'] as num?)?.toInt() ?? 0,
+      volume: (body['volume'] as num?)?.toDouble().clamp(0.0, 1.0),
+      isTransitioning: switch (body['transitioning']) {
+        final bool transitioning => transitioning,
+        _ => null,
+      },
     );
     if (isGroupedWith(deviceId) && !_groupLeader) {
       if (body['group'] == _groupId) {
@@ -1069,7 +1202,11 @@ class InzxConnectRemote extends ChangeNotifier {
     try {
       final action = body['action'];
       final group = body['group'];
-      if (action == 'group_start' &&
+      if (action == 'volume') {
+        // Each device keeps its own level, "Play on both" or not.
+        final volume = body['volume'];
+        if (volume is num) await _setLocalVolume(volume.toDouble());
+      } else if (action == 'group_start' &&
           group is String &&
           !_player.isJamsModeEnabled) {
         await _leaveGroup();
@@ -1243,10 +1380,13 @@ class InzxConnectRemote extends ChangeNotifier {
     final playing = state.isPlaying;
     final playhead = _player.playhead;
     final buffering = state.isBuffering || state.isLoading;
+    final volume = await _localVolume();
+    final transitioning = _player.isTransitioning;
     final signature =
         '${track?.id}|${state.currentIndex}|$playing|$buffering|'
         '${state.queueRevision}|${state.loopMode}|${state.shuffleEnabled}|'
-        '${state.speed}|${playhead.seeks}|${state.duration}';
+        '${state.speed}|${playhead.seeks}|${state.duration}|'
+        '${volume?.toStringAsFixed(2)}|$transitioning';
     if (signature == _sentSignature) return;
     _sentSignature = signature;
     final position = _player.currentPosition.inMilliseconds;
@@ -1275,6 +1415,8 @@ class InzxConnectRemote extends ChangeNotifier {
             'speed': state.speed,
             'buffering': buffering,
             'seeks': playhead.seeks,
+            'volume': ?volume,
+            'transitioning': transitioning,
             if (_groupId != null) 'group': _groupId,
           },
         },

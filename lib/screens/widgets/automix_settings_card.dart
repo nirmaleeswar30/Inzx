@@ -62,7 +62,11 @@ class AutomixSettingsCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          on
+                          automix.pausedForConnect
+                              ? 'Paused while playing on both devices, so '
+                                    'they change songs together. The '
+                                    'crossfade above is used until you stop.'
+                              : on
                               ? 'Times and blends every transition from the '
                                     'tracks themselves. Turn it off if the '
                                     '${isDesktop ? 'computer' : 'phone'} '
