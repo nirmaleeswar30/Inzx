@@ -1,3 +1,4 @@
+import '../../core/utils/open_once.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
@@ -17,7 +18,7 @@ class UpdateAvailableDialog {
     final textPrimary = isDark ? Colors.white : Colors.black87;
     final textSecondary = isDark ? Colors.white70 : Colors.black54;
 
-    await showDialog(
+    await openOnce('UpdateDialog', () => showDialog(
       context: context,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.transparent,
@@ -145,6 +146,6 @@ class UpdateAvailableDialog {
           ),
         ),
       ),
-    );
+    ));
   }
 }

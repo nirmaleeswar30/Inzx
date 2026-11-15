@@ -12,6 +12,7 @@ import '../../services/desktop/desktop_bootstrap.dart'
 import '../../services/lyrics/lyrics_models.dart';
 import '../../services/lyrics/lyrics_service.dart';
 import '../../services/desktop/desktop_audio_dsp.dart';
+import '../../services/inzx_connect_remote.dart';
 import '../inzx_connect_screen.dart';
 import 'artist_screen.dart';
 import 'automix_mix_pulse.dart';
@@ -711,11 +712,26 @@ class _RightControls extends ConsumerWidget {
         desktopNowPlayingOpen,
         desktopNowPlayingTab,
         desktopConnectPaneOpen,
+        InzxConnectRemote.instance,
       ]),
       builder: (context, _) {
         final open = desktopNowPlayingOpen.value;
         final tab = desktopNowPlayingTab.value;
         final connectOpen = open && desktopConnectPaneOpen.value;
+        final remote = InzxConnectRemote.instance;
+        final activePlayback = remote.activePlayback;
+        final onlineDevice = remote.pairedDevices
+            .where((d) => remote.isOnline(d.id))
+            .firstOrNull;
+        final groupDevice = remote.isPlayingOnBoth
+            ? remote.pairedDevices
+                .where((d) => remote.isGroupedWith(d.id))
+                .firstOrNull
+            : null;
+        final activeDevice =
+            groupDevice ?? activePlayback?.device ?? onlineDevice;
+        final hasActiveDevice = activeDevice != null;
+
         Color panel(int index) =>
             open && !connectOpen && tab == index
             ? accent
@@ -746,13 +762,17 @@ class _RightControls extends ConsumerWidget {
                   glyph: (color) => QueueGlyph(color: color),
                 ),
                 _RightControlButton(
-                  tooltip: InzxConnectScreen.title,
+                  tooltip: hasActiveDevice
+                      ? 'Inzx Connect · ${activeDevice.label}'
+                      : InzxConnectScreen.title,
                   onPressed: () {
                     desktopConnectPaneOpen.value = !connectOpen;
                     if (!open) NowPlayingScreen.showDesktop();
                   },
                   icon: InzxConnectScreen.icon,
-                  color: connectOpen ? accent : color,
+                  color: connectOpen
+                      ? accent
+                      : (hasActiveDevice ? const Color(0xFF34D399) : color),
                 ),
                 if (!compact) ...[
                   _VolumeControl(

@@ -1,3 +1,4 @@
+import '../../core/utils/open_once.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -21,7 +22,7 @@ class SignalPathSheet extends ConsumerStatefulWidget {
 
   static Future<void> show(BuildContext context, {required Color accentColor}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return showModalBottomSheet<void>(
+    return openOnce<void>('SignalPathSheet', () => showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: isDark ? const Color(0xFF141414) : Colors.white,
@@ -29,7 +30,7 @@ class SignalPathSheet extends ConsumerStatefulWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
       builder: (_) => SignalPathSheet(accentColor: accentColor),
-    );
+    ));
   }
 
   @override

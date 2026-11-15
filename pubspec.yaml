@@ -1,7 +1,7 @@
 name: inzx
 description: "Inzx - A beautiful and sleek music player with YouTube Music integration and Jams."
 publish_to: 'none'
-version: 1.5.7
+version: 1.5.8
 
 environment:
   sdk: ^3.10.3
@@ -71,7 +71,7 @@ dependencies:
   supabase_flutter: ^2.8.0
   
   # Notifications
-  flutter_local_notifications: ^18.0.1
+  flutter_local_notifications: ^22.3.1
   audio_metadata_reader: ^1.4.2
   flutter_dotenv: ^6.0.0
   shorebird_code_push: ^2.0.5

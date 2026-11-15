@@ -218,6 +218,9 @@ class InzxConnectRemote extends ChangeNotifier {
     super.dispose();
   }
 
+  Future<void> leaveGroup() => _leaveGroup();
+  Future<void> stopBoth() => _leaveGroup();
+
   Future<void> _leaveGroup() async {
     final peer = _groupPeer;
     final group = _groupId;
@@ -562,11 +565,12 @@ class InzxConnectRemote extends ChangeNotifier {
             }
           });
 
+      _localPlaying = _player.state.isPlaying || _player.state.isLoading;
       _playerSub = _player.stateStream.listen((state) {
         final localPlaying = state.isPlaying || state.isLoading;
         if (_localPlaying != localPlaying) {
           _localPlaying = localPlaying;
-          if (InzxConnectService.canScanQr) notifyListeners();
+          notifyListeners();
           unawaited(_syncNotification());
         }
         _publishIfWatched();

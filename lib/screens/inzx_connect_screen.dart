@@ -474,7 +474,7 @@ class _ConnectDeviceCardState extends State<ConnectDeviceCard> {
     final hasLocal = AudioPlayerService.instance.currentTrack != null;
     final mobile = InzxConnectService.canScanQr;
     final both = remote.isGroupedWith(device.id);
-    final active = mobile && remote.isOutputSelected(device.id);
+    final active = remote.isOutputSelected(device.id);
     final colors = theme.colorScheme;
     final secondary = theme.colorScheme.onSurface.withValues(alpha: 0.65);
     final volume = DateTime.now().isBefore(_volumeHeldUntil)
@@ -551,7 +551,7 @@ class _ConnectDeviceCardState extends State<ConnectDeviceCard> {
                         both
                             ? '$status on both devices'
                             : active
-                            ? '$status on this computer'
+                            ? '$status on ${device.label}'
                             : status,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: secondary,
@@ -700,7 +700,7 @@ class _ConnectDeviceCardState extends State<ConnectDeviceCard> {
                       icon: const Icon(Icons.cast_rounded, size: 18),
                       label: Text('Play on ${device.label}'),
                     ),
-                  if (mobile && !both)
+                  if (!both)
                     OutlinedButton.icon(
                       onPressed: _startingBoth ? null : _playBoth,
                       icon: const Icon(Icons.speaker_group_rounded, size: 18),

@@ -1,3 +1,4 @@
+import '../../core/utils/open_once.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -13,7 +14,7 @@ class SleepTimerSheet extends StatefulWidget {
 
   static Future<void> show(BuildContext context, {required Color accentColor}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return showModalBottomSheet<void>(
+    return openOnce<void>('SleepTimerSheet', () => showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: isDark ? const Color(0xFF161616) : Colors.white,
@@ -21,7 +22,7 @@ class SleepTimerSheet extends StatefulWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) => SleepTimerSheet(accentColor: accentColor),
-    );
+    ));
   }
 
   @override

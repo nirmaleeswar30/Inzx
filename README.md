@@ -1,12 +1,12 @@
 <div align="center">
 	<img src="assets/brand_transparent.png" alt="Inzx Logo" width=""/>
 
-**A beautiful, open-source YouTube Music client for Android** — dynamic theming, word-level synced lyrics, AI lyric translation, DJ Automix, AutoEQ studio calibration, high-quality audio streaming, and real-time listening sessions.
+**A beautiful, open-source YouTube Music client for Android, Windows & Linux** — dynamic theming, word-level synced lyrics, AI lyric translation, DJ Automix, AutoEQ studio calibration, high-quality audio streaming, Inzx Connect multi-device sync, and real-time listening sessions.
 
 [![Latest Release](https://img.shields.io/github/v/release/nirmaleeswar30/Inzx?label=release&logo=github)](https://github.com/nirmaleeswar30/Inzx/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/nirmaleeswar30/Inzx/total?logo=github&color=success)](https://github.com/nirmaleeswar30/Inzx/releases)
 [![Flutter](https://img.shields.io/badge/Flutter-3-02569B?logo=flutter)](https://flutter.dev)
-[![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white)](#installation)
+[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Windows%20%7C%20Linux-3DDC84?logo=android&logoColor=white)](#installation)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 [Website](https://inzx.nirmaleeswar.dev/) • [Features](#-features) • [Screenshots](#-screenshots) • [Installation](#-installation) • [Build from Source](#-building-from-source) • [Contributing](#-contributing)
@@ -40,13 +40,15 @@ A quick look at what makes Inzx stand out:
 - 🎚️ **DJ Automix** — smart beatmatching, tempo & transition cues for seamless continuous mixes
 - 🎧 **AutoEQ & Studio Calibration** — 4,000+ headphone & IEM compensation profiles + parametric EQ
 - 🔊 **Studio-grade audio** — optional JioSaavn source up to 320 kbps with gapless playback & prefetching
+- 🔗 **Inzx Connect** — multi-device bidirectional queue & playback sync, remote control, and simultaneous playback
+- 🖥️ **Native Desktop apps** — Windows installer (.exe) & Linux AppImage with global media keys and background self-update
 - 🎨 **Instant dynamic theming** — 0 ms isolate-extracted album colors, AMOLED black, and liquid-glass UI
 - 🖼️ **4 Now Playing styles** — Default, Cinematic, Ripple & OG + waveform / spectrum scrubbers
 - 🎞️ **Animated album art (Canvas)** — fullscreen video canvas loops with ambient reflection glow
 - 👥 **Jams** — real-time collaborative listening rooms with synchronized queues via Supabase
 - 🎮 **Discord Rich Presence** — share your live playback status & album art to Discord
 - 📊 **Scrobbling & listening stats** — Last.fm & ListenBrainz support + personalized listening analytics
-- 🚗 **Android Auto & widgets** — 3 dynamic home-screen widgets (2×2, 4×1, 4×2) + instant OTA updates
+- 🚗 **Android Auto, widgets & desktop** — 3 dynamic home-screen widgets + MPRIS / SMTC media controls + Shorebird OTA updates
 
 ## ❤️ Support Inzx
 
@@ -113,6 +115,15 @@ Inzx is free and open source. If it makes your day a little better, consider sup
 
 &nbsp;
 
+### 🔗 Inzx Connect & Multi-Device Sync
+
+- **Bidirectional playback sync** — seamlessly sync active playback, state, and queues across your Android phone, Windows PC, and Linux desktop
+- **Device pairing via Supabase** — quick device discovery and pairing with instant connection status
+- **Simultaneous playback** — synchronized multi-room / multi-device playback across paired installations
+- **Remote control** — control volume, skip, pause, and reorder upcoming tracks from any linked device
+
+&nbsp;
+
 ### 📚 Library, Discovery & Offline
 
 - **YouTube Music account sync** — Google Sign-In with bidirectional sync for playlists, liked tracks, saved albums, subscribed artists, and history
@@ -124,12 +135,15 @@ Inzx is free and open source. If it makes your day a little better, consider sup
 
 &nbsp;
 
-### 📱 Platform, Widgets & Updates
+### 📱 Platform, Desktop, Widgets & Updates
 
+- **Native Windows Desktop** — per-user installer (`.exe`) packaged with Inno Setup, system tray / taskbar controls, and silent background self-updates
+- **Linux AppImage** — standalone portable AppImage with bundled `libmpv`, desktop launcher menu integration, and MPRIS media keys
+- **Hardware media keys & transport** — Windows SMTC and Linux MPRIS integration for keyboard keys, headsets, and system media widgets
 - **Android Auto integration** — driving-optimized dashboard interface for safe on-road playback
 - **Dynamic home-screen widgets** — 3 launcher widget formats (2×2, 4×1 compact, 4×2 expanded) updating live via Android AppWidgetProvider
-- **Instant OTA updates** — Shorebird code push delivers patches instantly without reinstalling APKs
-- **In-app GitHub release notifications** — checks for major releases with direct APK downloads
+- **Over-the-air updates (Shorebird)** — silent instant code push delivers patches across Android, Windows, and Linux without reinstalling
+- **In-app GitHub release notifications** — checks for major releases with direct installer / APK downloads
 - **Backup & restore** — export and restore your entire app state, playlists, favorites, and settings to a single file
 - **Deep links & sharing** — native sharing for tracks, albums, and playlists
 
@@ -180,13 +194,14 @@ Inzx is free and open source. If it makes your day a little better, consider sup
 
 ## 📥 Installation
 
-Inzx supports **Android**. Grab the latest APK one of two ways:
+Inzx is officially supported on **Android**, **Windows**, and **Linux**.
+
+### 📱 Android
+Grab the latest APK one of two ways:
 
 - **Obtainium** (recommended) — auto-updates directly from GitHub releases. Use the badge above or add this repo:
   `https://github.com/nirmaleeswar30/Inzx`
-- **GitHub Releases** — download the APK from the [latest release](https://github.com/nirmaleeswar30/Inzx/releases/latest).
-
-Once installed, Inzx delivers smaller patches automatically via over-the-air (OTA) updates, so you stay current without reinstalling.
+- **GitHub Releases** — download the APK (`inzx.apk` or `inzx-universal.apk`) from the [latest release](https://github.com/nirmaleeswar30/Inzx/releases/latest).
 
 <details>
 <summary>Install via ADB</summary>
@@ -196,14 +211,30 @@ adb install app-release.apk
 ```
 </details>
 
+### 🪟 Windows
+1. Download **`Inzx-Setup-<version>.exe`** from the [latest release](https://github.com/nirmaleeswar30/Inzx/releases/latest).
+2. Run the installer. It installs per-user into `%LOCALAPPDATA%\Programs\Inzx` without requiring administrator privileges.
+3. Once installed, Inzx automatically updates in the background when updates are released.
+
+### 🐧 Linux
+1. Download **`Inzx-<version>-x86_64.AppImage`** from the [latest release](https://github.com/nirmaleeswar30/Inzx/releases/latest).
+2. Make it executable and run:
+   ```bash
+   chmod +x Inzx-*-x86_64.AppImage
+   ./Inzx-*-x86_64.AppImage
+   ```
+3. On first launch, Inzx can automatically integrate into your application launcher menu.
+
 ---
 
 ## 🛠️ Building from Source
 
 ### Prerequisites
 - **Flutter SDK** (stable channel, bundling **Dart**)
-- **Android Studio** or **VS Code** with the Flutter/Dart extensions
-- **Android SDK** and **Git**
+- **Android Studio** or **VS Code** with Flutter/Dart extensions
+- **Visual Studio with C++ tools** (for Windows builds)
+- **libmpv** & standard build tools (for Linux builds: `libmpv-dev clang cmake ninja-build`)
+- **Git**
 
 ### Setup
 
@@ -248,11 +279,26 @@ adb install app-release.apk
 # Debug run
 flutter run
 
-# Release APK
+# --- Android ---
+# Release APK (ARM64-v8a)
 flutter build apk --release
 
 # Split APKs per ABI (smaller downloads)
 flutter build apk --split-per-abi --release
+
+# --- Windows Desktop ---
+# Standard Windows Release installer
+.\scripts\package_windows_installer.ps1 -BuildType normal
+
+# Shorebird OTA-enabled Windows Release installer
+.\scripts\package_windows_installer.ps1 -BuildType shorebird
+
+# --- Linux Desktop ---
+# Standard Linux AppImage
+bash scripts/build_appimage.sh normal
+
+# Shorebird OTA-enabled Linux AppImage
+bash scripts/build_appimage.sh shorebird
 ```
 
 ---
@@ -292,13 +338,16 @@ Translations live in [`lib/l10n`](lib/l10n). Contributions and corrections are v
 - [x] AutoEQ headphone calibration (4,000+ profiles) & Equalizer
 - [x] Discord Rich Presence & Last.fm / ListenBrainz scrobbling
 - [x] Real-time collaborative Jams
+- [x] Inzx Connect (multi-device bidirectional sync & simultaneous playback)
+- [x] Personal listening statistics & analytics
 - [x] Crossfade & gapless prefetching
 - [x] Android Auto dashboard integration
 - [x] Dynamic home-screen widgets (2×2, 4×1, 4×2)
 - [x] Multiple Now Playing & progress-bar styles (Waveform / Spectrum)
-- [x] Over-the-air updates (Shorebird)
+- [x] Native Desktop targets (Windows installer · Linux AppImage)
+- [x] Over-the-air updates (Shorebird across Android, Windows & Linux)
 - [ ] Google Cast / Chromecast audio streaming
-- [ ] Desktop targets (Windows · macOS · Linux)
+- [ ] macOS desktop support
 
 ---
 

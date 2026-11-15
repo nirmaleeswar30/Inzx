@@ -1,3 +1,4 @@
+import '../../core/utils/open_once.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
@@ -28,7 +29,7 @@ class WhatsNewDialog {
         ? rawBody
         : 'No release notes available.';
 
-    await showDialog(
+    await openOnce('WhatsNewDialog', () => showDialog(
       context: context,
       builder: (dialogContext) {
         return Dialog(
@@ -221,6 +222,6 @@ class WhatsNewDialog {
           ),
         );
       },
-    );
+    ));
   }
 }

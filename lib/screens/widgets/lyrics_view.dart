@@ -1,3 +1,4 @@
+import '../../core/utils/open_once.dart';
 import 'dart:async';
 import 'dart:ui' show ImageFilter, TileMode;
 import 'package:flutter/material.dart';
@@ -827,11 +828,14 @@ class _LyricsViewState extends ConsumerState<LyricsView>
                   icon: const Icon(Iconsax.more),
                   color: textColor,
                   onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) => const LyricsMenuSheet(),
+                    openOnce(
+                      LyricsMenuSheet,
+                      () => showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => const LyricsMenuSheet(),
+                      ),
                     );
                   },
                 ),

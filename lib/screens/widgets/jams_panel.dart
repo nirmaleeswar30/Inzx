@@ -1,3 +1,4 @@
+import '../../core/utils/open_once.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,7 +31,7 @@ class JamsPanel extends ConsumerStatefulWidget {
     required Color textColor,
     required Color accentColor,
   }) {
-    showModalBottomSheet(
+    openOnce('JamsPanel', () => showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -39,7 +40,7 @@ class JamsPanel extends ConsumerStatefulWidget {
         textColor: textColor,
         accentColor: accentColor,
       ),
-    );
+    ));
   }
 
   @override

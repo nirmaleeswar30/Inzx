@@ -1,3 +1,4 @@
+import '../../core/utils/open_once.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -1318,8 +1319,9 @@ class NowPlayingScreen extends ConsumerStatefulWidget {
       showDesktop();
       return;
     }
-    Navigator.of(context).push(
-      PageRouteBuilder(
+    // A quick double tap on the mini player pushed it twice.
+    openOnce(NowPlayingScreen, () => Navigator.of(context).push(
+      PageRouteBuilder<void>(
         opaque: false,
         barrierColor: Colors.black54,
         barrierDismissible: true,
@@ -1341,7 +1343,7 @@ class NowPlayingScreen extends ConsumerStatefulWidget {
         transitionDuration: const Duration(milliseconds: 350),
         reverseTransitionDuration: const Duration(milliseconds: 300),
       ),
-    );
+    ));
   }
 
   @override

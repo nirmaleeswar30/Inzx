@@ -1,3 +1,4 @@
+import '../core/utils/open_once.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
@@ -1136,11 +1137,11 @@ class AudioQualityPicker extends ConsumerWidget {
   const AudioQualityPicker({super.key});
 
   static void show(BuildContext context) {
-    showModalBottomSheet(
+    openOnce('AudioSettingsSheet', () => showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => const AudioQualityPicker(),
-    );
+    ));
   }
 
   @override

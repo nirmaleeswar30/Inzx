@@ -1,3 +1,4 @@
+import '../../core/utils/open_once.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,7 +14,7 @@ class LyricsProviderSheet {
     final albumColors = ref.read(playerAlbumColorsProvider);
     final accentColor = isDark ? albumColors.accentLight : albumColors.accent;
 
-    showModalBottomSheet(
+    openOnce('LyricsProviderSheet', () => showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -355,6 +356,6 @@ class LyricsProviderSheet {
           },
         );
       },
-    );
+    ));
   }
 }

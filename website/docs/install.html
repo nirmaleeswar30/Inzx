@@ -5,11 +5,11 @@
 <script>/* Relative links need /docs/ (with the slash) to resolve inside docs/. */if(location.pathname.slice(-5)==="/docs")location.replace(location.pathname+"/"+location.search+location.hash);</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Install &amp; update · Inzx Docs</title>
-<meta name="description" content="Install Inzx on Android and keep it up to date.">
+<meta name="description" content="Install Inzx on Android, Windows, and Linux, and keep it up to date.">
 <link rel="canonical" href="https://inzx.nirmaleeswar.dev/docs/install">
 <meta property="og:url" content="https://inzx.nirmaleeswar.dev/docs/install">
 <meta property="og:title" content="Install &amp; update · Inzx Docs">
-<meta property="og:description" content="Install Inzx on Android and keep it up to date.">
+<meta property="og:description" content="Install Inzx on Android, Windows, and Linux, and keep it up to date.">
 <meta property="og:image" content="https://inzx.nirmaleeswar.dev/assets/img/brand.png">
 <link rel="icon" type="image/png" href="../assets/img/logo_transparent.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,23 +34,38 @@
     <article class="prose">
 <span class="crumb">Getting started</span>
 <h1>Install &amp; update</h1>
-<p class="lead">Inzx runs on Android. It isn't on the Play Store, so you install the APK yourself.</p>
+<p class="lead">Inzx runs on Android, Windows, and Linux. It is free and open-source, with no ads or trackers.</p>
 
-<h2 id="download">Download</h2>
+<h2 id="android">Android</h2>
 <ol>
   <li>Open the <a href="https://github.com/nirmaleeswar30/Inzx/releases/latest" target="_blank" rel="noopener noreferrer">latest release on GitHub</a>.</li>
-  <li>Download the APK for your phone. If you're not sure which one, pick the <b>universal</b> APK.</li>
-  <li>Open it and allow your browser or file manager to install apps when Android asks.</li>
+  <li>Download the APK for your phone (<b>ARM64-v8a</b> for modern devices, or <b>Universal</b> if unsure).</li>
+  <li>Open it and allow installation from your browser or file manager.</li>
+</ol>
+<p><b>Stay updated automatically:</b> <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/nirmaleeswar30/Inzx/" target="_blank" rel="noopener noreferrer">Add Inzx to Obtainium</a> to track new releases and update seamlessly.</p>
+
+<h2 id="windows">Windows</h2>
+<ol>
+  <li>Download <b><code>Inzx-Setup-&lt;version&gt;.exe</code></b> from the <a href="https://github.com/nirmaleeswar30/Inzx/releases/latest" target="_blank" rel="noopener noreferrer">latest release on GitHub</a>.</li>
+  <li>Run the installer. It installs per-user (no administrator permissions required) into <code>%LOCALAPPDATA%\Programs\Inzx</code>.</li>
+  <li>A desktop shortcut and start menu entry will be created. The in-app updater keeps it upgraded silently in the background.</li>
 </ol>
 
-<h2 id="obtainium">Stay updated with Obtainium</h2>
-<p><a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/nirmaleeswar30/Inzx/" target="_blank" rel="noopener noreferrer">Add Inzx to Obtainium</a> and it will notify you about new releases and install them straight from GitHub.</p>
+<h2 id="linux">Linux</h2>
+<ol>
+  <li>Download <b><code>Inzx-&lt;version&gt;-x86_64.AppImage</code></b> from the <a href="https://github.com/nirmaleeswar30/Inzx/releases/latest" target="_blank" rel="noopener noreferrer">latest release on GitHub</a>.</li>
+  <li>Make the AppImage executable:
+    <pre><code>chmod +x Inzx-*-x86_64.AppImage</code></pre>
+  </li>
+  <li>Run it directly. On first launch, you will be prompted if you'd like Inzx integrated into your desktop application menu.</li>
+</ol>
+<p>The AppImage carries its own <code>libmpv</code> and audio decoders for bit-perfect playback without touching your system's global mpv config.</p>
 
-<h2 id="in-app">In-app updates</h2>
-<p>Inzx also checks for updates itself. Small fixes arrive as silent patches: when one has downloaded you'll see a banner asking you to restart. When a full new version is out you'll see a banner with a download link, and after updating a short "What's new" sheet.</p>
+<h2 id="in-app">In-app updates &amp; Shorebird OTA</h2>
+<p>Inzx checks for updates automatically. Bug fixes and minor updates arrive instantly as over-the-air (OTA) patches via Shorebird across Android, Windows, and Linux. When an OTA patch is ready, restarting the app applies it. Major feature releases notify you with a direct download link.</p>
 
-<h2 id="first-launch">First launch</h2>
-<p>The first time you open Inzx you get a short welcome. On the last page you can <b>Continue with Google</b> to bring your YouTube Music library in, or <b>Continue without signing in</b>. Everything except your library, history sync and Jams works without an account. See <a href="sign-in.html">Signing in</a>.</p>
+<h2 id="first-launch">First launch &amp; pairing</h2>
+<p>The first time you open Inzx you get a quick welcome flow. You can <b>Continue with Google</b> to bring your YouTube Music library, playlists, and history in, or <b>Continue without signing in</b>. You can also pair multiple devices via <b>Settings → Inzx Connect</b> for synchronized playback. See <a href="sign-in.html">Signing in</a> and <a href="integrations.html">Integrations</a>.</p>
 
     </article>
     <nav class="pager" id="pager" aria-label="Previous and next page"></nav>

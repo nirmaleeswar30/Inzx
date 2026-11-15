@@ -27,9 +27,82 @@ APPIMAGETOOL="${APPIMAGETOOL:-/tmp/appimagetool-x86_64.AppImage}"
 APPIMAGETOOL_URL="https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
 RUNTIME_FILE="${RUNTIME_FILE:-/tmp/runtime-x86_64}"
 
+# Build type selection (normal vs shorebird)
+BUILD_TYPE="${1:-}"
+EXTRA_BUILD_ARGS=()
+if [[ $# -gt 0 ]]; then
+  shift
+  EXTRA_BUILD_ARGS=("$@")
+fi
+
+if [[ -z "$BUILD_TYPE" ]]; then
+  if [ -t 0 ]; then
+    echo ""
+    echo "=============================================="
+    echo "       Select Linux AppImage Build Type       "
+    echo "=============================================="
+    echo "  1) Standard Flutter Release (no Shorebird)"
+    echo "  2) Shorebird Release (OTA-enabled)"
+    echo "=============================================="
+    read -r -p "Enter choice [1 or 2, default: 1]: " choice
+    case "${choice:-1}" in
+      2|shorebird)
+        BUILD_TYPE="shorebird"
+        ;;
+      *)
+        BUILD_TYPE="normal"
+        ;;
+    esac
+  else
+    BUILD_TYPE="normal"
+  fi
+fi
+
+if [[ "$BUILD_TYPE" == "shorebird" ]]; then
+  echo "🦅 Target: Shorebird Linux AppImage (OTA-enabled)"
+  if ! command -v shorebird &>/dev/null; then
+    if [ -x "$HOME/.shorebird/bin/shorebird" ]; then
+      export PATH="$HOME/.shorebird/bin:$PATH"
+    else
+      echo "❌ Shorebird CLI was not found. Please install Shorebird (https://docs.shorebird.dev)." >&2
+      exit 1
+    fi
+  fi
+  echo "🔍 Verifying Shorebird credentials..."
+  if ! shorebird apps list >/dev/null 2>&1; then
+    echo "⚠️ Shorebird is not logged in or credentials have expired."
+    echo "🔑 Launching 'shorebird login'..."
+    shorebird login || { echo "❌ Shorebird login was unsuccessful. Aborting." >&2; exit 1; }
+  fi
+else
+  echo "🏗️ Target: Standard Flutter Linux AppImage"
+fi
+
 if [[ "${SKIP_FLUTTER_BUILD:-0}" != "1" ]]; then
-  echo "==> flutter build linux --release"
-  flutter build linux --release
+  if [[ "$BUILD_TYPE" == "shorebird" ]]; then
+    FLUTTER_VER_ARG=""
+    has_custom_flutter=0
+    for arg in "${EXTRA_BUILD_ARGS[@]}"; do
+      if [[ "$arg" == --flutter-version* ]]; then
+        has_custom_flutter=1
+        break
+      fi
+    done
+
+    if [ "$has_custom_flutter" -eq 0 ]; then
+      EXISTING_VER=$(shorebird releases list 2>/dev/null | grep -E "\b${VERSION//+/\\+}\b" | awk '{print $NF}' | head -n 1)
+      if [ -n "$EXISTING_VER" ]; then
+        echo "ℹ️ Existing Shorebird release found for $VERSION (Flutter $EXISTING_VER). Matching Flutter revision..."
+        FLUTTER_VER_ARG="--flutter-version=$EXISTING_VER"
+      fi
+    fi
+
+    echo "==> shorebird release linux"
+    shorebird release linux ${FLUTTER_VER_ARG:+"$FLUTTER_VER_ARG"} "${EXTRA_BUILD_ARGS[@]}"
+  else
+    echo "==> flutter build linux --release"
+    flutter build linux --release "${EXTRA_BUILD_ARGS[@]}"
+  fi
 fi
 [[ -x "$BUNDLE/inzx" ]] || { echo "No Linux bundle at $BUNDLE" >&2; exit 1; }
 
@@ -380,7 +453,31 @@ exec "$HERE/inzx" "$@"
 EOF
 chmod +x "$APPDIR/AppRun"
 
-echo "==> Packing $OUT"
-rm -f "$OUT"
-ARCH=x86_64 "$APPIMAGETOOL" --appimage-extract-and-run --runtime-file "$RUNTIME_FILE" "$APPDIR" "$OUT"
-echo "Done: $OUT ($(du -h "$OUT" | cut -f1))"
+echo "==> Packing AppImage (Version: $VERSION, Type: $BUILD_TYPE)..."
+if [[ "$BUILD_TYPE" == "shorebird" ]]; then
+  VERSIONED_APPIMAGE="$DIST/Inzx-Linux-Shorebird-$VERSION-x86_64.AppImage"
+  GENERIC_APPIMAGE="$DIST/Inzx-Linux-Shorebird-x86_64.AppImage"
+else
+  VERSIONED_APPIMAGE="$DIST/Inzx-Linux-$VERSION-x86_64.AppImage"
+  GENERIC_APPIMAGE="$DIST/Inzx-Linux-x86_64.AppImage"
+fi
+
+rm -f "$VERSIONED_APPIMAGE" "$GENERIC_APPIMAGE" 2>/dev/null || true
+
+ARCH=x86_64 "$APPIMAGETOOL" --appimage-extract-and-run --runtime-file "$RUNTIME_FILE" "$APPDIR" "$VERSIONED_APPIMAGE"
+chmod +x "$VERSIONED_APPIMAGE"
+cp -f "$VERSIONED_APPIMAGE" "$GENERIC_APPIMAGE" 2>/dev/null || true
+
+# Also create standard names for GitHub release / in-app updater consistency:
+STANDARD_VERSIONED="$DIST/Inzx-$VERSION-x86_64.AppImage"
+STANDARD_GENERIC="$DIST/Inzx-x86_64.AppImage"
+if [ "$VERSIONED_APPIMAGE" != "$STANDARD_VERSIONED" ]; then
+  cp -f "$VERSIONED_APPIMAGE" "$STANDARD_VERSIONED" 2>/dev/null || true
+  cp -f "$VERSIONED_APPIMAGE" "$STANDARD_GENERIC" 2>/dev/null || true
+fi
+
+echo "🎉 Success! Created AppImage: $VERSIONED_APPIMAGE ($(du -h "$VERSIONED_APPIMAGE" | cut -f1))"
+echo "  (Also available as: $GENERIC_APPIMAGE)"
+if [ "$VERSIONED_APPIMAGE" != "$STANDARD_VERSIONED" ]; then
+  echo "  (Standard release link: $STANDARD_VERSIONED)"
+fi

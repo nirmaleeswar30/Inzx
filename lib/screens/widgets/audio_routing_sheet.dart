@@ -1,3 +1,4 @@
+import '../../core/utils/open_once.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../../core/utils/platform_utils.dart';
@@ -13,12 +14,12 @@ class AudioRoutingSheet extends StatefulWidget {
   const AudioRoutingSheet({super.key, required this.accentColor});
 
   static Future<void> show(BuildContext context, Color accentColor) {
-    return showModalBottomSheet(
+    return openOnce('AudioRoutingSheet', () => showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => AudioRoutingSheet(accentColor: accentColor),
-    );
+    ));
   }
 
   @override

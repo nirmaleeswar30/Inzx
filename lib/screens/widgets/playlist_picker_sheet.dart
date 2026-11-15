@@ -1,3 +1,4 @@
+import '../../core/utils/open_once.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
@@ -13,12 +14,12 @@ class PlaylistPickerSheet extends ConsumerStatefulWidget {
   const PlaylistPickerSheet({super.key, required this.track});
 
   static void show(BuildContext context, Track track) {
-    showModalBottomSheet(
+    openOnce('PlaylistPickerSheet', () => showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => PlaylistPickerSheet(track: track),
-    );
+    ));
   }
 
   @override

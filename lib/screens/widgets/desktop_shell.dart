@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:math' show max;
 import 'dart:ui' show PointerDeviceKind;
 
@@ -18,6 +19,9 @@ import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../services/desktop/desktop_bootstrap.dart'
     show kDesktopMinWindowSize;
+import '../../services/inzx_connect_remote.dart';
+import '../../services/inzx_connect_service.dart';
+import '../inzx_connect_screen.dart';
 import '../jams_screen.dart';
 import '../search_screen.dart';
 import '../ytmusic_settings_screen.dart';
@@ -85,10 +89,48 @@ Future<void> _setWindowFullScreen(bool on, bool Function() stillWanted) {
       .then((_) async {
         if (stillWanted() != on) return; // a later press already undid it
         if (_windowFullScreen == on) return;
-        await windowManager.setFullScreen(on);
+        if (on) {
+          await _maximizeBeforeFullScreen();
+          await windowManager.setFullScreen(true);
+        } else {
+          await windowManager.setFullScreen(false);
+          await _unmaximizeAfterFullScreen();
+        }
         _windowFullScreen = on;
         if (on) await _healFullScreenView(stillWanted);
       });
+}
+
+/// Whether the window was maximised on the way into full screen, and so is
+/// put back to its normal size on the way out.
+bool _maximizedForFullScreen = false;
+
+/// On Windows, window_manager only takes a maximised window to full screen
+/// cleanly. From a normal window it makes the window frameless first, and the
+/// client area then misses the screen's top and right edges, leaving bands
+/// of stale pixels there. So a normal window is maximised first and takes
+/// the same path as a maximised one.
+Future<void> _maximizeBeforeFullScreen() async {
+  if (!Platform.isWindows || await windowManager.isMaximized()) return;
+  _maximizedForFullScreen = true;
+  await windowManager.maximize();
+  await _waitForMaximized(true);
+}
+
+Future<void> _unmaximizeAfterFullScreen() async {
+  if (!_maximizedForFullScreen) return;
+  _maximizedForFullScreen = false;
+  // The plugin re-maximises a window it took from maximised, by a posted
+  // message: wait for that to land, or it would undo the restore.
+  await _waitForMaximized(true);
+  await windowManager.unmaximize();
+}
+
+Future<void> _waitForMaximized(bool maximized) async {
+  for (var i = 0; i < 20; i++) {
+    if (await windowManager.isMaximized() == maximized) return;
+    await Future<void>.delayed(const Duration(milliseconds: 25));
+  }
 }
 
 /// Now and then the switch leaves Flutter drawing at a size that isn't the
@@ -229,6 +271,34 @@ class _DesktopAppFrameState extends State<DesktopAppFrame> {
   final _searchController = TextEditingController();
   final _searchFocusNode = FocusNode();
   MaterialPageRoute<void>? _searchRoute;
+  Timer? _connectPollTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _initInzxConnect();
+  }
+
+  void _initInzxConnect() async {
+    try {
+      if (!await InzxConnectService.instance.hasSession()) return;
+      await _refreshInzxConnect();
+      _connectPollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+        if (!mounted) return;
+        _refreshInzxConnect();
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _refreshInzxConnect() async {
+    try {
+      if (!await InzxConnectService.instance.hasSession()) return;
+      final status = await InzxConnectService.instance.status();
+      if (status.devices.isNotEmpty) {
+        await InzxConnectRemote.instance.watch(status.devices);
+      }
+    } catch (_) {}
+  }
 
   void _openSearch({String? query}) {
     final navigator = rootNavigatorKey.currentState;
@@ -269,6 +339,7 @@ class _DesktopAppFrameState extends State<DesktopAppFrame> {
 
   @override
   void dispose() {
+    _connectPollTimer?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
@@ -926,32 +997,53 @@ class _DesktopSidebar extends ConsumerWidget {
                     isDark: isDark,
                     onTap: () => _selectTab(ref, index),
                   ),
-                if (library.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Divider(
-                    height: 1,
-                    color: (isDark ? Colors.white : Colors.black).withValues(
-                      alpha: 0.14,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      itemCount: library.length,
-                      itemBuilder: (context, index) {
-                        final entry = library[index];
-                        return _LibraryTile(
-                          entry: entry,
-                          pinned: pinned.contains(entry.key),
-                          collapsed: compact,
-                          accent: accent,
-                          isDark: isDark,
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                ListenableBuilder(
+                  listenable: InzxConnectRemote.instance,
+                  builder: (context, _) {
+                    final remote = InzxConnectRemote.instance;
+                    final hasActive = remote.activePlayback != null ||
+                        remote.pairedDevices.any((d) => remote.isOnline(d.id));
+                    if (!hasActive && library.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+                    return Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 10),
+                          Divider(
+                            height: 1,
+                            color: (isDark ? Colors.white : Colors.black)
+                                .withValues(alpha: 0.14),
+                          ),
+                          const SizedBox(height: 8),
+                          _DesktopConnectSidebarCard(
+                            compact: compact,
+                            accent: accent,
+                            isDark: isDark,
+                          ),
+                          if (library.isNotEmpty)
+                            Expanded(
+                              child: ListView.builder(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                itemCount: library.length,
+                                itemBuilder: (context, index) {
+                                  final entry = library[index];
+                                  return _LibraryTile(
+                                    entry: entry,
+                                    pinned: pinned.contains(entry.key),
+                                    collapsed: compact,
+                                    accent: accent,
+                                    isDark: isDark,
+                                  );
+                                },
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ],
             );
           },
@@ -1024,6 +1116,231 @@ class _SidebarTab extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: collapsed ? Tooltip(message: label, child: tile) : tile,
+    );
+  }
+}
+
+/// A pulsating blinking dot indicating active connection.
+class _BlinkingDot extends StatefulWidget {
+  const _BlinkingDot({required this.color});
+
+  final Color color;
+
+  @override
+  State<_BlinkingDot> createState() => _BlinkingDotState();
+}
+
+class _BlinkingDotState extends State<_BlinkingDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+    _animation = Tween<double>(begin: 0.25, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, _) {
+        return Opacity(
+          opacity: _animation.value,
+          child: Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(
+              color: widget.color,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: widget.color.withValues(alpha: 0.75 * _animation.value),
+                  blurRadius: 5,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Renders an active Inzx Connect device indicator card at the top of the
+/// sidebar navigation, appearing only when a remote device is online or active.
+class _DesktopConnectSidebarCard extends StatelessWidget {
+  const _DesktopConnectSidebarCard({
+    required this.compact,
+    required this.accent,
+    required this.isDark,
+  });
+
+  final bool compact;
+  final Color accent;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: InzxConnectRemote.instance,
+      builder: (context, _) {
+        final remote = InzxConnectRemote.instance;
+        final activePlayback = remote.activePlayback;
+        final onlineDevice = remote.pairedDevices
+            .where((d) => remote.isOnline(d.id))
+            .firstOrNull;
+        final groupDevice = remote.isPlayingOnBoth
+            ? remote.pairedDevices
+                .where((d) => remote.isGroupedWith(d.id))
+                .firstOrNull
+            : null;
+        final activeDevice =
+            groupDevice ?? activePlayback?.device ?? onlineDevice;
+
+        if (activeDevice == null) {
+          return const SizedBox.shrink();
+        }
+
+        final isPlayingOnTarget = remote.isOutputSelected(activeDevice.id);
+        final String statusPrefix;
+        if (remote.isPlayingOnBoth) {
+          statusPrefix = 'Playing on both with ';
+        } else if (isPlayingOnTarget) {
+          final peerPlayback = remote.playbackOf(activeDevice.id);
+          statusPrefix =
+              peerPlayback?.isPlaying == false ? 'Paused on ' : 'Playing on ';
+        } else if (activePlayback != null) {
+          statusPrefix = activePlayback.playback.isPlaying
+              ? 'Playing on '
+              : 'Paused on ';
+        } else {
+          statusPrefix = 'Connected to ';
+        }
+
+        void onTap() {
+          desktopConnectPaneOpen.value = true;
+          NowPlayingScreen.showDesktop();
+        }
+
+        final tooltipMessage =
+            'Inzx Connect · $statusPrefix${activeDevice.label}';
+
+        if (compact) {
+          return Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 6),
+            child: Tooltip(
+              message: tooltipMessage,
+              child: Material(
+                color: accent.withValues(alpha: isDark ? 0.12 : 0.15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(
+                    color: accent.withValues(alpha: isDark ? 0.35 : 0.45),
+                  ),
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: onTap,
+                  child: SizedBox(
+                    height: 44,
+                    child: Center(
+                      child: Icon(
+                        InzxConnectScreen.icon,
+                        size: 20,
+                        color: accent,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(top: 4, bottom: 8),
+          child: Material(
+            color: accent.withValues(alpha: isDark ? 0.10 : 0.12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(
+                color: accent.withValues(alpha: isDark ? 0.30 : 0.38),
+              ),
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              hoverColor: accent.withValues(alpha: 0.10),
+              onTap: onTap,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(InzxConnectScreen.icon, size: 14, color: accent),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Inzx Connect',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: accent,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                        const Spacer(),
+                        _BlinkingDot(color: accent),
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    Text.rich(
+                      TextSpan(
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: (isDark ? Colors.white : Colors.black87)
+                              .withValues(alpha: 0.7),
+                        ),
+                        children: [
+                          TextSpan(text: statusPrefix),
+                          TextSpan(
+                            text: activeDevice.label,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

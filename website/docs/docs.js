@@ -4,7 +4,7 @@
   var GROUPS = [
     { title: 'Getting started', pages: [
       { slug: '', title: 'Overview', keys: 'start intro what is inzx youtube music' },
-      { slug: 'install', title: 'Install & update', keys: 'download apk obtainium github release update upgrade ota shorebird' },
+      { slug: 'install', title: 'Install & update', keys: 'download apk obtainium github release update upgrade ota shorebird windows exe installer linux appimage desktop' },
       { slug: 'sign-in', title: 'Signing in', keys: 'google account login youtube music sign in one login profile history guest' },
     ] },
     { title: 'Listening', pages: [
@@ -19,7 +19,7 @@
     ] },
     { title: 'Around the app', pages: [
       { slug: 'widgets', title: 'Home screen widgets', keys: 'widget pill square wide launcher 2x2 4x4 4x1' },
-      { slug: 'integrations', title: 'Integrations', keys: 'discord rich presence rpc backup restore android auto' },
+      { slug: 'integrations', title: 'Integrations', keys: 'inzx connect pair pairing simultaneous playback desktop media smtc mpris discord rich presence rpc backup restore android auto' },
     ] },
     { title: 'Help', pages: [
       { slug: 'faq', title: 'Troubleshooting & FAQ', keys: 'help problem error wrong song not playing history login crash bug report' },

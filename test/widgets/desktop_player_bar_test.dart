@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,8 +15,13 @@ import 'package:inzx/services/audio_player_service.dart';
 import 'package:inzx/services/playback/playback_data.dart';
 
 class _Player extends Fake implements AudioPlayerService {
+  final _volume = ValueNotifier<double>(0.5);
+
   @override
-  double get masterVolume => 0.5;
+  double get masterVolume => _volume.value;
+
+  @override
+  ValueListenable<double> get masterVolumeListenable => _volume;
 }
 
 void main() {

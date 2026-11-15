@@ -1,3 +1,4 @@
+import '../../core/utils/open_once.dart';
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -21,7 +22,7 @@ class ColorPickerDialog extends StatefulWidget {
     BuildContext context, {
     required Color initialColor,
   }) {
-    return showModalBottomSheet<Color>(
+    return openOnce<Color>('ColorPickerDialog', () => showModalBottomSheet<Color>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -34,7 +35,7 @@ class ColorPickerDialog extends StatefulWidget {
           onColorSelected: (color) => Navigator.pop(context, color),
         ),
       ),
-    );
+    ));
   }
 
   @override

@@ -1,3 +1,4 @@
+import '../../core/utils/open_once.dart';
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -41,7 +42,7 @@ class TrackOptionsSheet extends ConsumerStatefulWidget {
     String? sourcePlaylistId,
     bool isLocalPlaylist = false,
   }) {
-    showModalBottomSheet(
+    openOnce('TrackOptionsSheet', () => showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -50,7 +51,7 @@ class TrackOptionsSheet extends ConsumerStatefulWidget {
         sourcePlaylistId: sourcePlaylistId,
         isLocalPlaylist: isLocalPlaylist,
       ),
-    );
+    ));
   }
 
   @override

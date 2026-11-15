@@ -1,3 +1,4 @@
+import '../../core/utils/open_once.dart';
 import 'dart:async';
 import 'dart:ui' as ui;
 
@@ -90,7 +91,7 @@ class ShareSheet extends ConsumerStatefulWidget {
       unawaited(Clipboard.setData(ClipboardData(text: url)));
       _notifyLinkCopied(context);
     }
-    return showModalBottomSheet<void>(
+    return openOnce<void>('ShareSheet', () => showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
@@ -98,7 +99,7 @@ class ShareSheet extends ConsumerStatefulWidget {
       backgroundColor: Colors.transparent,
       constraints: isDesktop ? const BoxConstraints(maxWidth: 480) : null,
       builder: (_) => ShareSheet._(track: track),
-    );
+    ));
   }
 
   /// The sheet for anything without a card (album, playlist, artist, podcast):
@@ -113,7 +114,7 @@ class ShareSheet extends ConsumerStatefulWidget {
     final inzxUrl = DeepLinkHandler.createShareUrl(type, id);
     unawaited(Clipboard.setData(ClipboardData(text: inzxUrl)));
     _notifyLinkCopied(context);
-    return showModalBottomSheet<void>(
+    return openOnce<void>('ShareLinksSheet', () => showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
       showDragHandle: false,
@@ -125,7 +126,7 @@ class ShareSheet extends ConsumerStatefulWidget {
         title: title,
         shareText: shareText,
       ),
-    );
+    ));
   }
 
   @override

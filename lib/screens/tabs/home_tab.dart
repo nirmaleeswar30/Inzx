@@ -1221,12 +1221,16 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
               // Profile avatar
               _buildProfileAvatar(isDark, colorScheme, size: 40),
               const SizedBox(width: 12),
-              Expanded(
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: isDesktop ? 320 : 160),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       l10n.musicToGetYouStarted,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -1241,6 +1245,8 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
                     const SizedBox(height: 2),
                     Text(
                       displayTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -1250,29 +1256,96 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
                   ],
                 ),
               ),
-              // Jams button - minimalist (in the window's top bar on desktop)
-              if (!isDesktop) GestureDetector(
-                onTap: () => JamsScreen.open(context),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isDark ? Colors.white10 : Colors.grey.shade200,
-                    border: isDark
-                        ? null
-                        : Border.all(
-                            color: Colors.black.withValues(alpha: 0.12),
-                            width: 1,
+              const SizedBox(width: 16),
+              // YTM mood / activity bubbles & chips in the same row
+              // Flush right when they fit; when they don't, the row scrolls
+              // from the first chip (pinned right, the first ones would start
+              // hidden off the left edge).
+              Expanded(
+                child: SizedBox(
+                  height: 34,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Desktop keeps open space beside the welcome: the
+                      // chips get a box that scales with the window, about
+                      // four chips wide in the default 1280 x 800 window and
+                      // more as it grows. Phones use the whole row.
+                      final width = isDesktop
+                          ? constraints.maxWidth * _kDesktopChipsShare
+                          : constraints.maxWidth;
+                      final chips = SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(minWidth: width),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              for (final (index, chip)
+                                  in _kHomeMoodChips.indexed) ...[
+                                if (index > 0) const SizedBox(width: 8),
+                                _HomeMoodChip(
+                                  label: chip.label,
+                                  isDark: isDark,
+                                  textColor: _textColors.primary,
+                                  onTap: () => _performSearch(chip.query),
+                                ),
+                              ],
+                            ],
                           ),
-                  ),
-                  child: Icon(
-                    Iconsax.profile_2user,
-                    color: _textColors.secondary,
-                    size: 20,
+                        ),
+                      );
+                      if (!isDesktop) return chips;
+                      return Align(
+                        alignment: Alignment.centerRight,
+                        child: SizedBox(
+                          width: width,
+                          // The chip cut off at the box's edge fades out
+                          // rather than ending on a hard line.
+                          child: ShaderMask(
+                            blendMode: BlendMode.dstIn,
+                            shaderCallback: (bounds) => const LinearGradient(
+                              colors: [
+                                Colors.white,
+                                Colors.white,
+                                Colors.transparent,
+                              ],
+                              stops: [0, 0.9, 1],
+                            ).createShader(bounds),
+                            child: chips,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
+              // Jams button - minimalist (in the window's top bar on desktop)
+              if (!isDesktop) ...[
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () => JamsScreen.open(context),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isDark ? Colors.white10 : Colors.grey.shade200,
+                      border: isDark
+                          ? null
+                          : Border.all(
+                              color: Colors.black.withValues(alpha: 0.12),
+                              width: 1,
+                            ),
+                    ),
+                    child: Icon(
+                      Iconsax.profile_2user,
+                      color: _textColors.secondary,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -1337,6 +1410,94 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// The share of the space beside the welcome that the chips take on
+/// desktop: about four chips in the default 1280 x 800 window.
+const double _kDesktopChipsShare = 0.41;
+
+/// Mood & category filter chips matching YouTube Music
+const _kHomeMoodChips = <({String label, String query})>[
+  (label: 'Podcasts', query: 'Podcasts'),
+  (label: 'Feel good', query: 'Feel good'),
+  (label: 'Romance', query: 'Romance'),
+  (label: 'Relax', query: 'Relax'),
+  (label: 'Energize', query: 'Energize'),
+  (label: 'Party', query: 'Party'),
+  (label: 'Commute', query: 'Commute'),
+  (label: 'Workout', query: 'Workout'),
+  (label: 'Sad', query: 'Sad'),
+  (label: 'Focus', query: 'Focus'),
+  (label: 'Sleep', query: 'Sleep'),
+];
+
+class _HomeMoodChip extends StatefulWidget {
+  const _HomeMoodChip({
+    required this.label,
+    required this.onTap,
+    required this.isDark,
+    required this.textColor,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+  final bool isDark;
+  final Color textColor;
+
+  @override
+  State<_HomeMoodChip> createState() => _HomeMoodChipState();
+}
+
+class _HomeMoodChipState extends State<_HomeMoodChip> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final bgAlpha = widget.isDark
+        ? (_isHovered ? 0.22 : 0.10)
+        : (_isHovered ? 0.16 : 0.08);
+    final borderAlpha = widget.isDark
+        ? (_isHovered ? 0.32 : 0.14)
+        : (_isHovered ? 0.24 : 0.10);
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Material(
+        color: (widget.isDark ? Colors.white : Colors.black).withValues(
+          alpha: bgAlpha,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(
+            color: (widget.isDark ? Colors.white : Colors.black).withValues(
+              alpha: borderAlpha,
+            ),
+            width: 1,
+          ),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: widget.onTap,
+          child: Container(
+            height: 32,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            alignment: Alignment.center,
+            child: Text(
+              widget.label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: widget.textColor,
+                letterSpacing: 0.1,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

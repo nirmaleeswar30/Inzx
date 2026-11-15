@@ -1,3 +1,4 @@
+import '../../core/utils/open_once.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -89,12 +90,12 @@ class DesktopUpdateButton extends ConsumerWidget {
   static Future<void> showDetails(BuildContext context) {
     // The top bar sits above the app's navigator; dialogs go on that one.
     final navContext = rootNavigatorKey.currentContext ?? context;
-    return showDialog<void>(
+    return openOnce<void>('DesktopUpdateDetails', () => showDialog<void>(
       context: navContext,
       builder: (dialogContext) => Consumer(
         builder: (context, ref, _) => _UpdateDialog(accent: ref.watch(effectiveAccentColorProvider)),
       ),
-    );
+    ));
   }
 }
 

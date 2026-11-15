@@ -28,21 +28,64 @@ class DownloadNotificationService {
   // Base notification ID (we'll add track hash to make unique IDs)
   static const int _baseNotificationId = 1000;
 
+  /// The Windows app identity. Must match the installer's Start menu
+  /// shortcut and main.cpp's SetCurrentProcessExplicitAppUserModelID, so
+  /// toasts are credited to the installed app. The GUID names the toast
+  /// activation handler and must never change.
+  static const String _windowsAppId = 'Inzx.Inzx';
+  static const String _windowsActivatorGuid =
+      '22344f20-fbe2-4ea7-8b84-8c42b2a752a3';
+
+  /// Windows shows a progress bar in the download toast and updates it in
+  /// place; this is its id inside the toast.
+  static const String _windowsProgressId = 'download';
+
+  /// Desktop progress is throttled: the toast or notification is updated
+  /// when it has moved this far.
+  static const int _desktopProgressStep = 5;
+  final Map<int, int> _lastDesktopProgress = {};
+
+  FlutterLocalNotificationsWindows? get _windows => _notifications
+      .resolvePlatformSpecificImplementation<FlutterLocalNotificationsWindows>();
+
+  /// The app icon shown in Windows toasts, from the app's own assets.
+  static String? _windowsIconPath() {
+    if (!Platform.isWindows) return null;
+    final dir = File(Platform.resolvedExecutable).parent.path;
+    final path = '$dir\\data\\flutter_assets\\assets\\logo_transparent.png';
+    return File(path).existsSync() ? path : null;
+  }
+
   /// Initialize the notification service
   Future<void> initialize() async {
-    // Downloads show their progress in the app on desktop.
-    if (_isInitialized || isDesktop) return;
+    if (_isInitialized) return;
     final l10n = await _resolveL10n();
 
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',
     );
-    const initSettings = InitializationSettings(android: androidSettings);
-
-    await _notifications.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: _onNotificationTapped,
+    final initSettings = InitializationSettings(
+      android: androidSettings,
+      linux: const LinuxInitializationSettings(defaultActionName: 'Open'),
+      windows: WindowsInitializationSettings(
+        appName: 'Inzx',
+        appUserModelId: _windowsAppId,
+        guid: _windowsActivatorGuid,
+        iconPath: _windowsIconPath(),
+      ),
     );
+
+    try {
+      await _notifications.initialize(
+        settings: initSettings,
+        onDidReceiveNotificationResponse: _onNotificationTapped,
+      );
+    } catch (e) {
+      // No notification service (a Linux desktop without one): downloads
+      // still show their progress in the app.
+      debugPrint('DownloadNotificationService: unavailable: $e');
+      return;
+    }
 
     // Create the notification channel for Android
     final androidPlugin = _notifications
@@ -82,11 +125,12 @@ class DownloadNotificationService {
 
   /// Show download started notification
   Future<void> showDownloadStarted(String trackId, String trackTitle) async {
-    if (isDesktop) return;
     if (!_isInitialized) await initialize();
+    if (!_isInitialized) return;
     final l10n = await _resolveL10n();
 
     final notificationId = _getNotificationId(trackId);
+    _lastDesktopProgress[notificationId] = 0;
 
     final androidDetails = AndroidNotificationDetails(
       _channelId,
@@ -105,10 +149,22 @@ class DownloadNotificationService {
     );
 
     await _notifications.show(
-      notificationId,
-      trackTitle,
-      l10n.downloadStartingNotification,
-      NotificationDetails(android: androidDetails),
+      id: notificationId,
+      title: trackTitle,
+      body: l10n.downloadStartingNotification,
+      notificationDetails: NotificationDetails(
+        android: androidDetails,
+        windows: WindowsNotificationDetails(
+          progressBars: [
+            WindowsProgressBar(
+              id: _windowsProgressId,
+              status: l10n.downloading,
+              value: 0,
+              label: '0%',
+            ),
+          ],
+        ),
+      ),
       payload: trackId,
     );
   }
@@ -119,12 +175,35 @@ class DownloadNotificationService {
     String trackTitle,
     double progress,
   ) async {
-    if (isDesktop) return;
     if (!_isInitialized) await initialize();
+    if (!_isInitialized) return;
     final l10n = await _resolveL10n();
 
     final notificationId = _getNotificationId(trackId);
     final progressPercent = (progress * 100).toInt();
+
+    if (isDesktop) {
+      final last = _lastDesktopProgress[notificationId] ?? -100;
+      if (progressPercent - last < _desktopProgressStep &&
+          progressPercent < 100) {
+        return;
+      }
+      _lastDesktopProgress[notificationId] = progressPercent;
+      final windows = _windows;
+      if (windows != null) {
+        // In place: showing the toast again would pop it up each time.
+        await windows.updateProgressBar(
+          notificationId: notificationId,
+          progressBar: WindowsProgressBar(
+            id: _windowsProgressId,
+            status: l10n.downloading,
+            value: progress.clamp(0.0, 1.0),
+            label: '$progressPercent%',
+          ),
+        );
+        return;
+      }
+    }
 
     final androidDetails = AndroidNotificationDetails(
       _channelId,
@@ -143,21 +222,22 @@ class DownloadNotificationService {
     );
 
     await _notifications.show(
-      notificationId,
-      trackTitle,
-      l10n.downloadingProgress(progressPercent),
-      NotificationDetails(android: androidDetails),
+      id: notificationId,
+      title: trackTitle,
+      body: l10n.downloadingProgress(progressPercent),
+      notificationDetails: NotificationDetails(android: androidDetails),
       payload: trackId,
     );
   }
 
   /// Show download completed notification
   Future<void> showDownloadCompleted(String trackId, String trackTitle) async {
-    if (isDesktop) return;
     if (!_isInitialized) await initialize();
+    if (!_isInitialized) return;
     final l10n = await _resolveL10n();
 
     final notificationId = _getNotificationId(trackId);
+    _lastDesktopProgress.remove(notificationId);
 
     final androidDetails = AndroidNotificationDetails(
       _channelId,
@@ -171,17 +251,23 @@ class DownloadNotificationService {
     );
 
     await _notifications.show(
-      notificationId,
-      trackTitle,
-      l10n.downloadCompleteNotification,
-      NotificationDetails(android: androidDetails),
+      id: notificationId,
+      title: trackTitle,
+      body: l10n.downloadCompleteNotification,
+      notificationDetails: NotificationDetails(
+        android: androidDetails,
+        windows: const WindowsNotificationDetails(),
+      ),
       payload: trackId,
     );
 
-    // Auto-dismiss after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
-      cancelNotification(trackId);
-    });
+    // Android clears it after 3 seconds; on desktop it stays in the
+    // notification centre like any other.
+    if (!isDesktop) {
+      Future.delayed(const Duration(seconds: 3), () {
+        cancelNotification(trackId);
+      });
+    }
   }
 
   /// Show download failed notification
@@ -190,11 +276,12 @@ class DownloadNotificationService {
     String trackTitle,
     String error,
   ) async {
-    if (isDesktop) return;
     if (!_isInitialized) await initialize();
+    if (!_isInitialized) return;
     final l10n = await _resolveL10n();
 
     final notificationId = _getNotificationId(trackId);
+    _lastDesktopProgress.remove(notificationId);
 
     final androidDetails = AndroidNotificationDetails(
       _channelId,
@@ -208,10 +295,13 @@ class DownloadNotificationService {
     );
 
     await _notifications.show(
-      notificationId,
-      trackTitle,
-      localizeDownloadError(l10n, error),
-      NotificationDetails(android: androidDetails),
+      id: notificationId,
+      title: trackTitle,
+      body: localizeDownloadError(l10n, error),
+      notificationDetails: NotificationDetails(
+        android: androidDetails,
+        windows: const WindowsNotificationDetails(),
+      ),
       payload: trackId,
     );
   }
@@ -241,13 +331,15 @@ class DownloadNotificationService {
   /// Cancel notification for a track
   Future<void> cancelNotification(String trackId) async {
     final notificationId = _getNotificationId(trackId);
-    if (isDesktop) return;
-    await _notifications.cancel(notificationId);
+    _lastDesktopProgress.remove(notificationId);
+    if (!_isInitialized) return;
+    await _notifications.cancel(id: notificationId);
   }
 
   /// Cancel all download notifications
   Future<void> cancelAllNotifications() async {
-    if (isDesktop) return;
+    _lastDesktopProgress.clear();
+    if (!_isInitialized) return;
     await _notifications.cancelAll();
   }
 }

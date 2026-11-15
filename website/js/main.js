@@ -8,6 +8,97 @@
   var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* ───────── visitor's device ───────── */
+  // Android is checked before Linux (its user agent says both).
+  function detectUserOS() {
+    var ua = (navigator.userAgent || '').toLowerCase();
+    var plat = ((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '').toLowerCase();
+    if (/android/.test(ua)) return 'android';
+    if (/iphone|ipad|ipod/.test(ua) || (plat === 'macintel' && navigator.maxTouchPoints > 1)) return 'ios';
+    if (/windows/.test(ua) || plat.indexOf('win') === 0) return 'windows';
+    if (/macintosh|mac os x/.test(ua) || plat.indexOf('mac') === 0) return 'mac';
+    if (/linux|x11|cros/.test(ua) || plat.indexOf('linux') === 0) return 'linux';
+    return 'unknown';
+  }
+  var detectedOS = detectUserOS();
+  var isDesktopOS = detectedOS === 'windows' || detectedOS === 'linux' || detectedOS === 'mac';
+  // Phones see the phone app and computers the desktop app, until the
+  // visitor picks the other one. Unknown devices go by window width.
+  var defaultPlatform = (detectedOS === 'android' || detectedOS === 'ios') ? 'mobile'
+    : isDesktopOS ? 'desktop'
+    : (window.innerWidth >= 1024 ? 'desktop' : 'mobile');
+  document.documentElement.setAttribute('data-os', detectedOS);
+
+  var platformUrls = {
+    apk: 'https://github.com/nirmaleeswar30/Inzx/releases/latest/download/inzx.apk',
+    windows: 'https://github.com/nirmaleeswar30/Inzx/releases/latest',
+    linux: 'https://github.com/nirmaleeswar30/Inzx/releases/latest'
+  };
+
+  /* The hero's download button offers the build for this device: the
+     Windows installer or the Linux AppImage on a computer, the APK (with
+     Obtainium) on Android. Called again once the release's links load. */
+  function applyHeroPlatform(urls) {
+    if (urls) {
+      Object.keys(urls).forEach(function (k) { if (urls[k]) platformUrls[k] = urls[k]; });
+    }
+    var btn = $('#heroDownloadBtn');
+    var label = $('#heroDownloadLabel');
+    var icon = $('#heroDownloadIcon');
+    var obtainium = $('#heroObtainium');
+    var alt = $('#heroAltLink');
+    var altLabel = $('#heroAltLabel');
+    var detected = $('#heroDetected');
+    if (!btn) return;
+
+    var desktop = null;
+    if (detectedOS === 'windows') {
+      desktop = { href: platformUrls.windows, label: 'Download for Windows', icon: '#windowsDownloadBtn',
+        alt: 'Android & Linux builds', note: 'Detected Windows · Setup .exe for Windows 10 & 11' };
+    } else if (detectedOS === 'linux') {
+      desktop = { href: platformUrls.linux, label: 'Download for Linux', icon: '#linuxDownloadBtn',
+        alt: 'Android & Windows builds', note: 'Detected Linux · x86_64 AppImage' };
+    } else if (detectedOS === 'mac') {
+      desktop = { href: '#download', label: 'See all downloads', icon: null,
+        alt: null, note: 'No macOS build yet · Android, Windows & Linux are available' };
+    }
+
+    if (desktop) {
+      btn.href = desktop.href;
+      var external = desktop.href.charAt(0) !== '#';
+      if (external) { btn.target = '_blank'; btn.rel = 'noopener'; }
+      else { btn.removeAttribute('target'); btn.removeAttribute('rel'); }
+      if (label) label.textContent = desktop.label;
+      // The same OS logo as that platform's card in the download section.
+      var logo = desktop.icon && $(desktop.icon + ' .dl-btn-icon svg');
+      if (icon && logo) {
+        var copy = logo.cloneNode(true);
+        copy.setAttribute('width', '18');
+        copy.setAttribute('height', '18');
+        copy.setAttribute('aria-hidden', 'true');
+        copy.removeAttribute('aria-label');
+        icon.innerHTML = '';
+        icon.appendChild(copy);
+      }
+      if (obtainium) obtainium.hidden = true;
+      if (alt) {
+        alt.hidden = !desktop.alt;
+        if (altLabel && desktop.alt) altLabel.textContent = desktop.alt;
+      }
+      if (detected) { detected.textContent = desktop.note; detected.hidden = false; }
+    } else {
+      btn.href = platformUrls.apk;
+    }
+
+    var card = { windows: '#windowsDownloadBtn', linux: '#linuxDownloadBtn', android: '#mainDownloadBtn' }[detectedOS];
+    $$('.dl-btn-card.is-detected').forEach(function (el) { el.classList.remove('is-detected'); });
+    if (card && $(card)) $(card).classList.add('is-detected');
+  }
+  applyHeroPlatform();
+
+  var heroVisual = $('#heroVisual');
+  if (heroVisual) heroVisual.setAttribute('data-view', defaultPlatform);
+
   /* ───────── year ───────── */
   var yearEl = $('#year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
@@ -492,27 +583,31 @@
   }
 
   /* ───────── showcase sticky scroll controller ───────── */
+  // The same pinned, scroll-driven stage shows the phone or the desktop
+  // screenshots; it opens on the visitor's own platform and the toggle (or
+  // a Desktop / Mobile link) switches it.
   var showcasePin = $('#showcase') || $('.showcase-pin-wrap');
-  var showcaseTrack = $('#showcaseTrack');
-  var showcaseSlides = $$('.showcase-slide');
+  var showcaseTracks = { mobile: $('#showcaseTrack'), desktop: $('#showcaseTrackDesktop') };
   var showcaseCur = $('#showcaseCur');
+  var showcaseTotal = $('#showcaseTotal');
   var showcaseTag = $('#showcaseTag');
-  var showcaseDots = $$('.showcase-dot');
+  var showcaseDotsWrap = $('#showcaseDots');
+  var showcasePlatformBtns = $$('.showcase-platform-btn');
+  var setShowcasePlatform = function () {};
 
-  if (showcasePin && showcaseTrack && showcaseSlides.length) {
-    var count = showcaseSlides.length;
+  if (showcasePin && showcaseTracks.mobile) {
+    var showcasePlatform = null;
+    var showcaseTrack = null;
+    var showcaseSlides = [];
+    var showcaseDots = [];
+    var count = 0;
     var currentIndex = -1;
     var targetProgress = 0;
     var currentProgress = 0;
     var isTicking = false;
     var isLerping = false;
 
-    var slideData = showcaseSlides.map(function (el) {
-      return {
-        title: el.getAttribute('data-title') || 'Screen',
-        index: parseInt(el.getAttribute('data-index') || '0', 10)
-      };
-    });
+    var pad2 = function (n) { return (n < 10 ? '0' : '') + n; };
 
     function getSlideCenter(idx) {
       var slide = showcaseSlides[idx];
@@ -521,6 +616,7 @@
     }
 
     function applyProgress(prog) {
+      if (!count) return;
       var p = Math.max(0, Math.min(1, prog));
       var maxIdx = count - 1;
       var continuousIndex = p * maxIdx;
@@ -543,23 +639,17 @@
         currentIndex = activeIdx;
         for (var i = 0; i < count; i++) {
           var slideVid = showcaseSlides[i].querySelector('video');
-          if (i === activeIdx) {
-            showcaseSlides[i].classList.add('active');
-            if (showcaseDots[i]) showcaseDots[i].classList.add('active');
-            if (slideVid) {
-              slideVid.muted = true;
-              if (slideVid.paused) slideVid.play().catch(function () {});
-            }
-          } else {
-            showcaseSlides[i].classList.remove('active');
-            if (showcaseDots[i]) showcaseDots[i].classList.remove('active');
+          var on = i === activeIdx;
+          showcaseSlides[i].classList.toggle('active', on);
+          if (showcaseDots[i]) showcaseDots[i].classList.toggle('active', on);
+          if (on && slideVid) {
+            slideVid.muted = true;
+            if (slideVid.paused) slideVid.play().catch(function () {});
           }
         }
-        if (showcaseCur) {
-          showcaseCur.textContent = (activeIdx + 1 < 10 ? '0' : '') + (activeIdx + 1);
-        }
-        if (showcaseTag && slideData[activeIdx]) {
-          showcaseTag.textContent = slideData[activeIdx].title;
+        if (showcaseCur) showcaseCur.textContent = pad2(activeIdx + 1);
+        if (showcaseTag) {
+          showcaseTag.textContent = showcaseSlides[activeIdx].getAttribute('data-title') || 'Screen';
         }
       }
     }
@@ -577,15 +667,15 @@
       requestAnimationFrame(lerpLoop);
     }
 
-    function updateFromScroll() {
+    function readScrollProgress() {
       var rect = showcasePin.getBoundingClientRect();
       var totalScroll = showcasePin.offsetHeight - window.innerHeight;
-      if (totalScroll <= 0) {
-        targetProgress = 0;
-      } else {
-        var scrolled = -rect.top;
-        targetProgress = Math.max(0, Math.min(1, scrolled / totalScroll));
-      }
+      if (totalScroll <= 0) return 0;
+      return Math.max(0, Math.min(1, -rect.top / totalScroll));
+    }
+
+    function updateFromScroll() {
+      targetProgress = readScrollProgress();
 
       if (reduced) {
         currentProgress = targetProgress;
@@ -599,24 +689,81 @@
       }
     }
 
+    function pinTop() {
+      return showcasePin.getBoundingClientRect().top + window.scrollY;
+    }
+
     function scrollToSlide(idx) {
       var totalScroll = showcasePin.offsetHeight - window.innerHeight;
-      var pinTopFromDoc = showcasePin.getBoundingClientRect().top + window.scrollY;
-      var targetY = pinTopFromDoc + (idx / (count - 1)) * totalScroll;
+      var targetY = pinTop() + (count > 1 ? idx / (count - 1) : 0) * totalScroll;
       window.scrollTo({ top: targetY, behavior: 'smooth' });
     }
 
-    showcaseDots.forEach(function (dot, i) {
-      dot.addEventListener('click', function () {
-        scrollToSlide(i);
+    function renderDots() {
+      if (!showcaseDotsWrap) return;
+      showcaseDotsWrap.innerHTML = '';
+      showcaseDots = showcaseSlides.map(function (slide, i) {
+        var dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'showcase-dot';
+        dot.setAttribute('aria-label', 'Go to ' + (slide.getAttribute('data-title') || 'screen') + ' screenshot');
+        dot.addEventListener('click', function () { scrollToSlide(i); });
+        showcaseDotsWrap.appendChild(dot);
+        return dot;
+      });
+    }
+
+    setShowcasePlatform = function (next) {
+      if (!showcaseTracks[next]) next = 'mobile';
+      if (next === showcasePlatform) return;
+
+      // The pin is shorter for the desktop set, so a switch made inside
+      // it starts that set from its first screenshot.
+      var rect = showcasePin.getBoundingClientRect();
+      var inside = showcasePlatform !== null && rect.top < 0 && rect.bottom > window.innerHeight;
+      var top = rect.top + window.scrollY;
+
+      showcasePlatform = next;
+      showcasePin.setAttribute('data-platform', next);
+      Object.keys(showcaseTracks).forEach(function (k) {
+        var track = showcaseTracks[k];
+        if (!track) return;
+        track.hidden = k !== next;
+        if (k !== next) {
+          $$('video', track).forEach(function (v) { if (!v.paused) v.pause(); });
+        }
+      });
+      showcasePlatformBtns.forEach(function (btn) {
+        var on = btn.getAttribute('data-platform') === next;
+        btn.classList.toggle('active', on);
+        btn.setAttribute('aria-selected', String(on));
+      });
+
+      showcaseTrack = showcaseTracks[next];
+      showcaseSlides = $$('.showcase-slide', showcaseTrack);
+      count = showcaseSlides.length;
+      if (showcaseTotal) showcaseTotal.textContent = pad2(count);
+      renderDots();
+
+      if (inside) window.scrollTo({ top: top, behavior: 'auto' });
+      currentIndex = -1;
+      targetProgress = currentProgress = readScrollProgress();
+      applyProgress(currentProgress);
+    };
+
+    Object.keys(showcaseTracks).forEach(function (k) {
+      var track = showcaseTracks[k];
+      if (!track) return;
+      $$('.showcase-slide', track).forEach(function (slide, i) {
+        slide.addEventListener('click', function () {
+          if (showcasePlatform === k && i !== currentIndex) scrollToSlide(i);
+        });
       });
     });
 
-    showcaseSlides.forEach(function (slide, i) {
-      slide.addEventListener('click', function () {
-        if (i !== currentIndex) {
-          scrollToSlide(i);
-        }
+    showcasePlatformBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        setShowcasePlatform(btn.getAttribute('data-platform'));
       });
     });
 
@@ -634,13 +781,39 @@
       applyProgress(currentProgress);
     }, { passive: true });
 
-    updateFromScroll();
-    currentProgress = targetProgress;
-    applyProgress(currentProgress);
+    // Slides lay out once their images load, so re-centre then.
+    $$('.showcase-slide img').forEach(function (img) {
+      if (!img.complete) img.addEventListener('load', function () { applyProgress(currentProgress); }, { once: true });
+    });
+
+    setShowcasePlatform(defaultPlatform);
+
+    // "Desktop" / "Mobile" links open the showcase on that platform.
+    var openShowcase = function (platform, smooth) {
+      setShowcasePlatform(platform);
+      window.scrollTo({ top: pinTop(), behavior: smooth ? 'smooth' : 'auto' });
+    };
+    $$('[data-show-platform]').forEach(function (link) {
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+        openShowcase(link.getAttribute('data-show-platform'), !reduced);
+      });
+    });
+    // Old links to the desktop section land on the desktop screenshots.
+    if (location.hash === '#desktop') {
+      requestAnimationFrame(function () { openShowcase('desktop', false); });
+    }
   }
 
   /* ───────── autoplay videos helper (hero eager, offscreen lazy) ───────── */
   var heroVideo = document.querySelector('.phone-hero video');
+  if (heroVideo && heroVisual && heroVisual.getAttribute('data-view') === 'desktop') {
+    // Desktop visitors see the desktop app here; the phone video stays idle.
+    heroVideo.removeAttribute('autoplay');
+    heroVideo.preload = 'none';
+    heroVideo.pause();
+    heroVideo = null;
+  }
   if (heroVideo) {
     heroVideo.muted = true;
     heroVideo.defaultMuted = true;
@@ -901,6 +1074,18 @@
         return n.endsWith('.apk') && n.includes('universal');
       });
 
+      var windowsAsset = assets.find(function (a) {
+        var n = (a.name || '').toLowerCase();
+        return n.endsWith('.exe') && (n.includes('setup') || n.includes('inzx'));
+      }) || assets.find(function (a) {
+        return (a.name || '').toLowerCase().endsWith('.exe');
+      });
+
+      var linuxAsset = assets.find(function (a) {
+        var n = (a.name || '').toLowerCase();
+        return n.endsWith('.appimage');
+      });
+
       var mainApkUrl = (mainAsset && mainAsset.browser_download_url)
         ? mainAsset.browser_download_url
         : 'https://github.com/nirmaleeswar30/Inzx/releases/latest/download/inzx.apk';
@@ -909,18 +1094,32 @@
         ? universalAsset.browser_download_url
         : 'https://github.com/nirmaleeswar30/Inzx/releases/latest/download/inzx-universal.apk';
 
+      var windowsUrl = (windowsAsset && windowsAsset.browser_download_url)
+        ? windowsAsset.browser_download_url
+        : 'https://github.com/nirmaleeswar30/Inzx/releases/latest';
+
+      var linuxUrl = (linuxAsset && linuxAsset.browser_download_url)
+        ? linuxAsset.browser_download_url
+        : 'https://github.com/nirmaleeswar30/Inzx/releases/latest';
+
       var heroBtn = $('#heroDownloadBtn');
       var mainBtn = $('#mainDownloadBtn');
       var uniBtn = $('#universalDownloadBtn');
+      var winBtn = $('#windowsDownloadBtn');
+      var linuxBtn = $('#linuxDownloadBtn');
 
-      if (heroBtn) heroBtn.href = mainApkUrl;
+      if (heroBtn) applyHeroPlatform({ apk: mainApkUrl, windows: windowsUrl, linux: linuxUrl });
       if (mainBtn) mainBtn.href = mainApkUrl;
       if (uniBtn) uniBtn.href = universalApkUrl;
+      if (winBtn) winBtn.href = windowsUrl;
+      if (linuxBtn) linuxBtn.href = linuxUrl;
 
       return {
         mainApkUrl: mainApkUrl,
         mainApkName: mainAsset ? mainAsset.name : 'inzx.apk',
-        universalApkUrl: universalApkUrl
+        universalApkUrl: universalApkUrl,
+        windowsUrl: windowsUrl,
+        linuxUrl: linuxUrl
       };
     }
 

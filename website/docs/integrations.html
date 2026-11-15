@@ -5,11 +5,11 @@
 <script>/* Relative links need /docs/ (with the slash) to resolve inside docs/. */if(location.pathname.slice(-5)==="/docs")location.replace(location.pathname+"/"+location.search+location.hash);</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Integrations · Inzx Docs</title>
-<meta name="description" content="Discord Rich Presence, backup and Android Auto.">
+<meta name="description" content="Inzx Connect multi-device sync, Discord Rich Presence, desktop media keys, Android Auto and backup.">
 <link rel="canonical" href="https://inzx.nirmaleeswar.dev/docs/integrations">
 <meta property="og:url" content="https://inzx.nirmaleeswar.dev/docs/integrations">
 <meta property="og:title" content="Integrations · Inzx Docs">
-<meta property="og:description" content="Discord Rich Presence, backup and Android Auto.">
+<meta property="og:description" content="Inzx Connect multi-device sync, Discord Rich Presence, desktop media keys, Android Auto and backup.">
 <meta property="og:image" content="https://inzx.nirmaleeswar.dev/assets/img/brand.png">
 <link rel="icon" type="image/png" href="../assets/img/logo_transparent.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,6 +34,23 @@
     <article class="prose">
 <span class="crumb">Around the app</span>
 <h1>Integrations &amp; Ecosystem</h1>
+
+<h2 id="inzx-connect">Inzx Connect (Multi-Device Sync)</h2>
+<p>Seamlessly link your phone, Windows desktop, and Linux workstation together:</p>
+<ul>
+  <li><b>Bidirectional State Sync:</b> Song progress, play/pause state, and queues synchronize automatically across all paired devices.</li>
+  <li><b>Simultaneous Playback:</b> Play the same stream in real-time across multiple devices for a synchronized multi-room listening experience.</li>
+  <li><b>Remote Playback Control:</b> Use your phone to control music playing on your PC, or vice versa, including volume, track skipping, and queue management.</li>
+  <li><b>Pairing:</b> Open <b>Settings → Inzx Connect</b> on both devices to pair using device codes. Sessions are maintained securely via Supabase.</li>
+</ul>
+
+<h2 id="desktop-media">Desktop System Media Controls</h2>
+<p>Native hardware media key and system widget integration for desktop:</p>
+<ul>
+  <li><b>Windows SMTC:</b> Full integration with Windows 10/11 System Media Transport Controls, lock screen media controls, and keyboard media keys (Play, Pause, Next, Previous).</li>
+  <li><b>Linux MPRIS:</b> Native D-Bus MPRIS integration connecting to your Linux desktop environment's sound applet, notification center, and keyboard hotkeys.</li>
+  <li><b>Desktop Background Updates:</b> Silent in-place updates deliver the latest features without interrupting your session.</li>
+</ul>
 
 <h2 id="discord">Discord Rich Presence (RPC)</h2>
 <p>Broadcast your current listening status directly to Discord:</p>

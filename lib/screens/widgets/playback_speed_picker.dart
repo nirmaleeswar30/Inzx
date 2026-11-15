@@ -1,3 +1,4 @@
+import '../../core/utils/open_once.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations_x.dart';
@@ -19,11 +20,11 @@ class PlaybackSpeedPicker extends ConsumerWidget {
   static const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
 
   static void show(BuildContext context) {
-    showModalBottomSheet(
+    openOnce('PlaybackSpeedPicker', () => showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => const PlaybackSpeedPicker(),
-    );
+    ));
   }
 
   @override
