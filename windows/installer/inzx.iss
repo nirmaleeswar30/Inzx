@@ -100,6 +100,12 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 ; back up in the new version; an update applied as Inzx closes doesn't.
 Filename: "{app}\{#MyAppExeName}"; Flags: nowait runasoriginaluser; Check: ShouldRelaunch
 
+[Registry]
+Root: HKA; Subkey: "Software\Classes\inzx"; ValueType: string; ValueName: ""; ValueData: "URL:Inzx Protocol"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\inzx"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\inzx\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName},0"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\inzx\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey
+
 [UninstallDelete]
 ; Things Inzx itself may create in its program folder (the updater's marker,
 ; a WebView2 profile from older builds). User data elsewhere is kept.

@@ -10,6 +10,8 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/l10n/app_localizations_x.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../core/services/cache/hive_service.dart';
+import '../../core/utils/platform_utils.dart';
+import '../../main.dart' show rootScaffoldMessengerKey;
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../services/album_color_extractor.dart';
@@ -58,6 +60,22 @@ int currentLineIndex(List<LyricEntry> lines, int positionMs) {
   return current;
 }
 
+void _notifyLinkCopied([BuildContext? context]) {
+  final messenger = (context != null ? ScaffoldMessenger.maybeOf(context) : null) ??
+      rootScaffoldMessengerKey.currentState;
+  final message = context != null
+      ? context.l10n.shareCardLinkCopied
+      : 'Link copied to clipboard';
+  messenger?.hideCurrentSnackBar();
+  messenger?.showSnackBar(
+    SnackBar(
+      content: Text(message),
+      duration: const Duration(seconds: 2),
+      behavior: SnackBarBehavior.floating,
+    ),
+  );
+}
+
 /// The share sheet for a song: a live card preview, its style and theme, and
 /// where to send it. Inzx links are what get shared; the YouTube Music link is
 /// one of the targets.
@@ -67,12 +85,18 @@ class ShareSheet extends ConsumerStatefulWidget {
   final Track track;
 
   static Future<void> show(BuildContext context, Track track) {
+    if (!track.id.startsWith('local_')) {
+      final url = DeepLinkHandler.createShareUrl('song', track.id);
+      unawaited(Clipboard.setData(ClipboardData(text: url)));
+      _notifyLinkCopied(context);
+    }
     return showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
       showDragHandle: false,
       backgroundColor: Colors.transparent,
+      constraints: isDesktop ? const BoxConstraints(maxWidth: 480) : null,
       builder: (_) => ShareSheet._(track: track),
     );
   }
@@ -86,11 +110,15 @@ class ShareSheet extends ConsumerStatefulWidget {
     required String title,
     required String Function(String url) shareText,
   }) {
+    final inzxUrl = DeepLinkHandler.createShareUrl(type, id);
+    unawaited(Clipboard.setData(ClipboardData(text: inzxUrl)));
+    _notifyLinkCopied(context);
     return showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
       showDragHandle: false,
       backgroundColor: Colors.transparent,
+      constraints: isDesktop ? const BoxConstraints(maxWidth: 480) : null,
       builder: (_) => _LinkSheet(
         type: type,
         id: id,
@@ -151,7 +179,9 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
     unawaited(_loadLyrics());
     // Live while the song is the one playing; the export freezes the moment.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_isCurrent) return;
+      if (!mounted) return;
+      if (_hasLink) _say(context.l10n.shareCardLinkCopied);
+      if (!_isCurrent) return;
       final player = ref.read(audioPlayerServiceProvider);
       _setPosition(player.currentPosition);
       _positionSub = player.positionStream.listen(_setPosition);
@@ -447,7 +477,10 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
     // Ready to paste straight away, whatever happens with the card.
     if (url != null) {
       await Clipboard.setData(ClipboardData(text: url));
-      if (mounted) _say(context.l10n.shareCardLinkCopied);
+      if (mounted) {
+        _say(context.l10n.shareCardLinkCopied);
+        _notifyLinkCopied(context);
+      }
     }
     if (!mounted) return;
     await _withCard('more', (path) async {
@@ -463,6 +496,14 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
   void _shareYtLink() {
     final url = DeepLinkHandler.nativeYtMusicUrl('song', _track.id);
     if (url == null) return;
+    if (isDesktop) {
+      Clipboard.setData(ClipboardData(text: url));
+      if (mounted) {
+        _say(context.l10n.shareCardLinkCopied);
+        _notifyLinkCopied(context);
+      }
+      return;
+    }
     unawaited(SharePlus.instance.share(ShareParams(text: _text(url))));
   }
 
@@ -492,8 +533,11 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
     final hasNative = _installed != null;
     final media = MediaQuery.of(context);
 
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: media.size.height * 0.92),
+    final sheet = ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: isDesktop ? 480 : double.infinity,
+        maxHeight: media.size.height * 0.92,
+      ),
       child: Material(
         color: palette.sheet,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -566,28 +610,35 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
                 onChanged: (v) => setState(() => _mode = v),
               ),
               const SizedBox(height: 12),
-              FractionallySizedBox(
-                widthFactor: 0.62,
-                child: AspectRatio(
-                  aspectRatio:
-                      kShareCardSize.width / kShareCardSize.height,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: data == null
-                        ? ColoredBox(
-                            color: palette.raised,
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: palette.tint,
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: isDesktop
+                      ? (media.size.height * 0.45).clamp(240.0, 320.0)
+                      : double.infinity,
+                ),
+                child: FractionallySizedBox(
+                  widthFactor: isDesktop ? null : 0.62,
+                  child: AspectRatio(
+                    aspectRatio:
+                        kShareCardSize.width / kShareCardSize.height,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: data == null
+                          ? ColoredBox(
+                              color: palette.raised,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: palette.tint,
+                                ),
+                              ),
+                            )
+                          : FittedBox(
+                              child: RepaintBoundary(
+                                child: ShareCard(data: data),
                               ),
                             ),
-                          )
-                        : FittedBox(
-                            child: RepaintBoundary(
-                              child: ShareCard(data: data),
-                            ),
-                          ),
+                    ),
                   ),
                 ),
               ),
@@ -675,16 +726,22 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
                       icon: Icons.play_circle_outline_rounded,
                       onTap: _shareYtLink,
                     ),
-                  _Target(
-                    label: l10n.shareCardMore,
-                    background: LinearGradient(
-                      colors: [palette.raised, palette.raised],
+                  if (!isDesktop)
+                    _Target(
+                      label: l10n.shareCardMore,
+                      background: LinearGradient(
+                        colors: [palette.raised, palette.raised],
+                      ),
+                      iconColor: Colors.white,
+                      icon: Icons.share_rounded,
+                      busy: _busy == 'more',
+                      onTap: _shareMore,
                     ),
-                    iconColor: Colors.white,
-                    icon: Icons.share_rounded,
-                    busy: _busy == 'more',
-                    onTap: _shareMore,
-                  ),
+                  if (isDesktop) ...[
+                    const Spacer(),
+                    const Spacer(),
+                    const Spacer(),
+                  ],
                 ],
               ),
               const SizedBox(height: 8),
@@ -700,6 +757,14 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
         ),
       ),
     );
+
+    if (isDesktop) {
+      return Align(
+        alignment: Alignment.bottomCenter,
+        child: sheet,
+      );
+    }
+    return sheet;
   }
 }
 
@@ -1114,12 +1179,19 @@ class _LinkSheet extends StatelessWidget {
     final ytUrl = DeepLinkHandler.nativeYtMusicUrl(type, id);
     final inzxUrl = DeepLinkHandler.createShareUrl(type, id);
 
+    void copyLink(String url) {
+      Clipboard.setData(ClipboardData(text: url));
+      _notifyLinkCopied(context);
+    }
+
     void share(String url) {
       Navigator.pop(context);
       unawaited(SharePlus.instance.share(ShareParams(text: shareText(url))));
     }
 
-    return Material(
+    final targetCount = (!isDesktop ? 1 : 0) + (ytUrl != null ? 1 : 0);
+
+    final sheet = Material(
       color: palette.sheet,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       clipBehavior: Clip.antiAlias,
@@ -1163,20 +1235,22 @@ class _LinkSheet extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _Target(
-                  label: l10n.shareCardMore,
-                  background: LinearGradient(
-                    colors: [palette.accent, palette.accent],
+                if (!isDesktop)
+                  _Target(
+                    label: l10n.shareCardMore,
+                    background: LinearGradient(
+                      colors: [palette.accent, palette.accent],
+                    ),
+                    iconColor: palette.onAccent,
+                    icon: Icons.share_rounded,
+                    onTap: () {
+                      unawaited(
+                        Clipboard.setData(ClipboardData(text: inzxUrl)),
+                      );
+                      _notifyLinkCopied(context);
+                      share(inzxUrl);
+                    },
                   ),
-                  iconColor: palette.onAccent,
-                  icon: Icons.share_rounded,
-                  onTap: () {
-                    unawaited(
-                      Clipboard.setData(ClipboardData(text: inzxUrl)),
-                    );
-                    share(inzxUrl);
-                  },
-                ),
                 if (ytUrl != null)
                   _Target(
                     label: l10n.shareCardYtMusicLink,
@@ -1185,15 +1259,32 @@ class _LinkSheet extends StatelessWidget {
                     ),
                     iconColor: Colors.white,
                     icon: Icons.play_circle_outline_rounded,
-                    onTap: () => share(ytUrl),
+                    onTap: () {
+                      if (isDesktop) {
+                        copyLink(ytUrl);
+                      } else {
+                        share(ytUrl);
+                      }
+                    },
                   ),
-                const Spacer(),
-                const Spacer(),
+                for (var i = 0; i < (4 - targetCount).clamp(0, 4); i++)
+                  const Spacer(),
               ],
             ),
           ],
         ),
       ),
     );
+
+    if (isDesktop) {
+      return Align(
+        alignment: Alignment.bottomCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: sheet,
+        ),
+      );
+    }
+    return sheet;
   }
 }

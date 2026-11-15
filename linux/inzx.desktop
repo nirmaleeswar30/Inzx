@@ -8,4 +8,5 @@ Icon=inzx
 Terminal=false
 Categories=AudioVideo;Audio;Player;
 Keywords=music;player;youtube;lyrics;
-StartupWMClass=inzx
+StartupWMClass=com.inzx.inzx
+MimeType=x-scheme-handler/inzx;

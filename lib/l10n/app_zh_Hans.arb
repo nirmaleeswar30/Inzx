@@ -1231,7 +1231,7 @@
   "shareCardSave": "保存卡片",
   "shareCardYtMusicLink": "YT Music 链接",
   "shareCardMore": "更多分享",
-  "shareCardLinkCopied": "链接已复制",
+  "shareCardLinkCopied": "链接已复制到剪贴板",
   "shareCardSaved": "已保存到 Pictures/Inzx",
   "shareCardSaveFailed": "无法保存卡片。请改用“更多分享”。",
   "shareCardFailed": "无法分享卡片。请改用“更多分享”。",

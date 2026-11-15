@@ -1231,7 +1231,7 @@
   "shareCardSave": "カードを保存",
   "shareCardYtMusicLink": "YT Musicのリンク",
   "shareCardMore": "その他の共有",
-  "shareCardLinkCopied": "リンクをコピーしました",
+  "shareCardLinkCopied": "リンクをクリップボードにコピーしました",
   "shareCardSaved": "Pictures/Inzxに保存しました",
   "shareCardSaveFailed": "カードを保存できませんでした。代わりに「その他の共有」をお試しください。",
   "shareCardFailed": "カードを共有できませんでした。代わりに「その他の共有」をお試しください。",

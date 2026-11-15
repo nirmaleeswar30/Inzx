@@ -1342,7 +1342,7 @@
   "shareCardSave": "Save card",
   "shareCardYtMusicLink": "YT Music link",
   "shareCardMore": "Share more",
-  "shareCardLinkCopied": "Link copied",
+  "shareCardLinkCopied": "Link copied to clipboard",
   "shareCardSaved": "Saved to Pictures/Inzx",
   "shareCardSaveFailed": "Couldn't save the card. Try Share more instead.",
   "shareCardFailed": "Couldn't share the card. Try Share more instead.",

@@ -25,6 +25,7 @@ DIST="$ROOT/dist"
 OUT="$DIST/Inzx-$VERSION-x86_64.AppImage"
 APPIMAGETOOL="${APPIMAGETOOL:-/tmp/appimagetool-x86_64.AppImage}"
 APPIMAGETOOL_URL="https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
+RUNTIME_FILE="${RUNTIME_FILE:-/tmp/runtime-x86_64}"
 
 if [[ "${SKIP_FLUTTER_BUILD:-0}" != "1" ]]; then
   echo "==> flutter build linux --release"
@@ -36,6 +37,11 @@ if [[ ! -x "$APPIMAGETOOL" ]]; then
   echo "==> Fetching appimagetool"
   curl -fL -o "$APPIMAGETOOL" "$APPIMAGETOOL_URL"
   chmod +x "$APPIMAGETOOL"
+fi
+
+if [[ ! -f "$RUNTIME_FILE" ]]; then
+  echo "==> Extracting runtime from appimagetool"
+  head -c 944632 "$APPIMAGETOOL" > "$RUNTIME_FILE"
 fi
 
 echo "==> Staging $APPDIR"
@@ -166,10 +172,11 @@ for dep in libavcodec libavformat libavutil libswscale libswresample libass; do
 done
 
 echo "==> Icon, desktop entry, AppRun"
-ICON="$ROOT/assets/icon/logo_dark.png"
-mkdir -p "$APPDIR/usr/share/icons/hicolor/512x512/apps" "$APPDIR/usr/share/applications"
+ICON="$ROOT/assets/logo_transparent.png"
+mkdir -p "$APPDIR/usr/share/icons/hicolor/256x256/apps" "$APPDIR/usr/share/icons/hicolor/512x512/apps" "$APPDIR/usr/share/applications"
 cp "$ICON" "$APPDIR/inzx.png"
 cp "$ICON" "$APPDIR/.DirIcon"
+cp "$ICON" "$APPDIR/usr/share/icons/hicolor/256x256/apps/inzx.png"
 cp "$ICON" "$APPDIR/usr/share/icons/hicolor/512x512/apps/inzx.png"
 cp "$ROOT/linux/inzx.desktop" "$APPDIR/inzx.desktop"
 cp "$ROOT/linux/inzx.desktop" "$APPDIR/usr/share/applications/inzx.desktop"
@@ -177,6 +184,192 @@ cp "$ROOT/linux/inzx.desktop" "$APPDIR/usr/share/applications/inzx.desktop"
 cat >"$APPDIR/AppRun" <<'EOF'
 #!/bin/bash
 HERE="$(dirname "$(readlink -f "${0}")")"
+
+# A launch carrying an inzx:// link (shared link redirect) is usually a
+# short-lived second instance that only forwards the link to the running Inzx
+# and exits, so it must not touch shared state or show dialogs.
+URL_LAUNCH=0
+for arg in "$@"; do
+  case "$arg" in
+    inzx://*|https://inzx.nirmaleeswar.dev/*) URL_LAUNCH=1 ;;
+  esac
+done
+
+# --- Desktop Integration & CLI Options ---
+XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+DESKTOP_FILE="$XDG_DATA_HOME/applications/inzx.desktop"
+ICON_DIR="$XDG_DATA_HOME/icons/hicolor"
+APPLICATIONS_DIR="$HOME/Applications"
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/inzx"
+NO_INTEGRATE_FLAG="$CONFIG_DIR/.no_integrate"
+
+install_desktop() {
+  local appimage_src="${APPIMAGE:-}"
+  local target_exec=""
+
+  mkdir -p "$XDG_DATA_HOME/applications"
+  mkdir -p "$ICON_DIR/512x512/apps"
+  mkdir -p "$ICON_DIR/256x256/apps"
+
+  # Copy icon to standard icon locations
+  if [ -f "$HERE/inzx.png" ]; then
+    cp -f "$HERE/inzx.png" "$ICON_DIR/512x512/apps/inzx.png"
+    cp -f "$HERE/inzx.png" "$ICON_DIR/256x256/apps/inzx.png"
+  fi
+
+  # Determine target executable path
+  if [ -n "$appimage_src" ] && [ -f "$appimage_src" ]; then
+    mkdir -p "$APPLICATIONS_DIR"
+    local target_appimage="$APPLICATIONS_DIR/Inzx.AppImage"
+    if [ "$(readlink -f "$appimage_src")" != "$(readlink -f "$target_appimage")" ]; then
+      cp -f "$appimage_src" "$target_appimage"
+      chmod +x "$target_appimage"
+      # Clean up source AppImage if running from Downloads, tmp, or Desktop to avoid duplicates
+      case "$(readlink -f "$appimage_src")" in
+        "$HOME/Downloads/"*|/tmp/*|"$HOME/Desktop/"*)
+          rm -f "$appimage_src" 2>/dev/null || true
+          ;;
+      esac
+    fi
+    target_exec="$target_appimage"
+  else
+    target_exec="$HERE/inzx"
+  fi
+
+  cat > "$DESKTOP_FILE" << DESKTOP_EOF
+[Desktop Entry]
+Type=Application
+Name=Inzx
+GenericName=Music Player
+Comment=Your music, beautifully unbound
+Exec="$target_exec" %U
+Icon=inzx
+Terminal=false
+Categories=AudioVideo;Audio;Player;
+Keywords=music;player;youtube;lyrics;
+StartupWMClass=com.inzx.inzx
+MimeType=x-scheme-handler/inzx;
+StartupNotify=true
+DESKTOP_EOF
+  chmod +x "$DESKTOP_FILE"
+
+  update-desktop-database "$XDG_DATA_HOME/applications" 2>/dev/null || true
+  gtk-update-icon-cache "$ICON_DIR" 2>/dev/null || true
+}
+
+uninstall_desktop() {
+  local target_appimage="$APPLICATIONS_DIR/Inzx.AppImage"
+
+  rm -f "$DESKTOP_FILE"
+  rm -f "$ICON_DIR/512x512/apps/inzx.png"
+  rm -f "$ICON_DIR/256x256/apps/inzx.png"
+  rm -f "$target_appimage"
+  rm -f "$NO_INTEGRATE_FLAG"
+
+  update-desktop-database "$XDG_DATA_HOME/applications" 2>/dev/null || true
+  gtk-update-icon-cache "$ICON_DIR" 2>/dev/null || true
+
+  echo "✓ Inzx desktop integration removed."
+  exit 0
+}
+
+# Check for explicit flags
+for arg in "$@"; do
+  case "$arg" in
+    --install)
+      install_desktop
+      echo "✓ Inzx installed to $APPLICATIONS_DIR/Inzx.AppImage and integrated into desktop menu."
+      exit 0
+      ;;
+    --uninstall)
+      uninstall_desktop
+      ;;
+  esac
+done
+
+# First-run prompt if running as an AppImage and not yet integrated
+if [ "$URL_LAUNCH" = "0" ] && [ -n "${APPIMAGE:-}" ] && [ ! -f "$DESKTOP_FILE" ] && [ ! -f "$NO_INTEGRATE_FLAG" ]; then
+  # If already placed in ~/Applications, integrate automatically
+  if [ "$(readlink -f "$(dirname "$APPIMAGE")")" = "$(readlink -f "$APPLICATIONS_DIR")" ]; then
+    install_desktop
+  else
+    response="no"
+    if command -v python3 &>/dev/null; then
+      response=$(python3 - << 'PY' 2>/dev/null
+try:
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk
+
+    dialog = Gtk.MessageDialog(
+        modal=True,
+        message_type=Gtk.MessageType.QUESTION,
+        buttons=Gtk.ButtonsType.NONE,
+        text="Integrate Inzx into your application menu?"
+    )
+    dialog.set_title("Inzx Desktop Integration")
+    dialog.format_secondary_text(
+        "Would you like to add Inzx to your desktop applications menu?\n\nThis will move the AppImage to ~/Applications so you can launch Inzx from your app search and pin it to your dock."
+    )
+    dialog.add_button("Don't Ask Again", Gtk.ResponseType.REJECT)
+    dialog.add_button("Run Once", Gtk.ResponseType.NO)
+    integrate_btn = dialog.add_button("Integrate", Gtk.ResponseType.YES)
+    integrate_btn.get_style_context().add_class("suggested-action")
+    dialog.show_all()
+
+    res = dialog.run()
+    dialog.destroy()
+    while Gtk.events_pending():
+        Gtk.main_iteration()
+
+    if res == Gtk.ResponseType.YES:
+        print("yes")
+    elif res == Gtk.ResponseType.REJECT:
+        print("never")
+    else:
+        print("no")
+except Exception:
+    print("fallback")
+PY
+)
+    fi
+
+    if [ "$response" = "fallback" ] || [ -z "$response" ]; then
+      if command -v zenity &>/dev/null; then
+        if zenity --question --title="Inzx Desktop Integration" \
+          --text="Would you like to integrate Inzx into your application menu?\n\nThis will move the AppImage to ~/Applications and add it to your launcher." \
+          --ok-label="Integrate" --cancel-label="Run Once" 2>/dev/null; then
+          response="yes"
+        else
+          response="no"
+        fi
+      elif command -v kdialog &>/dev/null; then
+        if kdialog --yesno "Would you like to integrate Inzx into your application menu?\n\nThis will move the AppImage to ~/Applications and add it to your launcher." 2>/dev/null; then
+          response="yes"
+        else
+          response="no"
+        fi
+      elif [ -t 0 ]; then
+        read -r -p "Would you like to integrate Inzx into your application menu? [y/N]: " cli_ans
+        case "${cli_ans:-n}" in
+          [yY]*) response="yes" ;;
+          *) response="no" ;;
+        esac
+      fi
+    fi
+
+    case "$response" in
+      yes)
+        install_desktop
+        ;;
+      never)
+        mkdir -p "$CONFIG_DIR"
+        touch "$NO_INTEGRATE_FLAG"
+        ;;
+    esac
+  fi
+fi
+
 export LD_LIBRARY_PATH="$HERE/lib:${LD_LIBRARY_PATH:-}"
 # Playback depends only on what ships here: media_kit (and Inzx's own libmpv
 # users) load the bundled library, and mpv reads an empty, read-only config
@@ -189,5 +382,5 @@ chmod +x "$APPDIR/AppRun"
 
 echo "==> Packing $OUT"
 rm -f "$OUT"
-ARCH=x86_64 "$APPIMAGETOOL" --appimage-extract-and-run "$APPDIR" "$OUT"
+ARCH=x86_64 "$APPIMAGETOOL" --appimage-extract-and-run --runtime-file "$RUNTIME_FILE" "$APPDIR" "$OUT"
 echo "Done: $OUT ($(du -h "$OUT" | cut -f1))"

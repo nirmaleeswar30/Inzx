@@ -24,8 +24,19 @@ class DeepLinkHandler {
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
   bool _isInitialized = false;
+  WidgetRef? _ref;
+  Uri? _pendingUri;
 
   void initialize(BuildContext context, WidgetRef ref) {
+    _ref = ref;
+    if (_pendingUri != null) {
+      final pending = _pendingUri!;
+      _pendingUri = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleDeepLink(pending, ref);
+      });
+    }
+
     if (_isInitialized) return;
     _isInitialized = true;
     _appLinks = AppLinks();
@@ -48,6 +59,21 @@ class DeepLinkHandler {
         });
       }
     });
+  }
+
+  /// Dispatches an external URI directly (e.g. from desktop CLI arguments or
+  /// a secondary instance forward over IPC). If the app has already initialized
+  /// its root [WidgetRef], the link is processed immediately; otherwise it is
+  /// queued as [_pendingUri] and processed on startup.
+  void handleExternalUrl(Uri uri) {
+    final ref = _ref;
+    if (ref != null && _isInitialized) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleDeepLink(uri, ref);
+      });
+    } else {
+      _pendingUri = uri;
+    }
   }
 
   void _handleDeepLink(Uri uri, WidgetRef ref) {
@@ -97,7 +123,10 @@ class DeepLinkHandler {
   void _navigateToItem(String type, String id, WidgetRef ref) {
     final context = rootNavigatorKey.currentContext;
     if (context == null) {
-      debugPrint('DeepLinkHandler: rootNavigatorKey.currentContext is null');
+      debugPrint('DeepLinkHandler: rootNavigatorKey.currentContext is null; retrying next frame');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _navigateToItem(type, id, ref);
+      });
       return;
     }
 

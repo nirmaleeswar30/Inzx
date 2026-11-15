@@ -1231,7 +1231,7 @@
   "shareCardSave": "카드 저장",
   "shareCardYtMusicLink": "YT Music 링크",
   "shareCardMore": "더 공유하기",
-  "shareCardLinkCopied": "링크가 복사되었습니다",
+  "shareCardLinkCopied": "링크가 클립보드에 복사되었습니다",
   "shareCardSaved": "Pictures/Inzx에 저장되었습니다",
   "shareCardSaveFailed": "카드를 저장할 수 없습니다. 대신 '더 공유하기'를 사용해 보세요.",
   "shareCardFailed": "카드를 공유할 수 없습니다. 대신 '더 공유하기'를 사용해 보세요.",

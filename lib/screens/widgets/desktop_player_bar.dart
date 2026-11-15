@@ -18,6 +18,7 @@ import 'automix_mix_pulse.dart';
 import 'desktop_shell.dart';
 import 'lyrics_view.dart';
 import 'lossless_badge.dart';
+import 'track_options_sheet.dart';
 import 'now_playing_bottom_bar.dart' show LyricsGlyph, QueueGlyph;
 import 'now_playing_screen.dart';
 import 'track_artwork_view.dart';
@@ -199,6 +200,23 @@ class _TrackDetails extends ConsumerWidget {
                 : Icons.add_circle_outline_rounded,
             size: 22,
             color: liked ? accent : base.withValues(alpha: 0.7),
+          ),
+        ),
+        // The song's options, as the ⋮ in the phone's now playing view:
+        // queue, playlists, share, go to album/artist and the rest.
+        IconButton(
+          tooltip: 'More options',
+          onPressed: () {
+            // The bar sits above the app's Navigator, so the sheet opens on
+            // the root one (as the lossless badge's does).
+            final navigator = rootNavigatorKey.currentContext;
+            if (navigator == null) return;
+            TrackOptionsSheet.show(navigator, track);
+          },
+          icon: Icon(
+            Icons.more_vert_rounded,
+            size: 22,
+            color: base.withValues(alpha: 0.7),
           ),
         ),
       ],

@@ -48,8 +48,31 @@ VoidCallback? requestAppRestart;
 /// True on a fresh install until onboarding finishes.
 bool showOnboarding = false;
 
-void main() async {
+void main([List<String> args = const []]) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Desktop single-instance check: if another instance is already running,
+  // forward args / focus signal to it and exit immediately before doing any
+  // expensive initialization.
+  if (isDesktop) {
+    try {
+      final isSecondary = await handleDesktopSingleInstance(args);
+      if (isSecondary) return;
+    } catch (e) {
+      debugPrint('Single-instance check error: $e');
+    }
+
+    for (final arg in args) {
+      if (arg.startsWith('inzx://') ||
+          arg.startsWith('https://${DeepLinkHandler.shareHost}/')) {
+        final uri = Uri.tryParse(arg);
+        if (uri != null) {
+          DeepLinkHandler.instance.handleExternalUrl(uri);
+        }
+        break;
+      }
+    }
+  }
 
   // Initialize rolling application logger and crash tracing
   await AppLogger.init();
