@@ -1,4 +1,5 @@
 import '../../core/utils/open_once.dart';
+import '../../core/utils/platform_utils.dart';
 import 'dart:async';
 import 'dart:ui' show ImageFilter, TileMode;
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:iconsax/iconsax.dart';
 import '../../core/l10n/app_localizations_x.dart';
 import '../../providers/music_providers.dart';
 import '../../providers/providers.dart';
+import '../../services/dynamic_font_service.dart';
 import '../../services/lyrics/lyrics_service.dart';
 import '../../services/lyrics/lyrics_models.dart';
 import '../../services/lyrics/instrumental_gaps.dart';
@@ -111,6 +113,8 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     _smoothPositionNotifier.value = _heldPositionMs;
 
     _handover = AnimationController(vsync: this);
+
+    DynamicFontService.instance.addListener(_onFontLoaded);
 
     _ticker = createTicker((_) {
       final current = _stepClock();
@@ -269,8 +273,15 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     }
   }
 
+  void _onFontLoaded() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   void dispose() {
+    DynamicFontService.instance.removeListener(_onFontLoaded);
     _ticker.dispose();
     _handover.dispose();
     _smoothPositionNotifier.dispose();
@@ -947,6 +958,8 @@ class _LyricsViewState extends ConsumerState<LyricsView>
               child: Text(
                 displayText,
                 style: TextStyle(
+                  fontFamily: desktopFontFamily,
+                  fontFamilyFallback: desktopFontFamilyFallback,
                   fontStyle: FontStyle.italic,
                   fontSize: (isCurrentLine ? 20.0 : 16.0) * widget.fontScale,
                   fontWeight: isCurrentLine ? FontWeight.w600 : FontWeight.w400,
@@ -1044,6 +1057,8 @@ bool _isComplexScript(String text) {
         duration: isCurrentLine ? _lyricSettle : Duration.zero,
         curve: _lyricEase,
         style: TextStyle(
+          fontFamily: desktopFontFamily,
+          fontFamilyFallback: desktopFontFamilyFallback,
           fontSize: fontSize,
           fontWeight: fontWeight,
           fontStyle: isBg ? FontStyle.italic : FontStyle.normal,
@@ -1074,6 +1089,8 @@ bool _isComplexScript(String text) {
                   duration: _lyricSettle,
                   curve: _lyricEase,
                   style: TextStyle(
+                    fontFamily: desktopFontFamily,
+                    fontFamilyFallback: desktopFontFamilyFallback,
                     fontSize: fontSize * 0.75, // Smaller font for translation
                     fontWeight: FontWeight.w400,
                     color: textColor.withValues(alpha: 0.8), // Muted color
@@ -1194,6 +1211,8 @@ bool _isComplexScript(String text) {
                 line: line,
                 position: _smoothPositionNotifier,
                 style: TextStyle(
+                  fontFamily: desktopFontFamily,
+                  fontFamilyFallback: desktopFontFamilyFallback,
                   fontSize: fontSize,
                   fontWeight: FontWeight.w800,
                   fontStyle: isBg ? FontStyle.italic : FontStyle.normal,
@@ -1217,6 +1236,8 @@ bool _isComplexScript(String text) {
               child: Text(
                 line.translatedText!,
                 style: TextStyle(
+                  fontFamily: desktopFontFamily,
+                  fontFamilyFallback: desktopFontFamilyFallback,
                   fontSize: fontSize * 0.72,
                   fontWeight: FontWeight.w400,
                   color: isCurrentLine
@@ -1351,6 +1372,8 @@ bool _isComplexScript(String text) {
               child: Text(
                 displayLine,
                 style: TextStyle(
+                  fontFamily: desktopFontFamily,
+                  fontFamilyFallback: desktopFontFamilyFallback,
                   fontSize: (isSection ? 18 : 22) * widget.fontScale,
                   fontWeight: isSection ? FontWeight.w700 : FontWeight.w400,
                   letterSpacing: isSection ? 0.5 : 0.0,
@@ -1414,6 +1437,8 @@ class LyricsLine extends ConsumerWidget {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
+        fontFamily: desktopFontFamily,
+        fontFamilyFallback: desktopFontFamilyFallback,
         color: textColor.withValues(alpha: 0.7),
         fontSize: 13,
         fontStyle: FontStyle.italic,

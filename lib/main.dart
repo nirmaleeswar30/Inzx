@@ -36,6 +36,7 @@ import 'services/scrobbling/scrobble_service.dart';
 import 'services/desktop/desktop_updater.dart';
 import 'services/inzx_connect_remote.dart';
 import 'services/listening_stats_service.dart';
+import 'services/dynamic_font_service.dart';
 import 'services/inzx_connect_service.dart';
 
 InzxAudioHandler? audioHandler;
@@ -76,6 +77,13 @@ void main([List<String> args = const []]) async {
 
   // Initialize rolling application logger and crash tracing
   await AppLogger.init();
+
+  // Initialize dynamic font fallback loader (loads cached fonts into engine)
+  try {
+    await DynamicFontService.instance.init();
+  } catch (e) {
+    AppLogger.e('FontService', 'DynamicFontService init error', e);
+  }
 
   // Global Flutter UI crash interceptor
   FlutterError.onError = (FlutterErrorDetails details) {

@@ -9,8 +9,10 @@ import 'desktop_page_transitions.dart';
 import '../utils/platform_utils.dart';
 
 /// Adds the desktop font to a shared style; on mobile it's returned as is.
-TextStyle _font(TextStyle style) =>
-    style.copyWith(fontFamily: desktopFontFamily);
+TextStyle _font(TextStyle style) => style.copyWith(
+      fontFamily: desktopFontFamily,
+      fontFamilyFallback: desktopFontFamilyFallback,
+    );
 
 /// Inzx app theme configuration
 /// Creates the complete ThemeData with our calm design system
@@ -25,6 +27,8 @@ class InzxTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
+      fontFamily: desktopFontFamily,
+      fontFamilyFallback: desktopFontFamilyFallback,
 
       // Colors
       colorScheme: ColorScheme.light(
@@ -55,6 +59,7 @@ class InzxTheme {
       // Typography
       textTheme: createMineTextTheme().apply(
         fontFamily: desktopFontFamily,
+        fontFamilyFallback: desktopFontFamilyFallback,
         bodyColor: InzxColors.textPrimary,
         displayColor: InzxColors.textPrimary,
       ),
@@ -395,6 +400,8 @@ class InzxTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
+      fontFamily: desktopFontFamily,
+      fontFamilyFallback: desktopFontFamilyFallback,
 
       // Colors
       colorScheme: ColorScheme.dark(
@@ -425,6 +432,7 @@ class InzxTheme {
       // Typography
       textTheme: createMineTextTheme().apply(
         fontFamily: desktopFontFamily,
+        fontFamilyFallback: desktopFontFamilyFallback,
         bodyColor: InzxColors.darkTextPrimary,
         displayColor: InzxColors.darkTextPrimary,
       ),
@@ -442,6 +450,7 @@ class InzxTheme {
         ),
         titleTextStyle: TextStyle(
           fontFamily: desktopFontFamily,
+          fontFamilyFallback: desktopFontFamilyFallback,
           fontSize: 22,
           fontWeight: FontWeight.w500,
           letterSpacing: 0,

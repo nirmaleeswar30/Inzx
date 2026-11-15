@@ -7,6 +7,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/utils/platform_utils.dart';
+import '../../services/dynamic_font_service.dart';
 import '../../services/lyrics/lyrics_models.dart';
 import '../../services/lyrics/swept_lyric_timing.dart';
 
@@ -84,7 +86,15 @@ class _SweptLyricLineState extends State<SweptLyricLine> {
     super.initState();
     _timing = SweptTiming.of(widget.line);
     widget.position.addListener(_onTick);
+    DynamicFontService.instance.addListener(_onFontLoaded);
     _onTick();
+  }
+
+  void _onFontLoaded() {
+    _LineLayout.clearCache();
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -102,6 +112,7 @@ class _SweptLyricLineState extends State<SweptLyricLine> {
 
   @override
   void dispose() {
+    DynamicFontService.instance.removeListener(_onFontLoaded);
     widget.position.removeListener(_onTick);
     _drawnAt.dispose();
     super.dispose();
@@ -122,6 +133,13 @@ class _SweptLyricLineState extends State<SweptLyricLine> {
   @override
   Widget build(BuildContext context) {
     final style = DefaultTextStyle.of(context).style.merge(widget.style);
+    final effectiveStyle = style.copyWith(
+      color: widget.color,
+      fontFamily: widget.style.fontFamily ?? style.fontFamily ?? desktopFontFamily,
+      fontFamilyFallback: widget.style.fontFamilyFallback ??
+          style.fontFamilyFallback ??
+          desktopFontFamilyFallback,
+    );
     final scaler = MediaQuery.textScalerOf(context);
     final rtl = _isRtl(widget.line.text);
     return Semantics(
@@ -130,7 +148,7 @@ class _SweptLyricLineState extends State<SweptLyricLine> {
         builder: (context, constraints) {
           final layout = _LineLayout.build(
             text: widget.line.text,
-            style: style.copyWith(color: widget.color),
+            style: effectiveStyle,
             scaler: scaler,
             rtl: rtl,
             textAlign: widget.textAlign,
@@ -204,6 +222,10 @@ class _LineLayout {
   final List<double> charRight;
 
   static final Map<Object, _LineLayout> _cache = {};
+
+  static void clearCache() {
+    _cache.clear();
+  }
 
   static _LineLayout build({
     required String text,

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../services/dynamic_font_service.dart';
 
 /// Represents a music track
 class Track extends Equatable {
@@ -53,6 +54,10 @@ class Track extends Equatable {
     String? thumbnailUrl,
     bool isExplicit = false,
   }) {
+    DynamicFontService.instance.ensureFontsFor(title);
+    DynamicFontService.instance.ensureFontsFor(artist);
+    if (album != null) DynamicFontService.instance.ensureFontsFor(album);
+
     // Get highest quality thumbnail
     String? highRes;
     if (thumbnailUrl != null) {
@@ -182,12 +187,20 @@ class Track extends Equatable {
 
   /// Create from JSON
   factory Track.fromJson(Map<String, dynamic> json) {
+    final title = json['title'] as String;
+    final artist = json['artist'] as String;
+    final album = json['album'] as String?;
+
+    DynamicFontService.instance.ensureFontsFor(title);
+    DynamicFontService.instance.ensureFontsFor(artist);
+    if (album != null) DynamicFontService.instance.ensureFontsFor(album);
+
     return Track(
       id: json['id'] as String,
-      title: json['title'] as String,
-      artist: json['artist'] as String,
+      title: title,
+      artist: artist,
       artistId: json['artistId'] as String? ?? '',
-      album: json['album'] as String?,
+      album: album,
       albumId: json['albumId'] as String?,
       duration: Duration(milliseconds: json['duration'] as int),
       thumbnailUrl: json['thumbnailUrl'] as String?,
