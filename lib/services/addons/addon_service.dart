@@ -3,7 +3,7 @@ import 'dart:collection';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../secure_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/models.dart';
@@ -83,7 +83,7 @@ class AddonService extends ChangeNotifier {
   static const _nameKey = 'addon_name';
   static const _sourcesKey = 'addon_sources_list_v1';
 
-  final FlutterSecureStorage _secure = const FlutterSecureStorage();
+  final SecureStore _secure = SecureStore.instance;
 
   final List<AddonEntry> _addons = [];
   bool _loaded = false;

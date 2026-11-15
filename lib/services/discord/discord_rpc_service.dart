@@ -7,7 +7,7 @@ import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../secure_store.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:win32/win32.dart' as win32;
@@ -104,7 +104,7 @@ class DiscordRpcService {
   static const String _presenceLogoUrl =
       'https://raw.githubusercontent.com/nirmaleeswar30/Inzx/main/assets/icon/logo_dark.png';
 
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  final SecureStore _secureStorage = SecureStore.instance;
 
   final ValueNotifier<DiscordRpcState> stateNotifier =
       ValueNotifier<DiscordRpcState>(

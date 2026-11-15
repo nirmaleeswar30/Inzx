@@ -37,6 +37,13 @@ class DesktopYTMusicLoginState extends ConsumerState<YTMusicLoginScreen> {
   bool _done = false;
   String? _error;
 
+  /// Sign-ins that reached YouTube (its cookies were there) but didn't
+  /// complete. A few in a row stop the polling with an error: before, a
+  /// failure (an unsaved sign-in, YouTube refusing the cookies) was retried
+  /// every 2 seconds forever behind the spinner.
+  int _failedLogins = 0;
+  static const _maxFailedLogins = 3;
+
   @override
   void initState() {
     super.initState();
@@ -84,6 +91,19 @@ class DesktopYTMusicLoginState extends ConsumerState<YTMusicLoginScreen> {
     if (mounted) setState(() => _error = message);
   }
 
+  /// After a failed sign-in: check the still-open window again.
+  void _retry() {
+    final webview = _webview;
+    if (webview == null) return;
+    setState(() {
+      _error = null;
+      _failedLogins = 0;
+    });
+    _poll?.cancel();
+    _poll = Timer.periodic(const Duration(seconds: 2), (_) => _check());
+    unawaited(_check());
+  }
+
   void _onWindowClosed() {
     _poll?.cancel();
     if (!_done && mounted && _error == null) Navigator.of(context).pop(false);
@@ -109,7 +129,17 @@ class DesktopYTMusicLoginState extends ConsumerState<YTMusicLoginScreen> {
       final success = await ref
           .read(ytMusicAuthStateProvider.notifier)
           .login(cookies, account: await _readAccount(webview));
-      if (!success || !mounted) return;
+      if (!mounted) return;
+      if (!success) {
+        if (++_failedLogins >= _maxFailedLogins) {
+          _poll?.cancel();
+          _fail(
+            'You signed in, but Inzx couldn\'t finish connecting your '
+            'account. Check your internet connection and try again.',
+          );
+        }
+        return;
+      }
 
       _done = true;
       _poll?.cancel();
@@ -158,6 +188,10 @@ class DesktopYTMusicLoginState extends ConsumerState<YTMusicLoginScreen> {
                 error ?? 'Finish signing in in the window that just opened.',
                 textAlign: TextAlign.center,
               ),
+              if (error != null && _webview != null && _failedLogins > 0) ...[
+                const SizedBox(height: 20),
+                FilledButton(onPressed: _retry, child: const Text('Try again')),
+              ],
             ],
           ),
         ),
