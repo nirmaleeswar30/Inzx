@@ -438,7 +438,20 @@ class DesktopAutomixEngine {
     double? beatMs;
     double? sinceBeatMs;
     bool? blendPlaying;
-    if (_phase == _Phase.clip && blend != null) {
+    if (_phase == _Phase.live && blend != null) {
+      // The progress bar's pulse: the louder song's beat, read off its own
+      // player (the session's after the handoff).
+      final player = blend.handedOff ? blend.inPlayer : blend.outPlayer;
+      final dominant = analyzer.analysisFor(blend.handedOff ? blend.incomingId : blend.outgoingId);
+      final rate = blend.handedOff ? blend.rate : 1.0;
+      final beat = _beatAt(dominant, host.positionOf(player).inMicroseconds / 1e6);
+      if (beat != null) {
+        final speed = host.listenerSpeed;
+        beatMs = beat.$2 / rate / speed * 1000;
+        sinceBeatMs = beat.$1 / rate / speed * 1000;
+      }
+      blendPlaying = host.wantsToPlay(player);
+    } else if (_phase == _Phase.clip && blend != null) {
       final t = _clipSeconds();
       final speed = host.listenerSpeed;
       final dominant = blend.handedOff
