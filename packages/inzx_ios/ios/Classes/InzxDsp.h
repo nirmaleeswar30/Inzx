@@ -34,4 +34,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+/// Keeps Automix's FFI functions linked into the app (see InzxFfiSymbols.mm).
+/// Returns how many there are.
+FOUNDATION_EXPORT NSInteger InzxKeepFfiSymbols(void);
+
 NS_ASSUME_NONNULL_END

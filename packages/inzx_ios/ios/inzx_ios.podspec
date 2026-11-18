@@ -18,6 +18,9 @@ Pod::Spec.new do |s|
   s.source_files     = 'Classes/**/*.{h,m,mm,swift,cpp}'
   s.public_header_files = 'Classes/InzxDsp.h'
   s.dependency 'Flutter'
+  # ONNX Runtime is a static library, which CocoaPods won't link into a
+  # dynamic framework; inzx_ios is static too (see InzxFfiSymbols.mm).
+  s.static_framework = true
   # ONNX Runtime (MIT), Microsoft's prebuilt C/C++ library: runs Automix's
   # beat and vocal models (desktop/automix/automix_ffi.cpp).
   s.dependency 'onnxruntime-c', '1.24.2'

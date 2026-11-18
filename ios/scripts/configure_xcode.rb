@@ -42,6 +42,16 @@ unless runner.shell_script_build_phases.any? { |p| p.name == DATA_PHASE }
   changed = true
 end
 
+# ---- Automix's FFI symbols --------------------------------------------------------
+# inzx_ios is linked statically into the app and Dart looks its C API up by
+# name (DynamicLibrary.process()); stripping only local symbols keeps those
+# names findable, as Flutter's FFI guidance for iOS asks.
+runner.build_configurations.each do |config|
+  next if config.build_settings['STRIP_STYLE'] == 'non-global'
+  config.build_settings['STRIP_STYLE'] = 'non-global'
+  changed = true
+end
+
 # ---- 2. Widget extension -------------------------------------------------------
 widget_dir = File.join(IOS_DIR, WIDGET)
 if Dir.exist?(widget_dir) && project.targets.none? { |t| t.name == WIDGET }

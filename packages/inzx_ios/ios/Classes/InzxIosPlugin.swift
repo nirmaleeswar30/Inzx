@@ -35,6 +35,8 @@ public final class InzxIosPlugin: NSObject, FlutterPlugin {
     widgetChannel.setMethodCallHandler { call, result in instance.widget.handle(call, result) }
 
     instance.observeJustAudio()
+    // Automix's C API is looked up by name from Dart; keep it linked.
+    _ = InzxKeepFfiSymbols()
     registrar.publish(instance)
   }
 
