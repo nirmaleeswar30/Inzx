@@ -120,6 +120,27 @@ class _DesktopAutomixHost implements DesktopAutomixHost {
   }
 
   @override
+  bool wantsToPlay(String playerId) => _player(playerId).playing;
+
+  @override
+  bool get mixesLive => isIOS;
+
+  @override
+  void setTransitionFilter(String playerId,
+      {double lowPassHz = 20000, double highPassHz = 20, double echoSeconds = 0, double echoSend = 0, double echoDry = 1}) {
+    if (!isIOS) return;
+    unawaited(IosNative.setTransition(playerId,
+        lowPassHz: lowPassHz,
+        highPassHz: highPassHz,
+        echoSeconds: echoSeconds,
+        echoSend: echoSend,
+        echoDry: echoDry));
+  }
+
+  @override
+  void liveHandoff(String toPlayerId, int index) => _handoff(toPlayerId, index, playing: _player(toPlayerId).playing);
+
+  @override
   void clipBegan() {
     s._automixClipActive = true;
     s._automixClipPlaying = true;
@@ -141,7 +162,12 @@ class _DesktopAutomixHost implements DesktopAutomixHost {
   }
 
   @override
-  void clipHandoff(String toPlayerId, int index) {
+  void clipHandoff(String toPlayerId, int index) => _handoff(toPlayerId, index, playing: s._automixClipPlaying);
+
+  /// The incoming song becomes the current one: the session moves onto its
+  /// player (which a clip hands the rest of the song to, and a live blend is
+  /// already playing on).
+  void _handoff(String toPlayerId, int index, {required bool playing}) {
     if (index < 0 || index >= s._queue.length) return;
     s._flushWatchtimeForCurrentTrackBeforeSwitch();
     final incoming = _player(toPlayerId);
@@ -166,7 +192,7 @@ class _DesktopAutomixHost implements DesktopAutomixHost {
       duration: duration,
       resetDuration: duration == null,
       isLoading: false,
-      isPlaying: s._automixClipPlaying,
+      isPlaying: playing,
     );
     s._resetYoutubePlaybackTrackingForCurrentTrack();
     s._startYoutubePlaybackTracking();

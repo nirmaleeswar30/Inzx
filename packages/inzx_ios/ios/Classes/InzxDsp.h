@@ -21,6 +21,17 @@ NS_ASSUME_NONNULL_BEGIN
 /// Linear gain for one player (loudness normalization), 1 for none.
 - (void)setGain:(double)gain forPlayer:(NSString *)playerId NS_SWIFT_NAME(setGain(_:forPlayer:));
 
+/// The Automix transition filter for one player during a live blend:
+/// low-pass and high-pass cutoffs (20000 / 20 Hz to park them) and the
+/// echo out (send and dry; no echo with `echoSeconds` 0). Cutoffs glide.
+- (void)setTransitionForPlayer:(NSString *)playerId
+                     lowPassHz:(double)lowPassHz
+                    highPassHz:(double)highPassHz
+                   echoSeconds:(double)echoSeconds
+                      echoSend:(double)echoSend
+                       echoDry:(double)echoDry
+    NS_SWIFT_NAME(setTransition(forPlayer:lowPassHz:highPassHz:echoSeconds:echoSend:echoDry:));
+
 /// Attaches the tap to `item` once its audio track is known. Streaming
 /// playlists (HLS) have no asset-level track and play without it.
 - (void)attachToItem:(AVPlayerItem *)item

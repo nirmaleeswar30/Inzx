@@ -26,7 +26,7 @@ Pod::Spec.new do |s|
   s.dependency 'onnxruntime-c', '1.24.2'
   s.platform         = :ios, '17.0'
   s.swift_version    = '5.0'
-  s.frameworks       = 'AVFoundation', 'AVKit', 'MediaPlayer', 'MediaToolbox',
+  s.frameworks       = 'AVFoundation', 'AVKit', 'MediaPlayer', 'MediaToolbox', 'Photos',
                        'CoreMedia', 'AudioToolbox', 'Accelerate', 'UniformTypeIdentifiers'
   s.weak_frameworks  = 'WidgetKit'
   s.library          = 'c++'

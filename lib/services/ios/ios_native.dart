@@ -89,4 +89,26 @@ abstract final class IosNative {
       await _dsp.invokeMethod('setTrackGain', {'playerId': playerId, 'gain': gain});
     } catch (_) {}
   }
+
+  /// A live Automix blend's transition filter on one player (see
+  /// InzxDsp.setTransition): 20000 / 20 Hz and no echo park it.
+  static Future<void> setTransition(
+    String playerId, {
+    double lowPassHz = 20000,
+    double highPassHz = 20,
+    double echoSeconds = 0,
+    double echoSend = 0,
+    double echoDry = 1,
+  }) async {
+    try {
+      await _dsp.invokeMethod('setTransition', {
+        'playerId': playerId,
+        'lowPassHz': lowPassHz,
+        'highPassHz': highPassHz,
+        'echoSeconds': echoSeconds,
+        'echoSend': echoSend,
+        'echoDry': echoDry,
+      });
+    } catch (_) {}
+  }
 }

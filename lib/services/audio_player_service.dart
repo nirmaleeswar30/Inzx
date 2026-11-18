@@ -5972,7 +5972,12 @@ class AudioPlayerService {
       return;
     }
     // A seek during a rendered blend lands on whichever song is current.
-    if (_automixClipActive) await AutomixService.instance.desktopEngine?.leaveClip();
+    if (_automixClipActive) {
+      await AutomixService.instance.desktopEngine?.leaveClip();
+    } else if (_automixMixing) {
+      // A live blend (iOS) is dropped; one armed is planned afresh.
+      await AutomixService.instance.desktopEngine?.seeked();
+    }
     if (_youtubeWatchtimeTimer != null && _player.playing) {
       unawaited(_sendYoutubeWatchtime(state: 'playing', force: true));
       _youtubeTrackingLastPosition = position;

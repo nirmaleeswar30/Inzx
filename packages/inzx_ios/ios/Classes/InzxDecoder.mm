@@ -48,7 +48,15 @@ bool ReadPass(AVURLAsset *asset, AVAssetTrack *track, NSDictionary *settings, do
 
   const int64_t first = static_cast<int64_t>(std::llround(from * rate));
   const int64_t last = end > from ? static_cast<int64_t>(std::llround(end * rate)) : INT64_MAX;
-  int64_t next = -1;  // where the following buffer starts, when one has no time
+  // The decoder's output is one continuous stream. Each buffer's timestamp
+  // only anchors where that stream sits on the timeline: the resampler's
+  // timestamps wobble by a few frames from buffer to buffer, and following
+  // them literally put slivers of silence (or repeats) all through the
+  // audio. So a buffer counts as contiguous unless it's more than `slack`
+  // away from where the stream had got to; only then is it a real jump,
+  // padded with silence or trimmed.
+  const int64_t slack = rate / 50;  // 20 ms
+  int64_t pos = -1;                 // timeline frame of the stream's next sample
   std::vector<float> chunk;
   while (true) {
     CMSampleBufferRef buffer = [output copyNextSampleBuffer];
@@ -57,21 +65,22 @@ bool ReadPass(AVURLAsset *asset, AVAssetTrack *track, NSDictionary *settings, do
     CMBlockBufferRef block = CMSampleBufferGetDataBuffer(buffer);
     const int64_t frames =
         block == nullptr ? 0 : static_cast<int64_t>(CMBlockBufferGetDataLength(block) / sizeof(float) / channels);
-    int64_t at;
+    int64_t at = pos >= 0 ? pos : 0;
     if (CMTIME_IS_NUMERIC(pts)) {
-      at = static_cast<int64_t>(std::llround(CMTimeGetSeconds(pts) * rate));
-    } else {
-      at = next >= 0 ? next : 0;
+      const int64_t stamped = static_cast<int64_t>(std::llround(CMTimeGetSeconds(pts) * rate));
+      if (pos < 0 || std::llabs(stamped - pos) > slack) at = stamped;
     }
-    next = at + frames;
+    pos = at + frames;
     if (frames > 0 && at + frames > first && at < last) {
       chunk.resize(static_cast<size_t>(frames * channels));
       if (CMBlockBufferCopyDataBytes(block, 0, chunk.size() * sizeof(float), chunk.data()) == kCMBlockBufferNoErr) {
-        const int64_t skip = std::max<int64_t>(0, first - at);
-        const int64_t keep = std::min<int64_t>(frames, last - at);
-        // Place by time: pad a gap before (or between) buffers with silence.
         const int64_t have = static_cast<int64_t>(pcm.size()) / channels;
-        const int64_t gap = at + skip - first - have;
+        // Output index of this buffer's first frame; earlier frames are
+        // already written (an overlap) or before the region.
+        const int64_t startIndex = at - first;
+        const int64_t skip = std::max<int64_t>({0, -startIndex, have - startIndex});
+        const int64_t keep = std::min<int64_t>(frames, last - at);
+        const int64_t gap = startIndex + skip - have;
         if (ranged && have == 0 && gap > rate / 20) {
           // The ranged read started well after what was asked: read it all.
           CFRelease(buffer);
@@ -80,7 +89,7 @@ bool ReadPass(AVURLAsset *asset, AVAssetTrack *track, NSDictionary *settings, do
           return false;
         }
         if (gap > 0) pcm.insert(pcm.end(), static_cast<size_t>(gap * channels), 0.0f);
-        pcm.insert(pcm.end(), chunk.begin() + skip * channels, chunk.begin() + keep * channels);
+        if (keep > skip) pcm.insert(pcm.end(), chunk.begin() + skip * channels, chunk.begin() + keep * channels);
       }
     }
     CFRelease(buffer);

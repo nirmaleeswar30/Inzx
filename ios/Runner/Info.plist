@@ -120,6 +120,13 @@
 		<true/>
 		<key>NSCameraUsageDescription</key>
 		<string>Inzx uses the camera to scan an Inzx Connect pairing code.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>Inzx saves share cards to your photos, and hands them to Instagram from there.</string>
+		<key>LSApplicationQueriesSchemes</key>
+		<array>
+			<string>instagram</string>
+			<string>snapchat</string>
+		</array>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Inzx opens your photo library when you pick a playlist cover.</string>
 		<key>ITSAppUsesNonExemptEncryption</key>

@@ -10,9 +10,11 @@
 // against ~0.45 s before them.
 
 #import "InzxDsp.h"
+#include "InzxTransition.h"
 
 #import <MediaToolbox/MediaToolbox.h>
 
+#include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <memory>
@@ -93,9 +95,23 @@ std::atomic<uint64_t> gSpecVersion{0};
 
 std::shared_ptr<const ChainSpec> CurrentSpec() { return std::atomic_load(&gSpec); }
 
-// Per-player gain, looked up once per tap and then read atomically.
+// Per-player state, looked up once per tap and then read atomically: the
+// loudness gain, and the Automix transition filter a live blend rides
+// (BitChord-iOS's TransitionFilterProcessor, through the shared
+// TransitionFilter that desktop's blend renderer runs).
 struct PlayerGain {
   std::atomic<float> gain{1.0f};
+  std::atomic<float> lowPassHz{20000.0f};
+  std::atomic<float> highPassHz{20.0f};
+  std::atomic<bool> echo{false};
+  std::atomic<float> echoSeconds{0.0f};
+  std::atomic<float> echoSend{0.0f};
+  std::atomic<float> echoDry{1.0f};
+
+  bool TransitionActive() const {
+    return lowPassHz.load(std::memory_order_relaxed) < 19999.0f ||
+           highPassHz.load(std::memory_order_relaxed) > 20.5f || echo.load(std::memory_order_relaxed);
+  }
 };
 std::mutex gGainsLock;
 std::unordered_map<std::string, std::shared_ptr<PlayerGain>> gGains;
@@ -123,6 +139,55 @@ struct TapContext {
   std::vector<Coeffs> coeffs;
   // Direct form 1 state: per filter, per channel: x1 x2 y1 y2.
   std::vector<double> state;
+
+  InzxTransition *transition = InzxTransitionCreate();
+  /// Frames the transition filter keeps running after its player let go,
+  /// so its cutoffs glide back open instead of snapping.
+  int64_t transitionTail = 0;
+  std::vector<float> left, right;
+
+  ~TapContext() { InzxTransitionDestroy(transition); }
+
+  /// Runs the transition filter when this player is in a blend (or just
+  /// was). Stereo through the filter; mono goes in on both sides.
+  void RunTransition(AudioBufferList *list, UInt32 frames) {
+    if (gain->TransitionActive()) {
+      transitionTail = static_cast<int64_t>(sampleRate);  // a second to glide back
+    } else if (transitionTail <= 0) {
+      return;
+    } else {
+      transitionTail -= frames;
+    }
+    InzxTransitionSet(transition, gain->lowPassHz.load(std::memory_order_relaxed),
+                      gain->highPassHz.load(std::memory_order_relaxed), gain->echo.load(std::memory_order_relaxed),
+                      gain->echoSeconds.load(std::memory_order_relaxed),
+                      gain->echoSend.load(std::memory_order_relaxed), gain->echoDry.load(std::memory_order_relaxed));
+    if (left.size() < frames) return;  // larger than prepared for: leave it be
+    const UInt32 ch = std::max<UInt32>(channels, 1);
+    if (nonInterleaved) {
+      if (list->mNumberBuffers == 0) return;
+      float *l = static_cast<float *>(list->mBuffers[0].mData);
+      float *r = list->mNumberBuffers > 1 ? static_cast<float *>(list->mBuffers[1].mData) : nullptr;
+      if (l == nullptr) return;
+      if (r == nullptr) {
+        std::copy(l, l + frames, right.begin());
+        r = right.data();
+      }
+      InzxTransitionProcess(transition, l, r, static_cast<int>(frames));
+      return;
+    }
+    if (list->mNumberBuffers == 0 || list->mBuffers[0].mData == nullptr) return;
+    float *data = static_cast<float *>(list->mBuffers[0].mData);
+    for (UInt32 i = 0; i < frames; i++) {
+      left[i] = data[i * ch];
+      right[i] = data[i * ch + (ch > 1 ? 1 : 0)];
+    }
+    InzxTransitionProcess(transition, left.data(), right.data(), static_cast<int>(frames));
+    for (UInt32 i = 0; i < frames; i++) {
+      data[i * ch] = left[i];
+      if (ch > 1) data[i * ch + 1] = right[i];
+    }
+  }
 
   void Rebuild() {
     auto spec = CurrentSpec();
@@ -171,6 +236,10 @@ void TapPrepare(MTAudioProcessingTapRef tap, CMItemCount maxFrames,
   ctx->isFloat = (format->mFormatFlags & kAudioFormatFlagIsFloat) != 0 && format->mBitsPerChannel == 32;
   ctx->nonInterleaved = (format->mFormatFlags & kAudioFormatFlagIsNonInterleaved) != 0;
   ctx->builtVersion = UINT64_MAX;  // rebuild on the first process call
+  InzxTransitionConfigure(ctx->transition, static_cast<int>(format->mSampleRate));
+  const size_t room = static_cast<size_t>(std::max<CMItemCount>(maxFrames, 4096));
+  ctx->left.assign(room, 0.0f);
+  ctx->right.assign(room, 0.0f);
   gLastRate.store(format->mSampleRate);
 }
 
@@ -187,8 +256,9 @@ void TapProcess(MTAudioProcessingTapRef tap, CMItemCount numberFrames,
   if (ctx->builtVersion != gSpecVersion.load(std::memory_order_acquire)) ctx->Rebuild();
   const float gain = static_cast<float>(ctx->preamp) * ctx->gain->gain.load(std::memory_order_relaxed);
   const bool unityGain = std::fabs(gain - 1.0f) < 1e-6f;
-  if (ctx->flat && unityGain) return;  // bit-transparent
   const UInt32 frames = static_cast<UInt32>(*numberFramesOut);
+  ctx->RunTransition(bufferList, frames);
+  if (ctx->flat && unityGain) return;  // bit-transparent
   if (ctx->nonInterleaved) {
     for (UInt32 b = 0; b < bufferList->mNumberBuffers && b < ctx->channels; b++) {
       float *data = static_cast<float *>(bufferList->mBuffers[b].mData);
@@ -237,6 +307,22 @@ void TapProcess(MTAudioProcessingTapRef tap, CMItemCount numberFrames,
 - (void)setGain:(double)gain forPlayer:(NSString *)playerId {
   if (!(gain > 0) || !std::isfinite(gain)) gain = 1;
   GainFor(std::string(playerId.UTF8String))->gain.store(static_cast<float>(gain));
+}
+
+- (void)setTransitionForPlayer:(NSString *)playerId
+                     lowPassHz:(double)lowPassHz
+                    highPassHz:(double)highPassHz
+                   echoSeconds:(double)echoSeconds
+                      echoSend:(double)echoSend
+                       echoDry:(double)echoDry {
+  auto state = GainFor(std::string(playerId.UTF8String));
+  auto finite = [](double v, double fallback) { return std::isfinite(v) ? v : fallback; };
+  state->lowPassHz.store(static_cast<float>(finite(lowPassHz, 20000)));
+  state->highPassHz.store(static_cast<float>(finite(highPassHz, 20)));
+  state->echoSeconds.store(static_cast<float>(finite(echoSeconds, 0)));
+  state->echoSend.store(static_cast<float>(finite(echoSend, 0)));
+  state->echoDry.store(static_cast<float>(finite(echoDry, 1)));
+  state->echo.store(echoSeconds > 0 && (echoSend > 0 || echoDry < 1));
 }
 
 - (int64_t)framesProcessed {

@@ -4,11 +4,12 @@ import UIKit
 
 /// Inzx's iOS native side. Channel names match the Android ones where the
 /// Dart code already talks to them (`inzx/audio_routing`, `inzx/audio_output`,
-/// `inzx/widget`); the rest are iOS-only (`inzx/ios`, `inzx/ios_dsp`).
+/// `inzx/widget`, `inzx/share`); the rest are iOS-only (`inzx/ios`, `inzx/ios_dsp`).
 public final class InzxIosPlugin: NSObject, FlutterPlugin {
   private let route = AudioRouteChannel()
   private let folders = FolderAccess()
   private let widget = WidgetBridge()
+  private let share = ShareBridge()
   private var observers: [NSObjectProtocol] = []
 
   public static func register(with registrar: FlutterPluginRegistrar) {
@@ -33,6 +34,9 @@ public final class InzxIosPlugin: NSObject, FlutterPlugin {
     let widgetChannel = FlutterMethodChannel(name: "inzx/widget", binaryMessenger: messenger)
     instance.widget.attach(widgetChannel)
     widgetChannel.setMethodCallHandler { call, result in instance.widget.handle(call, result) }
+
+    let shareChannel = FlutterMethodChannel(name: "inzx/share", binaryMessenger: messenger)
+    shareChannel.setMethodCallHandler { call, result in instance.share.handle(call, result) }
 
     instance.observeJustAudio()
     // Automix's C API is looked up by name from Dart; keep it linked.
@@ -124,6 +128,20 @@ public final class InzxIosPlugin: NSObject, FlutterPlugin {
       if let id = args["playerId"] as? String {
         let gain = (args["gain"] as? NSNumber)?.doubleValue ?? 1
         InzxDsp.shared().setGain(gain, forPlayer: id)
+      }
+      result(nil)
+    case "setTransition":
+      if let id = args["playerId"] as? String {
+        func value(_ key: String, _ fallback: Double) -> Double {
+          (args[key] as? NSNumber)?.doubleValue ?? fallback
+        }
+        InzxDsp.shared().setTransition(
+          forPlayer: id,
+          lowPassHz: value("lowPassHz", 20000),
+          highPassHz: value("highPassHz", 20),
+          echoSeconds: value("echoSeconds", 0),
+          echoSend: value("echoSend", 0),
+          echoDry: value("echoDry", 1))
       }
       result(nil)
     case "stats":

@@ -60,6 +60,22 @@ abstract class DesktopAutomixHost {
   Future<void> pause(String playerId);
   Future<void> retire(String playerId);
 
+  /// Whether [playerId] is set to play, buffering or not.
+  bool wantsToPlay(String playerId);
+
+  /// iOS mixes live, BitChord-iOS's way, rather than through a rendered
+  /// clip: both songs play on their own players while the engine rides
+  /// their volumes and transition filters.
+  bool get mixesLive;
+
+  /// A live blend's transition filter on [playerId]; the defaults park it.
+  void setTransitionFilter(String playerId,
+      {double lowPassHz = 20000, double highPassHz = 20, double echoSeconds = 0, double echoSend = 0, double echoDry = 1});
+
+  /// A live blend's midpoint: the incoming song is now the current one,
+  /// with the outgoing still fading on the other player.
+  void liveHandoff(String toPlayerId, int index);
+
   /// The clip is now what's heard; [clipProgress] carries the UI through it.
   void clipBegan();
   void clipProgress(int index, Duration position, bool playing);
@@ -97,7 +113,7 @@ class QueueEntry {
   final bool isVideo;
 }
 
-enum _Phase { idle, rendering, armed, clip, easing }
+enum _Phase { idle, rendering, armed, clip, live, easing }
 
 /// Everything one blend needs, fixed when it's armed.
 class _Blend {
@@ -138,6 +154,13 @@ class _Blend {
   final double outgoingDuration;
   String? clipPath;
   bool handedOff = false;
+
+  /// Played live on the two players rather than as a rendered clip.
+  bool live = false;
+  /// Live: the incoming song's position when it started, and when that was.
+  double liveCue = 0;
+  DateTime? liveStartedAt;
+  bool latencyMeasured = false;
 
   /// How far each song's playing source runs ahead of the copy it was
   /// analysed from (a JioSaavn or lossless master against the YouTube one),
@@ -194,6 +217,11 @@ const double _envelopeStep = 0.005;
 const Duration _armLead = Duration(seconds: 25);
 const Duration _minArmLead = Duration(milliseconds: 2500);
 const Duration _crossoverTime = Duration(milliseconds: 80);
+// A seek onto (or into) the window still mixes, as on Android: a rendered
+// blend is joined part-way when it's ready, so long as this much of it is
+// left by then; a live one starts at once.
+const double _lateJoinMargin = 1.0;
+const double _renderAllowance = 2.0;
 // CrossfadeController's loop-mix lead times.
 const Duration _loopMinLead = Duration(seconds: 9);
 const double _loopSetupSeconds = 15.0;
@@ -346,6 +374,19 @@ class DesktopAutomixEngine {
   /// The listener asked for another song, or moved the playhead: whatever
   /// the blend was doing, the song carries on plainly.
   Future<void> skip() async => _abort('skip');
+
+  /// The listener moved the playhead. A live blend is dropped (the song
+  /// that's current carries on), and one armed but not yet started is
+  /// planned afresh from the new position, which re-arms it at once when
+  /// the seek landed on the marker. A rendered clip waits for its start (see
+  /// [_driveArmed]); a seek during one goes through [leaveClip].
+  Future<void> seeked() async {
+    if (_phase == _Phase.live) {
+      await _abort('seek');
+    } else if (host.mixesLive && (_phase == _Phase.rendering || _phase == _Phase.armed)) {
+      await _bail();
+    }
+  }
 
   /// Pause and play during the clip act on the clip.
   Future<void> clipPlay() async {
@@ -504,7 +545,7 @@ class DesktopAutomixEngine {
       _windowStart = _windowEnd = null;
       return;
     }
-    final fast = _phase == _Phase.armed || _phase == _Phase.clip;
+    final fast = _phase == _Phase.armed || _phase == _Phase.clip || _phase == _Phase.live;
     final period = Duration(milliseconds: fast ? 15 : (_phase == _Phase.easing ? 100 : 250));
     if (_ticker == null || _tickerPeriod != period) {
       _ticker?.cancel();
@@ -530,6 +571,8 @@ class DesktopAutomixEngine {
           _driveArmed();
         case _Phase.clip:
           _driveClip();
+        case _Phase.live:
+          _driveLive();
         case _Phase.easing:
           _driveEase();
           _considerTransition();
@@ -611,7 +654,14 @@ class DesktopAutomixEngine {
     if (!host.isPlaying(active)) return;
     final startMs = (plan.transitionStart * 1000).round();
     final remaining = Duration(milliseconds: startMs) - position;
-    if (remaining > _armLead || remaining < _minArmLead) return;
+    if (remaining > _armLead) return;
+    if (remaining < _minArmLead) {
+      // Too close to render ahead: a seek onto the marker, or a stall. Arm
+      // anyway while there's still a blend to join when it's ready.
+      final at = position.inMilliseconds / 1000.0;
+      final room = host.mixesLive ? _lateJoinMargin : _renderAllowance + _lateJoinMargin;
+      if (at > plan.transitionEnd - room) return;
+    }
     final spare = active == _primary ? _secondary : _primary;
     if (spare == null) return;
     if (_failedPair == '${current.id}>${next.id}') return;
@@ -797,6 +847,7 @@ class DesktopAutomixEngine {
   // ---- Arming: load the spare, decode both sides, render -----------------
 
   Future<void> _arm(TransitionPlan plan, int nextIndex, String outPlayer, String inPlayer, Duration duration) async {
+    if (host.mixesLive) return _armLive(plan, nextIndex, outPlayer, inPlayer, duration);
     final generation = ++_generation;
     _phase = _Phase.rendering;
     _endEase();
@@ -900,8 +951,21 @@ class DesktopAutomixEngine {
     if (blend == null) return;
     if (!host.isPlaying(blend.outPlayer)) return; // paused: wait
     final position = host.positionOf(blend.outPlayer).inMicroseconds / 1e6;
+    if (blend.live) {
+      // Early by the incoming player's start latency (BitChord-iOS).
+      if (position < blend.outStart - _liveLatency * host.listenerSpeed) return;
+      if (position > blend.tStart + blend.span - _lateJoinMargin) {
+        _lastIssue = 'missed the blend (at ${position.toStringAsFixed(1)}s)';
+        unawaited(_bail());
+        return;
+      }
+      _startLive(blend);
+      return;
+    }
     if (position < blend.outStart - 0.005) return;
-    if (position > blend.outStart + 1.0) {
+    // Late (a seek onto the marker, or a slow render): join the clip
+    // part-way, as long as there's still some of it to hear.
+    if (position > blend.outStart + math.max(1.0, blend.span - _lateJoinMargin)) {
       // Missed it (a stall or a seek past the start): no blend this time.
       _lastIssue = 'missed the blend start (at ${position.toStringAsFixed(1)}s, wanted ${blend.outStart.toStringAsFixed(1)}s)';
       unawaited(_bail());
@@ -1054,6 +1118,216 @@ class DesktopAutomixEngine {
     }
   }
 
+  // ---- Live blends (iOS) ---------------------------------------------------------
+  //
+  // BitChord-iOS's CrossfadeController: the outgoing song keeps playing on
+  // its player, the incoming one starts on the spare at its cue, and each
+  // tick sets both players' volumes and transition filters (the audio tap's
+  // TransitionFilter) from the same automation a rendered blend bakes in.
+  // Progress is read off the incoming song's position, so a pause parks the
+  // blend where it stands. Nothing is rendered, so nothing has to be lined
+  // up with what's already playing: no hand-over into a clip and out again.
+
+  /// How long the incoming player takes from play() to being heard,
+  /// measured on each blend (BitChord-iOS measures ~0.25 s on the tap).
+  double _liveLatency = 0.25;
+  BlendAutomation? _liveAutomation;
+  double _liveSentIn = -1, _liveSentOut = -1;
+  String _liveSentFilters = '';
+
+  Future<void> _armLive(TransitionPlan plan, int nextIndex, String outPlayer, String inPlayer, Duration duration) async {
+    final generation = ++_generation;
+    _phase = _Phase.rendering;
+    _endEase();
+    final current = _queue[_index];
+    final next = _queue[nextIndex];
+    final outgoingSeconds = duration.inMilliseconds / 1000.0;
+    final nextSeconds = next.durationMs / 1000.0;
+    final incomingCap = nextSeconds > 0 ? math.max(0.0, nextSeconds - plan.incomingCueTime) / 3 : double.infinity;
+    final span = math.max(0.05, math.min(plan.fadeSeconds, incomingCap));
+    final blend = _Blend(
+      plan: plan,
+      render: Render.forPlan(plan),
+      outgoingIndex: _index,
+      incomingIndex: nextIndex,
+      outgoingId: current.id,
+      incomingId: next.id,
+      outPlayer: outPlayer,
+      inPlayer: inPlayer,
+      tStart: plan.transitionStart,
+      span: math.min(span, math.max(0.05, outgoingSeconds - plan.transitionStart)),
+      rate: plan.incomingPlaybackRate,
+      cue: plan.incomingCueTime,
+      outgoingDuration: outgoingSeconds,
+    )..live = true;
+    _blend = blend;
+    debugPrint('Automix: arming live ${current.id} -> ${next.id}: ${_styleName(plan)} '
+        'at ${blend.tStart.toStringAsFixed(2)}s for ${blend.span.toStringAsFixed(2)}s, '
+        'cue ${blend.cue.toStringAsFixed(2)}s @${blend.rate}x (${plan.reason})');
+    bool stale() => generation != _generation;
+    try {
+      final loaded = await host.loadIncoming(inPlayer, nextIndex, _seconds(blend.cue));
+      if (stale()) return;
+      if (!loaded) throw StateError('incoming song would not load');
+      await host.setSpeed(inPlayer, host.listenerSpeed * blend.rate);
+      host.setTransitionFilter(inPlayer);
+      if (stale()) return;
+      _phase = _Phase.armed;
+      _schedule();
+    } catch (e) {
+      debugPrint('Automix: arming failed: $e');
+      _lastIssue = 'blend failed: $e';
+      _failedPair = '${current.id}>${next.id}';
+      if (!stale()) await _bail();
+    }
+  }
+
+  void _startLive(_Blend blend) {
+    _phase = _Phase.live;
+    _liveAutomation = BlendAutomation(blend.render);
+    _liveSentIn = _liveSentOut = -1;
+    _liveSentFilters = '';
+    blend.liveCue = host.positionOf(blend.inPlayer).inMicroseconds / 1e6;
+    blend.liveStartedAt = DateTime.now();
+    blend.latencyMeasured = false;
+    _rideLive(blend, 0.0);
+    host.play(blend.inPlayer);
+    _mixing = blend.isRealMix;
+    _windowStart = _windowEnd = null;
+    _lastIssue = null;
+    _schedule();
+    debugPrint('Automix: live blend under way');
+  }
+
+  /// Blend seconds (outgoing time) the incoming song has played.
+  double _liveSeconds(_Blend blend) {
+    final position = host.positionOf(blend.inPlayer).inMicroseconds / 1e6;
+    return math.max(0.0, position - blend.liveCue) / math.max(blend.rate, 0.01);
+  }
+
+  void _driveLive() {
+    final blend = _blend;
+    if (blend == null || _closing) return;
+    final t = _liveSeconds(blend);
+    if (!blend.latencyMeasured && t > 0) {
+      blend.latencyMeasured = true;
+      final started = blend.liveStartedAt;
+      if (started != null) {
+        final wall = DateTime.now().difference(started).inMicroseconds / 1e6;
+        final measured = (wall - t / math.max(host.listenerSpeed, 0.01)).clamp(0.0, 0.6);
+        _liveLatency = (_liveLatency + measured) / 2;
+      }
+    }
+    // The other player follows the session's play / pause (the service
+    // plays and pauses the current one).
+    final session = blend.handedOff ? blend.inPlayer : blend.outPlayer;
+    final other = blend.handedOff ? blend.outPlayer : blend.inPlayer;
+    final wanted = host.wantsToPlay(session);
+    if (wanted != host.wantsToPlay(other)) {
+      if (wanted) {
+        host.play(other);
+      } else {
+        unawaited(host.pause(other));
+      }
+    }
+    // By time, or by how little of the outgoing song is left (read off its
+    // player: after a seek onto the marker it isn't where the plan began).
+    final outPosition = host.positionOf(blend.outPlayer).inMicroseconds / 1e6;
+    final byEnd = (blend.span - (blend.outgoingDuration - outPosition)) / blend.span;
+    final progress = math.max(t / blend.span, byEnd).clamp(0.0, 1.0);
+    _mixProgress = progress;
+    _rideLive(blend, progress);
+    if (!blend.handedOff && progress >= blend.render.handoffAt) {
+      blend.handedOff = true;
+      host.liveHandoff(blend.inPlayer, blend.incomingIndex);
+    }
+    final outEnded = outPosition >= blend.outgoingDuration - 0.05;
+    if (progress >= 1.0 || outEnded) {
+      _closing = true;
+      unawaited(_finishLive(blend, _generation).whenComplete(() => _closing = false));
+    }
+  }
+
+  /// Both players' faders and filters at [progress].
+  void _rideLive(_Blend blend, double progress) {
+    final automation = _liveAutomation ??= BlendAutomation(blend.render);
+    final wallSpanMs = blend.span * 1000;
+    final frame = automation.at(progress, wallSpanMs);
+    final headroom = BlendAutomation.headroomFor(
+        automation.mixRise(progress), automation.outgoingLevel(progress, wallSpanMs));
+    final echo = blend.render.echo && frame.echoEngaged;
+    final inGain = (frame.inGain * headroom).clamp(0.0, 1.0);
+    final outGain = ((progress >= 1.0 && !echo ? 0.0 : frame.outGain) * headroom).clamp(0.0, 1.0);
+    if ((inGain - _liveSentIn).abs() > 0.002) {
+      _liveSentIn = inGain;
+      unawaited(host.setVolume(blend.inPlayer, inGain));
+    }
+    if ((outGain - _liveSentOut).abs() > 0.002) {
+      _liveSentOut = outGain;
+      unawaited(host.setVolume(blend.outPlayer, outGain));
+    }
+    final filters = '${frame.inLow.round()}|${frame.inHigh.round()}|${frame.outLow.round()}|'
+        '${frame.outHigh.round()}|$echo|${frame.echoSend.toStringAsFixed(2)}|${frame.echoDry.toStringAsFixed(2)}';
+    if (filters == _liveSentFilters) return;
+    _liveSentFilters = filters;
+    host.setTransitionFilter(blend.inPlayer, lowPassHz: frame.inLow, highPassHz: frame.inHigh);
+    host.setTransitionFilter(blend.outPlayer,
+        lowPassHz: frame.outLow,
+        highPassHz: frame.outHigh,
+        echoSeconds: echo ? blend.render.echoSeconds : 0,
+        echoSend: echo ? frame.echoSend : 0,
+        echoDry: echo ? frame.echoDry : 1);
+  }
+
+  /// The blend has run its course: the incoming song carries on alone.
+  Future<void> _finishLive(_Blend blend, int generation) async {
+    if (!blend.handedOff) {
+      blend.handedOff = true;
+      host.liveHandoff(blend.inPlayer, blend.incomingIndex);
+    }
+    final echo = blend.render.echo;
+    host.setTransitionFilter(blend.inPlayer);
+    await host.setVolume(blend.inPlayer, 1.0);
+    if (generation != _generation) return;
+    _mixing = false;
+    _mixProgress = 0;
+    _blend = null;
+    _liveAutomation = null;
+    final rate = blend.rate;
+    if ((rate - 1.0).abs() >= easeDone) {
+      _beginEase(blend.inPlayer, rate, analyzer.analysisFor(blend.incomingId));
+    } else {
+      _phase = _Phase.idle;
+    }
+    _schedule();
+    debugPrint('Automix: live blend done, ${blend.incomingId} carries on');
+    // An echo out rings on a moment after its source has stopped.
+    if (echo) await Future<void>.delayed(const Duration(milliseconds: 1500));
+    host.setTransitionFilter(blend.outPlayer);
+    await host.retire(blend.outPlayer);
+  }
+
+  /// A skip, seek or switch-off mid-blend: whichever song is current
+  /// carries on at full volume, unfiltered, at the listener's speed.
+  Future<void> _leaveLive() async {
+    final blend = _blend;
+    _generation++;
+    _phase = _Phase.idle;
+    _mixing = false;
+    _mixProgress = 0;
+    _blend = null;
+    _liveAutomation = null;
+    if (blend == null) return;
+    final session = blend.handedOff ? blend.inPlayer : blend.outPlayer;
+    final other = blend.handedOff ? blend.outPlayer : blend.inPlayer;
+    host.setTransitionFilter(session);
+    host.setTransitionFilter(other);
+    await host.setVolume(session, 1.0);
+    await host.setSpeed(session, host.listenerSpeed);
+    await host.retire(other);
+    _schedule();
+  }
+
   // ---- Tempo ease-back -----------------------------------------------------------
 
   void _beginEase(String player, double rate, TrackAnalysis analysis) {
@@ -1101,6 +1375,11 @@ class DesktopAutomixEngine {
 
   /// Drops whatever blend is in flight; the song carries on plainly.
   Future<void> _abort(String why) async {
+    if (_phase == _Phase.live) {
+      debugPrint('Automix: leaving the live blend ($why)');
+      await _leaveLive();
+      return;
+    }
     if (_phase == _Phase.clip) {
       debugPrint('Automix: leaving the blend ($why)');
       await leaveClip();
