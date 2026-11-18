@@ -26,12 +26,11 @@ import 'dart:isolate';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
-import 'package:media_kit/media_kit.dart' as mk;
 import 'package:path/path.dart' as p;
 
-import '../../desktop/desktop_audio_dsp.dart';
 import 'automix_native.dart';
 import 'blend_automation.dart';
+import 'blend_clip_player.dart';
 import 'desktop_track_analyzer.dart';
 import 'loop_mix.dart';
 import 'track_analysis.dart';
@@ -241,7 +240,7 @@ class DesktopAutomixEngine {
   _Blend? _blend;
   int _generation = 0;
   Timer? _ticker;
-  mk.Player? _clipPlayer;
+  BlendClipPlayer? _clipPlayer;
   final Set<String> _fetchAsked = {};
   /// A pair whose blend couldn't be armed isn't tried again this play.
   String? _failedPair;
@@ -296,19 +295,11 @@ class DesktopAutomixEngine {
   void dispose() {
     _ticker?.cancel();
     unawaited(_analysisLanded.cancel());
-    final clip = _clipPlayer;
-    if (clip != null) {
-      DesktopAudioDsp.instance.unregister(clip);
-      unawaited(clip.dispose());
-    }
+    unawaited(_clipPlayer?.dispose());
   }
 
   /// The blend player, with the equaliser / AutoEQ chain the others run.
-  mk.Player _createClipPlayer() {
-    final clip = mk.Player();
-    DesktopAudioDsp.instance.register(clip);
-    return clip;
-  }
+  BlendClipPlayer _createClipPlayer() => BlendClipPlayer.forPlatform();
 
   // ---- From the player service --------------------------------------------
 
@@ -370,7 +361,7 @@ class DesktopAutomixEngine {
     final blend = _blend;
     if (_phase != _Phase.clip || blend == null) return null;
     final t = _clipSeconds();
-    final playing = _clipPlayer?.state.playing ?? false;
+    final playing = _clipPlayer?.playing ?? false;
     _generation++;
     _phase = _Phase.idle;
     _mixing = false;
@@ -429,7 +420,7 @@ class DesktopAutomixEngine {
         beatMs = beat.$2 / rate / speed * 1000;
         sinceBeatMs = beat.$1 / rate / speed * 1000;
       }
-      blendPlaying = _clipPlayer?.state.playing ?? false;
+      blendPlaying = _clipPlayer?.playing ?? false;
     }
     return {
       'mixing': _mixing,
@@ -784,10 +775,10 @@ class DesktopAutomixEngine {
           '${DateTime.now().difference(began).inMilliseconds}ms');
       blend.clipPath = clipPath;
       final clip = _clipPlayer ??= _createClipPlayer();
-      await clip.setVolume(0);
+      await clip.setGain(0);
       await clip.setRate(host.listenerSpeed);
-      await clip.open(mk.Media(Uri.file(clipPath).toString()), play: false);
-      await _waitFor(() => clip.state.duration > Duration.zero, const Duration(seconds: 3));
+      await clip.open(clipPath);
+      await _waitFor(() => clip.duration > Duration.zero, const Duration(seconds: 3));
       if (stale()) return;
       _phase = _Phase.armed;
       _schedule();
@@ -882,10 +873,10 @@ class DesktopAutomixEngine {
       blend.clipPath = clipPath;
 
       final clip = _clipPlayer ??= _createClipPlayer();
-      await clip.setVolume(0);
+      await clip.setGain(0);
       await clip.setRate(host.listenerSpeed);
-      await clip.open(mk.Media(Uri.file(clipPath).toString()), play: false);
-      await _waitFor(() => clip.state.duration > Duration.zero, const Duration(seconds: 3));
+      await clip.open(clipPath);
+      await _waitFor(() => clip.duration > Duration.zero, const Duration(seconds: 3));
       if (stale()) return;
       _phase = _Phase.armed;
       _schedule();
@@ -921,14 +912,14 @@ class DesktopAutomixEngine {
 
     await clip.seek(_seconds(math.max(0.0, outgoingClipTime())));
     await clip.play();
-    await _waitFor(() => clip.state.playing && clip.state.position > Duration.zero, const Duration(milliseconds: 600));
+    await _waitFor(() => clip.playing && clip.position > Duration.zero, const Duration(milliseconds: 600));
     if (stale()) return;
-    await _align(() => clip.state.position.inMicroseconds / 1e6, outgoingClipTime, (to) => clip.seek(_seconds(to)));
+    await _align(() => clip.position.inMicroseconds / 1e6, outgoingClipTime, (to) => clip.seek(_seconds(to)));
     if (stale()) return;
 
     await _crossover(
       fadeOut: (v) => host.setVolume(blend.outPlayer, v),
-      fadeIn: (v) => clip.setVolume(v * host.masterVolume * 100 * DesktopAudioDsp.instance.volumeScale),
+      fadeIn: (v) => clip.setGain(v * host.masterVolume),
     );
     if (stale()) return;
     await host.pause(blend.outPlayer);
@@ -941,13 +932,13 @@ class DesktopAutomixEngine {
 
   // ---- Through the clip ----------------------------------------------------------
 
-  double _clipSeconds() => (_clipPlayer?.state.position.inMicroseconds ?? 0) / 1e6;
+  double _clipSeconds() => (_clipPlayer?.position.inMicroseconds ?? 0) / 1e6;
 
   void _publishClip() {
     final blend = _blend;
     if (blend == null || _phase != _Phase.clip) return;
     final t = _clipSeconds();
-    final playing = _clipPlayer?.state.playing ?? false;
+    final playing = _clipPlayer?.playing ?? false;
     if (blend.handedOff) {
       host.clipProgress(blend.incomingIndex, _seconds(blend.incomingAt(t)), playing);
     } else {
@@ -997,7 +988,7 @@ class DesktopAutomixEngine {
     await _align(spareTime, clipIncomingTime, (to) => host.seek(blend.inPlayer, _seconds(to)));
     if (stale()) return;
     await _crossover(
-      fadeOut: (v) => clip.setVolume(v * host.masterVolume * 100 * DesktopAudioDsp.instance.volumeScale),
+      fadeOut: (v) => clip.setGain(v * host.masterVolume),
       fadeIn: (v) => host.setVolume(blend.inPlayer, v),
     );
     if (stale()) return;
@@ -1125,7 +1116,7 @@ class DesktopAutomixEngine {
     final clip = _clipPlayer;
     if (clip == null) return;
     try {
-      await clip.setVolume(0);
+      await clip.setGain(0);
       await clip.stop();
     } catch (_) {}
   }
@@ -1295,7 +1286,7 @@ double _sourceOffset(Float32List copy, Float32List source, int rate) {
 
 /// The offset of [uri]'s audio against the analysis [copy] around [second].
 double _measureOffset(
-    MpvDecoder decoder, _RenderJob job, String? copy, String uri, double second, Map<String, String> headers) {
+    PcmDecoder decoder, _RenderJob job, String? copy, String uri, double second, Map<String, String> headers) {
   if (copy == null || copy == uri || !File(copy).existsSync()) return 0.0;
   final from = math.max(0.0, second - 1.0);
   final a = decoder.decode(copy,
@@ -1309,7 +1300,7 @@ double _measureOffset(
 /// Decodes both sides, measures them against their analysis copies, and
 /// renders the blend.
 _RenderResult _renderInIsolate(_RenderJob job) {
-  final decoder = MpvDecoder.instance;
+  final decoder = PcmDecoder.instance;
   if (decoder == null || AutomixNative.instance == null) return _failed('native library missing');
   final offOut = _measureOffset(decoder, job, job.outCopy, _decodable(job.outUri), job.tStart, job.outHeaders);
   final offIn = _measureOffset(decoder, job, job.inCopy, _decodable(job.inUri), job.cue, job.inHeaders);
@@ -1440,7 +1431,7 @@ Future<String?> _renderLoopOffThread(_LoopJob job) => Isolate.run(() => _renderL
 /// LoopMixSession.build, decoding with libmpv and writing the mix to a file
 /// instead of handing it to the sinks.
 String? _renderLoopInIsolate(_LoopJob job) {
-  final decoder = MpvDecoder.instance;
+  final decoder = PcmDecoder.instance;
   if (decoder == null || AutomixNative.instance == null) return 'native library missing';
   final plan = job.plan;
   final clock = LoopMixClock(plan);

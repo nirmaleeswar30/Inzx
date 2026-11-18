@@ -43,6 +43,15 @@ class _DesktopAutomixHost implements DesktopAutomixHost {
     if (source is UriAudioSource) {
       return DecodeSource(source.uri.toString(), source.headers ?? const {});
     }
+    // iOS streams YouTube's AAC through YouTubeAacAudioSource. The analysis
+    // copy is the same file, and the only kind AVAssetReader can decode.
+    if (source is YouTubeAacAudioSource) {
+      final tag = source.tag;
+      final copy = tag is Track
+          ? AutomixService.instance.desktopEngine?.analyzer.audioFor(tag.id)
+          : null;
+      return copy == null ? null : DecodeSource(Uri.file(copy).toString(), const {});
+    }
     return null;
   }
 

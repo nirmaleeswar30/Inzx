@@ -314,11 +314,10 @@ class AudioPlayerService {
     AutomixService.instance.fetchAudio = fetchAnalysisAudio;
     _wireAutomixEngine();
     // Desktop renders its blends in Dart; it drives these two players.
-    if (isDesktop) {
+    // Desktop and iOS run Automix's Dart engine on these two players, and
+    // level loudness per player (libmpv's volume / the iOS audio tap).
+    if (isDesktop || isIOS) {
       unawaited(AutomixService.instance.attachDesktopHost(_DesktopAutomixHost(this)));
-      _attachDesktopLoudness();
-    } else if (isIOS) {
-      // The same loudness levelling, applied by the iOS audio tap.
       _attachDesktopLoudness();
     }
     unawaited(_watchNetworkType());

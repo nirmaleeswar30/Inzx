@@ -201,7 +201,7 @@ class _AnalyzeArgs {
 /// The analysis as JSON under `a`, and under `why` what stopped it short.
 String _analyzeInIsolate(_AnalyzeArgs args) {
   final native = AutomixNative.instance;
-  final decoder = MpvDecoder.instance;
+  final decoder = PcmDecoder.instance;
   if (native == null || decoder == null) {
     return jsonEncode({'why': 'native library ${native == null ? 'missing' : 'ok'}, '
         'libmpv ${decoder == null ? 'missing' : 'ok'}'});
@@ -249,7 +249,7 @@ class _WholeTrack {
   _WholeTrack(this.native, this.decoder, this.args);
 
   final AutomixNative native;
-  final MpvDecoder decoder;
+  final PcmDecoder decoder;
   final _AnalyzeArgs args;
   AutomixModel? _beatModel;
   AutomixModel? _vocalModel;

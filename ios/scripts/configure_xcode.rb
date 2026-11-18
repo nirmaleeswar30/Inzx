@@ -80,6 +80,7 @@ if Dir.exist?(widget_dir) && project.targets.none? { |t| t.name == WIDGET }
     s['MARKETING_VERSION'] = build_name
     s['CURRENT_PROJECT_VERSION'] = build_number
     s['SKIP_INSTALL'] = 'YES'
+    s['APPLICATION_EXTENSION_API_ONLY'] = 'YES'
     s['ENABLE_BITCODE'] = 'NO'
     s['LD_RUNPATH_SEARCH_PATHS'] = ['$(inherited)', '@executable_path/Frameworks', '@executable_path/../../Frameworks']
     s['ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME'] = ''

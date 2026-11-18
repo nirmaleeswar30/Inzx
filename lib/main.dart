@@ -17,6 +17,7 @@ import 'l10n/generated/app_localizations.dart';
 import 'services/audio_handler.dart';
 import 'services/desktop/desktop_bootstrap.dart';
 import 'services/ios/ios_bootstrap.dart';
+import 'services/widget_sync_service.dart';
 import 'services/github_release_update_service.dart';
 import 'services/jams/jams_background_service_native.dart';
 import 'services/notification_service.dart';
@@ -153,6 +154,25 @@ void main([List<String> args = const []]) async {
     audioHandler = await initAudioService();
   } catch (e) {
     debugPrint('Audio service initialization failed: $e');
+  }
+
+  // iOS Home Screen widget buttons (App Intents running in this process).
+  final handler = audioHandler;
+  if (isIOS && handler != null) {
+    WidgetSyncService.attachActionHandler((action) async {
+      switch (action) {
+        case 'playPause':
+          handler.playbackState.value.playing ? await handler.pause() : await handler.play();
+        case 'next':
+          await handler.skipToNext();
+        case 'previous':
+          await handler.skipToPrevious();
+        case 'like':
+          await handler.customAction('toggle_like');
+        case 'shuffle':
+          await handler.toggleShuffle();
+      }
+    });
   }
 
   // Initialize notification service for download progress

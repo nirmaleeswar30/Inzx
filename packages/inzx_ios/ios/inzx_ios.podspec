@@ -18,6 +18,9 @@ Pod::Spec.new do |s|
   s.source_files     = 'Classes/**/*.{h,m,mm,swift,cpp}'
   s.public_header_files = 'Classes/InzxDsp.h'
   s.dependency 'Flutter'
+  # ONNX Runtime (MIT), Microsoft's prebuilt C/C++ library: runs Automix's
+  # beat and vocal models (desktop/automix/automix_ffi.cpp).
+  s.dependency 'onnxruntime-c', '1.24.2'
   s.platform         = :ios, '17.0'
   s.swift_version    = '5.0'
   s.frameworks       = 'AVFoundation', 'AVKit', 'MediaPlayer', 'MediaToolbox',
@@ -30,12 +33,14 @@ Pod::Spec.new do |s|
     'CLANG_CXX_LIBRARY' => 'libc++',
     # The analyzer is tuned against exact IEEE behaviour: never -ffast-math.
     'GCC_OPTIMIZATION_LEVEL' => '3',
-    'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) INZX_IOS=1 SIGNALSMITH_USE_ACCELERATE=1',
+    'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) INZX_IOS=1',
     'HEADER_SEARCH_PATHS' => '$(inherited) ' \
       '"$(PODS_ROOT)/../../android/app/src/main/cpp" ' \
       '"$(PODS_ROOT)/../../android/app/src/main/cpp/native" ' \
       '"$(PODS_ROOT)/../../android/app/src/main/cpp/native/third_party" ' \
-      '"$(PODS_ROOT)/../../desktop/automix"',
+      '"$(PODS_ROOT)/../../desktop/automix" ' \
+      '"$(PODS_ROOT)/onnxruntime-c/Headers" ' \
+      '"$(PODS_XCFRAMEWORKS_BUILD_DIR)/onnxruntime-c/onnxruntime.framework/Headers"',
     'OTHER_CPLUSPLUSFLAGS' => '$(inherited) -fno-fast-math -Wno-shorten-64-to-32 -Wno-comma',
   }
 end
