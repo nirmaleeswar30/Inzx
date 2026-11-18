@@ -48,7 +48,13 @@ jobs:
 
       - name: Write .env
         run: |
-          if [ -n "$ENV_FILE" ]; then printf '%s' "$ENV_FILE" > .env; else cp .env.example .env; fi
+          if [ -n "$ENV_FILE" ]; then
+            printf '%s' "$ENV_FILE" > .env
+          else
+            echo "::warning title=No ENV_FILE secret::Built from .env.example: Jams, Inzx Connect and Discord will not work in this IPA."
+            if [ "${{ github.event_name }}" = "release" ]; then exit 1; fi
+            cp .env.example .env
+          fi
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
 

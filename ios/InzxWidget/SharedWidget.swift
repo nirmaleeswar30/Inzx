@@ -14,13 +14,46 @@ enum InzxShared {
   static let artFileName = "widget_art.jpg"
   static let actionNotification = Notification.Name("InzxWidgetAction")
 
-  static var group: String {
-    if let groups = Bundle.main.object(forInfoDictionaryKey: "ALTAppGroups") as? [String],
-      let match = groups.first(where: { $0.contains("com.nirmal.inzx") }) ?? groups.first
-    {
-      return match
+  /// The group this bundle is really entitled to. Sideloaders re-sign with
+  /// their own team and rename the group (AltStore lists the new name under
+  /// `ALTAppGroups`, often only in the app's Info.plist, not the widget's).
+  /// The signing profile names the groups each bundle actually has, so it's
+  /// read first; a candidate counts only if iOS gives a container for it.
+  static let group: String = {
+    var candidates = provisionedGroups()
+    candidates += altGroups(Bundle.main.infoDictionary)
+    let bundle = Bundle.main.bundleURL
+    if bundle.pathExtension == "appex" {
+      // The widget: also the containing app's Info.plist.
+      let app = bundle.deletingLastPathComponent().deletingLastPathComponent()
+      candidates += altGroups(NSDictionary(contentsOf: app.appendingPathComponent("Info.plist")) as? [String: Any])
     }
-    return defaultGroup
+    candidates.append(defaultGroup)
+    for candidate in candidates
+    where FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: candidate) != nil {
+      return candidate
+    }
+    return candidates.first ?? defaultGroup
+  }()
+
+  private static func altGroups(_ info: [String: Any]?) -> [String] {
+    guard let groups = info?["ALTAppGroups"] as? [String] else { return [] }
+    return groups.filter { $0.contains("com.nirmal.inzx") } + groups.filter { !$0.contains("com.nirmal.inzx") }
+  }
+
+  /// `com.apple.security.application-groups` from embedded.mobileprovision,
+  /// a CMS envelope around a plain XML plist.
+  private static func provisionedGroups() -> [String] {
+    guard let url = Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision"),
+      let data = try? Data(contentsOf: url),
+      let start = data.range(of: Data("<?xml".utf8)),
+      let end = data.range(of: Data("</plist>".utf8), in: start.lowerBound..<data.endIndex),
+      let plist = try? PropertyListSerialization.propertyList(
+        from: data.subdata(in: start.lowerBound..<end.upperBound), format: nil) as? [String: Any],
+      let entitlements = plist["Entitlements"] as? [String: Any],
+      let groups = entitlements["com.apple.security.application-groups"] as? [String]
+    else { return [] }
+    return groups
   }
 
   static var container: URL? {
@@ -48,11 +81,28 @@ struct InzxWidgetState: Codable {
   var artVersion: Double?
   var updatedAt: Double?
 
+  /// Read leniently, field by field: one value of an unexpected type must
+  /// not blank the whole widget.
   static func load() -> InzxWidgetState {
     guard let data = UserDefaults(suiteName: InzxShared.group)?.data(forKey: InzxShared.stateKey),
-      let state = try? JSONDecoder().decode(InzxWidgetState.self, from: data)
+      let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
     else { return InzxWidgetState() }
-    return state
+    func string(_ key: String) -> String? { json[key] as? String }
+    func bool(_ key: String) -> Bool? { (json[key] as? NSNumber)?.boolValue }
+    func double(_ key: String) -> Double? { (json[key] as? NSNumber)?.doubleValue }
+    return InzxWidgetState(
+      trackId: string("trackId"),
+      title: string("title"),
+      artist: string("artist"),
+      isPlaying: bool("isPlaying"),
+      hasTrack: bool("hasTrack"),
+      isLiked: bool("isLiked"),
+      shuffle: bool("shuffle"),
+      positionMs: double("positionMs"),
+      durationMs: double("durationMs"),
+      statusLabel: string("statusLabel"),
+      artVersion: double("artVersion"),
+      updatedAt: double("updatedAt"))
   }
 }
 

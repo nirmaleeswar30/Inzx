@@ -6,6 +6,10 @@
   "@iosReopenToApply": {
     "description": "Shown on iOS, where an app can't close itself, when an update needs a restart."
   },
+  "iosPasskeyHint": "Passkeys can't be used inside apps on iPhone. On Google's page, tap \"Try another way\" and use your password or a prompt on your phone.",
+  "@iosPasskeyHint": {
+    "description": "Shown under YouTube Music sign-in on iOS, where Google's passkey option fails inside an app's web view."
+  },
   "restart": "Restart",
   "dismiss": "Dismiss",
   "accentColor": "Accent Color",

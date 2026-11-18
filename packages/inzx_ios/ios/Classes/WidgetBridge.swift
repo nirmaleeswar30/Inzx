@@ -2,19 +2,52 @@ import Flutter
 import Foundation
 import WidgetKit
 
-/// The App Group the app shares with its widget. Sideloaders re-sign with
-/// their own team and may rename the group; AltStore lists the renamed ones
-/// under `ALTAppGroups` in Info.plist, so that wins when present.
+/// The App Group the app shares with its widget (the same lookup as
+/// InzxShared in ios/InzxWidget/SharedWidget.swift, which the widget uses).
 enum InzxAppGroup {
-  static let defaultIdentifier = "group.com.nirmal.inzx"
+  static let defaultGroup = "group.com.nirmal.inzx"
+  static var identifier: String { group }
 
-  static var identifier: String {
-    if let groups = Bundle.main.object(forInfoDictionaryKey: "ALTAppGroups") as? [String],
-      let match = groups.first(where: { $0.contains("com.nirmal.inzx") }) ?? groups.first
-    {
-      return match
+  /// The group this bundle is really entitled to. Sideloaders re-sign with
+  /// their own team and rename the group (AltStore lists the new name under
+  /// `ALTAppGroups`, often only in the app's Info.plist, not the widget's).
+  /// The signing profile names the groups each bundle actually has, so it's
+  /// read first; a candidate counts only if iOS gives a container for it.
+  static let group: String = {
+    var candidates = provisionedGroups()
+    candidates += altGroups(Bundle.main.infoDictionary)
+    let bundle = Bundle.main.bundleURL
+    if bundle.pathExtension == "appex" {
+      // The widget: also the containing app's Info.plist.
+      let app = bundle.deletingLastPathComponent().deletingLastPathComponent()
+      candidates += altGroups(NSDictionary(contentsOf: app.appendingPathComponent("Info.plist")) as? [String: Any])
     }
-    return defaultIdentifier
+    candidates.append(defaultGroup)
+    for candidate in candidates
+    where FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: candidate) != nil {
+      return candidate
+    }
+    return candidates.first ?? defaultGroup
+  }()
+
+  private static func altGroups(_ info: [String: Any]?) -> [String] {
+    guard let groups = info?["ALTAppGroups"] as? [String] else { return [] }
+    return groups.filter { $0.contains("com.nirmal.inzx") } + groups.filter { !$0.contains("com.nirmal.inzx") }
+  }
+
+  /// `com.apple.security.application-groups` from embedded.mobileprovision,
+  /// a CMS envelope around a plain XML plist.
+  private static func provisionedGroups() -> [String] {
+    guard let url = Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision"),
+      let data = try? Data(contentsOf: url),
+      let start = data.range(of: Data("<?xml".utf8)),
+      let end = data.range(of: Data("</plist>".utf8), in: start.lowerBound..<data.endIndex),
+      let plist = try? PropertyListSerialization.propertyList(
+        from: data.subdata(in: start.lowerBound..<end.upperBound), format: nil) as? [String: Any],
+      let entitlements = plist["Entitlements"] as? [String: Any],
+      let groups = entitlements["com.apple.security.application-groups"] as? [String]
+    else { return [] }
+    return groups
   }
 
   static var defaults: UserDefaults? { UserDefaults(suiteName: identifier) }

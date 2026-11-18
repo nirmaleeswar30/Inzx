@@ -376,15 +376,36 @@ class _YTMusicLoginScreenState extends ConsumerState<YTMusicLoginScreen> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         color: isDark ? Colors.grey[900] : Colors.grey[200],
-        child: Text(
-          context.l10n.signInSyncYoutubeMusicDescription,
-          style: TextStyle(
-            color: isDark
-                ? Colors.grey
-                : colorScheme.onSurface.withValues(alpha: 0.6),
-            fontSize: 12,
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // iOS lets an app's web view use passkeys only for the app's
+              // own domains, so Google's passkey prompt fails here.
+              if (Platform.isIOS) ...[
+                Text(
+                  context.l10n.iosPasskeyHint,
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : colorScheme.onSurface,
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+              ],
+              Text(
+                context.l10n.signInSyncYoutubeMusicDescription,
+                style: TextStyle(
+                  color: isDark
+                      ? Colors.grey
+                      : colorScheme.onSurface.withValues(alpha: 0.6),
+                  fontSize: 12,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
-          textAlign: TextAlign.center,
         ),
       ),
     );

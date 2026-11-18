@@ -244,6 +244,9 @@ class DesktopAutomixEngine {
   final Set<String> _fetchAsked = {};
   /// A pair whose blend couldn't be armed isn't tried again this play.
   String? _failedPair;
+  /// Why the last blend didn't happen, for the stats line; cleared when one
+  /// gets under way.
+  String? _lastIssue;
 
   // Published for the player UI.
   TransitionPlan? _lastPlan;
@@ -475,7 +478,8 @@ class DesktopAutomixEngine {
         ? ' · ${_styleName(plan)} ${plan.fadeSeconds.toStringAsFixed(1)}s'
             '${plan.incomingPlaybackRate != 1.0 ? ' @${plan.incomingPlaybackRate.toStringAsFixed(3)}x' : ''}'
         : '';
-    return 'Automix · this song: ${label(current, true)} · next: ${label(next, false)}$planned';
+    final issue = _lastIssue == null ? '' : ' · last: $_lastIssue';
+    return 'Automix · this song: ${label(current, true)} · next: ${label(next, false)}$planned$issue';
   }
 
   static String _styleName(TransitionPlan plan) => switch (plan.transitionStyle) {
@@ -784,6 +788,7 @@ class DesktopAutomixEngine {
       _schedule();
     } catch (e) {
       debugPrint('Automix: loop mix failed: $e');
+      _lastIssue = 'loop mix failed: $e';
       _noLoopPairs.add('${current.id}>${next.id}');
       if (!stale()) await _bail();
     }
@@ -867,7 +872,7 @@ class DesktopAutomixEngine {
         _deleteQuietly(clipPath);
         return;
       }
-      if (!ok) throw StateError('render failed');
+      if (!ok) throw StateError(result.report);
       debugPrint('Automix: rendered ${blend.clipSeconds.toStringAsFixed(1)}s blend in '
           '${DateTime.now().difference(began).inMilliseconds}ms');
       blend.clipPath = clipPath;
@@ -882,6 +887,7 @@ class DesktopAutomixEngine {
       _schedule();
     } catch (e) {
       debugPrint('Automix: arming failed: $e');
+      _lastIssue = 'blend failed: $e';
       _failedPair = '${current.id}>${next.id}';
       if (!stale()) await _bail();
     }
@@ -897,6 +903,7 @@ class DesktopAutomixEngine {
     if (position < blend.outStart - 0.005) return;
     if (position > blend.outStart + 1.0) {
       // Missed it (a stall or a seek past the start): no blend this time.
+      _lastIssue = 'missed the blend start (at ${position.toStringAsFixed(1)}s, wanted ${blend.outStart.toStringAsFixed(1)}s)';
       unawaited(_bail());
       return;
     }
@@ -912,8 +919,15 @@ class DesktopAutomixEngine {
 
     await clip.seek(_seconds(math.max(0.0, outgoingClipTime())));
     await clip.play();
-    await _waitFor(() => clip.playing && clip.position > Duration.zero, const Duration(milliseconds: 600));
+    await _waitFor(() => clip.playing && clip.position > Duration.zero, const Duration(milliseconds: 1500));
     if (stale()) return;
+    if (!clip.playing || clip.position <= Duration.zero) {
+      // Nothing to cross into: the song carries on rather than going quiet.
+      _lastIssue = 'the blend clip would not start';
+      debugPrint('Automix: ${_lastIssue!}');
+      await _bail();
+      return;
+    }
     await _align(() => clip.position.inMicroseconds / 1e6, outgoingClipTime, (to) => clip.seek(_seconds(to)));
     if (stale()) return;
 
@@ -926,6 +940,7 @@ class DesktopAutomixEngine {
     _mixing = blend.isRealMix;
     _windowStart = _windowEnd = null;
     host.clipBegan();
+    _lastIssue = null;
     _schedule();
     debugPrint('Automix: blend under way');
   }
