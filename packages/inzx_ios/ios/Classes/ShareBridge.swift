@@ -22,7 +22,7 @@ final class ShareBridge {
     switch call.method {
     case "installedTargets":
       result(
-        Self.schemes.compactMap { name, scheme in
+        Self.schemes.compactMap { (name, scheme) -> String? in
           guard let url = URL(string: scheme), UIApplication.shared.canOpenURL(url) else { return nil }
           return name
         })
