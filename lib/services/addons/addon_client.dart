@@ -393,11 +393,11 @@ class AddonClient {
         mime.contains('dash');
     final bitrate = inner['bitrate'];
 
-    // AVPlayer (iOS) has no DASH and no Opus/Vorbis in Ogg or WebM: such a
-    // stream is a miss there, and the player falls back to the next source.
+    // AVPlayer (iOS) has no Opus/Vorbis in Ogg or WebM: such a stream is a
+    // miss there, and the player falls back to the next source. (DASH it
+    // gets as one fragmented MP4: see DashFmp4AudioSource.)
     if (isIOS) {
       final codec = _codecOf(inner, format, mime, path, assumeFlac: assumeFlac);
-      if (isDash) throw const AddonMiss('DASH stream (not playable on iOS)');
       if (codec == 'opus' || codec == 'vorbis') {
         throw AddonMiss('$codec stream (not playable on iOS)');
       }

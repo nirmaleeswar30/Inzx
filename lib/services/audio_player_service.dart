@@ -23,6 +23,7 @@ import 'desktop/desktop_audio_dsp.dart';
 import 'desktop/desktop_loudness.dart';
 import 'ios/ios_audio_dsp.dart';
 import 'ios/ios_native.dart';
+import 'playback/dash_fmp4_audio_source.dart';
 import 'playback/youtube_aac_audio_source.dart';
 import 'playback/youtube_mp4_fix.dart';
 import 'automix/desktop/loop_mix.dart' show LoopLyricLine;
@@ -4930,6 +4931,8 @@ class AudioPlayerService {
   AudioSource _addonAudioSource(AddonMatch match, Track track) {
     var uri = Uri.parse(match.stream.url);
     if (!match.stream.isDash) return AudioSource.uri(uri, tag: track);
+    // AVPlayer has no DASH: the segments are served as one fragmented MP4.
+    if (isIOS) return DashFmp4AudioSource(match.stream.url, tag: track);
     final manifest = isDesktop ? uri.data : null;
     if (manifest != null) {
       // mpv requires :// to route an inline manifest to its data protocol.

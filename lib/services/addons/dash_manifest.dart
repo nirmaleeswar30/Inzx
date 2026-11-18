@@ -5,11 +5,22 @@ import 'package:xml/xml.dart';
 
 /// The files that make up one audio track of a DASH stream, in play order.
 class DashTrack {
-  const DashTrack({required this.segments, this.codecs = ''});
+  const DashTrack({
+    required this.segments,
+    this.codecs = '',
+    this.hasInit = false,
+    this.singleFile = false,
+  });
 
   /// Initialization segment first (when there is one), then media segments.
   final List<Uri> segments;
   final String codecs;
+
+  /// Whether [segments] opens with an initialization segment.
+  final bool hasInit;
+
+  /// One self-indexed file rather than segments.
+  final bool singleFile;
 }
 
 /// Reads the on-demand MPD an addon hands back, far enough to download the
@@ -187,7 +198,11 @@ class DashManifest {
           );
         }
       }
-      return DashTrack(segments: segments, codecs: codecs);
+      return DashTrack(
+        segments: segments,
+        codecs: codecs,
+        hasInit: initialization != null && initialization.isNotEmpty,
+      );
     }
 
     final list =
@@ -201,12 +216,16 @@ class DashManifest {
         if (media != null && media.isNotEmpty) segments.add(resolve(media));
       }
       if (segments.isEmpty) throw const FormatException('Empty segment list');
-      return DashTrack(segments: segments, codecs: codecs);
+      return DashTrack(
+        segments: segments,
+        codecs: codecs,
+        hasInit: init != null && init.isNotEmpty,
+      );
     }
 
     // One self-indexed file behind the BaseURL.
     if (base != null && _child(bestRep, 'BaseURL') != null) {
-      return DashTrack(segments: [base], codecs: codecs);
+      return DashTrack(segments: [base], codecs: codecs, singleFile: true);
     }
     throw const FormatException('Manifest lists no segments');
   }
