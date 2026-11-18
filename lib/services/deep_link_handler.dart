@@ -85,6 +85,17 @@ class DeepLinkHandler {
       if (pathSegments.isEmpty) return;
 
       final type = pathSegments.first; // 'playlist', 'album', 'artist', 'song'
+
+      // inzx://open/player: the iOS widget's tap opens the full player.
+      if (type == 'player') {
+        final context = rootNavigatorKey.currentContext;
+        final hasTrack = ref.read(audioPlayerServiceProvider).state.currentTrack != null;
+        if (hasTrack && context != null && context.mounted) {
+          NowPlayingScreen.show(context);
+        }
+        return;
+      }
+
       final id = uri.queryParameters['id'];
 
       if (id == null || id.isEmpty) return;

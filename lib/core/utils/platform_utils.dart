@@ -32,7 +32,14 @@ bool get canPlayOpus => !isIOS;
 String resolveAppPath(String path) {
   if (!isIOS) return path;
   final home = Platform.environment['HOME'];
-  if (home == null || home.isEmpty || path.startsWith(home)) return path;
+  if (home == null || home.isEmpty) return path;
+  return rebaseContainerPath(path, home);
+}
+
+/// [path] moved from whichever app container it was saved in to [home], the
+/// current one; unchanged when it isn't inside an app container.
+String rebaseContainerPath(String path, String home) {
+  if (path.startsWith(home)) return path;
   final match = _containerPrefix.firstMatch(path);
   if (match == null) return path;
   return '$home${path.substring(match.end)}';
