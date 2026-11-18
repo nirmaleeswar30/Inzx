@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../core/utils/secure_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'audio_routing_service.dart';
@@ -57,11 +57,15 @@ class InzxConnectService {
   static final instance = InzxConnectService._();
 
   static bool get canShowQr => Platform.isWindows || Platform.isLinux;
-  static bool get canScanQr => Platform.isAndroid;
+  static bool get canScanQr => Platform.isAndroid || Platform.isIOS;
+
+  /// The phone's "playing on your computer" notification and its background
+  /// service are Android's; iOS has no ongoing notifications.
+  static bool get hasForegroundNotification => Platform.isAndroid;
   static bool get isSupported => canShowQr || canScanQr;
 
   static const _sessionKey = 'inzx_connect_refresh_token';
-  static const _storage = FlutterSecureStorage();
+  static const _storage = inzxSecureStorage;
 
   SupabaseClient? _client;
   Future<void>? _opening;
@@ -155,11 +159,13 @@ class InzxConnectService {
       } catch (_) {}
     }
     name = name?.trim();
-    if (name == null || name.isEmpty) {
+    if (name == null || name.isEmpty || (Platform.isIOS && name == 'localhost')) {
       return Platform.isWindows
           ? 'Windows PC'
           : Platform.isLinux
           ? 'Linux PC'
+          : Platform.isIOS
+          ? 'iPhone'
           : 'Android phone';
     }
     return name.length > 48 ? name.substring(0, 48) : name;

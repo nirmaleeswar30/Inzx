@@ -572,6 +572,9 @@ class _DownloadPathSetting extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 12),
+          // iOS keeps downloads in the app's own folder (Files app: On My
+          // iPhone > Inzx > Downloads); there's no shared folder to pick.
+          if (!isIOS)
           Row(
             children: [
               ElevatedButton.icon(

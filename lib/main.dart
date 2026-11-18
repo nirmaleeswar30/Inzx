@@ -11,6 +11,7 @@ import 'core/providers/locale_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/services/cache/hive_service.dart';
 import 'core/utils/app_logger.dart';
+import 'core/utils/app_restart.dart';
 import 'core/utils/platform_utils.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'services/audio_handler.dart';
@@ -384,7 +385,7 @@ class _InzxAppState extends ConsumerState<InzxApp> {
           TextButton(
             onPressed: () {
               // Close the app so the update applies on next launch.
-              SystemNavigator.pop();
+              closeAppForUpdate(context);
             },
             child: Text(l10n.restart),
           ),

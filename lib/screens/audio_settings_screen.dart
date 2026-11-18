@@ -293,7 +293,7 @@ class AudioSettingsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              isDesktop && !DesktopAudioDsp.exclusiveSupported
+              (isDesktop && !DesktopAudioDsp.exclusiveSupported) || isIOS
                   ? 'Loudness, equalizer and headphone correction'
                   : 'How lossless audio leaves the app',
               style: TextStyle(

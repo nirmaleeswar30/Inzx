@@ -2,6 +2,10 @@
   "@@locale": "en",
   "appTitle": "Inzx",
   "updateDownloadedBanner": "Update downloaded. Restart the app to apply.",
+  "iosReopenToApply": "Swipe Inzx away in the app switcher and open it again to finish updating.",
+  "@iosReopenToApply": {
+    "description": "Shown on iOS, where an app can't close itself, when an update needs a restart."
+  },
   "restart": "Restart",
   "dismiss": "Dismiss",
   "accentColor": "Accent Color",

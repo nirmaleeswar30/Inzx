@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../core/utils/secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/models.dart';
@@ -23,7 +23,7 @@ class ScrobbleService extends ChangeNotifier {
   static const double scrobblePercent = 0.5;
   static const int scrobbleMaxSeconds = 180;
 
-  final _secure = const FlutterSecureStorage();
+  final _secure = inzxSecureStorage;
   final _listenBrainz = ListenBrainzClient();
 
   // Settings.

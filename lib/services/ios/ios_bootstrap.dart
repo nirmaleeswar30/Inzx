@@ -9,10 +9,12 @@ import '../../core/services/cache/hive_service.dart';
 import '../../core/utils/platform_utils.dart';
 import 'ios_audio_dsp.dart';
 import 'ios_native.dart';
+import 'ipad_share.dart';
 
 /// iOS start-up, after Hive is open (main.dart).
 Future<void> initIosPlatform() async {
   await IosNative.init();
+  IpadAnchoredShare.install();
   await _restoreMusicFolders();
   await _ensureMusicFolder();
   unawaited(IosAudioDsp.instance.start());
