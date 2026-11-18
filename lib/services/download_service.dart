@@ -13,6 +13,8 @@ import '../models/models.dart';
 import '../core/services/cache/hive_service.dart';
 import '../data/entities/download_entity.dart';
 import '../data/entities/downloaded_playlist_entity.dart';
+import 'ios/ios_native.dart';
+import 'playback/youtube_mp4_fix.dart';
 import 'playback/yt_player_utils.dart';
 import 'playback/playback_data.dart';
 import 'notification_service.dart';
@@ -54,7 +56,7 @@ Future<String> _getDownloadsDirPath() async {
   // 1. Check custom path selected by user
   try {
     final prefs = await SharedPreferences.getInstance();
-    final customPath = prefs.getString(kCustomDownloadPathKey);
+    final customPath = isIOS ? null : prefs.getString(kCustomDownloadPathKey);
     if (customPath != null && customPath.trim().isNotEmpty) {
       final customDir = Directory(customPath.trim());
       if (await customDir.exists()) {
@@ -76,6 +78,16 @@ Future<String> _getDownloadsDirPath() async {
         : Directory('${(await appDataDirectory()).path}/downloads');
     await inzxDir.create(recursive: true);
     return inzxDir.path;
+  }
+
+  // iOS: Documents/Downloads, which the Files app shows under On My iPhone >
+  // Inzx. Kept out of iCloud backups (it can all be downloaded again).
+  if (isIOS) {
+    final docs = await getApplicationDocumentsDirectory();
+    final dir = Directory('${docs.path}/Downloads');
+    if (!await dir.exists()) await dir.create(recursive: true);
+    unawaited(IosNative.excludeFromBackup(dir.path));
+    return dir.path;
   }
 
   // 2. Use app-private external storage (OuterTune style)
@@ -211,7 +223,7 @@ final downloadedTracksProvider = FutureProvider<List<Track>>((ref) async {
             album: e.album,
             durationMs: e.durationMs,
             thumbnailUrl: e.thumbnailUrl,
-            localPath: e.localPath,
+            localPath: resolveAppPath(e.localPath),
           ),
         )
         .toList();
@@ -289,7 +301,8 @@ final downloadedPlaylistsProvider =
           for (final trackId in playlist.trackIds) {
             final download = downloadsById[trackId];
             if (download == null) continue;
-            final localFile = File(download.localPath);
+            final localPath = resolveAppPath(download.localPath);
+            final localFile = File(localPath);
             if (!await localFile.exists()) continue;
             orderedTracks.add(
               Track(
@@ -299,7 +312,7 @@ final downloadedPlaylistsProvider =
                 album: download.album,
                 duration: Duration(milliseconds: download.durationMs),
                 thumbnailUrl: download.thumbnailUrl,
-                localFilePath: download.localPath,
+                localFilePath: localPath,
               ),
             );
           }
@@ -651,7 +664,7 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
       final tasks = <String, DownloadTask>{};
 
       for (final entity in downloadsBox.values) {
-        final localPath = entity.localPath;
+        final localPath = resolveAppPath(entity.localPath);
 
         // Only restore if file still exists
         if (await File(localPath).exists()) {
@@ -751,7 +764,7 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
     try {
       final hiveEntity = HiveService.downloadsBox.get(track.id);
       if (hiveEntity != null && hiveEntity.localPath.isNotEmpty) {
-        final existingFile = File(hiveEntity.localPath);
+        final existingFile = File(resolveAppPath(hiveEntity.localPath));
         if (await existingFile.exists() &&
             await existingFile.length() >= 50 * 1024) {
           if (kDebugMode) {
@@ -764,7 +777,7 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
             track: track,
             status: DownloadStatus.completed,
             progress: 1.0,
-            localPath: hiveEntity.localPath,
+            localPath: resolveAppPath(hiveEntity.localPath),
             downloadedBytes: hiveEntity.totalBytes,
             totalBytes: hiveEntity.totalBytes,
             startedAt: hiveEntity.downloadedAt,
@@ -1854,6 +1867,10 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
       if (coverBytes != null) {
         LocalArtworkService.setMemoryCache(filePath, coverBytes);
       }
+
+      // AVFoundation reads YouTube's fragmented AAC at double its length
+      // until the header's durations are cleared (a no-op on other files).
+      if (isIOS) await YouTubeMp4Fix.patchFile(filePath);
 
       final finalFileSize = await downloadedFile.length();
 

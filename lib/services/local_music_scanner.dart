@@ -12,6 +12,7 @@ import '../data/entities/track_entity.dart';
 import '../data/entities/download_entity.dart';
 import 'safe_audio_metadata_reader.dart';
 import 'local_artwork_service.dart';
+import 'ios/ios_native.dart';
 
 /// Provider for scanned local music folders
 final localMusicFoldersProvider =
@@ -104,6 +105,7 @@ class LocalMusicFoldersNotifier extends StateNotifier<List<String>> {
   }
 
   void removeFolder(String path) {
+    if (Platform.isIOS) unawaited(IosNative.forgetFolder(path));
     state = state.where((p) => p != path).toList();
     _persist();
   }
@@ -501,9 +503,26 @@ class LocalMusicScanner {
     '.alac',
   ];
 
+  /// What AVPlayer opens (no Ogg, Opus or WebM).
+  static const _iosExtensions = [
+    '.mp3',
+    '.m4a',
+    '.m4b',
+    '.mp4',
+    '.flac',
+    '.wav',
+    '.aac',
+    '.aiff',
+    '.aif',
+    '.caf',
+    '.alac',
+  ];
+
   static List<String> get _audioExtensions => Platform.isAndroid
       ? _phoneExtensions
-      : [..._phoneExtensions, ..._desktopExtensions];
+      : Platform.isIOS
+          ? _iosExtensions
+          : [..._phoneExtensions, ..._desktopExtensions];
 
   /// Why the last [pickFolder] couldn't open a folder dialog, if it couldn't.
   /// On Linux the dialog needs zenity, kdialog or qarma installed.
@@ -594,6 +613,9 @@ class LocalMusicScanner {
   static Future<String?> pickFolder() async {
     lastPickerError = null;
     try {
+      // iOS: a folder outside the app is only readable through its security
+      // scope, kept open across launches as a bookmark (inzx_ios).
+      if (Platform.isIOS) return await IosNative.pickFolder();
       final result = await FilePicker.platform.getDirectoryPath();
       return result;
     } catch (e) {

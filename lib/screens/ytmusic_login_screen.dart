@@ -123,6 +123,19 @@ class _YTMusicLoginScreenState extends ConsumerState<YTMusicLoginScreen> {
         } catch (e) {
           // Ignore
         }
+      } else if (Platform.isIOS) {
+        // WebKit's cookie store, HttpOnly cookies included (document.cookie
+        // can't see SAPISID & co). Same session BitChord-iOS signs in with.
+        try {
+          final cookies = await WebViewCookieManager().getCookies(
+            domain: Uri.parse('https://music.youtube.com'),
+          );
+          for (final c in cookies) {
+            cookieMap[c.name] = c.value;
+          }
+        } catch (e) {
+          if (kDebugMode) print('YTMusicLogin: WebKit cookies unavailable: $e');
+        }
       }
 
       // Check if we have minimum required cookies

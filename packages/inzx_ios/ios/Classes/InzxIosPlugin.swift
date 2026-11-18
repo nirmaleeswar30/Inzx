@@ -79,8 +79,32 @@ public final class InzxIosPlugin: NSObject, FlutterPlugin {
       result(UIDevice.current.userInterfaceIdiom == .pad)
     case "homeDirectory":
       result(NSHomeDirectory())
+    case "holdBackgroundTime":
+      let seconds = (args["seconds"] as? NSNumber)?.doubleValue ?? 20
+      holdBackgroundTime(seconds)
+      result(nil)
     default:
       result(FlutterMethodNotImplemented)
+    }
+  }
+
+  private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
+
+  /// A background-task window, so the Dart side can finish starting the
+  /// next song after one ended with the app in the background.
+  private func holdBackgroundTime(_ seconds: Double) {
+    let app = UIApplication.shared
+    if backgroundTask != .invalid { app.endBackgroundTask(backgroundTask) }
+    backgroundTask = app.beginBackgroundTask(withName: "inzx.next-track") { [weak self] in
+      guard let self else { return }
+      app.endBackgroundTask(self.backgroundTask)
+      self.backgroundTask = .invalid
+    }
+    let task = backgroundTask
+    DispatchQueue.main.asyncAfter(deadline: .now() + seconds) { [weak self] in
+      guard let self, self.backgroundTask == task, task != .invalid else { return }
+      app.endBackgroundTask(task)
+      self.backgroundTask = .invalid
     }
   }
 

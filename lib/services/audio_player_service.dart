@@ -21,8 +21,13 @@ import 'automix/automix_service.dart';
 import 'automix/desktop/desktop_automix_engine.dart';
 import 'desktop/desktop_audio_dsp.dart';
 import 'desktop/desktop_loudness.dart';
+import 'ios/ios_audio_dsp.dart';
+import 'ios/ios_native.dart';
+import 'playback/youtube_aac_audio_source.dart';
+import 'playback/youtube_mp4_fix.dart';
 import 'automix/desktop/loop_mix.dart' show LoopLyricLine;
-import '../core/utils/platform_utils.dart' show isDesktop;
+import '../core/utils/platform_utils.dart'
+    show isDesktop, isIOS, resolveAppPath, usesDartAudioDsp;
 import 'ytmusic_api_service.dart';
 import 'ytmusic_auth_service.dart';
 import 'queue_persistence_service.dart';
@@ -312,6 +317,9 @@ class AudioPlayerService {
     if (isDesktop) {
       unawaited(AutomixService.instance.attachDesktopHost(_DesktopAutomixHost(this)));
       _attachDesktopLoudness();
+    } else if (isIOS) {
+      // The same loudness levelling, applied by the iOS audio tap.
+      _attachDesktopLoudness();
     }
     unawaited(_watchNetworkType());
     // Load persisted queue from previous session
@@ -433,7 +441,7 @@ class AudioPlayerService {
   final Queue<Completer<void>> _precacheSlotWaiters = Queue<Completer<void>>();
   int _activePrecacheDownloads = 0;
   bool _isPrecachingAhead = false;
-  bool _allowProxyCachingSource = true;
+  bool _allowProxyCachingSource = !isIOS;
   Timer? _cacheMaintenanceTimer;
   final Map<String, Timer> _liveCacheLogTimers = {};
   final Map<String, int> _liveCacheLastLoggedBytes = {};
@@ -972,7 +980,8 @@ class AudioPlayerService {
 
   Future<({AudioSource source, PlaybackData? playbackData})>
   _buildSourceForTrack(Track track) async {
-    String? resolvedLocalPath = track.localFilePath;
+    String? resolvedLocalPath =
+        track.localFilePath == null ? null : resolveAppPath(track.localFilePath!);
     if (resolvedLocalPath == null) {
       try {
         if (!Hive.isBoxOpen('music_downloads')) {
@@ -981,7 +990,7 @@ class AudioPlayerService {
         final box = Hive.box<DownloadEntity>('music_downloads');
         final entity = box.values.where((e) => e.trackId == track.id).firstOrNull;
         if (entity != null) {
-          resolvedLocalPath = entity.localPath;
+          resolvedLocalPath = resolveAppPath(entity.localPath);
         }
       } catch (_) {}
     }
@@ -1627,7 +1636,43 @@ class AudioPlayerService {
     final safeTrackId = _sanitizeCacheKey(track.id);
     final cacheKey =
         '${safeTrackId}_${_audioQuality.name}_${playbackData.format.bitrate}';
-    return File('${cacheDir.path}/$cacheKey.audio');
+    return File('${cacheDir.path}/$cacheKey.${_cacheExtension(playbackData)}');
+  }
+
+  /// `.audio` everywhere but iOS, where AVFoundation identifies a local file
+  /// by its extension and wouldn't open `.audio` at all.
+  String _cacheExtension(PlaybackData playbackData) {
+    if (!isIOS) return 'audio';
+    final mime = playbackData.format.mimeType.toLowerCase();
+    if (mime.contains('flac')) return 'flac';
+    if (mime.contains('mpeg') || mime.contains('mp3')) return 'mp3';
+    return 'm4a';
+  }
+
+  static bool _isStreamCacheFile(String path) =>
+      path.endsWith('.audio') ||
+      (isIOS && (path.endsWith('.m4a') || path.endsWith('.flac') || path.endsWith('.mp3')));
+
+  /// A direct (not file-cached) stream. On iOS a YouTube AAC stream goes
+  /// through [YouTubeAacAudioSource], which fixes the doubled duration
+  /// AVFoundation otherwise reads from its header.
+  AudioSource _directStreamSource(
+    Uri streamUri,
+    Map<String, String>? headers,
+    Track track,
+    PlaybackData playbackData,
+  ) {
+    if (isIOS &&
+        playbackData.format.isAac &&
+        streamUri.host.endsWith('googlevideo.com')) {
+      return YouTubeAacAudioSource(
+        streamUri,
+        headers: headers,
+        knownLength: playbackData.format.contentLength,
+        tag: track,
+      );
+    }
+    return AudioSource.uri(streamUri, headers: headers, tag: track);
   }
 
   Future<bool> _isConnectedToWifi() async {
@@ -1683,7 +1728,7 @@ class AudioPlayerService {
       if (!await cacheDir.exists()) return 0;
       int totalBytes = 0;
       await for (final entity in cacheDir.list(followLinks: false)) {
-        if (entity is! File || !entity.path.endsWith('.audio')) continue;
+        if (entity is! File || !_isStreamCacheFile(entity.path)) continue;
         totalBytes += await entity.length();
       }
       return totalBytes;
@@ -1705,7 +1750,7 @@ class AudioPlayerService {
 
       final files = <File>[];
       await for (final entity in cacheDir.list(followLinks: false)) {
-        if (entity is File && entity.path.endsWith('.audio')) {
+        if (entity is File && _isStreamCacheFile(entity.path)) {
           files.add(entity);
         }
       }
@@ -1797,7 +1842,7 @@ class AudioPlayerService {
           'AudioPlayerService: Pre-cache in progress for ${track.id}, using direct stream',
         );
       }
-      return AudioSource.uri(streamUri, headers: headers, tag: track);
+      return _directStreamSource(streamUri, headers, track, playbackData);
     }
 
     if (!_allowProxyCachingSource) {
@@ -1816,7 +1861,7 @@ class AudioPlayerService {
           'AudioPlayerService: Proxy caching disabled, using direct stream for ${track.id}',
         );
       }
-      return AudioSource.uri(streamUri, headers: headers, tag: track);
+      return _directStreamSource(streamUri, headers, track, playbackData);
     }
 
     if (preferDirectStreamWithBackgroundPrecache) {
@@ -1833,7 +1878,7 @@ class AudioPlayerService {
           'AudioPlayerService: Skipping aggressive background cache for ${track.id} (Wi-Fi only)',
         );
       }
-      return AudioSource.uri(streamUri, headers: headers, tag: track);
+      return _directStreamSource(streamUri, headers, track, playbackData);
     }
 
     if (kDebugMode) {
@@ -1959,7 +2004,8 @@ class AudioPlayerService {
         final track = _queue[i];
         if (_precacheInProgress.contains(track.id)) continue;
 
-        String? resolvedLocalPath = track.localFilePath;
+        String? resolvedLocalPath =
+        track.localFilePath == null ? null : resolveAppPath(track.localFilePath!);
         if (resolvedLocalPath == null) {
           try {
             if (!Hive.isBoxOpen('music_downloads')) {
@@ -1967,7 +2013,7 @@ class AudioPlayerService {
             }
             final box = Hive.box<DownloadEntity>('music_downloads');
             final entity = box.values.where((e) => e.trackId == track.id).firstOrNull;
-            if (entity != null) resolvedLocalPath = entity.localPath;
+            if (entity != null) resolvedLocalPath = resolveAppPath(entity.localPath);
           } catch (_) {}
         }
 
@@ -2228,6 +2274,7 @@ class AudioPlayerService {
         await cacheFile.delete();
       }
       await tempFile.rename(cacheFile.path);
+      if (isIOS) await YouTubeMp4Fix.patchFile(cacheFile.path);
       await _touchCacheFile(cacheFile);
       // A whole YouTube file is what Automix analyses this track from.
       _offerToAutomix(track, cacheFile.path);
@@ -3760,7 +3807,9 @@ class AudioPlayerService {
       }
 
       // Check if track has a local file - play directly without streaming
-      String? resolvedLocalPath = _currentTrack!.localFilePath;
+      String? resolvedLocalPath = _currentTrack!.localFilePath == null
+          ? null
+          : resolveAppPath(_currentTrack!.localFilePath!);
       if (resolvedLocalPath == null) {
         try {
           if (!Hive.isBoxOpen('music_downloads')) {
@@ -3769,7 +3818,7 @@ class AudioPlayerService {
           final box = Hive.box<DownloadEntity>('music_downloads');
           final entity = box.values.where((e) => e.trackId == _currentTrack!.id).firstOrNull;
           if (entity != null) {
-            resolvedLocalPath = entity.localPath;
+            resolvedLocalPath = resolveAppPath(entity.localPath);
           }
         } catch (_) {}
       }
@@ -4623,7 +4672,7 @@ class AudioPlayerService {
     final automix = AutomixService.instance;
     if (!automix.enabled || _jamsModeEnabled) return;
     final local = track.localFilePath;
-    if (local != null) unawaited(automix.audioCached(track.id, local));
+    if (local != null) unawaited(automix.audioCached(track.id, resolveAppPath(local)));
     unawaited(automix.request(track.id, track.duration));
   }
 
@@ -4686,7 +4735,7 @@ class AudioPlayerService {
       final db = _ytPlayerUtils.loudnessDbFor(t.id);
       if (db != null) loudness[t.id] = db;
     }
-    if (isDesktop) DesktopLoudness.instance.update(loudness);
+    if (usesDartAudioDsp) DesktopLoudness.instance.update(loudness);
     unawaited(
       AutomixService.instance.sync(
         primary: _primaryPlayer.playerId,
@@ -5591,6 +5640,9 @@ class AudioPlayerService {
   /// Handle track completion
   void _onTrackComplete() {
     if (followsConnectLeader) return;
+    // iOS suspends a backgrounded app once its audio stops; this keeps it
+    // running while the next song resolves and starts.
+    if (isIOS) unawaited(IosNative.holdBackgroundTime(const Duration(seconds: 25)));
     // Emit track complete event (for Jams integration)
     if (_currentTrack != null) {
       _trackCompleteController.add(_currentTrack!);

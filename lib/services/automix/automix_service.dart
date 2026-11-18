@@ -91,7 +91,7 @@ class AutomixService extends ChangeNotifier {
   /// The engine started or paused a player itself.
   void Function(String playerId, bool playing)? onPlayState;
 
-  bool get enabled => _enabled;
+  bool get enabled => _enabled && available;
   AutomixPerformanceMode get mode => _mode;
 
   // ---- Desktop -------------------------------------------------------------
@@ -102,9 +102,9 @@ class AutomixService extends ChangeNotifier {
 
   DesktopAutomixEngine? _desktop;
 
-  /// Whether Automix can run here: always on Android, on desktop when the
-  /// native library and models were bundled.
-  bool get available => !isDesktop || AutomixPaths.available;
+  /// Whether Automix can run here: always on Android, on desktop and iOS
+  /// when the native library and models were bundled.
+  bool get available => (!isDesktop && !isIOS) || AutomixPaths.available;
 
   /// The desktop engine, once the player service has attached to it.
   DesktopAutomixEngine? get desktopEngine => _desktop;

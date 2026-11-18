@@ -74,7 +74,7 @@ class AutoEqService {
   static const _channel = MethodChannel('inzx/autoeq');
 
   static Future<T?> _invoke<T>(String method, [Map<String, Object?>? args]) async {
-    if (isDesktop) {
+    if (usesDartAudioDsp) {
       return await DesktopAutoEq.instance.invoke(method, args ?? const {}) as T?;
     }
     return _channel.invokeMethod<T>(method, args);

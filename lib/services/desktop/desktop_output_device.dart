@@ -6,6 +6,7 @@ import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 
 import '../automix/desktop/automix_native.dart' show AutomixPaths;
+import '../ios/ios_native.dart';
 
 /// The audio output in use. [key] identifies the device across runs.
 class OutputDevice {
@@ -29,6 +30,7 @@ class DesktopOutputDevice extends ChangeNotifier {
 
   OutputDevice? _current;
   Timer? _poll;
+  StreamSubscription<dynamic>? _routeEvents;
 
   OutputDevice? get current {
     _start();
@@ -36,7 +38,23 @@ class DesktopOutputDevice extends ChangeNotifier {
   }
 
   void _start() {
-    if (_poll != null) return;
+    if (_poll != null || _routeEvents != null) return;
+    if (Platform.isIOS) {
+      // iOS pushes route changes (inzx_ios's AudioRouteChannel).
+      _routeEvents = IosNative.routeEvents.receiveBroadcastStream().listen((event) {
+        final next = event is Map
+            ? OutputDevice(
+                event['key'] as String,
+                event['label'] as String? ?? 'Output',
+                formFactor: (event['formFactor'] as num?)?.toInt() ?? 0,
+              )
+            : null;
+        if (next?.key == _current?.key && next?.formFactor == _current?.formFactor) return;
+        _current = next;
+        notifyListeners();
+      }, onError: (Object _) {});
+      return;
+    }
     _current = _read();
     _poll = Timer.periodic(const Duration(seconds: 3), (_) {
       final next = _read();

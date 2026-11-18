@@ -15,6 +15,7 @@ import 'core/utils/platform_utils.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'services/audio_handler.dart';
 import 'services/desktop/desktop_bootstrap.dart';
+import 'services/ios/ios_bootstrap.dart';
 import 'services/github_release_update_service.dart';
 import 'services/jams/jams_background_service_native.dart';
 import 'services/notification_service.dart';
@@ -116,6 +117,15 @@ void main([List<String> args = const []]) async {
     debugPrint('✅ Hive initialized successfully');
   } catch (e) {
     debugPrint('⚠️ Hive initialization failed: $e');
+  }
+
+  // iOS: reopen picked music folders, start the audio tap's equaliser.
+  if (isIOS) {
+    try {
+      await initIosPlatform();
+    } catch (e, stack) {
+      AppLogger.e('iOS', 'iOS startup failed', e, stack);
+    }
   }
 
   // Listening statistics: follows the player from here on.

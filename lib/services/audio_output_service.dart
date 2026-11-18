@@ -101,12 +101,12 @@ class AudioOutputService {
       true;
 
   static Future<void> setLoudnessNormalization(bool on) async {
-    if (isDesktop) DesktopLoudness.instance.setEnabled(on);
+    if (usesDartAudioDsp) DesktopLoudness.instance.setEnabled(on);
     await (await SharedPreferences.getInstance()).setBool(loudnessKey, on);
   }
 
   static Future<void> setLoudnessOffOnSpeaker(bool on) async {
-    if (isDesktop) DesktopLoudness.instance.setOffOnSpeaker(on);
+    if (usesDartAudioDsp) DesktopLoudness.instance.setOffOnSpeaker(on);
     await (await SharedPreferences.getInstance()).setBool(loudnessOffOnSpeakerKey, on);
   }
 }

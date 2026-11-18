@@ -252,7 +252,11 @@ extension _DesktopLoudnessWiring on AudioPlayerService {
         final db = _ytPlayerUtils.loudnessDbFor(id);
         if (db != null) loudness.update({id: db});
       }
-      JustAudioMediaKit.setTrackGain(player.playerId, loudness.gainFor(id));
+      if (isIOS) {
+        IosAudioDsp.instance.setTrackGain(player.playerId, loudness.gainFor(id));
+      } else {
+        JustAudioMediaKit.setTrackGain(player.playerId, loudness.gainFor(id));
+      }
     }
   }
 }

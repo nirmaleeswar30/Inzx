@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:http/http.dart' as http;
 
 import 'package:inzx/core/services/cache/hive_service.dart';
+import 'package:inzx/core/utils/platform_utils.dart' show canPlayOpus;
 import 'package:inzx/data/entities/stream_cache_entity.dart';
 import 'package:inzx/data/repositories/music_repository.dart'
     show CacheAnalytics;
@@ -542,7 +543,10 @@ class YTPlayerUtils {
         }
 
         // First try Opus/WebM (more reliable for downloads)
-        var formatData = _selectOpusFormat(adaptiveFormats, quality: quality);
+        // iOS can't play Opus/WebM (AVPlayer has no WebM demuxer): AAC only.
+        var formatData = canPlayOpus
+            ? _selectOpusFormat(adaptiveFormats, quality: quality)
+            : null;
 
         // Fallback to AAC if no Opus available
         if (formatData == null) {
@@ -996,6 +1000,12 @@ class YTPlayerUtils {
           },
         )
         .toList();
+
+    // AVPlayer (iOS) can't demux WebM, so only the AAC/M4A renditions
+    // (itag 140, and 139 at low quality) are candidates there.
+    if (!canPlayOpus) {
+      audioFormats.removeWhere((f) => !(f['format'] as AudioFormat).isAac);
+    }
 
     if (audioFormats.isEmpty) {
       if (kDebugMode) {
