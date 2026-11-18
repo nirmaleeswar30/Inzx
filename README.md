@@ -6,7 +6,7 @@
 [![Latest Release](https://img.shields.io/github/v/release/nirmaleeswar30/Inzx?label=release&logo=github)](https://github.com/nirmaleeswar30/Inzx/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/nirmaleeswar30/Inzx/total?logo=github&color=success)](https://github.com/nirmaleeswar30/Inzx/releases)
 [![Flutter](https://img.shields.io/badge/Flutter-3-02569B?logo=flutter)](https://flutter.dev)
-[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Windows%20%7C%20Linux-3DDC84?logo=android&logoColor=white)](#installation)
+[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Windows%20%7C%20Linux-3DDC84?logo=android&logoColor=white)](#installation)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 [Website](https://inzx.nirmaleeswar.dev/) • [Features](#-features) • [Screenshots](#-screenshots) • [Installation](#-installation) • [Build from Source](#-building-from-source) • [Contributing](#-contributing)
@@ -194,7 +194,7 @@ Inzx is free and open source. If it makes your day a little better, consider sup
 
 ## 📥 Installation
 
-Inzx is officially supported on **Android**, **Windows**, and **Linux**.
+Inzx is officially supported on **Android**, **iOS** (beta), **Windows**, and **Linux**.
 
 ### 📱 Android
 Grab the latest APK one of two ways:
@@ -209,6 +209,22 @@ Grab the latest APK one of two ways:
 ```bash
 adb install app-release.apk
 ```
+</details>
+
+### 🍎 iOS (beta)
+Inzx for iPhone and iPad (iOS 17 or later) is a sideloaded app; it isn't on the App Store.
+
+- **AltStore / SideStore** (recommended) — add the source `https://inzx.nirmaleeswar.dev/altstore.json`, then install Inzx from it. Updates arrive through the source.
+- **Sideloadly / other tools** — download **`Inzx-<version>.ipa`** from the [latest release](https://github.com/nirmaleeswar30/Inzx/releases/latest) and install it with your Apple ID.
+
+With a free Apple ID, sideloaded apps must be refreshed every 7 days (AltStore and SideStore do it in the background).
+
+<details>
+<summary>What's different on iOS</summary>
+
+- YouTube streams and downloads are AAC (iOS can't play Opus/WebM); lossless add-on streams play when they're FLAC or ALAC files.
+- Your own music: put files in **Files → On My iPhone → Inzx → Music**, or add any folder from Files.
+- No hi-res/bit-perfect switch (iOS mixes all audio itself), no CarPlay yet, and Jams keep syncing only while music plays or the app is open.
 </details>
 
 ### 🪟 Windows
