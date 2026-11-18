@@ -44,7 +44,7 @@ extern "C" void ax_vocal_spectrogram(void);
 extern "C" void inzx_decode_region(void);
 extern "C" void inzx_decode_free(void);
 
-extern "C" const void *const inzx_ffi_symbols[] = {
+extern "C" __attribute__((used, visibility("default"))) const void *const inzx_ffi_symbols[] = {
     reinterpret_cast<const void *>(&ax_analysis_sample_rate),
     reinterpret_cast<const void *>(&ax_analyze),
     reinterpret_cast<const void *>(&ax_beat_hop),
@@ -82,9 +82,13 @@ extern "C" const void *const inzx_ffi_symbols[] = {
 };
 
 NSInteger InzxKeepFfiSymbols(void) {
+  // Read through a volatile pointer: otherwise the compiler folds the loop
+  // into a constant, drops the table, and the linker then drops everything
+  // it referenced (the first CI build shipped without Automix this way).
+  const void *const volatile *table = inzx_ffi_symbols;
   NSInteger count = 0;
   for (size_t i = 0; i < sizeof(inzx_ffi_symbols) / sizeof(inzx_ffi_symbols[0]); i++) {
-    if (inzx_ffi_symbols[i] != nullptr) count++;
+    if (table[i] != nullptr) count++;
   }
   return count;
 }

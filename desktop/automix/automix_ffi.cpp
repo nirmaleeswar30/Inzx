@@ -32,6 +32,10 @@
 #if defined(_WIN32)
 #include <windows.h>
 #define AX_API extern "C" __declspec(dllexport)
+#elif defined(__APPLE__)
+// iOS links this statically into the app; `used` keeps the linker from
+// dropping functions only Dart's FFI lookup (by name) calls.
+#define AX_API extern "C" __attribute__((visibility("default"), used))
 #else
 #define AX_API extern "C" __attribute__((visibility("default")))
 #endif
