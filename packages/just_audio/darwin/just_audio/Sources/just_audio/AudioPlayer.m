@@ -414,6 +414,13 @@
     // TODO: Check this. Shouldn't need to removeOutput
     // later?
     [playerItem addOutput:metadataOutput];
+
+    // Inzx patch (the iOS side of JustAudioHooks): every item this player
+    // builds, before it's queued, so the app can attach its audio mix (the
+    // equaliser / AutoEQ / loudness tap) to it. Posted synchronously.
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"JustAudioPlayerItemCreated"
+                                                        object:playerItem
+                                                      userInfo:@{@"playerId": _playerId}];
 }
 
 - (void)metadataOutput:(AVPlayerItemMetadataOutput *)output didOutputTimedMetadataGroups:(NSArray<AVTimedMetadataGroup *> *)groups fromPlayerItemTrack:(AVPlayerItemTrack *)track {
@@ -651,6 +658,10 @@
     // Set up an empty player
     if (!_player) {
         _player = [[AVQueuePlayer alloc] initWithItems:@[]];
+        // Inzx patch: the AVQueuePlayer behind each Dart player.
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"JustAudioPlayerCreated"
+                                                            object:_player
+                                                          userInfo:@{@"playerId": _playerId}];
         if (@available(macOS 10.12, iOS 10.0, *)) {
             _player.automaticallyWaitsToMinimizeStalling = _automaticallyWaitsToMinimizeStalling;
             // TODO: Remove these observers in dispose.
@@ -1328,6 +1339,10 @@
 
 - (void)dispose:(BOOL)calledFromDealloc {
     if (!_player) return;
+    // Inzx patch: this player's AVQueuePlayer is going away.
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"JustAudioPlayerDisposed"
+                                                        object:_player
+                                                      userInfo:@{@"playerId": _playerId}];
     if (_processingState != none) {
         [_player pause];
 

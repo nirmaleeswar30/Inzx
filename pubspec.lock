@@ -805,6 +805,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.20.3"
+  inzx_ios:
+    dependency: "direct main"
+    description:
+      path: "packages/inzx_ios"
+      relative: true
+    source: path
+    version: "1.0.0"
   io:
     dependency: transitive
     description:

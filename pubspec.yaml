@@ -92,6 +92,10 @@ dependencies:
   desktop_webview_window: ^0.4.2 # YouTube Music sign-in window
   win32: ^5.15.0 # Windows named pipes for Discord Rich Presence
   mobile_scanner: 7.2.1
+  # iOS-only native side (audio tap, routes, folders, widget, Automix). An
+  # iOS-only plugin, so it adds nothing to the Android build.
+  inzx_ios:
+    path: packages/inzx_ios
   qr_flutter: 4.1.0
 dev_dependencies:
   flutter_test:
