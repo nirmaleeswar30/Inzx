@@ -707,6 +707,10 @@ class DesktopAutomixEngine {
   /// CrossfadeController.loopPlanFor: the loop mix for this pair, or null.
   LoopMixPlan? _loopPlanFor(String active, QueueEntry current, QueueEntry next, TrackAnalysis currentAnalysis,
       TrackAnalysis nextAnalysis, Duration duration, Duration position) {
+    // Not where blends are live (iOS): a loop mix is a rendered clip, and
+    // handing over into one and out again can't be lined up exactly on
+    // AVPlayer, which was heard as a hiccup. Those pairs blend live instead.
+    if (host.mixesLive) return null;
     final pair = '${current.id}>${next.id}';
     String? refusal;
     if (AutomixNative.instance == null) {
