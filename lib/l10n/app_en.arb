@@ -10,6 +10,10 @@
   "@iosPasskeyHint": {
     "description": "Shown under YouTube Music sign-in on iOS, where Google's passkey option fails inside an app's web view."
   },
+  "explore": "Explore",
+  "@explore": {
+    "description": "The Explore tab: YouTube Music's new releases, charts and moods."
+  },
   "restart": "Restart",
   "dismiss": "Dismiss",
   "accentColor": "Accent Color",
