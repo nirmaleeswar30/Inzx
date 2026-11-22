@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import '../core/utils/secure_storage.dart';
+import 'secure_store.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'audio_routing_service.dart';
@@ -65,7 +65,7 @@ class InzxConnectService {
   static bool get isSupported => canShowQr || canScanQr;
 
   static const _sessionKey = 'inzx_connect_refresh_token';
-  static const _storage = inzxSecureStorage;
+  static final _storage = SecureStore.instance;
 
   SupabaseClient? _client;
   Future<void>? _opening;

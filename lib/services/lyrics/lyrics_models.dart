@@ -1,6 +1,8 @@
 /// Lyrics data models and provider interface
 library;
 
+import '../dynamic_font_service.dart';
+
 /// Represents a single word with precise start/end timing for karaoke sync
 class LyricWord {
   final String text;
@@ -202,13 +204,23 @@ class LyricResult {
   final String? lyrics; // Plain text lyrics
   final String source; // Provider name
 
-  const LyricResult({
+  LyricResult({
     required this.title,
     required this.artists,
     this.lines,
     this.lyrics,
     required this.source,
-  });
+  }) {
+    DynamicFontService.instance.ensureFontsFor(title);
+    if (lyrics != null && lyrics!.isNotEmpty) {
+      DynamicFontService.instance.ensureFontsFor(lyrics);
+    }
+    if (lines != null && lines!.isNotEmpty) {
+      for (var i = 0; i < lines!.length; i++) {
+        DynamicFontService.instance.ensureFontsFor(lines![i].text);
+      }
+    }
+  }
 
   bool get hasSyncedLyrics => lines != null && lines!.isNotEmpty;
   bool get hasPlainLyrics => lyrics != null && lyrics!.isNotEmpty;

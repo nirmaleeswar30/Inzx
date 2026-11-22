@@ -3,16 +3,21 @@
 # Modelled on Nivio's scripts/build_appimage.sh.
 #
 #   scripts/build_appimage.sh              # flutter build linux --release, then pack
+#   scripts/build_appimage.sh shorebird    # shorebird release linux, then pack
 #   SKIP_FLUTTER_BUILD=1 scripts/build_appimage.sh
 #
-# Needs: flutter, libmpv (Debian/Ubuntu: libmpv-dev), python3, readelf
+# Needs: flutter, libmpv (Debian/Ubuntu: libmpv-dev), WebKitGTK 4.1
+# (libwebkit2gtk-4.1-dev) with GStreamer's base plugins, python3, readelf
 # (binutils), and appimagetool (downloaded on first use, or
 # APPIMAGETOOL=/path).
 #
 # The AppImage carries its own libmpv and everything it links (FFmpeg, libass,
 # ...), so a host mpv update can't change playback, and a user's ~/.config/mpv
-# is never read. GPU drivers, glibc, X11/Wayland, GTK and WebKitGTK (the
-# YouTube Music sign-in window) come from the host, as they must.
+# is never read. It also carries WebKitGTK (the YouTube Music sign-in window)
+# with its helper processes and GStreamer, as Nivio does with WPE WebKit: the
+# webview plugin links it, so a host without it couldn't start Inzx at all.
+# Only glibc, GPU drivers, systemd/dbus/ALSA, core X11/Wayland and the
+# GTK/GLib/Pango/Cairo core come from the host (Nivio's list).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -143,90 +148,127 @@ cp -f "$LIBMPV_REAL" "$APPDIR/lib/$(basename "$LIBMPV_REAL")"
 ln -sf libmpv.so.2 "$APPDIR/lib/libmpv.so"
 mkdir -p "$APPDIR/etc/mpv"   # empty MPV_HOME, see AppRun
 
+echo "==> Bundling WebKitGTK"
+# The webview plugin (YouTube Music sign-in) links WebKitGTK 4.1, so on a
+# host without it Inzx didn't start at all ("libwebkit2gtk-4.1.so.0: cannot
+# open shared object file"). The library and its dependencies are bundled by
+# the scan below; its helper processes (WebKitWebProcess and co.) are copied
+# here, and the library is pointed at them further down.
+WEBKIT_LIBDIR="$(pkg-config --variable=libdir webkit2gtk-4.1 2>/dev/null || true)"
+if [[ -z "$WEBKIT_LIBDIR" || ! -d "$WEBKIT_LIBDIR/webkit2gtk-4.1" ]]; then
+  for d in /usr/lib/x86_64-linux-gnu /usr/lib64 /usr/lib; do
+    [[ -d "$d/webkit2gtk-4.1" ]] && { WEBKIT_LIBDIR="$d"; break; }
+  done
+fi
+WEBKIT_HELPERS_SRC="$WEBKIT_LIBDIR/webkit2gtk-4.1"
+[[ -x "$WEBKIT_HELPERS_SRC/WebKitWebProcess" ]] || {
+  echo "WebKitGTK 4.1 helper processes not found (install libwebkit2gtk-4.1-dev)" >&2
+  exit 1
+}
+# The whole helper directory, as Nivio bundles wpe-webkit-2.0.
+mkdir -p "$APPDIR/lib/webkit2gtk-4.1"
+cp -a "$WEBKIT_HELPERS_SRC/." "$APPDIR/lib/webkit2gtk-4.1/"
+echo "    bundled WebKitGTK helper processes from $WEBKIT_HELPERS_SRC"
+
+# GStreamer plugins and scanner (WebKitGTK links GStreamer), the whole plugin
+# directory, as Nivio bundles it. Debian/Ubuntu keep the scanner elsewhere;
+# it goes beside the plugins here, where AppRun looks for it.
+GST_PLUGINS_SRC="$(pkg-config --variable=pluginsdir gstreamer-1.0 2>/dev/null || true)"
+[[ -d "$GST_PLUGINS_SRC" ]] || GST_PLUGINS_SRC="$WEBKIT_LIBDIR/gstreamer-1.0"
+[[ -d "$GST_PLUGINS_SRC" ]] || GST_PLUGINS_SRC="/usr/lib/gstreamer-1.0"
+if [[ -d "$GST_PLUGINS_SRC" ]]; then
+  mkdir -p "$APPDIR/lib/gstreamer-1.0"
+  cp -a "$GST_PLUGINS_SRC/." "$APPDIR/lib/gstreamer-1.0/"
+  echo "    bundled GStreamer 1.0 plugins from $GST_PLUGINS_SRC"
+fi
+if [[ ! -x "$APPDIR/lib/gstreamer-1.0/gst-plugin-scanner" ]]; then
+  GST_SCANNER_SRC="$(pkg-config --variable=pluginscannerdir gstreamer-1.0 2>/dev/null || true)/gst-plugin-scanner"
+  [[ -x "$GST_SCANNER_SRC" ]] || GST_SCANNER_SRC="$(find "$WEBKIT_LIBDIR" -name gst-plugin-scanner -type f 2>/dev/null | head -1)"
+  if [[ -x "$GST_SCANNER_SRC" ]]; then
+    cp -a "$GST_SCANNER_SRC" "$APPDIR/lib/gstreamer-1.0/gst-plugin-scanner"
+  fi
+fi
+
 echo "==> Bundling shared libraries"
+# Nivio's dependency bundler, as is: every library the AppDir's binaries,
+# libraries and plugins load (HarfBuzz-ICU, ICU, XML, codecs, GStreamer,
+# ...), except the few that must come from the host.
 APPDIR="$APPDIR" python3 - <<'PY'
-import os, re, shutil, subprocess
+import os, subprocess, re, shutil
 
-appdir = os.environ["APPDIR"]
+appdir = os.environ.get("APPDIR")
 libdir = os.path.join(appdir, "lib")
-# From the host, always: glibc, GPU/display drivers, audio and session
-# daemons, X11/Wayland, the GTK/GLib stack (themes, settings) and WebKitGTK
-# (its helper processes live at fixed host paths), plus the low-level
-# libraries the AppImage project's excludelist keeps on the host: the C++
-# runtime, compression, TLS and the like. They are ABI-stable, and a copy
-# from the (older) build host would be loaded by the host's own GTK and
-# WebKit too, through LD_LIBRARY_PATH, which also reaches WebKit's helper
-# processes.
-HOST = (
-    "libc.so", "libm.so", "libmvec.so", "libpthread.so", "libdl.so", "librt.so", "ld-linux",
-    "libresolv.so", "libutil.so", "libanl.so", "libnss_", "libBrokenLocale.so", "libthread_db.so",
-    "libstdc++.so", "libgcc_s.so", "libatomic.so", "libgomp.so",
-    "libGL.so", "libGLX.so", "libEGL.so", "libGLdispatch.so", "libOpenGL.so", "libdrm.so", "libgbm.so",
-    "libvulkan.so", "libglapi.so", "libepoxy.so", "libOpenCL.so", "libva.so", "libva-drm.so",
-    "libva-x11.so", "libva-wayland.so", "libvdpau.so",
-    "libsystemd.so", "libudev.so", "libdbus-1.so", "libasound.so", "libpulse", "libpipewire", "libjack.so",
-    "libX11.so", "libX11-xcb.so", "libXau.so", "libXdmcp.so", "libXext.so", "libXfixes.so", "libXi.so",
-    "libXrender.so", "libXrandr.so", "libXcursor.so", "libXinerama.so", "libXcomposite.so",
-    "libXdamage.so", "libXss.so", "libXv.so", "libXpresent.so", "libXtst.so", "libICE.so", "libSM.so",
-    "libxcb", "libwayland-", "libxkbcommon",
-    "libgtk-3.so", "libgdk-3.so", "libgdk_pixbuf-2.0.so", "libgio-2.0.so", "libglib-2.0.so",
-    "libgobject-2.0.so", "libgmodule-2.0.so", "libgthread-2.0.so", "libpango", "libcairo", "libatk",
-    "libatspi.so", "libharfbuzz", "libfontconfig.so", "libfreetype.so", "libfribidi.so", "libthai.so",
-    "libdatrie.so", "libgraphite2.so", "libpixman-1.so", "libpng16.so",
-    "libwebkit2gtk", "libjavascriptcoregtk", "libsoup-", "libsecret-1.so", "libgst",
-    "libz.so", "libexpat.so", "libffi.so", "libpcre2-", "libmount.so", "libblkid.so", "libuuid.so",
-    "libselinux.so", "libcom_err.so", "libgpg-error.so", "libgcrypt.so", "libkeyutils.so",
-    "libgnutls.so", "libnettle.so", "libhogweed.so", "libgmp.so", "libtasn1.so", "libp11-kit.so",
-    "libidn2.so", "libunistring.so", "libgssapi_krb5.so", "libkrb5", "libk5crypto.so",
+
+# Fundamental host / graphics driver / desktop libraries that MUST come from host OS
+SYSTEM_EXCLUDES = (
+    # glibc
+    "libc.so", "libm.so", "libpthread.so", "libdl.so", "librt.so", "ld-linux",
+    # GPU / DRM / Display hardware drivers
+    "libGL.so", "libGLX.so", "libEGL.so", "libGLdispatch.so", "libdrm.so", "libgbm.so", "libvulkan.so",
+    # Low-level system & audio hardware daemons
+    "libsystemd.so", "libudev.so", "libdbus-1.so", "libasound.so",
+    # X11 / Wayland core client protocols
+    "libX11.so", "libX11-xcb.so", "libXau.so", "libXdmcp.so", "libXext.so", "libXfixes.so", "libXi.so", "libXrender.so",
+    "libxcb", "libwayland-client.so", "libwayland-server.so", "libwayland-cursor.so", "libwayland-egl.so",
+    # GTK / GLib core runtime (host themes & desktop settings)
+    "libgtk-3.so", "libgdk-3.so", "libgdk_pixbuf-2.0.so",
+    "libgio-2.0.so", "libglib-2.0.so", "libgobject-2.0.so", "libgmodule-2.0.so",
+    "libpango-1.0.so", "libpangocairo-1.0.so", "libpangoft2-1.0.so", "libcairo.so", "libcairo-gobject.so"
 )
-host = lambda soname: soname.startswith(HOST)
 
-def needed(path):
-    """The DT_NEEDED entries of an ELF file: its direct dependencies only."""
-    try:
-        out = subprocess.check_output(["readelf", "-dW", path], stderr=subprocess.DEVNULL).decode()
-    except subprocess.CalledProcessError:
-        return []
-    return re.findall(r"\(NEEDED\)\s+Shared library: \[([^\]]+)\]", out)
+def is_excluded(soname):
+    return any(soname.startswith(prefix) for prefix in SYSTEM_EXCLUDES)
 
-def resolved(path):
-    """Where the dynamic linker finds each library [path] loads."""
-    try:
-        out = subprocess.check_output(["ldd", path], stderr=subprocess.DEVNULL, env={**os.environ, "LD_LIBRARY_PATH": libdir}).decode()
-    except subprocess.CalledProcessError:
-        return {}
-    return dict(re.findall(r"^\s*(\S+)\s+=>\s+(\S+)\s+\(", out, re.M))
-
-# Walk direct dependencies only: a library reached solely through a host
-# library (GTK's, WebKit's) is the host's business and must not be copied.
-todo, seen, copy = [], set(), {}
-for root, _, files in os.walk(appdir):
+targets = []
+# Find all ELF binaries and libraries in AppDir
+for root, dirs, files in os.walk(appdir):
     for f in files:
-        path = os.path.join(root, f)
-        if os.path.islink(path):
-            continue
-        try:
-            with open(path, "rb") as fh:
-                if fh.read(4) == b"\x7fELF":
-                    todo.append(path)
-        except OSError:
-            pass
-while todo:
-    cur = todo.pop()
-    if cur in seen:
+        p = os.path.join(root, f)
+        if not os.path.islink(p):
+            try:
+                with open(p, "rb") as fp:
+                    if fp.read(4) == b"\x7fELF":
+                        targets.append(p)
+            except:
+                pass
+
+to_copy = {}
+to_inspect = list(targets)
+visited = set()
+
+while to_inspect:
+    curr = to_inspect.pop(0)
+    if curr in visited:
         continue
-    seen.add(cur)
-    where = resolved(cur)
-    for soname in needed(cur):
-        real = where.get(soname)
-        if host(soname) or not real or not os.path.isfile(real) or real.startswith(appdir):
-            continue
-        if soname not in copy and not os.path.exists(os.path.join(libdir, soname)):
-            copy[soname] = real
-            todo.append(real)
-for soname, real in copy.items():
-    shutil.copy2(real, os.path.join(libdir, soname))
-print(f"    bundled {len(copy)} libraries")
+    visited.add(curr)
+    try:
+        out = subprocess.check_output(["ldd", curr], stderr=subprocess.DEVNULL).decode()
+        for line in out.splitlines():
+            m = re.search(r'^\s*([^\s]+)\s+=>\s+([^\s]+)\s+\(', line)
+            if m:
+                soname, realpath = m.group(1), m.group(2)
+                if is_excluded(soname):
+                    continue
+                if not os.path.isfile(realpath):
+                    continue
+                if realpath.startswith(("/usr/lib", "/lib", "/usr/local/lib")):
+                    dest = os.path.join(libdir, soname)
+                    if not os.path.exists(dest) and soname not in to_copy:
+                        to_copy[soname] = realpath
+                        to_inspect.append(realpath)
+    except Exception as e:
+        pass
+
+copied_count = 0
+for soname, realpath in to_copy.items():
+    dest = os.path.join(libdir, soname)
+    try:
+        shutil.copy2(realpath, dest)
+        copied_count += 1
+    except Exception as e:
+        print(f"    could not copy {soname}: {e}")
+
+print(f"    bundled {copied_count} runtime shared libraries (including HarfBuzz-ICU, codecs, GStreamer)")
 PY
 
 # Everything libmpv decodes with must resolve inside the AppDir.
@@ -243,6 +285,40 @@ for dep in libavcodec libavformat libavutil libswscale libswresample libass; do
     exit 1
   fi
 done
+
+echo "==> Pointing WebKitGTK at its bundled helper processes"
+# WebKitGTK finds its helper processes and injected bundle at a directory
+# compiled into the library, and (outside developer builds) ignores any
+# override. As Nivio does for WPE WebKit, the bundled copy's path is
+# rewritten to a short fixed one under /tmp, which AppRun links to this
+# AppImage's helpers. Keep WEBKIT_HELPERS in AppRun in step with this.
+WEBKIT_HELPERS_LINK="/tmp/inzx-webkitgtk"
+APPDIR="$APPDIR" OLD="$WEBKIT_HELPERS_SRC" NEW="$WEBKIT_HELPERS_LINK" python3 - <<'PY'
+import glob, os, sys
+
+old, new = os.environ["OLD"].encode(), os.environ["NEW"].encode()
+if len(new) > len(old):
+    sys.exit(f"helper path {new!r} is longer than the compiled-in {old!r}")
+pairs = [
+    (old + b"\0", new + b"\0" * (len(old) - len(new) + 1)),
+    (old + b"/injected-bundle/\0",
+     new + b"/injected-bundle/\0" + b"\0" * (len(old) - len(new))),
+]
+patched = 0
+for path in glob.glob(os.path.join(os.environ["APPDIR"], "lib", "libwebkit2gtk-4.1.so*")):
+    if os.path.islink(path):
+        continue
+    data = open(path, "rb").read()
+    for before, after in pairs:
+        if data.count(before) != 1:
+            sys.exit(f"{os.path.basename(path)}: expected {before!r} once, found {data.count(before)}")
+        data = data.replace(before, after)
+    open(path, "wb").write(data)
+    patched += 1
+if patched != 1:
+    sys.exit(f"expected one bundled libwebkit2gtk-4.1, patched {patched}")
+print(f"    {old.decode()} -> {new.decode()}")
+PY
 
 echo "==> Icon, desktop entry, AppRun"
 ICON="$ROOT/assets/logo_transparent.png"
@@ -443,7 +519,31 @@ PY
   fi
 fi
 
-export LD_LIBRARY_PATH="$HERE/lib:${LD_LIBRARY_PATH:-}"
+export LD_LIBRARY_PATH="$HERE/lib:$HERE/lib/webkit2gtk-4.1:${LD_LIBRARY_PATH:-}"
+export XDG_DATA_DIRS="$HERE/share:/usr/share:${XDG_DATA_DIRS:-}"
+
+# WebKitGTK (the YouTube Music sign-in window) ships here, so Inzx runs where
+# it isn't installed. The build pointed its compiled-in helper path at
+# /tmp/inzx-webkitgtk (keep in step with WEBKIT_HELPERS_LINK in the build
+# script): link that to this AppImage's helpers. A link that still works
+# with this WebKit is left alone: a second launch (which hands over to the
+# running Inzx and exits, taking its mount with it) must not leave the
+# running one's helpers pointing at a path that's about to vanish.
+WEBKIT_HELPERS=/tmp/inzx-webkitgtk
+if [ ! -e "$WEBKIT_HELPERS" ] ||
+  ! cmp -s "$WEBKIT_HELPERS/WebKitWebProcess" "$HERE/lib/webkit2gtk-4.1/WebKitWebProcess"; then
+  if [ -L "$WEBKIT_HELPERS" ] || [ ! -e "$WEBKIT_HELPERS" ]; then
+    ln -sfn "$HERE/lib/webkit2gtk-4.1" "$WEBKIT_HELPERS" 2>/dev/null || true
+  fi
+fi
+# Configure GStreamer to use bundled plugins (as Nivio does).
+export GST_PLUGIN_SYSTEM_PATH_1_0="$HERE/lib/gstreamer-1.0:${GST_PLUGIN_SYSTEM_PATH_1_0:-}"
+export GST_PLUGIN_SCANNER_1_0="$HERE/lib/gstreamer-1.0/gst-plugin-scanner"
+
+# Disable WebKit sandbox inside AppImage container (as Nivio does).
+export WEBKIT_DISABLE_SANDBOX=1
+export WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1
+
 # Playback depends only on what ships here: media_kit (and Inzx's own libmpv
 # users) load the bundled library, and mpv reads an empty, read-only config
 # dir instead of the user's ~/.config/mpv.

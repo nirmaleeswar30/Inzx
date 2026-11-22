@@ -1,8 +1,7 @@
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../core/utils/secure_storage.dart';
+import 'secure_store.dart';
 import 'ytmusic_api_service.dart';
 
 /// Manages YouTube Music authentication state and cookie persistence
@@ -10,7 +9,7 @@ class YTMusicAuthService {
   static const String _cookiesKey = 'ytmusic_cookies';
   static const String _accountInfoKey = 'ytmusic_account_info';
 
-  final FlutterSecureStorage _secureStorage = inzxSecureStorage;
+  final SecureStore _secureStorage = SecureStore.instance;
   final InnerTubeService _innerTubeService;
 
   Map<String, String> _cookies = {};
