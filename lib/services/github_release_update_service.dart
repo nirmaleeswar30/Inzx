@@ -216,8 +216,8 @@ class GithubReleaseUpdateService {
   }
 
   String? _pickInzxApkDownloadUrl(dynamic assetsRaw) {
-    // Desktop users get the release page, not an APK.
-    if (assetsRaw is! List || isDesktop) return null;
+    // Desktop and iOS users get the release page, not an APK.
+    if (assetsRaw is! List || isDesktop || isIOS) return null;
 
     for (final item in assetsRaw) {
       if (item is! Map<String, dynamic>) continue;

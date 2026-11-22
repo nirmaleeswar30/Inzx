@@ -968,7 +968,7 @@ class _DesktopSidebar extends ConsumerWidget {
 
     final tabs = [
       (Icons.home_outlined, Icons.home_rounded, l10n.home),
-      (Icons.explore_outlined, Icons.explore_rounded, 'Explore'),
+      (Icons.explore_outlined, Icons.explore_rounded, l10n.explore),
       (Icons.library_music_outlined, Icons.library_music_rounded, l10n.library),
       (Icons.folder_outlined, Icons.folder_rounded, l10n.folders),
     ];

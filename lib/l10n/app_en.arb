@@ -2,6 +2,18 @@
   "@@locale": "en",
   "appTitle": "Inzx",
   "updateDownloadedBanner": "Update downloaded. Restart the app to apply.",
+  "iosReopenToApply": "Swipe Inzx away in the app switcher and open it again to finish updating.",
+  "@iosReopenToApply": {
+    "description": "Shown on iOS, where an app can't close itself, when an update needs a restart."
+  },
+  "iosPasskeyHint": "Passkeys can't be used inside apps on iPhone. On Google's page, tap \"Try another way\" and use your password or a prompt on your phone.",
+  "@iosPasskeyHint": {
+    "description": "Shown under YouTube Music sign-in on iOS, where Google's passkey option fails inside an app's web view."
+  },
+  "explore": "Explore",
+  "@explore": {
+    "description": "The Explore tab: YouTube Music's new releases, charts and moods."
+  },
   "restart": "Restart",
   "dismiss": "Dismiss",
   "accentColor": "Accent Color",

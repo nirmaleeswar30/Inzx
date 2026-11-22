@@ -25,12 +25,35 @@ class AutomixPaths {
       ? p.join(_exeDir, 'inzx_automix.dll')
       : p.join(_exeDir, 'lib', 'libinzx_automix.so');
 
+  /// Next to the executable on desktop; on iOS inside Runner.app, where
+  /// ios/scripts/configure_xcode.rb's build phase copies them.
   static String get modelsDir => p.join(_exeDir, 'data', 'automix');
 
   static String get beatModel => p.join(modelsDir, 'beat_this_final0_q8.onnx');
   static String get vocalModel => p.join(modelsDir, 'vocals_umxhq_int8.onnx');
 
-  static bool get available => File(library).existsSync();
+  static bool get available {
+    if (Platform.isIOS) return _iosAvailable ??= _probeIos();
+    return File(library).existsSync();
+  }
+
+  static bool? _iosAvailable;
+
+  /// iOS links the library into the app (packages/inzx_ios), so its symbols
+  /// are in the process; the models must have been bundled too.
+  static bool _probeIos() {
+    try {
+      return DynamicLibrary.process().providesSymbol('ax_analyze') &&
+          File(beatModel).existsSync() &&
+          File(vocalModel).existsSync();
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// The library, for this isolate.
+  static DynamicLibrary open() =>
+      Platform.isIOS ? DynamicLibrary.process() : DynamicLibrary.open(library);
 }
 
 // ---- inzx_automix ------------------------------------------------------------
@@ -114,7 +137,7 @@ class AutomixNative {
     if (_instance != null) return _instance;
     if (!AutomixPaths.available) return null;
     try {
-      return _instance = AutomixNative._(DynamicLibrary.open(AutomixPaths.library));
+      return _instance = AutomixNative._(AutomixPaths.open());
     } catch (_) {
       return null;
     }
@@ -405,7 +428,90 @@ class DecodedAudio {
   }
 }
 
-class MpvDecoder {
+/// Decodes a region of a file or stream to float PCM: libmpv on desktop,
+/// AVFoundation on iOS.
+abstract interface class PcmDecoder {
+  /// The decoder for this platform (and isolate), or null where none loads.
+  static PcmDecoder? get instance =>
+      Platform.isIOS ? IosPcmDecoder.instance : MpvDecoder.instance;
+
+  /// Decodes [source] (a file path or URL) from [start] seconds to [end]
+  /// (or the end of the file) at [sampleRate], mono or stereo. Null if it
+  /// couldn't be opened or decoded. [scratch] is a writable directory.
+  DecodedAudio? decode(
+    String source, {
+    required String scratch,
+    double start = 0,
+    double? end,
+    int sampleRate = 48000,
+    int channels = 2,
+    Map<String, String> headers = const {},
+  });
+}
+
+typedef _IosDecodeC = Int64 Function(
+    Pointer<Utf8>, Double, Double, Int32, Int32, Pointer<Pointer<Float>>);
+typedef _IosDecodeD = int Function(
+    Pointer<Utf8>, double, double, int, int, Pointer<Pointer<Float>>);
+
+/// iOS: AVAssetReader through inzx_ios's `inzx_decode_region` (local files
+/// only: on iOS Automix decodes the stream cache's whole YouTube copy, which
+/// is what an AVAssetReader can open).
+class IosPcmDecoder implements PcmDecoder {
+  IosPcmDecoder._(DynamicLibrary lib)
+      : _decode = lib.lookupFunction<_IosDecodeC, _IosDecodeD>('inzx_decode_region'),
+        _free = lib.lookupFunction<_FreeC, _FreeD>('inzx_decode_free');
+
+  static IosPcmDecoder? _instance;
+
+  static IosPcmDecoder? get instance {
+    if (_instance != null) return _instance;
+    try {
+      return _instance = IosPcmDecoder._(DynamicLibrary.process());
+    } catch (_) {
+      return null;
+    }
+  }
+
+  final _IosDecodeD _decode;
+  final _FreeD _free;
+
+  @override
+  DecodedAudio? decode(
+    String source, {
+    required String scratch,
+    double start = 0,
+    double? end,
+    int sampleRate = 48000,
+    int channels = 2,
+    Map<String, String> headers = const {},
+  }) {
+    final uri = Uri.tryParse(source);
+    final String path;
+    if (uri != null && uri.isScheme('file')) {
+      path = uri.toFilePath();
+    } else if (uri != null && uri.hasScheme && uri.scheme.length > 1) {
+      return null; // remote: not readable by AVAssetReader
+    } else {
+      path = source;
+    }
+    if (!File(path).existsSync()) return null;
+    final cPath = path.toNativeUtf8();
+    final out = calloc<Pointer<Float>>();
+    try {
+      final frames = _decode(cPath, start, end ?? -1, sampleRate, channels, out);
+      if (frames <= 0 || out.value == nullptr) return null;
+      final samples = Float32List.fromList(out.value.asTypedList(frames * channels));
+      return DecodedAudio(samples, sampleRate, channels);
+    } finally {
+      if (out.value != nullptr) _free(out.value.cast());
+      calloc.free(out);
+      calloc.free(cPath);
+    }
+  }
+}
+
+class MpvDecoder implements PcmDecoder {
   MpvDecoder._(DynamicLibrary lib)
       : _create = lib.lookupFunction<_MpvCreateC, _MpvCreateC>('mpv_create'),
         _setOption = lib.lookupFunction<_MpvSetOptC, _MpvSetOptD>('mpv_set_option_string'),
@@ -449,6 +555,7 @@ class MpvDecoder {
   /// Decodes [source] (a file path or URL) from [start] seconds to [end]
   /// (or the end of the file) at [sampleRate], mono or stereo. Null if mpv
   /// couldn't open or decode it. [scratch] is a writable directory.
+  @override
   DecodedAudio? decode(
     String source, {
     required String scratch,

@@ -4,6 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import '../../core/utils/platform_utils.dart' show isIOS;
 import 'addon_models.dart';
 
 /// The shared client signing secret for LastWave addons. It's LastWave's
@@ -391,6 +392,16 @@ class AddonClient {
         transport == 'dash' ||
         mime.contains('dash');
     final bitrate = inner['bitrate'];
+
+    // AVPlayer (iOS) has no Opus/Vorbis in Ogg or WebM: such a stream is a
+    // miss there, and the player falls back to the next source. (DASH it
+    // gets as one fragmented MP4: see DashFmp4AudioSource.)
+    if (isIOS) {
+      final codec = _codecOf(inner, format, mime, path, assumeFlac: assumeFlac);
+      if (codec == 'opus' || codec == 'vorbis') {
+        throw AddonMiss('$codec stream (not playable on iOS)');
+      }
+    }
 
     return AddonStream(
       url: url,

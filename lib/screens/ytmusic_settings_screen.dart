@@ -49,6 +49,7 @@ import 'downloads_screen.dart';
 import 'widgets/sleep_timer_sheet.dart';
 import '../services/scrobbling/scrobble_service.dart';
 import '../core/utils/platform_utils.dart';
+import '../core/utils/app_restart.dart';
 
 /// Provider for sync service
 final ytMusicSyncServiceProvider = Provider<YTMusicSyncService>((ref) {
@@ -4043,7 +4044,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
             ),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: _accentColor),
-              onPressed: () => SystemNavigator.pop(),
+              onPressed: () => closeAppForUpdate(dialogContext),
               child: const Text('Restart App'),
             ),
           ],

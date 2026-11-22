@@ -247,7 +247,7 @@ export default async function handler(req, res) {
   ${safe.subheading ? `<p class="sub">${safe.subheading}</p>` : '<p class="sub"></p>'}
   ${safe.code ? `<div class="code">${safe.code.split('').map((c) => `<b>${c}</b>`).join('')}</div>` : ''}
   <a class="btn primary" href="${safe.deepLink}">${safe.cta}</a>
-  <a class="btn ghost" href="${RELEASES}" rel="noopener">Get Inzx for Android</a>
+  <a class="btn ghost" href="${RELEASES}" rel="noopener">Get Inzx (Android, iPhone)</a>
 </main>
 <script>try { window.location.href = ${JSON.stringify(deepLink)}; } catch (_) {}</script>
 </body>

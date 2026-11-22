@@ -1,0 +1,92 @@
+# Builds Inzx for iOS on a macOS runner and packages an unsigned IPA for
+# sideloading (AltStore, SideStore, Sideloadly). The IPA is uploaded as a
+# workflow artifact, and attached to a GitHub release when one is published.
+#
+# Set the repository secret ENV_FILE to the contents of .env; without it the
+# app builds from .env.example, and Jams and sign-ins that read keys from .env
+# won't work.
+name: iOS build
+
+on:
+  push:
+    branches: [feat/ios-port, main]
+    paths-ignore:
+      - 'website/**'
+      - '**.md'
+  pull_request:
+    paths-ignore:
+      - 'website/**'
+      - '**.md'
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build IPA
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.7
+          cache: true
+
+      - name: Write .env
+        run: |
+          if [ -n "$ENV_FILE" ]; then
+            printf '%s' "$ENV_FILE" > .env
+          else
+            echo "::warning title=No ENV_FILE secret::Built from .env.example: Jams, Inzx Connect and Discord will not work in this IPA."
+            if [ "${{ github.event_name }}" = "release" ]; then exit 1; fi
+            cp .env.example .env
+          fi
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+
+      - name: Show tools
+        run: |
+          xcodebuild -version
+          flutter --version
+          pod --version
+
+      - name: Get packages
+        run: flutter pub get --enforce-lockfile
+
+      - name: Configure the Xcode project (widget extension, bundled resources)
+        run: |
+          gem install xcodeproj --no-document --user-install || true
+          ruby ios/scripts/configure_xcode.rb
+
+      - name: Build
+        run: flutter build ios --release --no-codesign --suppress-analytics
+
+      - name: Package IPA
+        id: ipa
+        run: echo "path=$(bash scripts/ios/make_ipa.sh)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: inzx-ios-ipa
+          path: ${{ steps.ipa.outputs.path }}
+          if-no-files-found: error
+
+      - name: Attach to the release
+        if: github.event_name == 'release'
+        run: gh release upload "${{ github.event.release.tag_name }}" "${{ steps.ipa.outputs.path }}#Inzx.ipa" --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}

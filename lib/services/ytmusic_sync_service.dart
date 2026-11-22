@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show compute, kDebugMode;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../core/utils/secure_storage.dart';
 import '../models/models.dart';
 import 'ytmusic_api_service.dart';
 
@@ -12,7 +13,7 @@ class YTMusicSyncService {
   static const String _subscribedArtistsKey = 'ytmusic_subscribed_artists';
   static const String _lastSyncKey = 'ytmusic_last_sync';
 
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final FlutterSecureStorage _storage = inzxSecureStorage;
   final InnerTubeService _innerTube;
 
   // Cached data

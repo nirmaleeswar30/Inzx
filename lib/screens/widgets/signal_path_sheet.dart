@@ -190,12 +190,12 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
       good = true;
     } else if (tier != null && source != null && mixer != null && !resampled) {
       badge = tier.toUpperCase();
-      line = 'Lossless all the way to Android\'s mixer, at the track\'s own '
+      line = 'Lossless all the way to $_mixerOwner\'s mixer, at the track\'s own '
           '${_khz(source)}';
       good = true;
     } else if (tier != null && resampled) {
       badge = '$tier · RESAMPLED'.toUpperCase();
-      line = 'Lossless source; Android resamples ${_khz(source)} → '
+      line = 'Lossless source; $_mixerOwner resamples ${_khz(source)} → '
           '${_khz(mixer)} for this output';
       good = true;
     } else if (tier != null) {
@@ -310,7 +310,7 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
         icon: Icons.merge_type_rounded,
         title: isDesktop
             ? (isLinuxDesktop ? 'Linux audio output' : 'Windows audio output')
-            : 'Android mixer',
+            : '$_mixerOwner mixer',
         value: bitPerfect && !isDesktop
             ? 'Bypassed'
             : (outputRate == null ? 'Unknown' : _khz(outputRate)),
@@ -322,7 +322,7 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
             ),
           if (!isDesktop && output?.trackSampleRate != null)
             (
-              'Sent to Android',
+              'Sent to $_mixerOwner',
               '${output!.trackEncoding ?? 'PCM'} • '
                   '${_khz(output.trackSampleRate!)}',
             ),
@@ -640,3 +640,6 @@ class SignalPathColors {
     return accent;
   }
 }
+
+/// Whose mixer the phone's audio goes through.
+String get _mixerOwner => isIOS ? 'iOS' : 'Android';

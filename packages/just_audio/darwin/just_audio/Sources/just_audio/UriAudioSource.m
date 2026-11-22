@@ -73,8 +73,10 @@
         item = [[IndexedPlayerItem alloc] initWithAsset:asset];
     }
     if (@available(macOS 10.13, iOS 11.0, *)) {
-        // This does the best at reducing distortion on voice with speeds below 1.0
-        item.audioTimePitchAlgorithm = AVAudioTimePitchAlgorithmTimeDomain;
+        // Inzx patch: Spectral, as BitChord-iOS uses. Automix beat-matches by
+        // playing the incoming song a few percent fast or slow, and on music
+        // the time-domain algorithm (just_audio's default) warbles there.
+        item.audioTimePitchAlgorithm = AVAudioTimePitchAlgorithmSpectral;
     }
     if (@available(macOS 10.12, iOS 10.0, *)) {
         if (_loadControl.preferredForwardBufferDuration != (id)[NSNull null]) {

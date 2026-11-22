@@ -2,6 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/l10n/app_localizations_x.dart';
+import '../../core/utils/platform_utils.dart' show isDesktop;
 import '../../models/explore_page.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
@@ -21,6 +23,18 @@ const double _kListColumnWidth = 400;
 const double _kMoodTileWidth = 200;
 const double _kMoodTileHeight = 48;
 const int _kRowsPerColumn = 4;
+
+/// Phone sizing: Explore was laid out for the desktop window, and is a tab
+/// on Android and iOS too.
+bool _compact(BuildContext context) => !isDesktop || MediaQuery.sizeOf(context).width < 700;
+
+double _gutter(BuildContext context) => _compact(context) ? 16 : _kPageGutter;
+
+/// A chart column: as wide as the screen allows on a phone, with the next
+/// one peeking in.
+double _listColumnWidth(BuildContext context) => _compact(context)
+    ? (MediaQuery.sizeOf(context).width - 2 * _gutter(context) - 36).clamp(240.0, _kListColumnWidth)
+    : _kListColumnWidth;
 
 typedef _ExploreKey = ({String browseId, String? params});
 
@@ -107,6 +121,46 @@ class DesktopExploreTab extends StatelessWidget {
     return const _ExploreBody(
       key: PageStorageKey('explore'),
       browseId: 'FEmusic_explore',
+    );
+  }
+}
+
+/// Explore as a tab on Android and iOS, in place of Songs.
+class ExploreTab extends StatelessWidget {
+  const ExploreTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return SafeArea(
+      bottom: false,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: SizedBox(
+              height: 48,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  context.l10n.explore,
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const Expanded(
+            child: _ExploreBody(
+              key: PageStorageKey('explore'),
+              browseId: 'FEmusic_explore',
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -277,24 +331,7 @@ class _ExploreBody extends ConsumerWidget {
           error: (_, _) => _retry(ref, key),
           data: (page) {
             if (page == null) return _retry(ref, key);
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(
-                _kPageGutter,
-                12,
-                _kPageGutter,
-                32,
-              ),
-              children: [
-                if (page.topLinks.isNotEmpty) ...[
-                  _TopLinks(links: page.topLinks),
-                  const SizedBox(height: 36),
-                ],
-                for (final section in page.sections) ...[
-                  _SectionView(section: section),
-                  const SizedBox(height: 36),
-                ],
-              ],
-            );
+            return ExplorePageView(page: page);
           },
         );
   }
@@ -306,6 +343,34 @@ class _ExploreBody extends ConsumerWidget {
         icon: const Icon(Icons.refresh_rounded),
         label: const Text('Try again'),
       ),
+    );
+  }
+}
+
+/// One loaded Explore page: its top buttons, then its sections.
+class ExplorePageView extends StatelessWidget {
+  const ExplorePageView({super.key, required this.page});
+
+  final ExplorePage page;
+
+  @override
+  Widget build(BuildContext context) {
+    final compact = _compact(context);
+    final gutter = _gutter(context);
+    final gap = compact ? 28.0 : 36.0;
+    return ListView(
+      // On a phone, clear of the mini player and the floating nav.
+      padding: EdgeInsets.fromLTRB(gutter, compact ? 4 : 12, gutter, compact ? 170 : 32),
+      children: [
+        if (page.topLinks.isNotEmpty) ...[
+          _TopLinks(links: page.topLinks),
+          SizedBox(height: gap),
+        ],
+        for (final section in page.sections) ...[
+          _SectionView(section: section),
+          SizedBox(height: gap),
+        ],
+      ],
     );
   }
 }
@@ -324,46 +389,64 @@ class _TopLinks extends StatelessWidget {
     _ => Icons.explore_outlined,
   };
 
+  Widget _button(BuildContext context, ExploreLink link, Color base, {required bool compact}) {
+    return Material(
+      color: base.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => _openLink(context, link),
+        child: SizedBox(
+          height: compact ? 52 : 64,
+          child: Row(
+            children: [
+              SizedBox(width: compact ? 14 : 18),
+              Icon(_icon(link.iconType), color: base, size: compact ? 20 : 24),
+              SizedBox(width: compact ? 10 : 14),
+              Expanded(
+                child: Text(
+                  link.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: base,
+                    fontSize: compact ? 14 : 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final base = isDark ? Colors.white : Colors.black87;
+    if (_compact(context)) {
+      // Two to a row: four across don't fit a phone.
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final width = (constraints.maxWidth - 10) / 2;
+          return Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              for (final link in links)
+                SizedBox(width: width, child: _button(context, link, base, compact: true)),
+            ],
+          );
+        },
+      );
+    }
     return Row(
       children: [
         for (final (index, link) in links.indexed) ...[
           if (index > 0) const SizedBox(width: 12),
-          Expanded(
-            child: Material(
-              color: base.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(8),
-                onTap: () => _openLink(context, link),
-                child: SizedBox(
-                  height: 64,
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 18),
-                      Icon(_icon(link.iconType), color: base),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Text(
-                          link.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: base,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+          Expanded(child: _button(context, link, base, compact: false)),
         ],
       ],
     );
@@ -387,22 +470,37 @@ class _SectionView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = _compact(context);
+    final moodWidth = compact ? 160.0 : _kMoodTileWidth;
     if (section.links.isNotEmpty) {
       return section.isGrid
           ? _Heading(
               section: section,
-              child: Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  for (final link in section.links) _MoodTile(link: link),
-                ],
-              ),
+              child: compact
+                  ? LayoutBuilder(
+                      builder: (context, constraints) {
+                        final width = (constraints.maxWidth - 10) / 2;
+                        return Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: [
+                            for (final link in section.links) _MoodTile(link: link, width: width),
+                          ],
+                        );
+                      },
+                    )
+                  : Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        for (final link in section.links) _MoodTile(link: link),
+                      ],
+                    ),
             )
           : _HorizontalSection(
               section: section,
               height: _kRowsPerColumn * (_kMoodTileHeight + 12),
-              itemExtent: _kMoodTileWidth + 12,
+              itemExtent: moodWidth + 12,
               itemCount: (section.links.length / _kRowsPerColumn).ceil(),
               itemBuilder: (context, column) => Column(
                 children: [
@@ -414,7 +512,7 @@ class _SectionView extends StatelessWidget {
                   )
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: _MoodTile(link: section.links[i]),
+                      child: _MoodTile(link: section.links[i], width: moodWidth),
                     ),
                 ],
               ),
@@ -433,13 +531,14 @@ class _SectionView extends StatelessWidget {
           ),
         );
       }
+      final columnWidth = _listColumnWidth(context);
       return _HorizontalSection(
         section: section,
         height: _kRowsPerColumn * _kListRowHeight,
-        itemExtent: _kListColumnWidth + 16,
+        itemExtent: columnWidth + 16,
         itemCount: (section.items.length / _kRowsPerColumn).ceil(),
         itemBuilder: (context, column) => SizedBox(
-          width: _kListColumnWidth,
+          width: columnWidth,
           child: Column(
             children: [
               for (
@@ -454,7 +553,9 @@ class _SectionView extends StatelessWidget {
       );
     }
 
-    final cardWidth = _isVideos ? _kVideoCardWidth : _kCardWidth;
+    final cardWidth = _isVideos
+        ? (compact ? 240.0 : _kVideoCardWidth)
+        : (compact ? 140.0 : _kCardWidth);
     final cardHeight = (_isVideos ? cardWidth * 9 / 16 : cardWidth) + 68;
     if (section.isGrid) {
       return _Heading(
@@ -472,7 +573,7 @@ class _SectionView extends StatelessWidget {
     return _HorizontalSection(
       section: section,
       height: cardHeight,
-      itemExtent: cardWidth + 16,
+      itemExtent: cardWidth + (compact ? 12 : 16),
       itemCount: section.items.length,
       itemBuilder: (context, index) => _ItemCard(
         item: section.items[index],
@@ -523,7 +624,7 @@ class _Heading extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: base,
-                    fontSize: 24,
+                    fontSize: _compact(context) ? 20 : 24,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -532,8 +633,8 @@ class _Heading extends StatelessWidget {
                 OutlinedButton(
                   onPressed: () => _openMore(context),
                   style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(0, 38),
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    minimumSize: Size(0, _compact(context) ? 32 : 38),
+                    padding: EdgeInsets.symmetric(horizontal: _compact(context) ? 14 : 20),
                     shape: const StadiumBorder(),
                     foregroundColor: base,
                     side: BorderSide(color: base.withValues(alpha: 0.25)),
@@ -543,7 +644,7 @@ class _Heading extends StatelessWidget {
               ...?trailing,
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: _compact(context) ? 12 : 16),
         ],
         child,
       ],
@@ -617,10 +718,13 @@ class _HorizontalSectionState extends State<_HorizontalSection> {
 
     return _Heading(
       section: widget.section,
-      trailing: [
-        arrow(Icons.chevron_left_rounded, -1),
-        arrow(Icons.chevron_right_rounded, 1),
-      ],
+      // A phone's rows are swiped; the arrows are for a mouse.
+      trailing: _compact(context)
+          ? null
+          : [
+              arrow(Icons.chevron_left_rounded, -1),
+              arrow(Icons.chevron_right_rounded, 1),
+            ],
       child: SizedBox(
         height: widget.height,
         child: ListView.builder(
@@ -639,9 +743,10 @@ class _HorizontalSectionState extends State<_HorizontalSection> {
 }
 
 class _MoodTile extends StatelessWidget {
-  const _MoodTile({required this.link});
+  const _MoodTile({required this.link, this.width = _kMoodTileWidth});
 
   final ExploreLink link;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
@@ -649,7 +754,7 @@ class _MoodTile extends StatelessWidget {
     final base = isDark ? Colors.white : Colors.black87;
     final stripe = link.stripeColor;
     return SizedBox(
-      width: _kMoodTileWidth,
+      width: width,
       height: _kMoodTileHeight,
       child: Material(
         color: base.withValues(alpha: 0.1),

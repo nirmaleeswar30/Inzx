@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -7,7 +8,9 @@ class AudioRoutingService {
 
   static Future<Map<String, dynamic>> getActiveDeviceName() async {
     try {
-      if (await Permission.bluetoothConnect.status.isDenied) {
+      // Android 12+ needs Nearby Devices to name Bluetooth outputs; iOS
+      // reports the route without any permission.
+      if (Platform.isAndroid && await Permission.bluetoothConnect.status.isDenied) {
         await Permission.bluetoothConnect.request();
       }
       

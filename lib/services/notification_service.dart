@@ -66,6 +66,12 @@ class DownloadNotificationService {
     );
     final initSettings = InitializationSettings(
       android: androidSettings,
+      // iOS: permission is asked for with the first download, not at launch.
+      iOS: const DarwinInitializationSettings(
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+      ),
       linux: const LinuxInitializationSettings(defaultActionName: 'Open'),
       windows: WindowsInitializationSettings(
         appName: 'Inzx',
@@ -123,10 +129,35 @@ class DownloadNotificationService {
     return _baseNotificationId + trackId.hashCode.abs() % 10000;
   }
 
+  bool _askedIosPermission = false;
+
+  /// iOS has no ongoing or progress notifications: a download only says it
+  /// finished or failed. Permission is asked once, when the first starts.
+  Future<void> _askIosPermissionOnce() async {
+    if (_askedIosPermission) return;
+    _askedIosPermission = true;
+    try {
+      await _notifications
+          .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
+          ?.requestPermissions(alert: true, badge: false, sound: false);
+    } catch (e) {
+      debugPrint('DownloadNotificationService: permission request failed: $e');
+    }
+  }
+
+  static const _iosDetails = DarwinNotificationDetails(
+    presentAlert: true,
+    presentBanner: true,
+    presentList: true,
+    presentSound: false,
+    presentBadge: false,
+  );
+
   /// Show download started notification
   Future<void> showDownloadStarted(String trackId, String trackTitle) async {
     if (!_isInitialized) await initialize();
     if (!_isInitialized) return;
+    if (isIOS) return _askIosPermissionOnce();
     final l10n = await _resolveL10n();
 
     final notificationId = _getNotificationId(trackId);
@@ -175,6 +206,7 @@ class DownloadNotificationService {
     String trackTitle,
     double progress,
   ) async {
+    if (isIOS) return;
     if (!_isInitialized) await initialize();
     if (!_isInitialized) return;
     final l10n = await _resolveL10n();
@@ -256,6 +288,7 @@ class DownloadNotificationService {
       body: l10n.downloadCompleteNotification,
       notificationDetails: NotificationDetails(
         android: androidDetails,
+        iOS: _iosDetails,
         windows: const WindowsNotificationDetails(),
       ),
       payload: trackId,
@@ -263,7 +296,7 @@ class DownloadNotificationService {
 
     // Android clears it after 3 seconds; on desktop it stays in the
     // notification centre like any other.
-    if (!isDesktop) {
+    if (!isDesktop && !isIOS) {
       Future.delayed(const Duration(seconds: 3), () {
         cancelNotification(trackId);
       });
@@ -300,6 +333,7 @@ class DownloadNotificationService {
       body: localizeDownloadError(l10n, error),
       notificationDetails: NotificationDetails(
         android: androidDetails,
+        iOS: _iosDetails,
         windows: const WindowsNotificationDetails(),
       ),
       payload: trackId,

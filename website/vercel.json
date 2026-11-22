@@ -8,6 +8,7 @@
     { "source": "/pod/:id", "destination": "/api/redirect?type=podcast&id=:id" },
     { "source": "/jam/:code", "destination": "/api/redirect?type=jam&id=:code" },
     { "source": "/open", "destination": "/api/redirect" },
+    { "source": "/altstore.json", "destination": "/api/altstore" },
     { "source": "/redirect", "destination": "/api/redirect" }
   ],
   "headers": [

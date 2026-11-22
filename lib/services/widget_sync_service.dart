@@ -16,6 +16,20 @@ import 'local_artwork_service.dart';
 class WidgetSyncService {
   static const MethodChannel _channel = MethodChannel('inzx/widget');
 
+  /// iOS: the widget's buttons are App Intents that run in the app and come
+  /// back over this channel as `widgetAction` (`playPause`, `next`,
+  /// `previous`, `like`, `shuffle`). Actions that arrived before this was
+  /// attached (the app launched by a widget tap) are delivered now.
+  static void attachActionHandler(Future<void> Function(String action) handler) {
+    _channel.setMethodCallHandler((call) async {
+      if (call.method != 'widgetAction') return null;
+      final action = (call.arguments as Map?)?['action'];
+      if (action is String) await handler(action);
+      return null;
+    });
+    unawaited(_channel.invokeMethod('actionsReady').catchError((Object _) => null));
+  }
+
   static String? _lastFingerprint;
 
   /// Bumped by each state actually sent; an older one still waiting on its

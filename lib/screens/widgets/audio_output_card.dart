@@ -66,6 +66,7 @@ class _AudioOutputCardState extends State<AudioOutputCard> {
   @override
   Widget build(BuildContext context) {
     if (isDesktop) return _desktop();
+    if (isIOS) return _ios();
     final supported = _status?.bitPerfectSupported ?? true;
     final dac = _status?.usbDac;
     return Container(
@@ -149,6 +150,48 @@ class _AudioOutputCardState extends State<AudioOutputCard> {
                   }
                 : null,
           ),
+        ],
+      ),
+    );
+  }
+
+  /// iOS: loudness normalization only. iOS mixes every app's audio itself,
+  /// so there's no hi-res or bit-perfect switch to offer.
+  Widget _ios() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: widget.isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: widget.isDark ? Colors.white12 : widget.accentColor.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Column(
+        children: [
+          _row(
+            icon: Iconsax.volume_high,
+            title: 'Loudness normalization',
+            subtitle: 'Levels every track to the same loudness',
+            value: _loudness,
+            onChanged: (v) async {
+              setState(() => _loudness = v);
+              await AudioOutputService.setLoudnessNormalization(v);
+            },
+          ),
+          if (_loudness) ...[
+            const SizedBox(height: 12),
+            _row(
+              icon: Iconsax.mobile,
+              title: 'Disable on the built-in speaker',
+              subtitle: "Plays at the song's own level on the iPhone's speaker",
+              value: _loudnessOffOnSpeaker,
+              onChanged: (v) async {
+                setState(() => _loudnessOffOnSpeaker = v);
+                await AudioOutputService.setLoudnessOffOnSpeaker(v);
+              },
+            ),
+          ],
         ],
       ),
     );

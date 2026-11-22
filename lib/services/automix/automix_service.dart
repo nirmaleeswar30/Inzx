@@ -91,7 +91,7 @@ class AutomixService extends ChangeNotifier {
   /// The engine started or paused a player itself.
   void Function(String playerId, bool playing)? onPlayState;
 
-  bool get enabled => _enabled;
+  bool get enabled => _enabled && available;
   AutomixPerformanceMode get mode => _mode;
 
   // ---- Desktop -------------------------------------------------------------
@@ -102,16 +102,21 @@ class AutomixService extends ChangeNotifier {
 
   DesktopAutomixEngine? _desktop;
 
-  /// Whether Automix can run here: always on Android, on desktop when the
-  /// native library and models were bundled.
-  bool get available => !isDesktop || AutomixPaths.available;
+  /// Desktop and iOS run the Dart engine (analysis and planning in Dart over
+  /// the native library, blends rendered and played on a clip player);
+  /// Android runs BitChord's Kotlin engine.
+  static bool get _dartEngine => isDesktop || isIOS;
+
+  /// Whether Automix can run here: always on Android, on desktop and iOS
+  /// when the native library and models were bundled.
+  bool get available => !_dartEngine || AutomixPaths.available;
 
   /// The desktop engine, once the player service has attached to it.
   DesktopAutomixEngine? get desktopEngine => _desktop;
 
   /// Called by the player service on desktop with the players it owns.
   Future<void> attachDesktopHost(DesktopAutomixHost host) async {
-    if (!isDesktop || _desktop != null || !AutomixPaths.available) return;
+    if (!_dartEngine || _desktop != null || !AutomixPaths.available) return;
     final dataDir = await appDataDirectory();
     final analyzer = DesktopTrackAnalyzer(
       storeDir: p.join(dataDir.path, 'automix_analysis'),
@@ -146,7 +151,7 @@ class AutomixService extends ChangeNotifier {
   Future<void> load() async {
     if (_loaded) return;
     _loaded = true;
-    if (isDesktop) {
+    if (_dartEngine) {
       if (!AutomixPaths.available) return;
       final prefs = await SharedPreferences.getInstance();
       _enabled = prefs.getBool(_enabledKey) ?? false;
@@ -190,7 +195,7 @@ class AutomixService extends ChangeNotifier {
 
   /// A complete YouTube audio file for [videoId] is in the stream cache.
   Future<void> audioCached(String videoId, String path) async {
-    if (isDesktop) {
+    if (_dartEngine) {
       _desktop?.audioCached(videoId, path);
       return;
     }
@@ -205,7 +210,7 @@ class AutomixService extends ChangeNotifier {
   /// Queue analysis for [videoId] if Automix is on. Cheap to repeat.
   Future<void> request(String videoId, Duration duration) async {
     if (!_enabled) return;
-    if (isDesktop) {
+    if (_dartEngine) {
       _desktop?.request(videoId, duration);
       return;
     }
@@ -220,7 +225,7 @@ class AutomixService extends ChangeNotifier {
   }
 
   Future<AutomixAnalysis?> analysis(String videoId) async {
-    if (isDesktop) {
+    if (_dartEngine) {
       final engine = _desktop;
       return engine == null ? null : AutomixAnalysis(engine.describe(videoId));
     }
@@ -238,7 +243,7 @@ class AutomixService extends ChangeNotifier {
   /// wording), or null while Automix is off.
   Future<String?> statsLine(String currentId, String? nextId) async {
     if (!_enabled) return null;
-    if (isDesktop) return _desktop?.statsLine(currentId, nextId);
+    if (_dartEngine) return _desktop?.statsLine(currentId, nextId);
     try {
       return await _channel.invokeMethod<String>('statsLine', {
         'current': currentId,
@@ -275,7 +280,7 @@ class AutomixService extends ChangeNotifier {
   bool get _paused => _inJam || _inConnectGroup;
 
   Future<void> _pushPaused() async {
-    if (isDesktop) {
+    if (_dartEngine) {
       _desktop?.inJam = _paused;
       return;
     }
@@ -298,7 +303,7 @@ class AutomixService extends ChangeNotifier {
     required int crossfadeSeconds,
     Map<String, double> loudness = const {},
   }) async {
-    if (isDesktop) {
+    if (_dartEngine) {
       _desktop?.sync(
         primary: primary,
         secondary: secondary,
@@ -336,7 +341,7 @@ class AutomixService extends ChangeNotifier {
   }
 
   Future<void> loaded(String playerId, int index) async {
-    if (isDesktop) return;
+    if (_dartEngine) return;
     try {
       await _channel.invokeMethod('loaded', {'playerId': playerId, 'index': index});
     } catch (_) {}
@@ -345,7 +350,7 @@ class AutomixService extends ChangeNotifier {
   /// A lossless/JioSaavn hand-over is using the spare player: the engine
   /// waits it out (as BitChord's waits out a version swap).
   Future<void> setBusy(bool busy) async {
-    if (isDesktop) return;
+    if (_dartEngine) return;
     try {
       await _channel.invokeMethod('busy', {'busy': busy});
     } catch (_) {}
@@ -354,7 +359,7 @@ class AutomixService extends ChangeNotifier {
   /// The listener asked for another song: drop any blend in flight.
   Future<void> skip() async {
     if (!_enabled) return;
-    if (isDesktop) {
+    if (_dartEngine) {
       await _desktop?.skip();
       return;
     }
@@ -366,7 +371,7 @@ class AutomixService extends ChangeNotifier {
   /// For the player UI: mixing now, progress, the planned window, the beat.
   Future<Map<dynamic, dynamic>?> mixState() async {
     if (!_enabled) return null;
-    if (isDesktop) return _desktop?.mixState();
+    if (_dartEngine) return _desktop?.mixState();
     try {
       return await _channel.invokeMapMethod<dynamic, dynamic>('mixState');
     } catch (_) {

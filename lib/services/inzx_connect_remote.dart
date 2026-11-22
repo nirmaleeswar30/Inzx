@@ -581,7 +581,7 @@ class InzxConnectRemote extends ChangeNotifier {
         );
       }
       _started = true;
-      if (InzxConnectService.canScanQr) {
+      if (InzxConnectService.hasForegroundNotification) {
         _backgroundChannel.setMethodCallHandler((call) async {
           final id = activePlayback?.device.id;
           switch (call.method) {
@@ -678,7 +678,7 @@ class InzxConnectRemote extends ChangeNotifier {
   }
 
   Future<void> _syncNotification() async {
-    if (!InzxConnectService.canScanQr) return;
+    if (!InzxConnectService.hasForegroundNotification) return;
     if (_updatingNotification) {
       _notificationNeedsUpdate = true;
       return;
@@ -1180,6 +1180,7 @@ class InzxConnectRemote extends ChangeNotifier {
   }
 
   Future<void> _keepAwake() async {
+    if (!InzxConnectService.hasForegroundNotification) return;
     try {
       await _backgroundChannel.invokeMethod<void>('keepAwake');
     } catch (_) {

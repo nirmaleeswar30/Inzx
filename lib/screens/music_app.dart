@@ -7,7 +7,6 @@ import '../../../core/design_system/design_system.dart';
 import '../providers/providers.dart';
 import '../../core/providers/theme_provider.dart';
 import 'tabs/home_tab.dart';
-import 'tabs/songs_tab.dart';
 import 'tabs/library_tab.dart';
 import 'tabs/folders_tab.dart';
 import 'tabs/desktop_explore_tab.dart';
@@ -41,7 +40,7 @@ class _MusicAppState extends ConsumerState<MusicApp>
 
   final List<Widget> _tabs = [
     const MusicHomeTab(),
-    isDesktop ? const DesktopExploreTab() : const MusicSongsTab(),
+    isDesktop ? const DesktopExploreTab() : const ExploreTab(),
     const MusicLibraryTab(),
     const MusicFoldersTab(),
   ];
@@ -330,9 +329,9 @@ class _ModernFloatingNav extends ConsumerWidget {
             label: l10n.home,
           ),
           LiquidGlassNavItem(
-            icon: Icons.music_note_outlined,
-            selectedIcon: Icons.music_note_rounded,
-            label: l10n.songs,
+            icon: Icons.explore_outlined,
+            selectedIcon: Icons.explore_rounded,
+            label: l10n.explore,
           ),
           LiquidGlassNavItem(
             icon: Icons.library_music_outlined,
@@ -459,7 +458,7 @@ class _StandardFloatingNavState extends ConsumerState<_StandardFloatingNav>
     final l10n = context.l10n;
     final navItems = [
       (Icons.home_outlined, Icons.home_rounded, l10n.home),
-      (Icons.music_note_outlined, Icons.music_note_rounded, l10n.songs),
+      (Icons.explore_outlined, Icons.explore_rounded, l10n.explore),
       (Icons.library_music_outlined, Icons.library_music_rounded, l10n.library),
       (Icons.folder_outlined, Icons.folder_rounded, l10n.folders),
     ];
