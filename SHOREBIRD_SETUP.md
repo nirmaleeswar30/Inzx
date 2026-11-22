@@ -1,6 +1,6 @@
 # Shorebird OTA Setup
 
-This project is configured for Shorebird Code Push across Android, Windows, and Linux (AppImage).
+This project is configured for Shorebird Code Push across Android, iOS, Windows, and Linux (AppImage).
 
 ## What's Already Wired
 
@@ -12,6 +12,7 @@ This project is configured for Shorebird Code Push across Android, Windows, and 
   - **Windows Installer**: `scripts/package_windows_installer.ps1` (with `-BuildType shorebird` or interactive selection)
   - **Linux AppImage**: `scripts/build_appimage.sh` (with `shorebird` or interactive selection)
   - **Android APK / AAB**: `shorebird release android` + `build_universal_apk.ps1` / `build_universal_apk.sh`
+  - **iOS IPA**: manual **Actions → iOS build** workflow with `build_type: shorebird`; `normal` produces a standard IPA without OTA support
 
 ---
 
@@ -56,6 +57,27 @@ This produces `dist/Inzx-Linux-Shorebird-<version>-x86_64.AppImage` and standard
 ## Patch Workflows (OTA Updates)
 
 After code changes, publish an instant Over-the-Air patch without rebuilding full installers:
+
+### iOS baseline (manual only)
+
+Run **Actions → iOS build → Run workflow** from `main`, select **shorebird**,
+and enter the build number. `SHOREBIRD_TOKEN` must have access to the Inzx app;
+`ENV_FILE` supplies the app configuration. Increment the build number for a
+new baseline. The workflow reuses the Flutter revision for an existing
+`<version>+<build>` release across platforms, or pins `3.47.7` for a new one.
+It packages the exact unsigned Shorebird archive for sideloading and records
+dependency locks, checksums, and toolchain details in the artifact. Attach the
+IPA to a GitHub release separately to publish it through the AltStore source.
+
+### iOS patches
+
+```bash
+shorebird patch ios --release-version=<version>+<build>
+```
+
+Native iOS/Swift/C++ or widget changes require a new baseline IPA. Install a
+Shorebird baseline before testing patches; normal Flutter IPAs cannot receive
+them. See the [iOS notes](ios/README.md) for packaging and platform limits.
 
 ### Android
 ```powershell

@@ -5,11 +5,11 @@
 <script>/* Relative links need /docs/ (with the slash) to resolve inside docs/. */if(location.pathname.slice(-5)==="/docs")location.replace(location.pathname+"/"+location.search+location.hash);</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Install &amp; update · Inzx Docs</title>
-<meta name="description" content="Install Inzx on Android, Windows, and Linux, and keep it up to date.">
+<meta name="description" content="Install Inzx on Android, iOS, Windows, and Linux, and keep it up to date.">
 <link rel="canonical" href="https://inzx.nirmaleeswar.dev/docs/install">
 <meta property="og:url" content="https://inzx.nirmaleeswar.dev/docs/install">
 <meta property="og:title" content="Install &amp; update · Inzx Docs">
-<meta property="og:description" content="Install Inzx on Android, Windows, and Linux, and keep it up to date.">
+<meta property="og:description" content="Install Inzx on Android, iOS, Windows, and Linux, and keep it up to date.">
 <meta property="og:image" content="https://inzx.nirmaleeswar.dev/assets/img/brand.png">
 <link rel="icon" type="image/png" href="../assets/img/logo_transparent.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,7 +34,7 @@
     <article class="prose">
 <span class="crumb">Getting started</span>
 <h1>Install &amp; update</h1>
-<p class="lead">Inzx runs on Android, Windows, and Linux. It is free and open-source, with no ads or trackers.</p>
+<p class="lead">Inzx runs on Android, iOS, Windows, and Linux. It is free and open-source, with no ads or trackers.</p>
 
 <h2 id="android">Android</h2>
 <ol>
@@ -43,6 +43,16 @@
   <li>Open it and allow installation from your browser or file manager.</li>
 </ol>
 <p><b>Stay updated automatically:</b> <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/nirmaleeswar30/Inzx/" target="_blank" rel="noopener noreferrer">Add Inzx to Obtainium</a> to track new releases and update seamlessly.</p>
+
+<h2 id="ios">iPhone &amp; iPad (beta)</h2>
+<p>Requires <b>iOS 17 or later</b>. Inzx is sideloaded with your Apple ID and is not on the App Store.</p>
+<ol>
+  <li>In AltStore or SideStore, add <code>https://inzx.nirmaleeswar.dev/altstore.json</code> as a source. Install Inzx once an IPA is listed.</li>
+  <li>Alternatively, download <code>Inzx-&lt;version&gt;-&lt;build&gt;.ipa</code> from a <a href="https://github.com/nirmaleeswar30/Inzx/releases" target="_blank" rel="noopener noreferrer">GitHub release containing an IPA</a> and install it with Sideloadly or your preferred sideloader.</li>
+  <li>With a free Apple ID, refresh the app every seven days using your sideloading tool.</li>
+</ol>
+<p>IPAs are published separately from Android and desktop builds, so the latest release may not include one yet. The source lists releases with an attached IPA.</p>
+<div class="callout"><span class="ic">iOS limits</span><div><p>YouTube uses AAC rather than Opus/WebM. Lossless add-ons support FLAC/ALAC and compatible DASH streams. iOS manages the audio output mixer, so there is no bit-perfect switch or CarPlay support yet. Jams and Inzx Connect stay connected while music plays or the app is open, then reconnect when you return.</p></div></div>
 
 <h2 id="windows">Windows</h2>
 <ol>
@@ -62,7 +72,7 @@
 <p>The AppImage carries its own <code>libmpv</code> and audio decoders for bit-perfect playback without touching your system's global mpv config.</p>
 
 <h2 id="in-app">In-app updates &amp; Shorebird OTA</h2>
-<p>Inzx checks for updates automatically. Bug fixes and minor updates arrive instantly as over-the-air (OTA) patches via Shorebird across Android, Windows, and Linux. When an OTA patch is ready, restarting the app applies it. Major feature releases notify you with a direct download link.</p>
+<p>Builds made with Shorebird can receive over-the-air (OTA) patches on Android, iOS, Windows, and Linux; restarting applies a downloaded patch. Standard Flutter builds need a new APK, IPA, or desktop installer. On iOS, install new IPAs through your sideloading tool or the AltStore/SideStore source; the app cannot replace itself. Refreshing your Apple ID signature is still required even with OTA patches.</p>
 
 <h2 id="first-launch">First launch &amp; pairing</h2>
 <p>The first time you open Inzx you get a quick welcome flow. You can <b>Continue with Google</b> to bring your YouTube Music library, playlists, and history in, or <b>Continue without signing in</b>. You can also pair multiple devices via <b>Settings → Inzx Connect</b> for synchronized playback. See <a href="sign-in.html">Signing in</a> and <a href="integrations.html">Integrations</a>.</p>

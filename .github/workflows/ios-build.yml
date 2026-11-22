@@ -1,39 +1,66 @@
-# Builds Inzx for iOS on a macOS runner and packages an unsigned IPA for
-# sideloading (AltStore, SideStore, Sideloadly). The IPA is uploaded as a
-# workflow artifact, and attached to a GitHub release when one is published.
-#
-# Set the repository secret ENV_FILE to the contents of .env; without it the
-# app builds from .env.example, and Jams and sign-ins that read keys from .env
-# won't work.
+# Manual sideload builds only. Attach the artifact IPA to a GitHub release
+# separately to publish it through the AltStore source.
 name: iOS build
 
 on:
-  push:
-    branches: [feat/ios-port, main]
-    paths-ignore:
-      - 'website/**'
-      - '**.md'
-  pull_request:
-    paths-ignore:
-      - 'website/**'
-      - '**.md'
-  release:
-    types: [published]
   workflow_dispatch:
+    inputs:
+      build_type:
+        description: Build a normal IPA or a Shorebird OTA baseline
+        required: true
+        type: choice
+        default: normal
+        options: [normal, shorebird]
+      build_number:
+        description: iOS build number (increment for each new Shorebird baseline)
+        required: true
+        type: string
+        default: '1'
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: ios-${{ github.ref }}
-  cancel-in-progress: true
+  group: inzx-ios-${{ inputs.build_type }}
+  cancel-in-progress: false
+
+env:
+  BUILD_TYPE: ${{ inputs.build_type }}
+  BUILD_NUMBER: ${{ inputs.build_number }}
+  FLUTTER_VERSION: '3.47.7'
 
 jobs:
   build:
-    name: Build IPA
+    name: Build IPA (${{ inputs.build_type }})
     runs-on: macos-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
+    defaults:
+      run:
+        shell: bash
     steps:
+      - name: Validate dispatch
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+        run: |
+          if [[ ! "$BUILD_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+            echo "::error::Enter a positive integer for the iOS build number."
+            exit 1
+          fi
+          case "$BUILD_TYPE" in
+            normal) ;;
+            shorebird)
+              if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+                echo "::error::Create Shorebird iOS baselines from main."
+                exit 1
+              fi
+              if [[ -z "$SHOREBIRD_TOKEN" ]]; then
+                echo "::error::Add a SHOREBIRD_TOKEN secret with access to the Inzx app."
+                exit 1
+              fi
+              ;;
+            *) echo "::error::Choose normal or shorebird."; exit 1 ;;
+          esac
+
       - uses: actions/checkout@v4
 
       - uses: maxim-lobanov/setup-xcode@v1
@@ -43,50 +70,110 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.47.7
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Write .env
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
         run: |
-          if [ -n "$ENV_FILE" ]; then
+          if [[ -n "$ENV_FILE" ]]; then
             printf '%s' "$ENV_FILE" > .env
           else
             echo "::warning title=No ENV_FILE secret::Built from .env.example: Jams, Inzx Connect and Discord will not work in this IPA."
-            if [ "${{ github.event_name }}" = "release" ]; then exit 1; fi
             cp .env.example .env
           fi
-        env:
-          ENV_FILE: ${{ secrets.ENV_FILE }}
-
-      - name: Show tools
-        run: |
-          xcodebuild -version
-          flutter --version
-          pod --version
 
       - name: Get packages
         run: flutter pub get --enforce-lockfile
 
       - name: Configure the Xcode project (widget extension, bundled resources)
         run: |
-          gem install xcodeproj --no-document --user-install || true
+          gem install xcodeproj --no-document --user-install
           ruby ios/scripts/configure_xcode.rb
 
-      - name: Build
-        run: flutter build ios --release --no-codesign --suppress-analytics
+      - name: Build normal IPA app
+        if: inputs.build_type == 'normal'
+        run: flutter build ios --release --no-codesign --suppress-analytics --build-number="$BUILD_NUMBER"
 
-      - name: Package IPA
-        id: ipa
-        run: echo "path=$(bash scripts/ios/make_ipa.sh)" >> "$GITHUB_OUTPUT"
+      - uses: shorebirdtech/setup-shorebird@v1
+        if: inputs.build_type == 'shorebird'
+        with:
+          cache: true
+
+      # Shorebird requires the same engine revision across all platforms of a release.
+      - name: Resolve Shorebird Flutter revision
+        if: inputs.build_type == 'shorebird'
+        id: release
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+        run: |
+          version=$(awk '/^version:/ { sub(/[+\r].*/, "", $2); print $2; exit }' pubspec.yaml)
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Expected a semantic app version in pubspec.yaml."
+            exit 1
+          fi
+          release_version="$version+$BUILD_NUMBER"
+          flutter_revision=$(shorebird api '/apps/{appId}/releases' --paginate -F per_page=100 \
+            --jq ".releases[] | select(.version == \"$release_version\") | .flutter_revision")
+          if [[ -z "$flutter_revision" ]]; then
+            flutter_revision="$FLUTTER_VERSION"
+          elif [[ ! "$flutter_revision" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Invalid Flutter revision for Shorebird release $release_version."
+            exit 1
+          fi
+          printf 'version=%s\nflutter_revision=%s\n' "$release_version" "$flutter_revision" >> "$GITHUB_OUTPUT"
+
+      - name: Build unsigned Shorebird archive
+        if: inputs.build_type == 'shorebird'
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+          SHOREBIRD_FLUTTER_REVISION: ${{ steps.release.outputs.flutter_revision }}
+        run: |
+          shorebird release ios --no-codesign --build-number="$BUILD_NUMBER" \
+            --flutter-version="$SHOREBIRD_FLUTTER_REVISION"
+
+      - name: Package IPA and record build baseline
+        env:
+          SHOREBIRD_RELEASE_VERSION: ${{ steps.release.outputs.version }}
+          SHOREBIRD_FLUTTER_REVISION: ${{ steps.release.outputs.flutter_revision }}
+        run: |
+          app=build/ios/iphoneos/Runner.app
+          if [[ "$BUILD_TYPE" == shorebird ]]; then
+            # Package the exact archive registered with Shorebird, without a rebuild.
+            shopt -s nullglob
+            apps=(build/ios/archive/*.xcarchive/Products/Applications/*.app)
+            if [[ ${#apps[@]} -ne 1 ]]; then
+              echo "::error::Expected exactly one archived Shorebird app."
+              exit 1
+            fi
+            app="${apps[0]}"
+          fi
+          mkdir -p build/ios/package
+          ipa=$(bash scripts/ios/make_ipa.sh "$app")
+          cp "$ipa" build/ios/package/
+          cp pubspec.lock ios/Podfile.lock build/ios/package/
+          (cd build/ios/package && shasum -a 256 ./*.ipa > SHA256SUMS)
+          {
+            printf 'Commit: %s\nBuild type: %s\nBuild number: %s\n' "$GITHUB_SHA" "$BUILD_TYPE" "$BUILD_NUMBER"
+            if [[ "$BUILD_TYPE" == shorebird ]]; then
+              printf 'Shorebird release: %s\nFlutter revision: %s\n' "$SHOREBIRD_RELEASE_VERSION" "$SHOREBIRD_FLUTTER_REVISION"
+              shorebird --version
+            else
+              flutter --version
+            fi
+            xcodebuild -version
+            pod --version
+          } > build/ios/package/toolchain.txt
+          {
+            printf '### Inzx iOS (%s)\n\n' "$BUILD_TYPE"
+            printf 'Download the IPA and build baseline from the workflow artifact.\n'
+            printf 'To publish to the AltStore source, attach the IPA to a GitHub release.\n'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: inzx-ios-ipa
-          path: ${{ steps.ipa.outputs.path }}
+          name: inzx-ios-${{ inputs.build_type }}
+          path: build/ios/package/
           if-no-files-found: error
-
-      - name: Attach to the release
-        if: github.event_name == 'release'
-        run: gh release upload "${{ github.event.release.tag_name }}" "${{ steps.ipa.outputs.path }}#Inzx.ipa" --clobber
-        env:
-          GH_TOKEN: ${{ github.token }}
+          retention-days: 30

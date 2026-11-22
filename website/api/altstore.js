@@ -3,7 +3,7 @@
  * (rewritten here by vercel.json).
  *
  * Built from the GitHub releases on every request (cached at the edge), so a
- * release only needs its .ipa attached (the iOS build workflow does that)
+ * release only needs its .ipa attached manually after the iOS build workflow
  * and AltStore picks it up: nothing here is edited by hand.
  */
 

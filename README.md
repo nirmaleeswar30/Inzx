@@ -1,7 +1,7 @@
 <div align="center">
 	<img src="assets/brand_transparent.png" alt="Inzx Logo" width=""/>
 
-**A beautiful, open-source YouTube Music client for Android, Windows & Linux** — dynamic theming, word-level synced lyrics, AI lyric translation, DJ Automix, AutoEQ studio calibration, high-quality audio streaming, Inzx Connect multi-device sync, and real-time listening sessions.
+**A beautiful, open-source YouTube Music client for Android, iOS (beta), Windows & Linux** — dynamic theming, word-level synced lyrics, AI lyric translation, DJ Automix, AutoEQ studio calibration, high-quality audio streaming, Inzx Connect multi-device sync, and real-time listening sessions.
 
 [![Latest Release](https://img.shields.io/github/v/release/nirmaleeswar30/Inzx?label=release&logo=github)](https://github.com/nirmaleeswar30/Inzx/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/nirmaleeswar30/Inzx/total?logo=github&color=success)](https://github.com/nirmaleeswar30/Inzx/releases)
@@ -42,6 +42,8 @@ A quick look at what makes Inzx stand out:
 - 🔊 **Studio-grade audio** — optional JioSaavn source up to 320 kbps with gapless playback & prefetching
 - 🔗 **Inzx Connect** — multi-device bidirectional queue & playback sync, remote control, and simultaneous playback
 - 🖥️ **Native Desktop apps** — Windows installer (.exe) & Linux AppImage with global media keys and background self-update
+- 🍎 **iPhone & iPad beta** — sideloaded IPA, Home Screen widgets, AAC playback, lossless add-ons, AutoEQ, and live Automix blends
+- 🧭 **Explore on mobile** — charts, new releases, moods, genres, and music videos replace the Songs tab on Android and iOS
 - 🎨 **Instant dynamic theming** — 0 ms isolate-extracted album colors, AMOLED black, and liquid-glass UI
 - 🖼️ **4 Now Playing styles** — Default, Cinematic, Ripple & OG + waveform / spectrum scrubbers
 - 🎞️ **Animated album art (Canvas)** — fullscreen video canvas loops with ambient reflection glow
@@ -117,7 +119,7 @@ Inzx is free and open source. If it makes your day a little better, consider sup
 
 ### 🔗 Inzx Connect & Multi-Device Sync
 
-- **Bidirectional playback sync** — seamlessly sync active playback, state, and queues across your Android phone, Windows PC, and Linux desktop
+- **Bidirectional playback sync** — seamlessly sync active playback, state, and queues across Android, iPhone, iPad, Windows, and Linux
 - **Device pairing via Supabase** — quick device discovery and pairing with instant connection status
 - **Simultaneous playback** — synchronized multi-room / multi-device playback across paired installations
 - **Remote control** — control volume, skip, pause, and reorder upcoming tracks from any linked device
@@ -132,17 +134,20 @@ Inzx is free and open source. If it makes your day a little better, consider sup
 - **Download manager** — multi-threaded background downloader for offline listening
 - **Local file player & tag editor** — browse local folders and edit ID3, MP4, and WebM tags directly
 - **Moods & Genres browsing** — curated mood feeds, genre charts, artist radios, and related track discovery
+- **Explore tab on Android & iOS** — charts, new releases, music videos, moods, and genres in a layout adapted for phones; local music remains in Folders
 
 &nbsp;
 
 ### 📱 Platform, Desktop, Widgets & Updates
 
+- **iPhone & iPad (iOS 17+)** — sideload through AltStore, SideStore, or Sideloadly; native audio effects, Files folder access, Keychain storage, and small/medium Home Screen widgets with playback controls
+- **iOS Automix** — live beatmatched blends with progress-bar feedback; loop-mix transitions fall back to live blends on iOS
 - **Native Windows Desktop** — per-user installer (`.exe`) packaged with Inno Setup, system tray / taskbar controls, and silent background self-updates
 - **Linux AppImage** — standalone portable AppImage with bundled `libmpv`, desktop launcher menu integration, and MPRIS media keys
 - **Hardware media keys & transport** — Windows SMTC and Linux MPRIS integration for keyboard keys, headsets, and system media widgets
 - **Android Auto integration** — driving-optimized dashboard interface for safe on-road playback
 - **Dynamic home-screen widgets** — 3 launcher widget formats (2×2, 4×1 compact, 4×2 expanded) updating live via Android AppWidgetProvider
-- **Over-the-air updates (Shorebird)** — silent instant code push delivers patches across Android, Windows, and Linux without reinstalling
+- **Over-the-air updates (Shorebird)** — code push across Android, iOS, Windows, and Linux when installed from a Shorebird baseline; standard Flutter builds require a new binary
 - **In-app GitHub release notifications** — checks for major releases with direct installer / APK downloads
 - **Backup & restore** — export and restore your entire app state, playlists, favorites, and settings to a single file
 - **Deep links & sharing** — native sharing for tracks, albums, and playlists
@@ -152,7 +157,7 @@ Inzx is free and open source. If it makes your day a little better, consider sup
 ### 🔒 Privacy & Open Source
 
 - **Offline-first architecture** — core features work entirely without an internet connection or login
-- **Encrypted credentials** — auth tokens and API keys stored securely via Android Keystore
+- **Protected credentials** — system secure storage, including Android Keystore and iOS Keychain; Linux falls back to a private per-user file when no keyring is available
 - **Zero tracking or analytics** — completely free, no telemetry, no third-party tracking, no ads
 
 ---
@@ -215,14 +220,14 @@ adb install app-release.apk
 Inzx for iPhone and iPad (iOS 17 or later) is a sideloaded app; it isn't on the App Store.
 
 - **AltStore / SideStore** (recommended) — add the source `https://inzx.nirmaleeswar.dev/altstore.json`, then install Inzx from it. Updates arrive through the source.
-- **Sideloadly / other tools** — download **`Inzx-<version>.ipa`** from the [latest release](https://github.com/nirmaleeswar30/Inzx/releases/latest) and install it with your Apple ID.
+- **Sideloadly / other tools** — download **`Inzx-<version>-<build>.ipa`** from a [GitHub release containing an IPA](https://github.com/nirmaleeswar30/Inzx/releases) and install it with your Apple ID. Until an IPA is published, maintainers can build one through the manual iOS workflow below.
 
 With a free Apple ID, sideloaded apps must be refreshed every 7 days (AltStore and SideStore do it in the background).
 
 <details>
 <summary>What's different on iOS</summary>
 
-- YouTube streams and downloads are AAC (iOS can't play Opus/WebM); lossless add-on streams play when they're FLAC or ALAC files.
+- YouTube streams and downloads are AAC; lossless add-ons support FLAC/ALAC files and compatible DASH streams through a fragmented-MP4 bridge. Opus/WebM streams are skipped on iOS.
 - Your own music: put files in **Files → On My iPhone → Inzx → Music**, or add any folder from Files.
 - No hi-res/bit-perfect switch (iOS mixes all audio itself), no CarPlay yet, and Jams keep syncing only while music plays or the app is open.
 </details>
@@ -250,6 +255,7 @@ With a free Apple ID, sideloaded apps must be refreshed every 7 days (AltStore a
 - **Android Studio** or **VS Code** with Flutter/Dart extensions
 - **Visual Studio with C++ tools** (for Windows builds)
 - **libmpv** & standard build tools (for Linux builds: `libmpv-dev clang cmake ninja-build`)
+- **macOS, Xcode & CocoaPods** (for local iOS builds; the manual GitHub Actions workflow can build an IPA from any development platform)
 - **Git**
 
 ### Setup
@@ -287,7 +293,7 @@ With a free Apple ID, sideloaded apps must be refreshed every 7 days (AltStore a
 
 6. **(Optional) Configure Google Sign-In** — create an OAuth 2.0 Web Client ID in the Google Cloud Console and set `GOOGLE_WEB_CLIENT_ID`.
 
-7. **(Optional) Enable Inzx Connect** — apply the [pairing migration](supabase/migrations/20261111000100_inzx_connect_pairing.sql) to the configured Supabase project and enable anonymous sign-ins in Supabase Auth. Open **Settings → Inzx Connect** on desktop and Android to pair. Each installation creates its device session automatically.
+7. **(Optional) Enable Inzx Connect** — apply the [pairing migration](supabase/migrations/20261111000100_inzx_connect_pairing.sql) to the configured Supabase project and enable anonymous sign-ins in Supabase Auth. Open **Settings → Inzx Connect** to pair Android, iOS, and desktop devices. Each installation creates its device session automatically.
 
 ### Build Commands
 
@@ -301,6 +307,11 @@ flutter build apk --release
 
 # Split APKs per ABI (smaller downloads)
 flutter build apk --split-per-abi --release
+
+# --- iOS (macOS only) ---
+ruby ios/scripts/configure_xcode.rb
+flutter build ios --release --no-codesign
+bash scripts/ios/make_ipa.sh
 
 # --- Windows Desktop ---
 # Standard Windows Release installer
@@ -316,6 +327,17 @@ bash scripts/build_appimage.sh normal
 # Shorebird OTA-enabled Linux AppImage
 bash scripts/build_appimage.sh shorebird
 ```
+
+### Manual iOS builds
+
+Open **Actions → iOS build → Run workflow**, choose **normal** or **shorebird**, and enter a positive iOS build number. Pushes, pull requests, and published releases do not start this workflow.
+
+- **normal** builds a standard Flutter IPA without OTA support.
+- **shorebird** runs from `main`, requires the `SHOREBIRD_TOKEN` repository secret, and registers an OTA baseline. Increment the build number for each new baseline. As in Nivio, the workflow reuses an existing release's Flutter revision and packages the exact Shorebird archive.
+- **ENV_FILE** supplies the app's `.env` for either option. Without it, `.env.example` is used with a warning.
+- Download **inzx-ios-normal** or **inzx-ios-shorebird** from the run's artifacts. Each includes the sideloadable IPA, checksums, dependency locks, and toolchain details. To publish the IPA through the AltStore source, attach it to a GitHub release separately.
+
+See [iOS build notes](ios/README.md) and [Shorebird setup](SHOREBIRD_SETUP.md) for local builds and patching.
 
 ---
 
@@ -361,7 +383,10 @@ Translations live in [`lib/l10n`](lib/l10n). Contributions and corrections are v
 - [x] Dynamic home-screen widgets (2×2, 4×1, 4×2)
 - [x] Multiple Now Playing & progress-bar styles (Waveform / Spectrum)
 - [x] Native Desktop targets (Windows installer · Linux AppImage)
-- [x] Over-the-air updates (Shorebird across Android, Windows & Linux)
+- [x] iPhone & iPad beta (sideloading, widgets, AutoEQ & Automix)
+- [x] Explore tab on Android & iOS
+- [x] Lossless add-on DASH playback on iOS
+- [x] Over-the-air updates (Shorebird builds across Android, iOS, Windows & Linux)
 - [ ] Google Cast / Chromecast audio streaming
 - [ ] macOS desktop support
 

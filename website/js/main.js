@@ -31,13 +31,15 @@
 
   var platformUrls = {
     apk: 'https://github.com/nirmaleeswar30/Inzx/releases/latest/download/inzx.apk',
+    ios: 'docs/install.html#ios',
     windows: 'https://github.com/nirmaleeswar30/Inzx/releases/latest',
     linux: 'https://github.com/nirmaleeswar30/Inzx/releases/latest'
   };
 
   /* The hero's download button offers the build for this device: the
      Windows installer or the Linux AppImage on a computer, the APK (with
-     Obtainium) on Android. Called again once the release's links load. */
+     Obtainium) on Android, and an IPA or sideload instructions on iOS.
+     Called again once the release's links load. */
   function applyHeroPlatform(urls) {
     if (urls) {
       Object.keys(urls).forEach(function (k) { if (urls[k]) platformUrls[k] = urls[k]; });
@@ -52,20 +54,23 @@
     if (!btn) return;
 
     var desktop = null;
-    if (detectedOS === 'windows') {
+    if (detectedOS === 'ios') {
+      desktop = { href: platformUrls.ios, label: /\.ipa(?:$|\?)/i.test(platformUrls.ios) ? 'Download for iOS' : 'Install on iOS', icon: '#iosDownloadBtn',
+        alt: 'Android, Windows & Linux builds', note: 'iOS beta · iPhone & iPad · iOS 17+ · Sideload with AltStore or SideStore' };
+    } else if (detectedOS === 'windows') {
       desktop = { href: platformUrls.windows, label: 'Download for Windows', icon: '#windowsDownloadBtn',
-        alt: 'Android & Linux builds', note: 'Detected Windows · Setup .exe for Windows 10 & 11' };
+        alt: 'Android, iOS & Linux builds', note: 'Detected Windows · Setup .exe for Windows 10 & 11' };
     } else if (detectedOS === 'linux') {
       desktop = { href: platformUrls.linux, label: 'Download for Linux', icon: '#linuxDownloadBtn',
-        alt: 'Android & Windows builds', note: 'Detected Linux · x86_64 AppImage' };
+        alt: 'Android, iOS & Windows builds', note: 'Detected Linux · x86_64 AppImage' };
     } else if (detectedOS === 'mac') {
       desktop = { href: '#download', label: 'See all downloads', icon: null,
-        alt: null, note: 'No macOS build yet · Android, Windows & Linux are available' };
+        alt: null, note: 'No macOS build yet · Android, iOS, Windows & Linux are supported' };
     }
 
     if (desktop) {
       btn.href = desktop.href;
-      var external = desktop.href.charAt(0) !== '#';
+      var external = /^https?:/i.test(desktop.href);
       if (external) { btn.target = '_blank'; btn.rel = 'noopener'; }
       else { btn.removeAttribute('target'); btn.removeAttribute('rel'); }
       if (label) label.textContent = desktop.label;
@@ -90,7 +95,7 @@
       btn.href = platformUrls.apk;
     }
 
-    var card = { windows: '#windowsDownloadBtn', linux: '#linuxDownloadBtn', android: '#mainDownloadBtn' }[detectedOS];
+    var card = { ios: '#iosDownloadBtn', windows: '#windowsDownloadBtn', linux: '#linuxDownloadBtn', android: '#mainDownloadBtn' }[detectedOS];
     $$('.dl-btn-card.is-detected').forEach(function (el) { el.classList.remove('is-detected'); });
     if (card && $(card)) $(card).classList.add('is-detected');
   }
@@ -1058,10 +1063,19 @@
       return { headline: headline, summary: summary, notes: notes };
     }
 
-    function updateDownloadLinks(latest) {
+    function updateDownloadLinks(latest, releases) {
       if (!latest || !latest.assets) return null;
 
       var assets = latest.assets || [];
+      // iOS builds are published separately, so the newest IPA may be on an
+      // earlier release than the newest Android/desktop downloads.
+      var iosRelease = (releases || [latest]).find(function (release) {
+        return !release.draft && !release.prerelease && (release.assets || []).some(function (a) {
+          return /\.ipa$/i.test(a.name || '');
+        });
+      });
+      var iosAsset = iosRelease && iosRelease.assets.find(function (a) { return /\.ipa$/i.test(a.name || ''); });
+      var iosUrl = iosAsset && iosAsset.browser_download_url || 'docs/install.html#ios';
       var mainAsset = assets.find(function (a) {
         var n = (a.name || '').toLowerCase();
         return n.endsWith('.apk') && !n.includes('universal');
@@ -1107,8 +1121,14 @@
       var uniBtn = $('#universalDownloadBtn');
       var winBtn = $('#windowsDownloadBtn');
       var linuxBtn = $('#linuxDownloadBtn');
+      var iosBtn = $('#iosDownloadBtn');
 
-      if (heroBtn) applyHeroPlatform({ apk: mainApkUrl, windows: windowsUrl, linux: linuxUrl });
+      if (heroBtn) applyHeroPlatform({ apk: mainApkUrl, ios: iosUrl, windows: windowsUrl, linux: linuxUrl });
+      if (iosBtn) {
+        iosBtn.href = iosUrl;
+        var iosSub = $('.dl-btn-sub', iosBtn);
+        if (iosSub) iosSub.textContent = iosAsset ? 'IPA · iOS 17+ · Sideload with your Apple ID' : 'iOS 17+ · Beta · Sideloading guide';
+      }
       if (mainBtn) mainBtn.href = mainApkUrl;
       if (uniBtn) uniBtn.href = universalApkUrl;
       if (winBtn) winBtn.href = windowsUrl;
@@ -1133,7 +1153,7 @@
       if (!validReleases.length) validReleases = releases;
 
       var latest = validReleases[0];
-      var dlInfo = updateDownloadLinks(latest);
+      var dlInfo = updateDownloadLinks(latest, validReleases);
       var apkUrl = dlInfo ? dlInfo.mainApkUrl : 'https://github.com/nirmaleeswar30/Inzx/releases/latest/download/inzx.apk';
       var apkName = dlInfo ? dlInfo.mainApkName : 'inzx.apk';
 
@@ -1181,7 +1201,15 @@
                 '<div class="rel-badge-group">' +
                   '<span class="rel-tag ' + tagStyle + '">' + escapeHtml(rel.tag_name) + '</span>' +
                   (isLatest ? '<span class="rel-status-pill">Latest Release</span>' : '') +
-                  '<span class="rel-plat-pill">Android · Android Auto</span>' +
+                  '<span class="rel-plat-pill">' + escapeHtml((function () {
+                    var names = (rel.assets || []).map(function (a) { return (a.name || '').toLowerCase(); });
+                    return [
+                      names.some(function (n) { return n.endsWith('.apk'); }) && 'Android',
+                      names.some(function (n) { return n.endsWith('.ipa'); }) && 'iOS',
+                      names.some(function (n) { return n.endsWith('.exe'); }) && 'Windows',
+                      names.some(function (n) { return n.endsWith('.appimage'); }) && 'Linux'
+                    ].filter(Boolean).join(' · ') || 'Release notes';
+                  })()) + '</span>' +
                 '</div>' +
                 '<div class="rel-date">' +
                   (dateStr ? dateStr + ' · ' : '') +
@@ -1213,12 +1241,12 @@
               '</div>' +
               '<div class="rel-date">Upcoming · Roadmap</div>' +
             '</div>' +
-            '<h4>Desktop Client &amp; Google Cast Audio Streaming</h4>' +
-            '<p>Expanding the Inzx listening experience to large desktop workstations and networked smart home speakers.</p>' +
+            '<h4>macOS Desktop Port &amp; Google Cast Audio Streaming</h4>' +
+            '<p>Expanding the Inzx listening experience to macOS devices and networked smart home speakers.</p>' +
             '<ul class="rel-notes">' +
-              '<li><b>Desktop Client (Windows · macOS · Linux):</b> Native desktop packaging with global media hotkeys and system media integration.</li>' +
+              '<li><b>macOS Desktop Port:</b> Native Apple Silicon and Intel macOS packaging with media controls and menu bar integration.</li>' +
               '<li><b>Google Cast &amp; DLNA:</b> Direct stream casting to Nest Audio, smart TVs, and network receivers.</li>' +
-              '<li><b>Advanced Scrobbling:</b> Built-in Last.fm and ListenBrainz history scrobbling.</li>' +
+              '<li><b>Enhanced DJ Transitions:</b> Expanded Automix transitions and stem separation.</li>' +
             '</ul>' +
             '<div class="rel-actions">' +
               '<a class="rel-sub-btn" href="https://github.com/nirmaleeswar30/Inzx/issues" target="_blank" rel="noopener noreferrer">Join Discussion ↗</a>' +

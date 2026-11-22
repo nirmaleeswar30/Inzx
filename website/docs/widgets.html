@@ -5,11 +5,11 @@
 <script>/* Relative links need /docs/ (with the slash) to resolve inside docs/. */if(location.pathname.slice(-5)==="/docs")location.replace(location.pathname+"/"+location.search+location.hash);</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Home screen widgets · Inzx Docs</title>
-<meta name="description" content="Inzx's three home screen widgets.">
+<meta name="description" content="Home Screen widgets for Android, iPhone, and iPad.">
 <link rel="canonical" href="https://inzx.nirmaleeswar.dev/docs/widgets">
 <meta property="og:url" content="https://inzx.nirmaleeswar.dev/docs/widgets">
 <meta property="og:title" content="Home screen widgets · Inzx Docs">
-<meta property="og:description" content="Inzx's three home screen widgets.">
+<meta property="og:description" content="Home Screen widgets for Android, iPhone, and iPad.">
 <meta property="og:image" content="https://inzx.nirmaleeswar.dev/assets/img/brand.png">
 <link rel="icon" type="image/png" href="../assets/img/logo_transparent.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,7 +36,7 @@
 <h1>Home screen widgets</h1>
 <p class="lead">Inzx includes three high-fidelity home screen widgets designed to blend seamlessly into your Android launcher with dynamic colors, crisp album art, and instant playback controls.</p>
 
-<h2 id="adding">Adding a widget</h2>
+<h2 id="adding">Adding an Android widget</h2>
 <ol>
   <li>Long-press any empty space on your Android home screen.</li>
   <li>Select <b>Widgets</b> from the menu.</li>
@@ -63,6 +63,10 @@
   <li><b>Zero Battery Drain:</b> State updates are pushed through Android's native <code>AppWidgetProvider</code> broadcasts only when track state transitions, avoiding battery-draining polling loops.</li>
   <li><b>Quick Open:</b> Tapping the album artwork or song title anywhere on the widget instantly opens the Inzx Now Playing screen.</li>
 </ul>
+
+<h2 id="ios">iPhone &amp; iPad widgets</h2>
+<p>On iOS 17+, long-press the Home Screen, open the widget gallery, and choose <b>Inzx</b>. Pick the small or medium <b>Now Playing</b> widget. Both show album artwork and playback controls; tapping the widget opens Inzx's player.</p>
+<p>The app and widget share playback state through an App Group. Your sideloading tool must preserve the widget extension and remap that group when signing. If the widget is missing or does not update, open Inzx and check the installed IPA and your sideloading tool's extension support.</p>
 
     </article>
     <nav class="pager" id="pager" aria-label="Previous and next page"></nav>

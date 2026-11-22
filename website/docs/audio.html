@@ -52,6 +52,13 @@
 <p>These add-ons come from independent open-source communities, and this directory is built from links shared by the community. Thank you to the maintainers who build and support these projects, and to everyone who shares and tests sources with other Inzx listeners.</p>
 <p><a class="btn" href="https://github.com/nirmaleeswar30/Inzx" target="_blank" rel="noopener noreferrer">Star on GitHub</a></p>
 
+<h2 id="ios-audio">Audio on iOS</h2>
+<p>YouTube streams use AAC. Lossless add-ons can play FLAC/ALAC files and compatible DASH streams, which Inzx bridges to a fragmented-MP4 stream for the native player. Opus/Vorbis add-on streams are skipped.</p>
+<p>The native iOS audio effects stage supports EQ, AutoEQ calibration, and loudness processing. iOS manages the final output mixer, so there is no hi-res or bit-perfect output switch.</p>
+
+<h2 id="automix">DJ Automix</h2>
+<p>Automix analyses beats and transition cues to blend tracks. On iOS, transitions use live blends, including pairs that would use loop-mix on other platforms. The progress bar pulses while a live blend is active.</p>
+
 <h2 id="jiosaavn">High quality sources (JioSaavn)</h2>
 <p>With this on, Inzx looks for the same song on JioSaavn and, when it finds a match, plays its 320&nbsp;kbps stream instead of YouTube's.</p>
 <div class="callout warn"><span class="ic">Heads up</span><div><p>Matching is done by title and artist, so once in a while JioSaavn may load a different song or version. If that happens, turn the source off in Settings → Audio. More high quality sources are coming soon.</p></div></div>

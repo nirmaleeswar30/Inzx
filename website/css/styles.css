@@ -3055,6 +3055,16 @@ html:not(.js) .showcase-track[hidden]{ display:flex; }
   background:linear-gradient(135deg, rgba(168,85,247,.25), rgba(99,102,241,.3)), rgba(255,255,255,.05);
 }
 .dl-btn-card-universal .dl-btn-icon{ color:#c084fc; }
+.dl-btn-card-ios{
+  background:linear-gradient(135deg, rgba(148,163,184,.16), rgba(100,116,139,.2)), rgba(255,255,255,.03);
+  border:1px solid rgba(148,163,184,.45); color:#fff;
+  box-shadow:0 12px 32px -10px rgba(148,163,184,.2);
+}
+.dl-btn-card-ios:hover{
+  transform:translateY(-3px); border-color:rgba(203,213,225,.8);
+  background:rgba(148,163,184,.2);
+}
+.dl-btn-card-ios .dl-btn-icon{ color:#cbd5e1; }
 .dl-btn-card-windows{
   background:linear-gradient(135deg, rgba(14,165,233,.16), rgba(59,130,246,.2)), rgba(255,255,255,.03);
   border:1px solid rgba(14,165,233,.45); color:#fff;

@@ -4,21 +4,21 @@
   var GROUPS = [
     { title: 'Getting started', pages: [
       { slug: '', title: 'Overview', keys: 'start intro what is inzx youtube music' },
-      { slug: 'install', title: 'Install & update', keys: 'download apk obtainium github release update upgrade ota shorebird windows exe installer linux appimage desktop' },
+      { slug: 'install', title: 'Install & update', keys: 'download apk obtainium github release update upgrade ota shorebird windows exe installer linux appimage desktop ios iphone ipad ipa altstore sidestore sideload' },
       { slug: 'sign-in', title: 'Signing in', keys: 'google account login youtube music sign in one login profile history guest' },
     ] },
     { title: 'Listening', pages: [
       { slug: 'player', title: 'Now playing', keys: 'player cinematic ripple og default lyrics up next queue related shuffle repeat like device output spectrum waveform liquid glass' },
       { slug: 'lyrics', title: 'Lyrics & AI translation', keys: 'synced karaoke word translation ai offset provider lrclib musixmatch ttml deepl gemini openrouter transliteration romanization' },
-      { slug: 'audio', title: 'Audio & quality', keys: 'quality lossless add-ons addons flac hi-res community sources 320kbps jiosaavn high quality sources crossfade cache streaming routing bluetooth' },
-      { slug: 'downloads', title: 'Downloads & offline', keys: 'offline download local files folders storage' },
+      { slug: 'audio', title: 'Audio & quality', keys: 'quality automix ios dash alac lossless add-ons addons flac hi-res community sources 320kbps jiosaavn high quality sources crossfade cache streaming routing bluetooth' },
+      { slug: 'downloads', title: 'Downloads & offline', keys: 'offline download local files folders storage explore charts moods genres ios files' },
     ] },
     { title: 'Together', pages: [
       { slug: 'jams', title: 'Jams', keys: 'listen together friends sync code link host controller permission websocket' },
       { slug: 'sharing', title: 'Sharing links', keys: 'share link preview whatsapp discord open in app short url' },
     ] },
     { title: 'Around the app', pages: [
-      { slug: 'widgets', title: 'Home screen widgets', keys: 'widget pill square wide launcher 2x2 4x4 4x1' },
+      { slug: 'widgets', title: 'Home screen widgets', keys: 'widget pill square wide launcher 2x2 4x4 4x1 ios iphone ipad small medium' },
       { slug: 'integrations', title: 'Integrations', keys: 'inzx connect pair pairing simultaneous playback desktop media smtc mpris discord rich presence rpc backup restore android auto' },
     ] },
     { title: 'Help', pages: [
