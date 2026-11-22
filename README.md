@@ -334,7 +334,7 @@ Open **Actions → iOS build → Run workflow**, choose **normal** or **shorebir
 
 - **normal** builds a standard Flutter IPA without OTA support.
 - **shorebird** runs from `main`, requires the `SHOREBIRD_TOKEN` repository secret, and registers an OTA baseline. Increment the build number for each new baseline. As in Nivio, the workflow reuses an existing release's Flutter revision and packages the exact Shorebird archive.
-- **ENV_FILE** supplies the app's `.env` for either option. Without it, `.env.example` is used with a warning.
+- **ENV_FILE** must contain the full app `.env` for either option. CI fails if it is missing and verifies that the packaged IPA contains exactly that file.
 - Download **inzx-ios-normal** or **inzx-ios-shorebird** from the run's artifacts. Each includes the sideloadable IPA, checksums, dependency locks, and toolchain details. To publish the IPA through the AltStore source, attach it to a GitHub release separately.
 
 See [iOS build notes](ios/README.md) and [Shorebird setup](SHOREBIRD_SETUP.md) for local builds and patching.

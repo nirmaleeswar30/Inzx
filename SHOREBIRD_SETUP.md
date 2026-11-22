@@ -62,7 +62,8 @@ After code changes, publish an instant Over-the-Air patch without rebuilding ful
 
 Run **Actions → iOS build → Run workflow** from `main`, select **shorebird**,
 and enter the build number. `SHOREBIRD_TOKEN` must have access to the Inzx app;
-`ENV_FILE` supplies the app configuration. Increment the build number for a
+`ENV_FILE` must supply the full app configuration; CI fails if it is missing
+or does not match the `.env` bundled in the IPA. Increment the build number for a
 new baseline. The workflow reuses the Flutter revision for an existing
 `<version>+<build>` release across platforms, or pins `3.47.7` for a new one.
 It packages the exact unsigned Shorebird archive for sideloading and records

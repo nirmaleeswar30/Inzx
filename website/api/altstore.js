@@ -43,11 +43,13 @@ function versionOf(release) {
 function toVersion(release) {
   if (release.draft) return null;
   const ipa = (release.assets || []).find((a) => /\.ipa$/i.test(a.name || ''));
-  const version = versionOf(release);
-  if (!ipa || !version) return null;
+  if (!ipa) return null;
+  const packaged = /^Inzx-(\d+\.\d+\.\d+)-([1-9]\d*)\.ipa$/i.exec(ipa.name || '');
+  const version = packaged ? packaged[1] : versionOf(release);
+  if (!version) return null;
   return {
     version,
-    buildVersion: version,
+    ...(packaged ? { buildVersion: packaged[2] } : {}),
     date: release.published_at || release.created_at,
     localizedDescription: (release.body || '').slice(0, 4000),
     downloadURL: ipa.browser_download_url,

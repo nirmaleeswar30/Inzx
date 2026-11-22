@@ -36,9 +36,11 @@ Both options follow these steps:
    `build/ios/archive/*.xcarchive/Products/Applications/`, preserving the
    exact baseline registered with Shorebird rather than rebuilding it.
 
-The repository secret `ENV_FILE` supplies `.env` (as for the desktop builds).
-Without it, CI uses `.env.example` and warns that configured integrations
-will be unavailable.
+The repository secret `ENV_FILE` must contain the full app `.env` (as for
+the desktop builds). Both build modes bundle it as a Flutter asset. CI
+fails if the secret is missing or the final IPA's bundled `.env` differs
+from the supplied file. `SHOREBIRD_TOKEN` authenticates CI only; it is not
+part of the app configuration.
 
 The `inzx-ios-normal` or `inzx-ios-shorebird` artifact contains
 `Inzx-<version>-<build>.ipa`, SHA-256 checksums, `pubspec.lock`,

@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="docs.css">
 <script src="docs.js" defer></script>
+<script src="../js/ios-download.js" defer></script>
 </head>
 <body>
 <div class="field" aria-hidden="true"></div>
@@ -44,15 +45,25 @@
 </ol>
 <p><b>Stay updated automatically:</b> <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/nirmaleeswar30/Inzx/" target="_blank" rel="noopener noreferrer">Add Inzx to Obtainium</a> to track new releases and update seamlessly.</p>
 
-<h2 id="ios">iPhone &amp; iPad (beta)</h2>
-<p>Requires <b>iOS 17 or later</b>. Inzx is sideloaded with your Apple ID and is not on the App Store.</p>
-<ol>
-  <li>In AltStore or SideStore, add <code>https://inzx.nirmaleeswar.dev/altstore.json</code> as a source. Install Inzx once an IPA is listed.</li>
-  <li>Alternatively, download <code>Inzx-&lt;version&gt;-&lt;build&gt;.ipa</code> from a <a href="https://github.com/nirmaleeswar30/Inzx/releases" target="_blank" rel="noopener noreferrer">GitHub release containing an IPA</a> and install it with Sideloadly or your preferred sideloader.</li>
-  <li>With a free Apple ID, refresh the app every seven days using your sideloading tool.</li>
+<h2 id="ios">iPhone and iPad</h2>
+<div class="platforms"><span class="chip on">iOS / iPadOS 17+</span><span class="chip">Sideloading · Beta</span></div>
+<p data-ios-status aria-live="polite">Checking iOS download availability…</p>
+<h3 id="ios-source">Install from the Inzx source</h3>
+<ol class="steps">
+  <li>Set up <a href="https://docs.sidestore.io/docs/installation/install">SideStore</a> or <a href="https://faq.altstore.io/altstore-classic/your-altstore">AltStore Classic</a> using its installation guide.</li>
+  <li>Once the IPA is available, open <strong>Sources</strong>, choose <strong>Add Source</strong> and paste <code>https://inzx.nirmaleeswar.dev/altstore.json</code>.
+    <span data-ios-available hidden><a href="sidestore://source?url=https%3A%2F%2Finzx.nirmaleeswar.dev%2Faltstore.json">Open in SideStore</a> · <a href="altstore-classic://source?url=https%3A%2F%2Finzx.nirmaleeswar.dev%2Faltstore.json">Open in AltStore Classic</a></span>
+  </li>
+  <li>In <strong>Browse</strong>, search for <strong>Inzx</strong> and tap <strong>Install</strong>. Your sideloading app downloads and signs the IPA.</li>
 </ol>
-<p>IPAs are published separately from Android and desktop builds, so the latest release may not include one yet. The source lists releases with an attached IPA.</p>
-<div class="callout"><span class="ic">iOS limits</span><div><p>YouTube uses AAC rather than Opus/WebM. Lossless add-ons support FLAC/ALAC and compatible DASH streams. iOS manages the audio output mixer, so there is no bit-perfect switch or CarPlay support yet. Jams and Inzx Connect stay connected while music plays or the app is open, then reconnect when you return.</p></div></div>
+<p>Once available, you can also <a href="https://github.com/nirmaleeswar30/Inzx/releases">get the IPA from GitHub Releases</a> and import it manually. <a data-ios-ipa hidden>Download the current IPA</a></p>
+<noscript><p>Check GitHub Releases for an IPA; live download availability requires JavaScript.</p></noscript>
+
+<h3 id="ios-updates">Updating and refreshing on iOS</h3>
+<p>Use the same sideloading app to install new IPA versions. Free Apple Accounts usually need to refresh their signature every seven days. Shorebird builds can receive Dart fixes in the app. Native changes and bundled assets require an updated IPA.</p>
+
+<h3 id="ios-differences">What to expect on iOS</h3>
+<p>YouTube uses AAC rather than Opus/WebM. Lossless add-ons support FLAC/ALAC and compatible DASH streams. iOS manages the audio output mixer, so there is no bit-perfect switch or CarPlay support yet. Jams and Inzx Connect stay connected while music plays or the app is open, then reconnect when you return.</p>
 
 <h2 id="windows">Windows</h2>
 <ol>
