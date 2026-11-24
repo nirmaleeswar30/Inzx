@@ -1,5 +1,12 @@
 {
   "@@locale": "en",
+  "preferDolbyAtmosMixes": "Prefer Dolby Atmos mixes",
+  "preferDolbyAtmosMixesDescription": "Play Dolby Atmos mixes from compatible add-ons when available. Stereo lossless is used as a fallback.",
+  "dolbyAtmosOutputUnavailable": "Dolby Atmos is unavailable on the current audio output.",
+  "checkingAudioOutput": "Checking audio output…",
+  "hdmiAtmosPassthrough": "HDMI Atmos passthrough",
+  "hdmiAtmosPassthroughDescription": "Choose your HDMI output for a compatible receiver or soundbar. Playback bypasses app EQ and mixing and uses the receiver’s volume.",
+  "desktopAtmosHeadphoneDescription": "For headphones, use your system’s spatial audio. The player decodes the surround channels. HDMI passthrough also carries Atmos object data.",
   "appTitle": "Inzx",
   "updateDownloadedBanner": "Update downloaded. Restart the app to apply.",
   "iosReopenToApply": "Swipe Inzx away in the app switcher and open it again to finish updating.",

@@ -80,11 +80,14 @@ object InzxAudioOutput {
     /** Info for the Dart side: capabilities, settings and the last track's path. */
     fun describe(): Map<String, Any?> {
         val ctx = appContext
-        val usb = ctx?.let { usbOutput(it.getSystemService(Context.AUDIO_SERVICE) as AudioManager) }
+        val manager = ctx?.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+        val usb = manager?.let(::usbOutput)
         return mapOf(
             "bitPerfectSupported" to bitPerfectSupported,
             "bitPerfectRequested" to bitPerfectRequested,
             "hiResOutput" to hiResOutput,
+            "atmosSupported" to (!bitPerfectRequested && AtmosCapabilities.canDecodeJoc &&
+                manager != null && AtmosCapabilities.isSpatialRoute(manager)),
             "usbDac" to usb?.productName?.toString(),
         ) + status
     }

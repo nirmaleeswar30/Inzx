@@ -1,4 +1,5 @@
 import AVFoundation
+import AudioToolbox
 import AVKit
 import Flutter
 import MediaPlayer
@@ -97,12 +98,14 @@ final class AudioRouteChannel: NSObject, FlutterStreamHandler {
     switch call.method {
     case "describe":
       let session = AVAudioSession.sharedInstance()
+      let spatial = session.currentRoute.outputs.contains { $0.isSpatialAudioEnabled }
       var out: [String: Any] = [
         "bitPerfectSupported": false,
         "bitPerfectRequested": false,
         "hiResOutput": true,
         "outSampleRate": Int(session.sampleRate.rounded()),
         "outEncoding": "Float32",
+        "atmosSupported": Self.canDecodeEac3 && spatial,
       ]
       if let port = session.currentRoute.outputs.first {
         out["device"] = port.portName
@@ -116,6 +119,16 @@ final class AudioRouteChannel: NSObject, FlutterStreamHandler {
   }
 
   // MARK: Route picker and volume
+
+  private static let canDecodeEac3: Bool = {
+    if AVURLAsset.isPlayableExtendedMIMEType("audio/mp4; codecs=\"ec-3\"") {
+      return true
+    }
+    var format = kAudioFormatEnhancedAC3
+    var size: UInt32 = 0
+    return AudioFormatGetPropertyInfo(kAudioFormatProperty_Decoders,
+      UInt32(MemoryLayout<AudioFormatID>.size), &format, &size) == noErr && size > 0
+  }()
 
   private func showRoutePicker() -> Bool {
     guard let host = topViewController()?.view else { return false }

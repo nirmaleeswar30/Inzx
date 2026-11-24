@@ -23,21 +23,29 @@ import 'youtube_mp4_fix.dart';
 /// Automix's filters would all have stopped at lossless songs.
 // ignore: experimental_member_use
 class DashFmp4AudioSource extends StreamAudioSource {
-  DashFmp4AudioSource(this.manifestUrl, {super.tag, DashFetcher? fetcher})
-      : _fetcher = fetcher ?? HttpDashFetcher();
+  DashFmp4AudioSource(
+    this.manifestUrl, {
+    super.tag,
+    DashFetcher? fetcher,
+    this.preferAtmos = false,
+  }) : _fetcher = fetcher ?? HttpDashFetcher();
 
   /// The manifest's URL, or a `data:` URI holding it.
   final String manifestUrl;
+  final bool preferAtmos;
   final DashFetcher _fetcher;
   Future<DashFileLayout>? _layout;
 
   /// The file this stream is laid out as (built on the first request).
-  Future<DashFileLayout> layout() => _layout ??= DashFileLayout.build(manifestUrl, _fetcher).catchError(
-        (Object e, StackTrace s) {
-          _layout = null; // a later request tries again
-          return Future<DashFileLayout>.error(e, s);
-        },
-      );
+  Future<DashFileLayout> layout() => _layout ??=
+      DashFileLayout.build(
+        manifestUrl,
+        _fetcher,
+        preferAtmos: preferAtmos,
+      ).catchError((Object e, StackTrace s) {
+        _layout = null; // a later request tries again
+        return Future<DashFileLayout>.error(e, s);
+      });
 
   @override
   // ignore: experimental_member_use
@@ -87,15 +95,26 @@ class DashFileLayout {
   static const int _probesAtOnce = 8;
 
   /// Reads the manifest at [manifestUrl] and measures its segments.
-  static Future<DashFileLayout> build(String manifestUrl, DashFetcher fetcher) async {
+  static Future<DashFileLayout> build(
+    String manifestUrl,
+    DashFetcher fetcher, {
+    bool preferAtmos = false,
+  }) async {
     final uri = Uri.parse(manifestUrl);
     final DashTrack track;
     if (uri.isScheme('data')) {
       final data = uri.data;
       if (data == null) throw const FormatException('Empty manifest');
-      track = DashManifest.parse(data.contentAsString());
+      track = DashManifest.parse(
+        data.contentAsString(),
+        preferAtmos: preferAtmos,
+      );
     } else {
-      track = DashManifest.parse(utf8.decode(await fetcher.whole(uri), allowMalformed: true), baseUri: uri);
+      track = DashManifest.parse(
+        utf8.decode(await fetcher.whole(uri), allowMalformed: true),
+        baseUri: uri,
+        preferAtmos: preferAtmos,
+      );
     }
     if (track.segments.isEmpty) throw const FormatException('Manifest lists no segments');
 

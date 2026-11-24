@@ -171,6 +171,105 @@ void main() {
       duration: const Duration(seconds: 230),
     );
 
+    test('defaults to stereo and requests Atmos after opt-in on a capable output', () async {
+      final calls = <String>[];
+      var rejectedBySource = false;
+      final client = AddonClient('https://source.example', httpClient: MockClient((request) async {
+        final uri = request.url;
+        if (uri.path == '/manifest.json') return http.Response('Not found', 404);
+        final atmos = uri.queryParameters['atmos'] == 'auto';
+        calls.add('${uri.path}:${uri.queryParameters['atmos']}');
+        if (uri.path == '/search') {
+          return http.Response(jsonEncode({'tracks': [
+            {'id': 'stereo', 'title': 'Starboy', 'artist': 'The Weeknd', 'duration': 230, 'audioQuality': 'LOSSLESS'},
+            {'id': 'immersive', 'title': 'Starboy', 'artist': 'The Weeknd', 'duration': 230, 'audioQuality': 'LOW', 'audioModes': ['DOLBY_ATMOS']},
+          ]}), 200);
+        }
+        if (uri.path == '/stream/immersive' && rejectedBySource) {
+          return http.Response('Atmos unavailable', 404);
+        }
+        return http.Response(jsonEncode(uri.path == '/stream/immersive' && atmos
+            ? {'url': 'https://source.example/atmos.m4a', 'codec': 'ec-3'}
+            : {'url': 'https://source.example/stereo.flac', 'codec': 'flac'}), 200);
+      }));
+      service.resetForTesting(atmosSupported: true, addons: [
+        AddonEntry(id: 'addon', name: 'Test', baseUrl: client.baseUrl, client: client),
+      ]);
+
+      expect((await service.matchFor(testTrack))?.stream.isLossless, isTrue);
+      expect(calls, ['/search:none', '/stream/stereo:none']);
+      await service.setPreferAtmos(true);
+      calls.clear();
+
+      final mix = await service.matchFor(testTrack);
+      expect(mix?.stream.isAtmos, isTrue);
+      expect(mix?.stream.isLossless, isFalse);
+      expect(calls, ['/search:auto', '/stream/immersive:auto']);
+
+      final download = await service.matchForDownload(testTrack);
+      expect(download?.stream.isLossless, isTrue);
+      expect(calls.skip(2), ['/search:none', '/stream/stereo:none']);
+
+      service.rejectAtmosFor(testTrack);
+      final fallback = await service.matchFor(testTrack);
+      expect(fallback?.stream.isLossless, isTrue);
+      expect(calls.skip(4), ['/search:none', '/stream/stereo:none']);
+
+      await service.setPreferAtmos(false);
+      await service.setPreferAtmos(true);
+      rejectedBySource = true;
+      calls.clear();
+      expect((await service.matchFor(testTrack))?.stream.isLossless, isTrue);
+      expect(calls, ['/search:auto', '/stream/immersive:auto', '/search:none', '/stream/stereo:none']);
+    });
+
+    test('requests stereo on an unsupported output', () async {
+      SharedPreferences.setMockInitialValues({
+        'inzx_headphone_atmos': true, // A preference left by an older test build.
+      });
+      final requests = <String?>[];
+      final client = AddonClient(
+        'https://source.example',
+        httpClient: MockClient((request) async {
+          final uri = request.url;
+          if (uri.path == '/manifest.json') return http.Response('', 404);
+          requests.add(uri.queryParameters['atmos']);
+          final atmos = uri.queryParameters['atmos'] == 'auto';
+          if (uri.path == '/search') {
+            return http.Response(jsonEncode({'tracks': [
+              {
+                'id': atmos ? 'immersive' : 'stereo',
+                'title': 'Starboy',
+                'artist': 'The Weeknd',
+                'duration': 230,
+                'audioQuality': 'LOSSLESS',
+                'atmos': atmos,
+              }
+            ]}), 200);
+          }
+          return http.Response(jsonEncode({
+            'url': atmos ? 'https://source.example/song.mp4' : 'https://source.example/song.flac',
+            'codec': atmos ? 'ec-3' : 'flac',
+          }), 200);
+        }),
+      );
+      service.resetForTesting(
+        atmosSupported: false,
+        addons: [
+          AddonEntry(
+            id: 'addon',
+            name: 'Test',
+            baseUrl: client.baseUrl,
+            client: client,
+          ),
+        ],
+      );
+
+      await service.setPreferAtmos(true);
+      expect((await service.matchFor(testTrack))?.stream.isLossless, isTrue);
+      expect(requests, ['none', 'none']);
+    });
+
     test('falls back to Addon #2 when Addon #1 has no search candidates', () async {
       // Mock Client 1: returns empty search results
       final mockHttp1 = MockClient((request) async {

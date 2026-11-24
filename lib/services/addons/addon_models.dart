@@ -212,7 +212,6 @@ class AddonTrack {
       json['quality'],
       json['tier'],
     ].whereType<String>().firstWhere((s) => s.isNotEmpty, orElse: () => '');
-    final modes = (json['audioModes'] as List?)?.join(' ') ?? '';
     final durationRaw = json['duration'] ??
         json['durationMs'] ??
         json['duration_ms'] ??
@@ -250,8 +249,7 @@ class AddonTrack {
       album: albumVal?.toString() ?? '',
       duration: Duration(milliseconds: durationMs),
       audioQuality: quality.toUpperCase(),
-      isAtmos: json['atmos'] == true ||
-          _atmosHint.hasMatch('$quality $modes ${json['audioMode'] ?? ''}'),
+      isAtmos: hasAtmosMetadata(json),
       format: [
         json['format'],
         json['codec'],
@@ -282,6 +280,7 @@ class AddonTrack {
   /// addons that label quality as "HIGH" or leave it blank while specifying
   /// format: "flac" are also correctly recognised as lossless.
   bool get isLossless {
+    if (isAtmos) return false;
     if (losslessText.hasMatch(audioQuality)) return true;
     if (losslessText.hasMatch(format)) return true;
     return bitDepth != null && bitDepth! >= 16;
@@ -303,6 +302,7 @@ class AddonStream {
     this.bitDepth,
     this.sampleRate,
     this.bitrate,
+    this.isAtmos = false,
   });
 
   /// A DASH manifest (`.mpd`) or a direct file URL.
@@ -312,14 +312,22 @@ class AddonStream {
   final int? bitDepth;
   final int? sampleRate;
   final int? bitrate;
+  final bool isAtmos;
+
+  /// Streaming Atmos from these add-ons uses Dolby Digital Plus/JOC.
+  /// TrueHD and unidentified codecs are not enabled by the mobile probe.
+  bool get isPlayableAtmos =>
+      isAtmos && (codec == 'eac3' || codec == 'eac3-joc');
 
   bool get isLossless {
+    if (isAtmos) return false;
     final c = codec.toLowerCase();
     return c == 'flac' || c == 'alac' || c == 'wav' || c == 'aiff';
   }
 
   /// "FLAC 24-bit / 96 kHz", or as much of that as the addon told us.
   String get formatLabel {
+    if (isAtmos) return 'Dolby Atmos';
     final parts = <String>[codec.isEmpty ? 'Audio' : codec.toUpperCase()];
     final depth = bitDepth;
     final rate = sampleRate;
@@ -338,9 +346,18 @@ class AddonStream {
 }
 
 final RegExp _atmosHint = RegExp(
-  r'atmos|dolby|eac3[_-]?joc|ec-?3',
+  r'atmos|e-?ac-?3[ _-]?joc|ec-?3[ _-]?joc',
   caseSensitive: false,
 );
+
+bool hasAtmosMetadata(Map<String, dynamic> json) =>
+    json['atmos'] == true ||
+    _atmosHint.hasMatch([
+      json['audioQuality'], json['audio_quality'], json['quality'],
+      json['streamQuality'], json['audioMode'], json['audioModes'], json['tier'],
+      json['codec'], json['fileCodec'], json['audioCodec'], json['format'],
+      json['mimeType'], json['contentType'],
+    ].whereType<Object>().join(' '));
 
 const _nestedKeys = [
   'metadata',

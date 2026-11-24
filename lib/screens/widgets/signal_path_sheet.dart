@@ -22,15 +22,18 @@ class SignalPathSheet extends ConsumerStatefulWidget {
 
   static Future<void> show(BuildContext context, {required Color accentColor}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return openOnce<void>('SignalPathSheet', () => showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: isDark ? const Color(0xFF141414) : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+    return openOnce<void>(
+      'SignalPathSheet',
+      () => showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: isDark ? const Color(0xFF141414) : Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        ),
+        builder: (_) => SignalPathSheet(accentColor: accentColor),
       ),
-      builder: (_) => SignalPathSheet(accentColor: accentColor),
-    ));
+    );
   }
 
   @override
@@ -179,7 +182,14 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
     final String badge;
     final String line;
     final bool good;
-    if (tier != null && output != null && output.bitPerfectActive) {
+    if (format.isAtmos) {
+      final passthrough = output?.atmosPassthroughActive == true;
+      badge = passthrough ? 'ATMOS PASSTHROUGH' : 'DOLBY ATMOS MIX';
+      line = passthrough
+          ? 'Dolby Digital Plus bitstream sent to the receiver'
+          : 'Mix from ${data.audioSource}. Spatial rendering depends on the output.';
+      good = true;
+    } else if (tier != null && output != null && output.bitPerfectActive) {
       badge = 'BIT-PERFECT';
       final rate = _khz(output.trackSampleRate ?? source ?? 0);
       final encoding = output.trackEncoding ?? 'PCM';

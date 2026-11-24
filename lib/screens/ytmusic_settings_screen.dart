@@ -184,6 +184,21 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
         screen: const AudioSettingsScreen(),
       ),
       _SearchableItem(
+        tags: const ['dolby atmos', 'spatial audio', 'surround sound', 'eac3'],
+        title: l10n.preferDolbyAtmosMixes,
+        subtitle: l10n.preferDolbyAtmosMixesDescription,
+        icon: Iconsax.volume_high,
+        screen: const AudioSettingsScreen(),
+      ),
+      if (isDesktop)
+        _SearchableItem(
+          tags: const ['dolby atmos', 'hdmi atmos', 'passthrough', 'soundbar'],
+          title: l10n.hdmiAtmosPassthrough,
+          subtitle: l10n.hdmiAtmosPassthroughDescription,
+          icon: Iconsax.volume_high,
+          screen: const AudioSettingsScreen(),
+        ),
+      _SearchableItem(
         tags: [
           'crossfade',
           'transition',

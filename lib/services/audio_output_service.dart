@@ -20,6 +20,8 @@ class AudioOutputStatus {
     this.bitPerfectActive = false,
     this.bitPerfectDevice,
     this.bitPerfectReason,
+    this.atmosSupported = false,
+    this.atmosPassthroughActive = false,
   });
 
   final bool bitPerfectSupported;
@@ -35,6 +37,10 @@ class AudioOutputStatus {
   final String? bitPerfectDevice;
   final String? bitPerfectReason;
 
+  /// Backend can decode E-AC-3/JOC; spatial rendering depends on the output.
+  final bool atmosSupported;
+  final bool atmosPassthroughActive;
+
   factory AudioOutputStatus.fromMap(Map<dynamic, dynamic> m) =>
       AudioOutputStatus(
         bitPerfectSupported: m['bitPerfectSupported'] == true,
@@ -49,6 +55,8 @@ class AudioOutputStatus {
         bitPerfectActive: m['bitPerfectActive'] == true,
         bitPerfectDevice: m['bitPerfectDevice'] as String?,
         bitPerfectReason: m['bitPerfectReason'] as String?,
+        atmosSupported: m['atmosSupported'] == true,
+        atmosPassthroughActive: m['atmosPassthroughActive'] == true,
       );
 }
 
@@ -63,6 +71,9 @@ class AudioOutputService {
   // shared_preferences adds on Android).
   static const hiResKey = 'inzx_hires_output';
   static const bitPerfectKey = 'inzx_bitperfect_usb';
+  static const preferAtmosKey = 'inzx_prefer_atmos';
+  static const preferAtmosDefault = false;
+  static const atmosPassthroughKey = 'inzx_atmos_passthrough';
 
   static Future<AudioOutputStatus?> describe() async {
     try {

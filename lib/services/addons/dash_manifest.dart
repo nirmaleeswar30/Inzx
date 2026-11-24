@@ -47,7 +47,7 @@ class DashManifest {
     return parse(response.body, baseUri: uri);
   }
 
-  static DashTrack parse(String xml, {Uri? baseUri}) {
+  static DashTrack parse(String xml, {Uri? baseUri, bool preferAtmos = false}) {
     final XmlDocument document;
     try {
       document = XmlDocument.parse(xml);
@@ -85,7 +85,10 @@ class DashManifest {
         final codecs =
             (rep.getAttribute('codecs') ?? set.getAttribute('codecs') ?? '')
                 .toLowerCase();
-        // Lossless first, then the richest of those.
+        final dolby = RegExp(r'\b(?:ec-?3|e-?ac-?3)\b').hasMatch(codecs);
+        // The iOS bridge needs exactly the selected mix. If the requested
+        // Atmos representation is missing, let the player retry in stereo.
+        if (preferAtmos && !dolby) continue;
         final lossless = codecs.contains('flac') || codecs.contains('alac');
         final bandwidth = int.tryParse(rep.getAttribute('bandwidth') ?? '') ?? 0;
         final score = (lossless ? 1 << 40 : 0) + bandwidth;

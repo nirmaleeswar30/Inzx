@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:math' as math;
@@ -36,6 +37,40 @@ class DesktopAudioDsp extends ChangeNotifier {
   final _players = <mk.Player>{};
   bool _started = false;
   bool _exclusive = false;
+  bool _atmosPassthrough = false;
+  bool? _eac3Decoder;
+  bool get atmosPassthrough => _atmosPassthrough;
+  bool get _untouchedOutput => _exclusive || _atmosPassthrough;
+
+  Future<void> setAtmosPassthrough(bool enabled) async {
+    await (await SharedPreferences.getInstance()).setBool(
+      AudioOutputService.atmosPassthroughKey, enabled);
+    _atmosPassthrough = enabled;
+    _applyExclusiveSideEffects();
+    notifyListeners();
+    for (final player in List.of(_players)) {
+      await _applyTo(player, reloadOutput: true);
+    }
+  }
+
+  /// Probe the bundled mpv instead of assuming every desktop build has E-AC-3.
+  Future<bool> _canDecodeEac3() async {
+    if (_eac3Decoder != null) return _eac3Decoder!;
+    for (final player in _players) {
+      final native = player.platform;
+      if (native is! mk.NativePlayer) continue;
+      try {
+        final decoders = await native.getProperty('decoder-list');
+        if (decoders.isEmpty) continue;
+        final entries = jsonDecode(decoders) as List<dynamic>;
+        final supported = entries.whereType<Map>().any((entry) => entry['codec'] == 'eac3');
+        _eac3Decoder = supported;
+        return supported;
+      } catch (_) {}
+    }
+    return false;
+  }
+
   bool _shelves = !Platform.isWindows;
   MpvEq _eq = const MpvEq('', 0);
   Timer? _debounce;
@@ -47,12 +82,12 @@ class DesktopAudioDsp extends ChangeNotifier {
   static bool get exclusiveSupported => Platform.isWindows;
 
   /// The filter chain every player runs ('' when flat or bit-perfect).
-  String get chain => _exclusive ? '' : _eq.af;
+  String get chain => _untouchedOutput ? '' : _eq.af;
 
   /// What to multiply a player's mpv volume by for the chain's gain: mpv
   /// turns volume v into amplitude (v/100)^3, so a gain of g dB is a factor
   /// of 10^(g/60) on the volume.
-  double get volumeScale => _exclusive ? 1.0 : math.pow(10, _eq.gainDb / 60).toDouble();
+  double get volumeScale => _untouchedOutput ? 1.0 : math.pow(10, _eq.gainDb / 60).toDouble();
 
   /// mpv's default volume-max (130) only allows +6.8 dB; the chain's gain
   /// plus the app's own volume never needs more than this.
@@ -74,6 +109,7 @@ class DesktopAudioDsp extends ChangeNotifier {
     _started = true;
     final prefs = await SharedPreferences.getInstance();
     _exclusive = exclusiveSupported && (prefs.getBool(AudioOutputService.bitPerfectKey) ?? false);
+    _atmosPassthrough = prefs.getBool(AudioOutputService.atmosPassthroughKey) ?? false;
     _shelves = await _libmpvHasShelves();
     EqualizerService.instance.addListener(_schedule);
     DesktopAutoEq.instance.addListener(_schedule);
@@ -124,10 +160,12 @@ class DesktopAudioDsp extends ChangeNotifier {
   }
 
   void _applyExclusiveSideEffects() {
+    // mpv leaves encoded HDMI volume to the receiver. Keep software volume
+    // available when a stereo fallback is decoded to PCM.
     JustAudioMediaKit.fixedVolume = _exclusive ? 100.0 : null;
     JustAudioMediaKit.volumeScale = volumeScale;
     unawaited(JustAudioMediaKit.refreshVolumes());
-    AutomixService.instance.desktopEngine?.exclusiveOutput = _exclusive;
+    AutomixService.instance.desktopEngine?.exclusiveOutput = _untouchedOutput;
   }
 
   void _schedule() {
@@ -147,7 +185,7 @@ class DesktopAudioDsp extends ChangeNotifier {
     debugPrint('DesktopAudioDsp: af = ${eqNow.af.isEmpty ? '(none)' : eqNow.af}, '
         'gain ${eqNow.gainDb.toStringAsFixed(2)} dB');
     notifyListeners();
-    if (_exclusive) return;
+    if (_untouchedOutput) return;
     JustAudioMediaKit.volumeScale = volumeScale;
     unawaited(JustAudioMediaKit.refreshVolumes());
     if (!filtersChanged) return;
@@ -161,8 +199,13 @@ class DesktopAudioDsp extends ChangeNotifier {
     if (native is! mk.NativePlayer) return;
     try {
       await native.setProperty('volume-max', _volumeMax);
+      await native.setProperty('audio-channels', 'auto-safe');
+      await native.setProperty('audio-spdif', _atmosPassthrough ? 'eac3' : '');
+      if (Platform.isWindows) {
+        await native.setProperty('audio-fallback-to-null', _atmosPassthrough ? 'no' : 'yes');
+      }
       await native.setProperty('af', chain);
-      await native.setProperty('audio-exclusive', _exclusive ? 'yes' : 'no');
+      await native.setProperty('audio-exclusive', Platform.isWindows && _untouchedOutput ? 'yes' : 'no');
       if (reloadOutput) await native.command(['ao-reload']);
       if (_exclusive) await player.setVolume(100);
     } catch (e) {
@@ -177,6 +220,7 @@ class DesktopAudioDsp extends ChangeNotifier {
       'bitPerfectSupported': exclusiveSupported,
       'bitPerfectRequested': _exclusive,
       'hiResOutput': true,
+      'atmosSupported': !_exclusive && await _canDecodeEac3(),
     };
     for (final pl in _players) {
       final native = pl.platform;
@@ -190,7 +234,8 @@ class DesktopAudioDsp extends ChangeNotifier {
         out['trackEncoding'] = format;
         out['outSampleRate'] = outRate;
         out['outEncoding'] = outFormat;
-        out['bitPerfectActive'] = _exclusive && rate != null && rate == outRate;
+        out['bitPerfectActive'] = _exclusive && !_atmosPassthrough && rate != null && rate == outRate;
+        out['atmosPassthroughActive'] = _atmosPassthrough && (outFormat.contains('spdif') || format.contains('spdif'));
       } catch (_) {}
       break;
     }

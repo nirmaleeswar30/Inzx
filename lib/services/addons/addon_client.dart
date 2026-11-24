@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import '../../core/utils/platform_utils.dart' show isIOS;
 import 'addon_models.dart';
+import 'dash_manifest.dart';
 
 /// The shared client signing secret for LastWave addons. It's LastWave's
 /// public default (the same value ships in their open-source client), so it
@@ -205,9 +206,12 @@ class AddonClient {
   /// defaults first (what its reference host sends untouched), then
   /// `quality` set to what's wanted — in the addon's own vocabulary when it
   /// lists one, since `quality=lossless` to an addon offering
-  /// `hifi|high|low` is an invalid value that lands on its fallback. Atmos
-  /// is never wanted here (a different mix, not a better copy).
-  Future<Map<String, String>> _params(AddonQuality quality) async {
+  /// `hifi|high|low` is an invalid value that lands on its fallback.
+  /// Like BitChord, `atmos=auto` requests Atmos with a stereo fallback.
+  Future<Map<String, String>> _params(
+    AddonQuality quality, {
+    bool preferAtmos = false,
+  }) async {
     final declared = (await _manifestOrNull())?.settings ?? const <AddonSetting>[];
     final params = <String, String>{
       for (final s in declared)
@@ -219,15 +223,20 @@ class AddonClient {
         .toList();
     params['quality'] = matchQuality(quality, qualityOptions) ?? quality.wire;
     final atmos = declared.where((s) => s.key == 'atmos').firstOrNull;
-    params['atmos'] = atmos == null
-        ? 'none'
-        : atmos.options.firstWhere(
-            (o) => RegExp(r'^(0|false|off|no|none|never|stereo)$', caseSensitive: false)
-                .hasMatch(o),
-            orElse: () => '0',
-          );
+    if (preferAtmos) {
+      final options = atmos?.options ?? const <String>[];
+      params['atmos'] = options.where((o) => o.toLowerCase() == 'auto').firstOrNull ??
+          options.where(_atmosOn.hasMatch).firstOrNull ?? 'auto';
+    } else {
+      params['atmos'] = atmos == null
+          ? 'none'
+          : atmos.options.where(_atmosOff.hasMatch).firstOrNull ?? '0';
+    }
     return params;
   }
+
+  static final _atmosOn = RegExp(r'^(on|true|1|yes|atmos|dolby_atmos)$', caseSensitive: false);
+  static final _atmosOff = RegExp(r'^(0|false|off|no|none|never|stereo)$', caseSensitive: false);
 
   /// The option in [options] that best answers [quality], or null when the
   /// addon enumerated none. Matched on what an option says, not its
@@ -287,11 +296,12 @@ class AddonClient {
   Future<List<AddonTrack>> search(
     String query, {
     AddonQuality quality = AddonQuality.lossless,
+    bool preferAtmos = false,
   }) async {
     final q = query.trim();
     if (q.isEmpty) return const [];
     final uri = Uri.parse('$baseUrl/search').replace(
-      queryParameters: {...await _params(quality), 'q': q},
+      queryParameters: {...await _params(quality, preferAtmos: preferAtmos), 'q': q},
     );
     final Object? json;
     try {
@@ -315,12 +325,14 @@ class AddonClient {
     String trackId, {
     AddonQuality quality = AddonQuality.lossless,
     bool download = false,
+    bool preferAtmos = false,
+    bool atmosTrack = false,
   }) async {
     final id = trackId.trim();
     if (id.isEmpty) throw const AddonException('Empty track id');
     final uri = Uri.parse(
       '$baseUrl/stream/${Uri.encodeComponent(id)}',
-    ).replace(queryParameters: await _params(quality));
+    ).replace(queryParameters: await _params(quality, preferAtmos: preferAtmos && !download));
     final json = await _getJson(uri, download: download);
     if (json is! Map<String, dynamic>) {
       throw const AddonException('Stream answer is not a JSON object');
@@ -332,7 +344,11 @@ class AddonClient {
             : 'This build has no addon signing secret',
       );
     }
-    return parseStream(json, assumeFlac: isLastWave);
+    return parseStream(
+      json,
+      assumeFlac: isLastWave,
+      atmosTrack: preferAtmos && !download && atmosTrack,
+    );
   }
 
   /// A `/stream` answer, read leniently. [assumeFlac] is for LastWave's own
@@ -343,6 +359,7 @@ class AddonClient {
   static AddonStream parseStream(
     Map<String, dynamic> json, {
     required bool assumeFlac,
+    bool atmosTrack = false,
   }) {
     final inner = json['stream'] is Map<String, dynamic>
         ? json['stream'] as Map<String, dynamic>
@@ -387,30 +404,54 @@ class AddonClient {
         '${inner['manifest'] ?? inner['mediaType'] ?? ''}'.toLowerCase();
     final mime = '${inner['mimeType'] ?? inner['contentType'] ?? ''}'.toLowerCase();
     final path = Uri.tryParse(url)?.path.toLowerCase() ?? '';
-    final isDash = path.endsWith('.mpd') ||
+    final isDash = url.startsWith('data:application/dash+xml') || path.endsWith('.mpd') ||
         format == 'dash' ||
         transport == 'dash' ||
         mime.contains('dash');
     final bitrate = inner['bitrate'];
+    final metadata = {...json, ...inner};
+    final codec = _codecOf(metadata, format, mime, path, assumeFlac: assumeFlac);
+    final isAtmos = codec == 'eac3-joc' ||
+        hasAtmosMetadata(metadata) ||
+        (atmosTrack && codec == 'eac3');
 
     // AVPlayer (iOS) has no Opus/Vorbis in Ogg or WebM: such a stream is a
     // miss there, and the player falls back to the next source. (DASH it
     // gets as one fragmented MP4: see DashFmp4AudioSource.)
     if (isIOS) {
-      final codec = _codecOf(inner, format, mime, path, assumeFlac: assumeFlac);
       if (codec == 'opus' || codec == 'vorbis') {
         throw AddonMiss('$codec stream (not playable on iOS)');
       }
     }
 
     return AddonStream(
-      url: url,
+      url: isDash && isAtmos ? _inlineAtmosManifest(inner['dataUrl']) ?? url : url,
       isDash: isDash,
-      codec: _codecOf(inner, format, mime, path, assumeFlac: assumeFlac),
+      codec: codec,
       bitDepth: findBitDepth(inner) ?? findBitDepth(json),
       sampleRate: findSampleRate(inner) ?? findSampleRate(json),
       bitrate: bitrate is num ? bitrate.toInt() : null,
+      isAtmos: isAtmos,
     );
+  }
+
+  /// Some Atmos add-ons include the MPD alongside a hosted copy. Use the
+  /// included version when it can resolve all of its media URLs on its own.
+  static String? _inlineAtmosManifest(Object? value) {
+    if (value is! String || !value.startsWith('data:')) return null;
+    try {
+      final data = UriData.parse(value);
+      if (data.mimeType != 'application/dash+xml') return null;
+      final track = DashManifest.parse(data.contentAsString(), preferAtmos: true);
+      if (!track.singleFile && (!track.hasInit || track.segments.length < 2)) {
+        return null;
+      }
+      return track.segments.every(
+        (uri) => uri.host.isNotEmpty && (uri.isScheme('https') || uri.isScheme('http')),
+      ) ? value : null;
+    } on FormatException {
+      return null;
+    }
   }
 
   /// Whether a stream object indicates DRM protection or encryption that cannot
@@ -461,13 +502,17 @@ class AddonClient {
   }) {
     String? named(String text) {
       final t = text.toLowerCase();
+      if (t.contains('truehd') || t.contains('mlp')) return 'truehd';
+      if (RegExp(r'e-?ac-?3[ _-]?joc|ec-?3[ _-]?joc').hasMatch(t)) return 'eac3-joc';
+      if (RegExp(r'e-?ac-?3|ec-?3').hasMatch(t)) return 'eac3';
+      if (RegExp(r'ac-?3').hasMatch(t)) return 'ac3';
       if (t.contains('flac')) return 'flac';
       if (t.contains('alac')) return 'alac';
       if (t.contains('wav')) return 'wav';
       if (t.contains('aiff')) return 'aiff';
       if (t.contains('opus')) return 'opus';
       if (t.contains('mp3') || t.contains('mpeg')) return 'mp3';
-      if (t.contains('aac') || t.contains('mp4a') || t.contains('m4a')) return 'aac';
+      if (t.contains('aac') || t.contains('mp4a')) return 'aac';
       if (t.contains('vorbis') || t.contains('ogg')) return 'vorbis';
       return null;
     }
@@ -495,6 +540,12 @@ class AddonClient {
       inner['audioQuality'],
       inner['audio_quality'],
     ].whereType<String>().join(' ');
+    if (hasAtmosMetadata(inner)) return 'eac3-joc';
+    if ([inner['codec'], format, extension, mime].whereType<String>().any(
+      (value) => value.toLowerCase().contains('m4a'),
+    )) {
+      return 'aac';
+    }
     if (losslessText.hasMatch(qualityText)) return 'flac';
     return assumeFlac ? 'flac' : '';
   }

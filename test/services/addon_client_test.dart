@@ -65,6 +65,59 @@ void main() {
   });
 
   group('AddonStream and parseStream', () {
+    const hostedManifest = 'https://addon.example.com/track.mpd';
+    const mpd = '''
+<MPD mediaPresentationDuration="PT4S">
+  <Period>
+    <AdaptationSet mimeType="audio/mp4" codecs="ec-3">
+      <Representation id="atmos">
+        <SegmentTemplate timescale="1" duration="2" initialization="init.mp4"
+            media="track-\$Number\$.m4s"/>
+      </Representation>
+    </AdaptationSet>
+  </Period>
+</MPD>''';
+
+    test('uses a self-contained inline Atmos manifest when both URLs exist', () {
+      final inline = Uri.dataFromString(
+        mpd.replaceFirst('<Period>', '<Period><BaseURL>https://cdn.example.com/</BaseURL>'),
+        mimeType: 'application/dash+xml',
+        base64: true,
+      ).toString();
+      final stream = AddonClient.parseStream({
+        'url': hostedManifest,
+        'dataUrl': inline,
+        'format': 'dash',
+        'codec': 'eac3-joc',
+      }, assumeFlac: true);
+
+      expect(stream.isPlayableAtmos, isTrue);
+      expect(stream.isDash, isTrue);
+      expect(stream.url, inline);
+    });
+
+    test('keeps the hosted URL if the inline Atmos manifest cannot be used', () {
+      for (final xml in [mpd, 'unreadable MPD', '<MPD/>']) {
+        final stream = AddonClient.parseStream({
+          'url': hostedManifest,
+          'dataUrl': Uri.dataFromString(xml, mimeType: 'application/dash+xml').toString(),
+          'format': 'dash',
+          'codec': 'eac3-joc',
+        }, assumeFlac: true);
+
+        expect(stream.url, hostedManifest);
+      }
+    });
+
+    test('does not mistake plain Dolby Digital Plus for Atmos or lossless', () {
+      final stereo = AddonClient.parseStream({'url': 'https://example.com/s.m4a', 'codec': 'ec-3'}, assumeFlac: true);
+      final immersive = AddonClient.parseStream({'stream': {'url': 'https://example.com/a.m4a', 'mimeType': 'audio/eac3-joc'}}, assumeFlac: true);
+      expect(stereo.codec, 'eac3');
+      expect(stereo.isAtmos, isFalse);
+      expect(stereo.isLossless, isFalse);
+      expect(immersive.isPlayableAtmos, isTrue);
+      expect(immersive.isLossless, isFalse);
+    });
     test('infers flac when assumeFlac is true (LastWave addon)', () {
       final stream = AddonClient.parseStream({
         'url': 'https://example.com/stream/12345',

@@ -142,6 +142,7 @@ Inzx is free and open source. If it makes your day a little better, consider sup
 
 - **iPhone & iPad (iOS 17+)** — sideload through AltStore, SideStore, or Sideloadly; native audio effects, Files folder access, Keychain storage, and small/medium Home Screen widgets with playback controls
 - **iOS Automix** — live beatmatched blends with progress-bar feedback; loop-mix transitions fall back to live blends on iOS
+- **Dolby Atmos add-on playback** — turn on **Prefer Dolby Atmos mixes** in **Settings → Audio** to play compatible add-on mixes on supported outputs.
 - **Native Windows Desktop** — per-user installer (`.exe`) packaged with Inno Setup, system tray / taskbar controls, and silent background self-updates
 - **Linux AppImage** — standalone portable AppImage with bundled `libmpv`, desktop launcher menu integration, and MPRIS media keys
 - **Hardware media keys & transport** — Windows SMTC and Linux MPRIS integration for keyboard keys, headsets, and system media widgets

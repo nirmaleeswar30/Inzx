@@ -3,16 +3,17 @@ import 'dart:collection';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import '../secure_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/models.dart';
+import '../audio_output_service.dart';
 import '../canvas/canvas_artwork.dart';
 import '../canvas/canvas_repository.dart';
+import '../secure_store.dart';
 import 'addon_client.dart';
 import 'addon_models.dart';
 
-/// A lossless copy found for a queue track, ready to play.
+/// A lossless or Atmos copy found for a queue track, ready to play.
 class AddonMatch {
   const AddonMatch({
     required this.addonName,
@@ -87,6 +88,49 @@ class AddonService extends ChangeNotifier {
 
   final List<AddonEntry> _addons = [];
   bool _loaded = false;
+  bool _allowAtmos = false;
+  bool? _testAtmosSupport;
+  int _cacheRevision = 0;
+  final Set<String> _failedAtmos = <String>{};
+
+  Future<void> _refreshAtmosPolicy() async {
+    final prefs = await SharedPreferences.getInstance();
+    final preferred = prefs.getBool(AudioOutputService.preferAtmosKey) ??
+        AudioOutputService.preferAtmosDefault;
+    final allowed = preferred &&
+        (_testAtmosSupport ??
+            (await AudioOutputService.describe())?.atmosSupported ??
+            false);
+    if (_allowAtmos == allowed) return;
+    _allowAtmos = allowed;
+    _failedAtmos.clear();
+    _clearCache();
+  }
+
+  /// A failed Atmos load must retry the stereo mix, not the same URL.
+  void rejectAtmosFor(Track track) {
+    _failedAtmos.add(track.id);
+    if (_failedAtmos.length > _cacheSize) {
+      _failedAtmos.remove(_failedAtmos.first);
+    }
+    _cache.remove(track.id);
+    _resolvedAt.remove(track.id);
+  }
+
+  Future<void> setPreferAtmos(bool enabled) async {
+    await (await SharedPreferences.getInstance()).setBool(
+      AudioOutputService.preferAtmosKey,
+      enabled,
+    );
+    await _refreshAtmosPolicy();
+    notifyListeners();
+  }
+
+  /// Recheck the route before using an Atmos copy prefetched on another output.
+  Future<bool> canPlayAtmos(Track track) async {
+    await _refreshAtmosPolicy();
+    return _allowAtmos && !_failedAtmos.contains(track.id);
+  }
 
   /// Settled answers per track id, misses included, so a track with no
   /// lossless copy isn't searched for again every time it plays.
@@ -316,7 +360,10 @@ class AddonService extends ChangeNotifier {
   }
 
   @visibleForTesting
-  void resetForTesting({List<AddonEntry>? addons}) {
+  void resetForTesting({List<AddonEntry>? addons, bool? atmosSupported}) {
+    _testAtmosSupport = atmosSupported;
+    _allowAtmos = false;
+    _failedAtmos.clear();
     _clearCache();
     for (final a in _addons) {
       a.close();
@@ -329,6 +376,7 @@ class AddonService extends ChangeNotifier {
   }
 
   void _clearCache() {
+    _cacheRevision++;
     _cache.clear();
     _resolvedAt.clear();
   }
@@ -358,27 +406,39 @@ class AddonService extends ChangeNotifier {
     return match;
   }
 
-  /// The lossless copy of [track], or null when no addon has one (or
+  /// The preferred Atmos or lossless copy of [track], or null when no addon has one (or
   /// none are installed, enabled or reachable). Never throws.
   Future<AddonMatch?> matchFor(Track track) async {
     if (!isEnabled) return null;
     if (track.localFilePath != null || track.id.startsWith('local_')) {
       return null;
     }
+    final preferAtmos = await canPlayAtmos(track);
+    final revision = _cacheRevision;
+    final key = '${track.id}:$revision:$preferAtmos';
     if (_cache.containsKey(track.id)) {
-      final hit = _cache[track.id];
-      if (hit == null) return null; // settled miss
+      if (_cache[track.id] == null) return null;
       final fresh = cachedFor(track);
       if (fresh != null) return fresh;
-      // Expired stream: re-resolve the same catalogue id, no new search.
-      return _inFlight[track.id] ??= _resolve(track, knownMatch: hit)
-          .whenComplete(() {
-            _inFlight.remove(track.id);
-          });
     }
-    return _inFlight[track.id] ??= _resolve(track).whenComplete(() {
-      _inFlight.remove(track.id);
-    });
+    return _inFlight[key] ??=
+        _resolve(
+              track,
+              knownMatch: _cache[track.id],
+              preferAtmos: preferAtmos,
+              revision: revision,
+            )
+            .then((match) {
+              if (revision != _cacheRevision) return null;
+              if (match?.stream.isAtmos == true &&
+                  _failedAtmos.contains(track.id)) {
+                return null;
+              }
+              return match;
+            })
+            .whenComplete(() {
+              _inFlight.remove(key);
+            });
   }
 
   /// The lossless copy of [track] to download, or null when no addon has one
@@ -392,105 +452,110 @@ class AddonService extends ChangeNotifier {
     await load();
     if (!isEnabled || track.id.startsWith('local_')) return null;
     final known = _cache[track.id];
-    if (_cache.containsKey(track.id) && known == null) return null;
-    return _resolve(track, knownMatch: known, download: true);
+    if (!_allowAtmos && known == null && isSettledMiss(track)) return null;
+    return _resolve(
+      track,
+      knownMatch: known?.stream.isAtmos == true ? null : known,
+      download: true,
+    );
   }
 
   Future<AddonMatch?> _resolve(
     Track track, {
     AddonMatch? knownMatch,
     bool download = false,
+    bool preferAtmos = false,
+    int? revision,
   }) async {
+    bool acceptable(AddonStream stream, bool atmos) =>
+        stream.isLossless || (atmos && stream.isPlayableAtmos);
+    AddonMatch makeMatch(
+      AddonEntry entry,
+      AddonTrack candidate,
+      AddonStream stream,
+    ) => AddonMatch(
+        addonName: entry.name,
+        addonId: entry.id,
+        track: candidate,
+        stream: stream,
+      );
+
     void announce(AddonMatch match) {
-      if (download) return;
+      if (download || revision != _cacheRevision) return;
+      if (match.stream.isAtmos && _failedAtmos.contains(track.id)) return;
       _remember(track.id, match);
       _matchesController.add((trackId: track.id, match: match));
     }
 
     final active = _addons.where((a) => a.enabled).toList();
-    if (active.isEmpty) return null;
-
-    // Fast-path: if re-resolving an expired stream from a previously matched addon,
-    // try that addon directly first without a full search.
     if (knownMatch != null) {
-      final knownEntry = active.where((a) =>
-          a.id == knownMatch.addonId || a.name == knownMatch.addonName).firstOrNull;
-      if (knownEntry != null) {
+      final entry = active
+          .where(
+            (a) => a.id == knownMatch.addonId || a.name == knownMatch.addonName,
+          )
+          .firstOrNull;
+      if (entry != null) {
         try {
-          final stream = await knownEntry.client.stream(
+          final stream = await entry.client.stream(
             knownMatch.track.id,
-            quality: knownEntry.quality,
+            quality: entry.quality,
             download: download,
+            preferAtmos: preferAtmos,
+            atmosTrack: knownMatch.track.isAtmos,
           );
-          if (stream.isLossless) {
-            final match = AddonMatch(
-              addonName: knownEntry.name,
-              addonId: knownEntry.id,
-              track: knownMatch.track,
-              stream: stream,
-            );
+          if (acceptable(stream, preferAtmos && !download)) {
+            final match = makeMatch(entry, knownMatch.track, stream);
             announce(match);
             return match;
           }
         } catch (_) {
-          // If expired stream refresh fails, fall through to full priority search.
+          // An expired or unavailable stream needs a new search.
         }
       }
     }
-
-    var anyDefinitiveFailure = false;
-
-    for (var i = 0; i < active.length; i++) {
-      final entry = active[i];
-      final client = entry.client;
-      final quality = entry.quality;
-      try {
-        final watch = Stopwatch()..start();
-        final candidate = await _findCandidate(client, track, quality);
-        debugPrint(
-          '[Lossless] [${entry.name} (#${i + 1})] Search for "${track.title}" took ${watch.elapsedMilliseconds} ms: '
-          '${candidate == null ? 'no matching copy' : 'matched "${candidate.title}" (${candidate.album})'}',
-        );
-        if (candidate == null) {
-          anyDefinitiveFailure = true;
-          continue; // try next addon in priority
+    var settled = false;
+    for (final entry in active) {
+      // Try Atmos then stereo from the same source before moving down priority.
+      for (final atmos in [if (preferAtmos && !download) true, false]) {
+        if (!download && revision != _cacheRevision) return null;
+        try {
+          final candidate = await _findCandidate(
+            entry.client,
+            track,
+            entry.quality,
+            preferAtmos: atmos,
+          );
+          if (candidate == null) {
+            settled = true;
+            continue;
+          }
+          final stream = await entry.client.stream(
+            candidate.id,
+            quality: entry.quality,
+            download: download,
+            preferAtmos: atmos,
+            atmosTrack: candidate.isAtmos,
+          );
+          if (!acceptable(stream, atmos)) {
+            settled = true;
+            continue;
+          }
+          final match = makeMatch(entry, candidate, stream);
+          announce(match);
+          return match;
+        } on AddonMiss catch (error) {
+          debugPrint(
+            '[Lossless] [${entry.name}] Miss for "${track.title}": $error',
+          );
+          settled = true;
+        } catch (error) {
+          debugPrint(
+            '[Lossless] [${entry.name}] Error for "${track.title}": $error',
+          );
         }
-        watch.reset();
-        final stream = await client.stream(
-          candidate.id,
-          quality: quality,
-          download: download,
-        );
-        debugPrint(
-          '[Lossless] [${entry.name} (#${i + 1})] Stream for "${track.title}" took ${watch.elapsedMilliseconds} ms '
-          '(${stream.formatLabel})',
-        );
-        if (!stream.isLossless) {
-          anyDefinitiveFailure = true;
-          continue; // try next addon in priority
-        }
-        final match = AddonMatch(
-          addonName: entry.name,
-          addonId: entry.id,
-          track: candidate,
-          stream: stream,
-        );
-        announce(match);
-        return match;
-      } on AddonMiss catch (e) {
-        // 404, DRM-protected, or track not served by this addon: try next addon!
-        debugPrint('[Lossless] [${entry.name}] Miss for "${track.title}": $e');
-        anyDefinitiveFailure = true;
-        continue;
-      } catch (e) {
-        // Network or unexpected failure on this addon: log and try next addon!
-        debugPrint('[Lossless] [${entry.name}] Error for "${track.title}": $e');
-        continue;
       }
     }
-
-    // Only cache settled miss if at least one addon definitively answered.
-    if (anyDefinitiveFailure) {
+    if (settled && !download && revision == _cacheRevision) {
       _remember(track.id, null);
     }
     return null;
@@ -510,8 +575,9 @@ class AddonService extends ChangeNotifier {
   Future<AddonTrack?> _findCandidate(
     AddonClient client,
     Track track,
-    AddonQuality quality,
-  ) async {
+    AddonQuality quality, {
+    bool preferAtmos = false,
+  }) async {
     final title = CanvasRepository.cleanTitle(track.title);
     final artist = CanvasRepository.cleanArtist(track.artist);
     if (title.isEmpty) return null;
@@ -523,6 +589,7 @@ class AddonService extends ChangeNotifier {
       artist: artist,
       album: track.album,
       duration: track.duration,
+      preferAtmos: preferAtmos,
     );
     // A dubbed release usually differs from the original only by the
     // language on its album, so ask for that language by name first; the
@@ -532,11 +599,16 @@ class AddonService extends ChangeNotifier {
       final tagged = await client.search(
         '$primaryArtist $title ${languages.first}',
         quality: quality,
+        preferAtmos: preferAtmos,
       );
       final hit = pick(tagged);
       if (hit != null) return hit;
     }
-    final results = await client.search('$primaryArtist $title', quality: quality);
+    final results = await client.search(
+      '$primaryArtist $title',
+      quality: quality,
+      preferAtmos: preferAtmos,
+    );
     final hit = pick(results);
     if (hit == null && results.isNotEmpty) {
       debugPrint(
@@ -553,8 +625,8 @@ class AddonService extends ChangeNotifier {
   /// a remix or another language's dub in mid-song is jarring — so the bar
   /// is: same title once normalised, the same take markers ("Remix",
   /// "Live"…) and the same language, every artist credited, a duration
-  /// within a few seconds when both are known, and actually lossless. Atmos
-  /// copies are left out; they're a different mix, not a better copy.
+  /// within a few seconds when both are known. Atmos is a separate mix and
+  /// is only preferred when the playback backend supports it.
   ///
   /// Language follows BitChord's rule for takes: both directions must
   /// agree. Film songs are released once per language with the same title,
@@ -571,6 +643,7 @@ class AddonService extends ChangeNotifier {
     required String artist,
     String? album,
     Duration duration = Duration.zero,
+    bool preferAtmos = false,
   }) {
     final wantTitle = CanvasArtwork.normalizeForMatch(title);
     // A title in a script normalisation drops would match every other one.
@@ -581,7 +654,7 @@ class AddonService extends ChangeNotifier {
     AddonTrack? best;
     var bestScore = -1;
     for (final hit in results) {
-      if (hit.isAtmos || !hit.isLossless) continue;
+      if (hit.isAtmos ? !preferAtmos : !hit.isLossless) continue;
       if (CanvasArtwork.normalizeForMatch(hit.title) != wantTitle) continue;
       if (!setEquals(_effectiveTakes(hit, wantTakes), wantTakes)) continue;
       final languages = languageTags('${hit.title} ${hit.album}');
@@ -596,7 +669,7 @@ class AddonService extends ChangeNotifier {
       )) {
         continue;
       }
-      var score = 10;
+      var score = 10 + (preferAtmos && hit.isAtmos ? 100 : 0);
       if (duration > Duration.zero && hit.duration > Duration.zero) {
         final diff = (duration - hit.duration).inMilliseconds.abs();
         if (diff > 4000) continue; // another edit of the song

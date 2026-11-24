@@ -28,7 +28,7 @@ class LosslessBadge extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tier = ref.watch(
-      currentPlaybackDataProvider.select((d) => d?.format.losslessTier),
+      currentPlaybackDataProvider.select((d) => d?.format.isAtmos == true ? 'Atmos mix' : d?.format.losslessTier),
     );
     final upgrading =
         tier == null &&

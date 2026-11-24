@@ -8,6 +8,7 @@ import '../../core/providers/theme_provider.dart';
 import '../providers/providers.dart';
 import '../services/playback/playback_data.dart';
 import 'widgets/addon_source_card.dart';
+import 'widgets/atmos_settings_card.dart';
 import 'widgets/audio_output_card.dart';
 import 'widgets/automix_settings_card.dart';
 import '../services/automix/automix_service.dart';
@@ -223,6 +224,7 @@ class AudioSettingsScreen extends ConsumerWidget {
             ),
           ),
 
+          const AtmosSettingsCard(),
           const SizedBox(height: 32),
           Text(
             l10n.crossfadeTransition,

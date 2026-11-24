@@ -23,6 +23,7 @@ class AudioFormat {
   final int? contentLength;
   final int? averageBitrate;
   final bool isAudioOnly;
+  final bool isAtmos;
 
   /// Bit depth for lossless streams (16, 24…); null for lossy ones.
   final int? bitsPerSample;
@@ -36,13 +37,17 @@ class AudioFormat {
     this.contentLength,
     this.averageBitrate,
     this.isAudioOnly = true,
+    this.isAtmos = false,
     this.bitsPerSample,
   });
 
   bool get isLossless {
+    if (isAtmos) return false;
     final c = '${codecs ?? ''} $mimeType'.toLowerCase();
     return c.contains('flac') || c.contains('alac');
   }
+
+  bool get isAddonQuality => isLossless || isAtmos;
 
   /// "Hi-Res Lossless" above CD quality (more than 16-bit or 48 kHz),
   /// "Lossless" at it; null for lossy formats.
@@ -80,6 +85,7 @@ class AudioFormat {
 
   /// Clean user-friendly codec name (e.g. "Opus", "AAC", "FLAC", "MP3")
   String get codecName {
+    if (isAtmos) return 'Dolby Atmos';
     final lowerMime = mimeType.toLowerCase();
     final lowerCodecs = codecs?.toLowerCase() ?? '';
     if (isOpus) return 'Opus';
@@ -289,6 +295,7 @@ class PlaybackData {
   /// Lossless") rather than who served it; the provider is in the Signal
   /// path sheet.
   String get statsSummary {
+    if (format.isAtmos) return 'Dolby Atmos mix • $audioSource';
     final resolution = format.resolutionLabel;
     final tier = format.losslessTier;
     if (tier != null && resolution != null) {

@@ -393,10 +393,10 @@ class AudioPlayerService {
   final AudioPlayer _secondaryPlayer = AudioPlayer();
   late AudioPlayer _player = _primaryPlayer;
 
+
   /// OuterTune-style playback resolver
   final YTPlayerUtils _ytPlayerUtils = YTPlayerUtils.instance;
   final LyricsWarmupService _lyricsWarmupService = LyricsWarmupService.instance;
-
 
   // Queue management
   List<Track> _queue = [];
@@ -736,7 +736,10 @@ class AudioPlayerService {
 
   /// Desktop bit-perfect output holds the device for one stream, so tracks
   /// change without overlapping.
-  bool get _exclusiveOutput => isDesktop && DesktopAudioDsp.instance.exclusive;
+  bool get _exclusiveOutput =>
+      isDesktop &&
+      (DesktopAudioDsp.instance.exclusive ||
+          DesktopAudioDsp.instance.atmosPassthrough);
 
   Future<void> _setVolumeSafely(
     AudioPlayer player,
@@ -1020,8 +1023,12 @@ class AudioPlayerService {
     // time: fade straight into the FLAC.
     if (_startsOnLossless) {
       final lossless = AddonService.instance.cachedFor(track);
-      if (lossless != null) {
-        _logLossless('Crossfading straight into ${lossless.stream.formatLabel}');
+      if (lossless != null &&
+          (!lossless.stream.isAtmos ||
+              await AddonService.instance.canPlayAtmos(track))) {
+        _logLossless(
+          'Crossfading straight into ${lossless.stream.formatLabel}',
+        );
         return (
           source: _addonAudioSource(lossless, track),
           // This track isn't current yet; its history tracking is resolved
@@ -2661,7 +2668,7 @@ class AudioPlayerService {
         unawaited(_upgradeTrackQualityIfPossible(_currentTrack!));
         // Gapless auto-advance starts the next track on whatever the
         // playlist was built with; it gets its second look too.
-        if (playbackData?.format.isLossless != true &&
+        if (playbackData?.format.isAddonQuality != true &&
             _currentPlaybackData?.isLive != true) {
           unawaited(_upgradeToLosslessIfPossible(_currentTrack!));
         }
@@ -3119,6 +3126,16 @@ class AudioPlayerService {
       return;
     }
 
+    final track = _currentTrack;
+    if (track != null && _currentPlaybackData?.format.isAtmos == true) {
+      AddonService.instance.rejectAtmosFor(track);
+      _pendingSeekPosition = _player.position;
+      _pendingSeekTrackId = track.id;
+      _currentPlaybackData = null;
+      unawaited(_loadAndPlayCurrent());
+      return;
+    }
+
     // Clear cache for current track and retry once
     if (_currentTrack != null) {
       _ytPlayerUtils.clearCache(_currentTrack!.id);
@@ -3457,6 +3474,8 @@ class AudioPlayerService {
         print(
           'AudioPlayerService: Running delayed work, _isRadioMode=$_isRadioMode, queue.length=${_queue.length}',
         );
+
+
       }
       // Playlist build removed to fix native ExoPlayer leaks
       // If radio mode is on and queue is short, immediately fetch related tracks
@@ -3511,8 +3530,6 @@ class AudioPlayerService {
       );
     }
   }
-
-
 
   /// Add tracks to the end of the queue
   void addToQueue(List<Track> tracks) {
@@ -3724,7 +3741,7 @@ class AudioPlayerService {
 
     _crossfadeTriggeredForTrack = false;
     _currentTrack = _queue[_currentIndex];
-    
+
     // --- SMART AUTO-SWAP (Prefer Audio Versions) ---
     if (_preferAudioVersions && _currentTrack != null && !_isLocalTrack(_currentTrack!)) {
       final t = _currentTrack!;
@@ -3748,7 +3765,7 @@ class AudioPlayerService {
                   }
                   _currentTrack = best.copyWith(setVideoId: t.setVideoId);
                   _queue[_currentIndex] = _currentTrack!;
-                  
+
                   // Update the original queue too if it's there
                   final origIdx = _originalQueue.indexWhere((x) => x.id == t.id);
                   if (origIdx != -1) _originalQueue[origIdx] = _currentTrack!;
@@ -4454,7 +4471,7 @@ class AudioPlayerService {
   QualityStep get _playingStep {
     final data = _currentPlaybackData;
     if (data == null) return QualityStep.opus;
-    if (data.format.isLossless) return QualityStep.flac;
+    if (data.format.isAddonQuality) return QualityStep.flac;
     return data.audioSource == 'JioSaavn'
         ? QualityStep.jioSaavn
         : QualityStep.opus;
@@ -4911,10 +4928,13 @@ class AudioPlayerService {
     return PlaybackData(
       streamUrl: stream.url,
       format: AudioFormat(
-        mimeType: stream.isDash ? 'application/dash+xml' : 'audio/flac',
-        bitrate: stream.bitrate ?? 1411200,
-        sampleRate: stream.sampleRate ?? 44100,
-        bitsPerSample: stream.bitDepth ?? 16,
+        mimeType: stream.isDash
+            ? 'application/dash+xml'
+            : 'audio/${stream.isAtmos ? 'eac3' : stream.codec}',
+        bitrate: stream.bitrate ?? (stream.isAtmos ? 0 : 1411200),
+        sampleRate: stream.sampleRate ?? (stream.isAtmos ? null : 44100),
+        bitsPerSample: stream.isAtmos ? null : stream.bitDepth ?? 16,
+        isAtmos: stream.isAtmos,
         codecs: stream.codec.toLowerCase(),
       ),
       playbackTracking: forCurrentTrack
@@ -4932,7 +4952,14 @@ class AudioPlayerService {
     var uri = Uri.parse(match.stream.url);
     if (!match.stream.isDash) return AudioSource.uri(uri, tag: track);
     // AVPlayer has no DASH: the segments are served as one fragmented MP4.
-    if (isIOS) return DashFmp4AudioSource(match.stream.url, tag: track);
+    if (isIOS) {
+      return DashFmp4AudioSource(
+        match.stream.url,
+        tag: track,
+        preferAtmos: match.stream.isAtmos,
+      );
+    }
+    if (Platform.isAndroid) return DashAudioSource(uri, tag: track);
     final manifest = isDesktop ? uri.data : null;
     if (manifest != null) {
       // mpv requires :// to route an inline manifest to its data protocol.
@@ -4959,8 +4986,33 @@ class AudioPlayerService {
     final playbackData = _addonPlaybackData(match);
     final player = _player;
     try {
-      await player.setAudioSource(_addonAudioSource(match, track), preload: true);
+      if (match.stream.isAtmos &&
+          !await AddonService.instance.canPlayAtmos(track)) {
+        throw PlayerException(0, 'Atmos is unavailable on the current output');
+      }
+      if (_currentTrack?.id != track.id || !identical(player, _player)) return;
+      await player.setAudioSource(
+        _addonAudioSource(match, track),
+        preload: true,
+      );
     } on PlayerException {
+      if (match.stream.isAtmos &&
+          _currentTrack?.id == track.id &&
+          identical(player, _player)) {
+        final addons = AddonService.instance;
+        if (await addons.canPlayAtmos(track)) {
+          addons.rejectAtmosFor(track);
+        }
+        final stereo = await addons
+            .matchFor(track)
+            .timeout(const Duration(seconds: 4), onTimeout: () => null);
+        if (_currentTrack?.id != track.id || !identical(player, _player)) {
+          return;
+        }
+        if (stereo != null && !stereo.stream.isAtmos) {
+          return _playAddonStream(stereo, track, resolveTimeMs: resolveTimeMs);
+        }
+      }
       if (isDesktop && _currentTrack?.id == track.id) {
         _failedDesktopLosslessUrl = match.stream.url;
       }
@@ -5013,7 +5065,7 @@ class AudioPlayerService {
     }
     if (!addons.isEnabled) return;
     if (track.localFilePath != null || track.id.startsWith('local_')) return;
-    if (_currentPlaybackData?.format.isLossless == true) {
+    if (_currentPlaybackData?.format.isAddonQuality == true) {
       _prepareAutoFallbacks(track); // arrived on FLAC by crossfade or blend
       return;
     }
@@ -5082,8 +5134,10 @@ class AudioPlayerService {
     if (isDesktop && _currentPlaybackData == null) return;
     // Keep the fallback playing if this URL already failed during startup.
     if (match.stream.url == _failedDesktopLosslessUrl) return;
-    if (_currentPlaybackData?.format.isLossless == true) return;
+    if (_currentPlaybackData?.format.isAddonQuality == true) return;
     if (_currentPlaybackData?.isLive == true) return;
+    // The receiver takes one encoded stream. Select the mix at track start.
+    if (isDesktop && DesktopAudioDsp.instance.atmosPassthrough) return;
     // The lookup may have started before Auto stepped down.
     if (!_qualityAllowsLossless || _droppingQuality) return;
 
@@ -5093,7 +5147,7 @@ class AudioPlayerService {
     bool stillWanted() =>
         handOverId == _losslessUpgradeId &&
         _currentTrack?.id == track.id &&
-        _currentPlaybackData?.format.isLossless != true;
+        _currentPlaybackData?.format.isAddonQuality != true;
 
     _logLossless(
       'Found ${match.stream.formatLabel} for "${track.title}"; handing over',
@@ -5102,7 +5156,20 @@ class AudioPlayerService {
     // it's upgrading until the hand-over lands or is given up on.
     _losslessUpgradingController.add(track.id);
     try {
-      final landed = await _handOverToLossless(track, match, stillWanted);
+      if (match.stream.isAtmos &&
+          !await AddonService.instance.canPlayAtmos(track)) {
+        return;
+      }
+      if (!stillWanted()) return;
+      var landed = await _handOverToLossless(track, match, stillWanted);
+      if (landed == false && match.stream.isAtmos && stillWanted()) {
+        final addons = AddonService.instance;
+        addons.rejectAtmosFor(track);
+        final stereo = await addons.matchFor(track);
+        if (stereo != null && !stereo.stream.isAtmos && stillWanted()) {
+          landed = await _handOverToLossless(track, stereo, stillWanted);
+        }
+      }
       if (landed == true) _prepareAutoFallbacks(track);
       if (isAutoTry && landed != null) {
         final now = DateTime.now();
@@ -5478,7 +5545,7 @@ class AudioPlayerService {
     if (track.localFilePath != null) return;
 
     // Lossless already: 320 kbps would be a downgrade.
-    if (_currentPlaybackData?.format.isLossless == true) return;
+    if (_currentPlaybackData?.format.isAddonQuality == true) return;
 
     // The lossless upgrade looks this track up at the same moment (the
     // lookup is shared, not repeated). If it finds a FLAC, step aside rather
@@ -5548,12 +5615,12 @@ class AudioPlayerService {
       );
 
       // A lossless swap may have landed while JioSaavn was resolving.
-      if (_currentPlaybackData?.format.isLossless == true) return;
+      if (_currentPlaybackData?.format.isAddonQuality == true) return;
 
       bool stillWanted() =>
           sessionId == _upgradeSessionId &&
           _currentTrack?.id == track.id &&
-          _currentPlaybackData?.format.isLossless != true;
+          _currentPlaybackData?.format.isAddonQuality != true;
       final isAutoTry = _autoIsLowered;
       if (!_isUpgradingStream &&
           !_isCrossfading &&

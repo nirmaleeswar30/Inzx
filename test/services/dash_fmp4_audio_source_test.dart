@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:inzx/services/addons/dash_manifest.dart';
 import 'package:inzx/services/playback/dash_fmp4_audio_source.dart';
 
 Uint8List box(String type, List<int> payload) {
@@ -57,6 +58,18 @@ void main() {
  </AdaptationSet></Period>
 </MPD>''';
   final manifestUrl = 'data:application/dash+xml;base64,${base64Encode(utf8.encode(mpd))}';
+
+  test('Atmos DASH selects Dolby over FLAC and fails on a stereo-only MPD', () {
+    final mixed = mpd.replaceFirst(
+      '</AdaptationSet>',
+      '<Representation id="dolby" codecs="ec-3" bandwidth="640">'
+      '<BaseURL>https://cdn.test/atmos.mp4</BaseURL><SegmentBase/>'
+      '</Representation></AdaptationSet>',
+    );
+    expect(DashManifest.parse(mixed).codecs, 'flac');
+    expect(DashManifest.parse(mixed, preferAtmos: true).codecs, 'ec-3');
+    expect(() => DashManifest.parse(mpd, preferAtmos: true), throwsFormatException);
+  });
 
   // init: ftyp + moov (no mvex: left as it is); media: styp + sidx + moof + mdat.
   final init = Uint8List.fromList([...box('ftyp', [1, 2, 3, 4]), ...box('moov', List.filled(20, 9))]);

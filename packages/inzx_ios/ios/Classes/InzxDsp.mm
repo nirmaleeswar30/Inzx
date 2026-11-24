@@ -13,6 +13,7 @@
 #include "InzxTransition.h"
 
 #import <MediaToolbox/MediaToolbox.h>
+#import <AudioToolbox/AudioToolbox.h>
 
 #include <algorithm>
 #include <atomic>
@@ -341,6 +342,12 @@ void TapProcess(MTAudioProcessingTapRef tap, CMItemCount numberFrames,
                completionHandler:^(NSArray<AVAssetTrack *> *tracks, NSError *error) {
                  AVAssetTrack *track = tracks.firstObject;
                  if (!track) return;  // HLS or a failed load: plays untapped
+                 // Leave Dolby Digital Plus/JOC on AVPlayer's native rendering
+                 // path. A PCM processing mix can discard spatial metadata.
+                 for (id description in track.formatDescriptions) {
+                   CMFormatDescriptionRef format = (__bridge CMFormatDescriptionRef)description;
+                   if (CMFormatDescriptionGetMediaSubType(format) == kAudioFormatEnhancedAC3) return;
+                 }
                  dispatch_async(dispatch_get_main_queue(), ^{
                    AVPlayerItem *strongItem = weakItem;
                    if (!strongItem || strongItem.audioMix) return;

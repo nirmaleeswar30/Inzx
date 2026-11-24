@@ -54,6 +54,8 @@ public final class InzxIosPlugin: NSObject, FlutterPlugin {
         guard let item = note.object as? AVPlayerItem,
           let playerId = note.userInfo?["playerId"] as? String
         else { return }
+        try? AVAudioSession.sharedInstance().setSupportsMultichannelContent(true)
+        item.allowedAudioSpatializationFormats = .multichannel
         InzxDsp.shared().attach(to: item, playerId: playerId)
       })
   }
