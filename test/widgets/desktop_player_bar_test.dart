@@ -4,15 +4,19 @@ import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:inzx/core/providers/theme_provider.dart';
 import 'package:inzx/main.dart' show rootNavigatorKey;
 import 'package:inzx/l10n/generated/app_localizations.dart';
 import 'package:inzx/models/models.dart';
 import 'package:inzx/providers/providers.dart';
 import 'package:inzx/screens/inzx_connect_screen.dart';
+import 'package:inzx/screens/widgets/animated_album_art_view.dart';
 import 'package:inzx/screens/widgets/desktop_player_bar.dart';
 import 'package:inzx/screens/widgets/now_playing_screen.dart';
+import 'package:inzx/screens/widgets/track_artwork_view.dart';
 import 'package:inzx/services/audio_player_service.dart';
 import 'package:inzx/services/playback/playback_data.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _Player extends Fake implements AudioPlayerService {
   final _volume = ValueNotifier<double>(0.5);
@@ -25,6 +29,65 @@ class _Player extends Fake implements AudioPlayerService {
 }
 
 void main() {
+  testWidgets('the mini player uses the canvas and releases it in lyrics mode', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      AnimatedAlbumArtNotifier.animatedArtPrefKey: false,
+    });
+    addTearDown(() => SharedPreferences.setMockInitialValues({}));
+    desktopMiniLyrics.value = false;
+    addTearDown(() => desktopMiniLyrics.value = false);
+
+    final playback = StreamController<PlaybackState>();
+    addTearDown(playback.close);
+    const track = Track(
+      id: 'mini-first',
+      title: 'First song',
+      artist: 'Artist',
+      duration: Duration(minutes: 4),
+    );
+    final next = track.copyWith(id: 'mini-next', title: 'Next song');
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          audioPlayerServiceProvider.overrideWithValue(_Player()),
+          playbackStateProvider.overrideWith((_) => playback.stream),
+          isLiveProvider.overrideWithValue(true),
+        ],
+        child: const MaterialApp(
+          home: Center(
+            child: SizedBox(
+              width: 320,
+              height: 340,
+              child: DesktopPopoutPlayer(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final canvas = find.byType(AnimatedAlbumArtView);
+    playback.add(const PlaybackState(currentTrack: track));
+    await tester.pumpAndSettle();
+    expect(tester.widget<AnimatedAlbumArtView>(canvas).track, track);
+    expect(
+      find.descendant(of: canvas, matching: find.byType(TrackArtworkView)),
+      findsOneWidget,
+    );
+
+    playback.add(PlaybackState(currentTrack: next));
+    await tester.pumpAndSettle();
+    expect(tester.widget<AnimatedAlbumArtView>(canvas).track, next);
+
+    desktopMiniLyrics.value = true;
+    await tester.pumpAndSettle();
+    expect(canvas, findsNothing);
+    expect(find.text('Lyrics aren’t available for live streams'), findsOneWidget);
+  });
+
   testWidgets('the desktop bar fits Connect and follows playback quality', (
     tester,
   ) async {

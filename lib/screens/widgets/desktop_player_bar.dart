@@ -14,6 +14,7 @@ import '../../services/lyrics/lyrics_service.dart';
 import '../../services/desktop/desktop_audio_dsp.dart';
 import '../../services/inzx_connect_remote.dart';
 import '../inzx_connect_screen.dart';
+import 'animated_album_art_view.dart';
 import 'artist_screen.dart';
 import 'automix_mix_pulse.dart';
 import 'desktop_shell.dart';
@@ -1233,7 +1234,7 @@ class _MiniArtwork extends StatelessWidget {
           )
         : null;
 
-    return TrackArtworkView(
+    final staticArt = TrackArtworkView(
       track: track.copyWith(thumbnailUrl: maxRes ?? art),
       width: width,
       height: height,
@@ -1246,6 +1247,12 @@ class _MiniArtwork extends StatelessWidget {
               fit: BoxFit.cover,
             )
           : null,
+    );
+    return AnimatedAlbumArtView(
+      key: ValueKey(track.id),
+      track: track,
+      staticArt: staticArt,
+      borderRadius: BorderRadius.zero,
     );
   }
 }

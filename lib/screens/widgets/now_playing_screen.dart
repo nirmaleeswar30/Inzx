@@ -59,6 +59,7 @@ import 'desktop_shell.dart'
     show
         desktopConnectPaneOpen,
         desktopFullScreen,
+        desktopMiniMode,
         desktopNowPlayingOpen,
         desktopNowPlayingTab,
         setDesktopFullScreen;
@@ -4827,7 +4828,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     final staticArt = _buildStaticAlbumArtContent(displayTrack, accentColor);
     if (displayTrack == null) return staticArt;
 
-    return AnimatedAlbumArtView(
+    final animatedArt = AnimatedAlbumArtView(
       key: ValueKey('animated_art_${displayTrack.id}'),
       // Only the playing song's canvas feeds the ambient glow.
       captureKey: displayTrack.id == ref.read(currentTrackProvider)?.id
@@ -4852,6 +4853,15 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
           apply();
         }
       },
+    );
+    if (!isDesktop) return animatedArt;
+
+    // The full player stays mounted offstage in mini mode. Release its
+    // video controller while the mini player is showing the canvas.
+    return ValueListenableBuilder<bool>(
+      valueListenable: desktopMiniMode,
+      child: animatedArt,
+      builder: (_, mini, child) => mini ? staticArt : child!,
     );
   }
 

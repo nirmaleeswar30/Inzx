@@ -70,12 +70,22 @@ class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (!_isInitialized) return;
-    if (state == AppLifecycleState.resumed) {
-      if (ref.read(isPlayingProvider)) _play();
+    if (state == AppLifecycleState.resumed ||
+        (isDesktop && state == AppLifecycleState.inactive)) {
+      if (_shouldPlay) _play();
     } else if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.hidden) {
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.detached) {
       _pause();
     }
+  }
+
+  bool get _shouldPlay {
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    return lifecycle != AppLifecycleState.hidden &&
+        lifecycle != AppLifecycleState.paused &&
+        lifecycle != AppLifecycleState.detached &&
+        ref.read(isPlayingProvider);
   }
 
   void _play() {
@@ -228,7 +238,7 @@ class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView>
       final old = _mpv;
       _mpv = player;
       old?.dispose();
-      if (ref.read(isPlayingProvider)) {
+      if (_shouldPlay) {
         player.play();
       } else {
         player.pause();
@@ -268,8 +278,7 @@ class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView>
       _disposeController(old);
 
       // Sync with active playback state
-      final isPlaying = ref.read(isPlayingProvider);
-      if (isPlaying) {
+      if (_shouldPlay) {
         await controller.play();
       } else {
         await controller.pause();
@@ -314,8 +323,7 @@ class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView>
         _controller = fallbackController;
         _disposeController(old);
 
-        final isPlaying = ref.read(isPlayingProvider);
-        if (isPlaying) {
+        if (_shouldPlay) {
           await fallbackController.play();
         } else {
           await fallbackController.pause();
@@ -345,29 +353,25 @@ class _AnimatedAlbumArtViewState extends ConsumerState<AnimatedAlbumArtView>
   @override
   Widget build(BuildContext context) {
     final isEnabled = ref.watch(animatedAlbumArtProvider);
+    ref.listen<bool>(animatedAlbumArtProvider, (previous, enabled) {
+      if (enabled) {
+        _loadCanvas();
+      } else {
+        _stopAndReset();
+      }
+    });
     if (!isEnabled) {
       return widget.staticArt;
     }
 
     // Sync play/pause with player service state
-    ref.listen<bool>(isPlayingProvider, (previous, isPlaying) {
-      if (!mounted) return;
+    ref.listen<bool>(isPlayingProvider, (_, _) {
       if (_isInitialized) {
-        if (isPlaying) {
+        if (_shouldPlay) {
           _play();
         } else {
           _pause();
         }
-      }
-    });
-
-    // Listen for settings toggle changes dynamically
-    ref.listen<bool>(animatedAlbumArtProvider, (previous, enabled) {
-      if (!mounted) return;
-      if (enabled) {
-        _loadCanvas();
-      } else {
-        _stopAndReset();
       }
     });
 
