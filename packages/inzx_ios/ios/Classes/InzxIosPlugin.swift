@@ -49,6 +49,16 @@ public final class InzxIosPlugin: NSObject, FlutterPlugin {
   private func observeJustAudio() {
     let center = NotificationCenter.default
     observers.append(
+      center.addObserver(forName: Notification.Name("JustAudioPlayerCreated"), object: nil, queue: .main) {
+        [weak self] note in
+        if let player = note.object as? AVPlayer { self?.route.usbSampleRate.observe(player) }
+      })
+    observers.append(
+      center.addObserver(forName: Notification.Name("JustAudioPlayerDisposed"), object: nil, queue: .main) {
+        [weak self] note in
+        if let player = note.object as? AVPlayer { self?.route.usbSampleRate.remove(player) }
+      })
+    observers.append(
       center.addObserver(forName: Notification.Name("JustAudioPlayerItemCreated"), object: nil, queue: nil) {
         note in
         guard let item = note.object as? AVPlayerItem,

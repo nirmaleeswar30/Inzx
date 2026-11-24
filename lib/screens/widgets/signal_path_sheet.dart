@@ -88,7 +88,9 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
     final active = device['active'];
     setState(() {
       _output = output;
-      _mixerRate = info?['mixerSampleRate'] as int?;
+      _mixerRate = isIOS
+          ? output?.outSampleRate ?? (info?['mixerSampleRate'] as int?)
+          : info?['mixerSampleRate'] as int?;
       _framesPerBuffer = info?['framesPerBuffer'] as int?;
       _systemVolume = info?['systemVolume'] as int?;
       _systemVolumeMax = info?['systemVolumeMax'] as int?;
@@ -173,7 +175,7 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
     bool isDark,
   ) {
     final format = data.format;
-    final source = format.sampleRate;
+    final source = _output?.sourceSampleRate ?? format.sampleRate;
     final mixer = _mixerRate;
     final resampled = source != null && mixer != null && source != mixer;
     final tier = format.losslessTier;
@@ -200,8 +202,10 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
       good = true;
     } else if (tier != null && source != null && mixer != null && !resampled) {
       badge = tier.toUpperCase();
-      line = 'Lossless all the way to $_mixerOwner\'s mixer, at the track\'s own '
-          '${_khz(source)}';
+      line = isIOS
+          ? 'Lossless source at ${_khz(source)}. iOS reports the same output rate.'
+          : 'Lossless all the way to $_mixerOwner\'s mixer, at the track\'s own '
+                '${_khz(source)}';
       good = true;
     } else if (tier != null && resampled) {
       badge = '$tier · RESAMPLED'.toUpperCase();
@@ -271,11 +275,15 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
     final speed = player.currentSpeed;
     final volume = player.currentVolume;
     final crossfadeMs = player.crossfadeDurationMs;
-    final source = format.sampleRate;
     final output = _output;
+    final source = output?.sourceSampleRate ?? format.sampleRate;
     final outputRate = isDesktop ? output?.outSampleRate : _mixerRate;
     final inputRate = isDesktop ? output?.trackSampleRate ?? source : source;
     final bitPerfect = output?.bitPerfectActive == true;
+    final usbSourceRate = isIOS && output?.usbDac != null
+        ? output?.sourceSampleRate
+        : null;
+    final usbOutputRate = output?.outSampleRate;
 
     final stages = <_Stage>[
       _Stage(
@@ -294,7 +302,9 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
       _Stage(
         icon: Icons.tune_rounded,
         title: 'Processing',
-        value: speed == 1.0 && volume >= 0.999 ? 'Untouched' : 'Adjusted',
+        value: speed == 1.0 && volume >= 0.999
+            ? (isIOS ? '1× · Unity gain' : 'Untouched')
+            : 'Adjusted',
         rows: [
           (
             'Speed',
@@ -325,6 +335,12 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
             ? 'Bypassed'
             : (outputRate == null ? 'Unknown' : _khz(outputRate)),
         rows: [
+          if (usbSourceRate != null && usbOutputRate != null)
+            (
+              'USB DAC sample rate',
+              '${_khz(usbSourceRate)} requested · '
+                  '${_khz(usbOutputRate)} reported by iOS',
+            ),
           if (isDesktop && outputRate != null)
             (
               'Player output',
@@ -347,6 +363,8 @@ class _SignalPathSheetState extends ConsumerState<SignalPathSheet> {
               isDesktop ? 'Player resampling' : 'Resampling',
               inputRate == null || outputRate == null
                   ? 'Can\'t tell (rate unknown)'
+                  : inputRate == outputRate && isIOS
+                  ? 'Source and output rates match at ${_khz(inputRate)}'
                   : inputRate == outputRate
                   ? 'None — ${_khz(inputRate)} in and out'
                   : '${_khz(inputRate)} → ${_khz(outputRate)}',

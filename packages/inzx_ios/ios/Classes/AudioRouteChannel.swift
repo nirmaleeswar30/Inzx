@@ -13,6 +13,7 @@ import UIKit
 /// from AVAudioSession and switching goes through the system route picker
 /// (AVRoutePickerView), as BitChord-iOS's output sheet does.
 final class AudioRouteChannel: NSObject, FlutterStreamHandler {
+  let usbSampleRate = UsbDacSampleRate()
   private var sink: FlutterEventSink?
   private var routeObserver: NSObjectProtocol?
   private lazy var picker: AVRoutePickerView = {
@@ -109,7 +110,9 @@ final class AudioRouteChannel: NSObject, FlutterStreamHandler {
       ]
       if let port = session.currentRoute.outputs.first {
         out["device"] = port.portName
+        if port.portType == .usbAudio { out["usbDac"] = port.portName }
       }
+      if let sourceRate = usbSampleRate.sourceRate { out["sourceSampleRate"] = sourceRate }
       let rate = InzxDsp.shared().lastSampleRate
       if rate > 0 { out["trackSampleRate"] = Int(rate.rounded()) }
       result(out)

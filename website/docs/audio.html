@@ -54,7 +54,7 @@
 
 <h2 id="ios-audio">Audio on iOS</h2>
 <p>YouTube streams use AAC. Lossless add-ons can play FLAC/ALAC files and compatible DASH streams, which Inzx bridges to a fragmented-MP4 stream for the native player. Opus/Vorbis add-on streams are skipped.</p>
-<p>The native iOS audio effects stage supports EQ, AutoEQ calibration, and loudness processing. iOS manages the final output mixer, so there is no hi-res or bit-perfect output switch.</p>
+<p>The native iOS audio effects stage supports EQ, AutoEQ calibration, and loudness processing. With a USB DAC, Inzx asks iOS to use the track’s sample rate. <b>Signal path</b> shows the requested and reported rates. iOS manages the final output, and matching sample rates alone cannot verify bit-perfect playback.</p>
 
 <h2 id="ios-atmos">Dolby Atmos on Android, iPhone and iPad</h2>
 <p><b>Prefer Dolby Atmos mixes</b> is off by default. Enable it under <b>Settings → Audio</b> when your audio output supports Atmos, and use an add-on that provides an Atmos mix.</p>

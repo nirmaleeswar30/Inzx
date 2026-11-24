@@ -12,6 +12,7 @@ class AudioOutputStatus {
     required this.bitPerfectRequested,
     required this.hiResOutput,
     this.usbDac,
+    this.sourceSampleRate,
     this.trackSampleRate,
     this.trackEncoding,
     this.trackBitDepth,
@@ -28,6 +29,7 @@ class AudioOutputStatus {
   final bool bitPerfectRequested;
   final bool hiResOutput;
   final String? usbDac;
+  final int? sourceSampleRate;
   final int? trackSampleRate;
   final String? trackEncoding;
   final int? trackBitDepth;
@@ -47,6 +49,7 @@ class AudioOutputStatus {
         bitPerfectRequested: m['bitPerfectRequested'] == true,
         hiResOutput: m['hiResOutput'] != false,
         usbDac: m['usbDac'] as String?,
+        sourceSampleRate: m['sourceSampleRate'] as int?,
         trackSampleRate: m['trackSampleRate'] as int?,
         trackEncoding: m['trackEncoding'] as String?,
         trackBitDepth: m['trackBitDepth'] as int?,
