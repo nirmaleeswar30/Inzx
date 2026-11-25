@@ -89,13 +89,16 @@ void _toggleNowPlaying(BuildContext context, {int? tab}) {
 
 /// The full-width player along the bottom of the window.
 class DesktopPlayerBar extends ConsumerWidget {
-  const DesktopPlayerBar({super.key});
+  const DesktopPlayerBar({super.key, this.showControls = true});
+
+  final bool showControls;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(playbackStateProvider).valueOrNull;
     final track = state?.currentTrack;
     if (state == null || track == null) return const SizedBox.shrink();
+    if (!showControls) return const SizedBox(height: _kPlayerBarHeight);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final albumColors = ref.watch(albumColorsProvider);

@@ -647,10 +647,12 @@ class _IsolatedLyricsView extends ConsumerWidget {
   final bool isActive;
   final double fontScale;
   final bool menuVisible;
+  final bool windowedDesktop;
   const _IsolatedLyricsView({
     this.isActive = true,
     this.fontScale = 1.0,
     this.menuVisible = true,
+    this.windowedDesktop = false,
   });
 
   @override
@@ -670,14 +672,16 @@ class _IsolatedLyricsView extends ConsumerWidget {
         ),
       );
     }
-    final position =
-        ref.watch(positionStreamProvider).valueOrNull ?? Duration.zero;
+    final position = isActive
+        ? ref.watch(positionStreamProvider)
+        : ref.read(positionStreamProvider);
     return RepaintBoundary(
       child: LyricsView(
-        currentPosition: position,
+        currentPosition: position.valueOrNull ?? Duration.zero,
         isActive: isActive,
         fontScale: fontScale,
         menuVisible: menuVisible,
+        windowedDesktop: windowedDesktop,
       ),
     );
   }
@@ -1399,7 +1403,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     super.initState();
     _nerdStatsAlternateTimer = Timer.periodic(const Duration(seconds: 4), (_) {
       // Only worth a rebuild of this whole screen when stats are shown.
-      if (mounted && ref.read(showNerdStatsProvider)) {
+      if (mounted &&
+          !(isDesktop && desktopMiniMode.value) &&
+          ref.read(showNerdStatsProvider)) {
         setState(() {
           _showStatsInsteadOfTitle = !_showStatsInsteadOfTitle;
         });
@@ -1430,6 +1436,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
       desktopNowPlayingTab.addListener(_onDesktopTabChanged);
       desktopConnectPaneOpen.addListener(_onDesktopTabChanged);
       desktopFullScreen.addListener(_onDesktopTabChanged);
+      desktopMiniMode.addListener(_onDesktopTabChanged);
     }
 
     // Page controller for swiping content
@@ -1488,6 +1495,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
       desktopNowPlayingTab.removeListener(_onDesktopTabChanged);
       desktopConnectPaneOpen.removeListener(_onDesktopTabChanged);
       desktopFullScreen.removeListener(_onDesktopTabChanged);
+      desktopMiniMode.removeListener(_onDesktopTabChanged);
     }
     _tabController.dispose();
     _pageController.dispose();
@@ -2269,6 +2277,19 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     final tab = _tabController.index;
     final labels = [context.l10n.upNext, 'LYRICS', 'RELATED'];
     final connectOpen = desktopConnectPaneOpen.value;
+    final mini = desktopMiniMode.value;
+    final Widget panel;
+    if (mini) {
+      panel = const SizedBox.shrink();
+    } else if (connectOpen) {
+      panel = const InzxConnectPanel(compact: true);
+    } else {
+      panel = switch (tab) {
+        1 => const _IsolatedLyricsView(windowedDesktop: true),
+        2 => _buildRelatedContent(textColor, secondaryTextColor),
+        _ => _buildQueueContent(textColor, secondaryTextColor, surfaceColor),
+      };
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -2304,7 +2325,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                             ),
                             _buildHeartOverlay(),
                             // Stats for nerds on the art, as on Android.
-                            const _DesktopArtStats(),
+                            if (!mini) const _DesktopArtStats(),
                           ],
                         ),
                       ),
@@ -2354,26 +2375,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                         ),
                     ],
                   ),
-                  Expanded(
-                    child: IndexedStack(
-                      index: connectOpen ? labels.length : tab,
-                      children: [
-                        _buildQueueContent(
-                          textColor,
-                          secondaryTextColor,
-                          surfaceColor,
-                        ),
-                        _buildLyricsView(isActive: !connectOpen && tab == 1),
-                        // Built only when asked for: it fetches on build.
-                        if (tab == 2)
-                          _buildRelatedContent(textColor, secondaryTextColor)
-                        else
-                          const SizedBox.shrink(),
-                        if (connectOpen)
-                          const InzxConnectPanel(compact: true),
-                      ],
-                    ),
-                  ),
+                  Expanded(child: SizedBox.expand(child: panel)),
                 ],
               ),
             ),
@@ -2388,8 +2390,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     if (!mounted) return;
     setState(() {
       _tabController.index = desktopNowPlayingTab.value;
-      _showQueue = !desktopConnectPaneOpen.value && _tabController.index == 0;
-      _showLyrics = !desktopConnectPaneOpen.value && _tabController.index == 1;
+      final showTab = !desktopConnectPaneOpen.value && !desktopMiniMode.value;
+      _showQueue = showTab && _tabController.index == 0;
+      _showLyrics = showTab && _tabController.index == 1;
     });
     if (_showQueue) {
       WidgetsBinding.instance.addPostFrameCallback((_) {

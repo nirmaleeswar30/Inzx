@@ -369,10 +369,10 @@ class _DesktopAppFrameState extends State<DesktopAppFrame> {
           return Stack(
             children: [
               const Positioned.fill(child: _DesktopBackdrop()),
-              // Offstage rather than removed, so pages and scroll positions
-              // are all still there when the mini player is closed.
-              Offstage(
-                offstage: mini,
+              // Keep the navigation stack and scroll positions in mini mode.
+              Visibility(
+                visible: !mini,
+                maintainState: true,
                 child: _MinimumSizeLayout(
                   child: Stack(
                     children: [
@@ -402,7 +402,7 @@ class _DesktopAppFrameState extends State<DesktopAppFrame> {
                               ],
                             ),
                           ),
-                          if (showShell) const DesktopPlayerBar(),
+                          if (showShell) DesktopPlayerBar(showControls: !mini),
                         ],
                       ),
                       // Onboarding runs edge to edge behind the window buttons.

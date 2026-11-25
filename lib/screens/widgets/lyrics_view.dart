@@ -21,6 +21,7 @@ import 'lyrics_menu_sheet.dart';
 /// Preview duration before auto-scroll resumes after manual scrolling
 const _lyricsPreviewTimeMs = 8000;
 const _lyricsAnchorRatio = 0.35; // 35% from the top of the viewport
+const _lyricsScrollCache = 1500.0;
 
 // ── Line-to-line handover (after BitChord) ───────────────────────────────
 // One curve for everything that moves when a line hands over — the scroll,
@@ -64,12 +65,16 @@ class LyricsView extends ConsumerStatefulWidget {
   /// out while the mouse is idle.
   final bool menuVisible;
 
+  /// Use viewport-only blur layers for the windowed desktop panel.
+  final bool windowedDesktop;
+
   const LyricsView({
     super.key,
     required this.currentPosition,
     this.isActive = true,
     this.fontScale = 1.0,
     this.menuVisible = true,
+    this.windowedDesktop = false,
   });
 
   @override
@@ -128,14 +133,16 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     ref.listenManual(isPlayingProvider, (_, _) => _syncTicker());
     _syncTicker();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && widget.isActive) {
-        _checkLineIndexChange(_smoothPositionNotifier.value);
-        if (_isAutoScrollEnabled) {
-          _scrollToCurrentLine(immediate: true);
+    if (!widget.windowedDesktop) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && widget.isActive) {
+          _checkLineIndexChange(_smoothPositionNotifier.value);
+          if (_isAutoScrollEnabled) {
+            _scrollToCurrentLine(immediate: true);
+          }
         }
-      }
-    });
+      });
+    }
   }
 
   /// The position the widget was handed, with the lyrics offset: where the
@@ -173,7 +180,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     }
   }
 
-  void _checkLineIndexChange(int currentPositionMs) {
+  void _checkLineIndexChange(int currentPositionMs, {bool scroll = true}) {
     final lyricsState = ref.read(lyricsProvider);
     final lines = lyricsState.currentLyrics?.lines;
     if (lines == null || lines.isEmpty) return;
@@ -205,7 +212,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
 
     if (focusIdx != _focusLineIndex && focusIdx >= 0) {
       _focusLineIndex = focusIdx;
-      if (_isAutoScrollEnabled && widget.isActive) {
+      if (scroll && _isAutoScrollEnabled && widget.isActive) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && _isAutoScrollEnabled && widget.isActive) {
             _scrollToCurrentLine(immediate: false);
@@ -319,6 +326,11 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     }
   }
 
+  // During a lyrics-source transition the outgoing list can still be attached.
+  ScrollPosition get _lyricsScrollPosition => widget.windowedDesktop
+      ? _scrollController.positions.last
+      : _scrollController.position;
+
   void _scrollToCurrentLine({bool immediate = false}) {
     if (!widget.isActive) return;
     final target = _focusLineIndex >= 0 ? _focusLineIndex : _currentLineIndex;
@@ -334,11 +346,12 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     } else {
       // Far off screen (a seek): get close first, then settle precisely once
       // the row has been laid out.
+      final position = _lyricsScrollPosition;
       final approxOffset = (target * 60.0).clamp(
         0.0,
-        _scrollController.position.maxScrollExtent,
+        position.maxScrollExtent,
       );
-      _scrollController.jumpTo(approxOffset);
+      position.jumpTo(approxOffset);
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted &&
@@ -348,10 +361,45 @@ class _LyricsViewState extends ConsumerState<LyricsView>
           final newContext = _lineKeys[target].currentContext;
           if (newContext != null) {
             _ensureLineVisible(newContext, target, immediate: immediate);
+          } else if (widget.windowedDesktop) {
+            _scrollToUnlaidLine(target, immediate: immediate);
           }
         }
       });
     }
+  }
+
+  // A reopened panel starts without row positions. Wrapped lyrics and
+  // translations can put the target well past the first offset estimate.
+  void _scrollToUnlaidLine(int target, {required bool immediate}) {
+    if (!mounted ||
+        !widget.isActive ||
+        !_isAutoScrollEnabled ||
+        target != _focusLineIndex ||
+        target >= _lineKeys.length ||
+        !_scrollController.hasClients) {
+      return;
+    }
+    final context = _lineKeys[target].currentContext;
+    if (context != null) {
+      _ensureLineVisible(context, target, immediate: immediate);
+      return;
+    }
+
+    final firstLaidOut = _lineKeys.indexWhere(
+      (key) => key.currentContext != null,
+    );
+    if (firstLaidOut < 0) return;
+    final position = _lyricsScrollPosition;
+    // Step by the cache extent so the next layout can't skip over the row.
+    final step = target < firstLaidOut ? -_lyricsScrollCache : _lyricsScrollCache;
+    final offset = (position.pixels + step)
+        .clamp(position.minScrollExtent, position.maxScrollExtent);
+    if (offset == position.pixels) return;
+    position.jumpTo(offset);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToUnlaidLine(target, immediate: immediate);
+    });
   }
 
   void _ensureLineVisible(
@@ -363,16 +411,14 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     final renderObject = keyContext.findRenderObject();
     if (renderObject == null || !renderObject.attached) return;
 
-    if (!_scrollController.hasClients ||
-        !_scrollController.position.hasContentDimensions) {
-      return;
-    }
+    if (!_scrollController.hasClients) return;
+    final position = _lyricsScrollPosition;
+    if (!position.hasContentDimensions) return;
 
     // Scroll ONLY the lyrics ScrollController position.
     // Never call Scrollable.ensureVisible(keyContext) because that bubbles up all
     // ancestor Scrollables including the parent horizontal PageView in NowPlayingScreen,
     // halting PageView transitions and forcefully switching tabs.
-    final position = _scrollController.position;
     final viewport = RenderAbstractViewport.maybeOf(renderObject);
     if (viewport == null) return;
     final targetOffset = viewport
@@ -399,7 +445,7 @@ class _LyricsViewState extends ConsumerState<LyricsView>
     );
     _handover.forward(from: 0);
 
-    _scrollController.animateTo(
+    position.animateTo(
       targetOffset,
       duration: Duration(milliseconds: durationMs),
       curve: _lyricEase,
@@ -643,6 +689,10 @@ class _LyricsViewState extends ConsumerState<LyricsView>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _scrollController.hasClients) {
           _scrollController.jumpTo(0);
+          if (widget.windowedDesktop && widget.isActive && _isAutoScrollEnabled) {
+            _checkLineIndexChange(_smoothPositionNotifier.value, scroll: false);
+            _scrollToCurrentLine(immediate: true);
+          }
         }
       });
     }
@@ -680,7 +730,12 @@ class _LyricsViewState extends ConsumerState<LyricsView>
             blendMode: BlendMode.dstIn,
             child: ListView.builder(
               controller: _scrollController,
-              scrollCacheExtent: const ScrollCacheExtent.pixels(1500.0),
+              scrollCacheExtent: const ScrollCacheExtent.pixels(
+                _lyricsScrollCache,
+              ),
+              // Let the sliver cull rows before painting their blur. The
+              // content inside each row still has its own repaint boundary.
+              addRepaintBoundaries: !widget.windowedDesktop,
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 96),
               itemCount: lines.length + (showNerdStats ? 1 : 0),
@@ -875,6 +930,9 @@ class _LyricsViewState extends ConsumerState<LyricsView>
       builder: (context, radius, child) {
         // A Compose blur radius, as Skia turns it into a sigma.
         final sigma = radius > 0.01 ? radius * 0.57735 + 0.5 : 0.0;
+        if (widget.windowedDesktop) {
+          return _LyricRowBlur(sigma: sigma, child: child!);
+        }
         return ImageFiltered(
           enabled: sigma > 0,
           imageFilter: ImageFilter.blur(
@@ -1393,6 +1451,61 @@ bool _isComplexScript(String text) {
 
 
 
+}
+
+/// The sliver only paints rows intersecting the viewport. Keep the filter out
+/// of the cached row's repaint boundary so offscreen rows own no blur layer.
+class _LyricRowBlur extends SingleChildRenderObjectWidget {
+  const _LyricRowBlur({required this.sigma, required Widget super.child});
+
+  final double sigma;
+
+  @override
+  _RenderLyricRowBlur createRenderObject(BuildContext context) =>
+      _RenderLyricRowBlur(sigma);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderLyricRowBlur renderObject) {
+    renderObject.sigma = sigma;
+  }
+}
+
+class _RenderLyricRowBlur extends RenderProxyBox {
+  _RenderLyricRowBlur(this._sigma);
+
+  double _sigma;
+
+  set sigma(double value) {
+    if (value == _sigma) return;
+    final wasComposited = alwaysNeedsCompositing;
+    _sigma = value;
+    if (wasComposited != alwaysNeedsCompositing) {
+      markNeedsCompositingBitsUpdate();
+    }
+    markNeedsPaint();
+  }
+
+  @override
+  bool get alwaysNeedsCompositing => child != null && _sigma > 0;
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    if (!alwaysNeedsCompositing) {
+      super.paint(context, offset);
+      return;
+    }
+    context.pushLayer(
+      ImageFilterLayer(
+        imageFilter: ImageFilter.blur(
+          sigmaX: _sigma,
+          sigmaY: _sigma,
+          tileMode: TileMode.decal,
+        ),
+      ),
+      super.paint,
+      offset,
+    );
+  }
 }
 
 /// Compact lyrics display for mini player or controls area

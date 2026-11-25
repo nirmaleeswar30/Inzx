@@ -12,6 +12,8 @@ import 'package:inzx/providers/providers.dart';
 import 'package:inzx/screens/inzx_connect_screen.dart';
 import 'package:inzx/screens/widgets/animated_album_art_view.dart';
 import 'package:inzx/screens/widgets/desktop_player_bar.dart';
+import 'package:inzx/screens/widgets/desktop_shell.dart' show desktopMiniMode;
+import 'package:inzx/screens/widgets/lyrics_view.dart';
 import 'package:inzx/screens/widgets/now_playing_screen.dart';
 import 'package:inzx/screens/widgets/track_artwork_view.dart';
 import 'package:inzx/services/audio_player_service.dart';
@@ -108,7 +110,8 @@ void main() {
       artist: 'Artist name',
       duration: Duration(minutes: 4),
     );
-    const state = PlaybackState(currentTrack: track);
+    const state = PlaybackState(currentTrack: track, queue: [track]);
+    addTearDown(() => desktopMiniMode.value = false);
 
     await tester.pumpWidget(
       ProviderScope(
@@ -157,6 +160,23 @@ void main() {
     final nowPlaying = find.byType(NowPlayingScreen);
     expect(nowPlaying, findsOneWidget);
 
+    final lyrics = find.byType(LyricsView, skipOffstage: false);
+    final queue = find.byType(ReorderableListView, skipOffstage: false);
+    expect(lyrics, findsNothing);
+    expect(queue, findsOneWidget);
+    await tester.tap(find.text('LYRICS'));
+    await tester.pumpAndSettle();
+    expect(lyrics, findsOneWidget);
+    expect(queue, findsNothing);
+
+    desktopMiniMode.value = true;
+    await tester.pumpAndSettle();
+    expect(nowPlaying, findsOneWidget);
+    expect(lyrics, findsNothing);
+    desktopMiniMode.value = false;
+    await tester.pumpAndSettle();
+    expect(lyrics, findsOneWidget);
+
     await tester.tap(connect);
     await tester.pumpAndSettle();
     final pane = find.descendant(
@@ -167,11 +187,17 @@ void main() {
     expect(tester.getTopLeft(pane).dx, greaterThan(720 / 2));
     expect(find.text('CONNECT'), findsNothing);
     expect(find.byType(InzxConnectScreen), findsNothing);
+    expect(lyrics, findsNothing);
 
     await tester.tap(connect);
     await tester.pumpAndSettle();
     expect(pane, findsNothing);
     expect(nowPlaying, findsOneWidget);
+    expect(lyrics, findsOneWidget);
+    await tester.tap(find.text('UP NEXT'));
+    await tester.pumpAndSettle();
+    expect(lyrics, findsNothing);
+    expect(queue, findsOneWidget);
     NowPlayingScreen.closeDesktop();
     await tester.pumpAndSettle();
 

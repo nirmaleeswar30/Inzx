@@ -854,8 +854,8 @@ class _PodcastVideoScreenState extends ConsumerState<PodcastVideoScreen>
                           thumbnailUrl: itemThumb,
                         );
                       } else if (item.videoId != null) {
-                        // Open this video episode in PodcastVideoScreen
-                        Navigator.push(
+                        // Switch episodes so the earlier video player is released.
+                        Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
                             builder: (_) => PodcastVideoScreen(

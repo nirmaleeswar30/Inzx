@@ -44,6 +44,7 @@ class _MusicAppState extends ConsumerState<MusicApp>
     const MusicLibraryTab(),
     const MusicFoldersTab(),
   ];
+  final Set<int> _visitedTabs = {};
 
   @override
   void initState() {
@@ -186,6 +187,7 @@ class _MusicAppState extends ConsumerState<MusicApp>
 
     // Desktop's sidebar and player bar live in DesktopAppFrame.
     final tabIndex = isDesktop ? ref.watch(desktopTabProvider) : _currentIndex;
+    _visitedTabs.add(tabIndex);
 
     return PopScope(
       canPop: false,
@@ -234,7 +236,16 @@ class _MusicAppState extends ConsumerState<MusicApp>
               ),
               // Main content (extends full screen behind floating nav)
               Positioned.fill(
-                child: IndexedStack(index: tabIndex, children: _tabs),
+                child: IndexedStack(
+                  index: tabIndex,
+                  children: [
+                    for (final (index, tab) in _tabs.indexed)
+                      if (_visitedTabs.contains(index))
+                        TickerMode(enabled: index == tabIndex, child: tab)
+                      else
+                        const SizedBox.shrink(),
+                  ],
+                ),
               ),
               // Mini player + nav bar positioned at bottom
               if (!isDesktop) Positioned(

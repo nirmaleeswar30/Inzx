@@ -24,6 +24,7 @@ class AutomixMixPulse extends ChangeNotifier {
 
   late final Ticker _ticker;
   Timer? _poll;
+  bool _disposed = false;
 
   // ---- Engine state ----------------------------------------------------
   bool _mixing = false;
@@ -61,6 +62,7 @@ class AutomixMixPulse extends ChangeNotifier {
 
   Future<void> _refresh() async {
     final state = await AutomixService.instance.mixState();
+    if (_disposed) return;
     final nowUs = _clock.elapsedMicroseconds;
     final mixing = state?['mixing'] == true;
     final beatMs = (state?['beatMs'] as num?)?.toDouble();
@@ -157,6 +159,7 @@ class AutomixMixPulse extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _poll?.cancel();
     _ticker.dispose();
     super.dispose();
