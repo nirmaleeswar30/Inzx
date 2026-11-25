@@ -56,11 +56,17 @@ final desktopMiniMode = ValueNotifier<bool>(false);
 
 /// Whether the player has taken over the whole screen, showing the lyrics.
 final desktopFullScreen = ValueNotifier<bool>(false);
+int _fullScreenRequest = 0;
 
 Future<void> setDesktopFullScreen(bool on) async {
-  // Restore the normal window before entering fullscreen.
-  if (on) await exitDesktopMiniMode();
-  if (on) NowPlayingScreen.showDesktop();
+  // Record intent before awaiting restore so a newer exit can cancel entry.
+  final request = ++_fullScreenRequest;
+  if (on) {
+    await exitDesktopMiniMode();
+    // A failed restore leaves the compact controls available for retry.
+    if (request != _fullScreenRequest || desktopMiniMode.value) return;
+    NowPlayingScreen.showDesktop();
+  }
   desktopFullScreen.value = on;
   await _setWindowFullScreen(on, () => desktopFullScreen.value);
 }
@@ -69,10 +75,16 @@ Future<void> setDesktopFullScreen(bool on) async {
 /// [desktopFullScreen] the frame steps aside, but the page stays as it is
 /// and shows only its video.
 final desktopVideoFullScreen = ValueNotifier<bool>(false);
+int _videoFullScreenRequest = 0;
 
 Future<void> setDesktopVideoFullScreen(bool on) async {
+  // An exit can cancel pending entry even while the video flag is still false.
+  final request = ++_videoFullScreenRequest;
   if (desktopVideoFullScreen.value == on) return;
-  if (on) await exitDesktopMiniMode();
+  if (on) {
+    await exitDesktopMiniMode();
+    if (request != _videoFullScreenRequest || desktopMiniMode.value) return;
+  }
   desktopVideoFullScreen.value = on;
   await _setWindowFullScreen(on, () => desktopVideoFullScreen.value);
 }
