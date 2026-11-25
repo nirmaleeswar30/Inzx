@@ -150,28 +150,44 @@ void main() {
     'expanding restores Hyprland maximization after normal geometry',
     () async {
       for (final floating in [false, true]) {
-        current
-          ..['floating'] = floating
-          ..['fullscreen'] = 1
-          ..['fullscreenClient'] = 1
-          ..['size'] = [1920, 1040];
-        final window = (await capture())!;
-        await window.prepare();
-        await window.enter();
-        expect(current['size'], [320, 340]);
-        expect(current['fullscreen'], 0);
-        expect(current['fullscreenClient'], 0);
-        await window.restore();
-        expect(current['floating'], floating);
-        expect(current['fullscreen'], 1);
-        expect(current['fullscreenClient'], 1);
-        expect(current['size'], [1920, 1040]);
-        expect(commands().last, contains('internal = 1, client = 1'));
-        if (floating) {
+        for (final (internal, client, restoredInternal, restoredClient) in [
+          (1, 1, 1, 1),
+          (3, 3, 1, 1),
+          (3, 2, 1, 0),
+          (2, 3, 0, 1),
+        ]) {
+          final commandStart = commands().length;
+          current
+            ..['floating'] = floating
+            ..['fullscreen'] = internal
+            ..['fullscreenClient'] = client
+            ..['size'] = [1920, 1040];
+          final window = (await capture())!;
+          await window.prepare();
+          await window.enter();
+          expect(current['size'], [320, 340]);
+          expect(current['fullscreen'], 0);
+          expect(current['fullscreenClient'], 0);
+          await window.restore();
+          expect(current['floating'], floating);
+          expect(current['fullscreen'], restoredInternal);
+          expect(current['fullscreenClient'], restoredClient);
           expect(
-            commands().any((c) => c.contains('x = 1280, y = 800')),
-            isTrue,
+            current['size'],
+            restoredInternal == 1 ? [1920, 1040] : [1280, 800],
           );
+          expect(
+            commands().last,
+            contains('internal = $restoredInternal, client = $restoredClient'),
+          );
+          if (floating) {
+            expect(
+              commands()
+                  .skip(commandStart)
+                  .any((c) => c.contains('x = 1280, y = 800')),
+              isTrue,
+            );
+          }
         }
       }
     },

@@ -10,6 +10,7 @@ class HyprlandMiniWindow {
   final Future<ProcessResult> Function(List<String>) _run;
   final Map<String, dynamic> _window;
   final bool _lua;
+  static const _maximizedBit = 1;
   int _maximizedInternal = 0;
   int _maximizedClient = 0;
 
@@ -131,9 +132,10 @@ class HyprlandMiniWindow {
     final original = await _current();
     await _leaveFullscreen(original);
     _window.addAll(await _current());
-    // Preserve maximization (1), but expand to normal after fullscreen (2).
-    _maximizedInternal = original['fullscreen'] == 1 ? 1 : 0;
-    _maximizedClient = original['fullscreenClient'] == 1 ? 1 : 0;
+    // Each flag can contain both bits. Expand restores only maximization.
+    _maximizedInternal = (original['fullscreen'] as int? ?? 0) & _maximizedBit;
+    _maximizedClient =
+        (original['fullscreenClient'] as int? ?? 0) & _maximizedBit;
   }
 
   Future<void> _resizeSettled(int width, int height) async {
