@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show PointerDeviceKind;
 
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
@@ -88,6 +89,34 @@ void main() {
     await tester.pumpAndSettle();
     expect(canvas, findsNothing);
     expect(find.text('Lyrics aren’t available for live streams'), findsOneWidget);
+  });
+
+  testWidgets('compact player shows artwork and hover lyrics/expand controls', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 340);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    desktopMiniLyrics.value = false;
+    const track = Track(id: 'mini-test', title: 'Mini song', artist: 'Artist', duration: Duration(minutes: 3));
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        audioPlayerServiceProvider.overrideWithValue(_Player()),
+        playbackStateProvider.overrideWith((_) => Stream.value(const PlaybackState(currentTrack: track))),
+        playerAlbumColorsProvider.overrideWith((_) => AlbumColorsNotifier()),
+      ],
+      child: const MaterialApp(home: Scaffold(body: DesktopPopoutPlayer())),
+    ));
+    await tester.pumpAndSettle();
+    expect(tester.getSize(find.byType(DesktopPopoutPlayer)), const Size(320, 340));
+    expect(find.byType(DesktopPlayerBar), findsNothing);
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: const Offset(160, 170));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Show lyrics'), findsOneWidget);
+    expect(find.byTooltip('Back to full window'), findsOneWidget);
+    expect(find.text('Mini song'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await mouse.removePointer();
   });
 
   testWidgets('the desktop bar fits Connect and follows playback quality', (

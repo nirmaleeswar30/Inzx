@@ -56,9 +56,17 @@ final desktopMiniMode = ValueNotifier<bool>(false);
 
 /// Whether the player has taken over the whole screen, showing the lyrics.
 final desktopFullScreen = ValueNotifier<bool>(false);
+int _fullScreenRequest = 0;
 
 Future<void> setDesktopFullScreen(bool on) async {
-  if (on) NowPlayingScreen.showDesktop();
+  // Record intent before awaiting restore so a newer exit can cancel entry.
+  final request = ++_fullScreenRequest;
+  if (on) {
+    await exitDesktopMiniMode();
+    // A failed restore leaves the compact controls available for retry.
+    if (request != _fullScreenRequest || desktopMiniMode.value) return;
+    NowPlayingScreen.showDesktop();
+  }
   desktopFullScreen.value = on;
   await _setWindowFullScreen(on, () => desktopFullScreen.value);
 }
@@ -67,9 +75,16 @@ Future<void> setDesktopFullScreen(bool on) async {
 /// [desktopFullScreen] the frame steps aside, but the page stays as it is
 /// and shows only its video.
 final desktopVideoFullScreen = ValueNotifier<bool>(false);
+int _videoFullScreenRequest = 0;
 
 Future<void> setDesktopVideoFullScreen(bool on) async {
+  // An exit can cancel pending entry even while the video flag is still false.
+  final request = ++_videoFullScreenRequest;
   if (desktopVideoFullScreen.value == on) return;
+  if (on) {
+    await exitDesktopMiniMode();
+    if (request != _videoFullScreenRequest || desktopMiniMode.value) return;
+  }
   desktopVideoFullScreen.value = on;
   await _setWindowFullScreen(on, () => desktopVideoFullScreen.value);
 }
@@ -138,6 +153,8 @@ Future<void> _waitForMaximized(bool maximized) async {
 /// and entered again). Checks once the window has settled, and if Flutter's
 /// view disagrees with the real window, does that leave-and-enter itself.
 Future<void> _healFullScreenView(bool Function() stillWanted) async {
+  // GTK configure events can lag; this repair is specific to Windows.
+  if (!Platform.isWindows) return;
   for (final wait in const [
     Duration(milliseconds: 200),
     Duration(milliseconds: 800),
@@ -367,9 +384,11 @@ class _DesktopAppFrameState extends State<DesktopAppFrame> {
               !desktopVideoFullScreen.value;
           final mini = desktopMiniMode.value;
           return Stack(
+            // Fill the mini window even when the hidden full layout has no size.
+            fit: StackFit.expand,
             children: [
-              const Positioned.fill(child: _DesktopBackdrop()),
-              // Keep the navigation stack and scroll positions in mini mode.
+              if (!mini) const Positioned.fill(child: _DesktopBackdrop()),
+              // Preserve navigation state while pausing hidden animations.
               Visibility(
                 visible: !mini,
                 maintainState: true,
