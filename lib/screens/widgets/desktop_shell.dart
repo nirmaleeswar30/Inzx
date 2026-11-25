@@ -58,6 +58,8 @@ final desktopMiniMode = ValueNotifier<bool>(false);
 final desktopFullScreen = ValueNotifier<bool>(false);
 
 Future<void> setDesktopFullScreen(bool on) async {
+  // Restore the normal window before entering fullscreen.
+  if (on) await exitDesktopMiniMode();
   if (on) NowPlayingScreen.showDesktop();
   desktopFullScreen.value = on;
   await _setWindowFullScreen(on, () => desktopFullScreen.value);
@@ -70,6 +72,7 @@ final desktopVideoFullScreen = ValueNotifier<bool>(false);
 
 Future<void> setDesktopVideoFullScreen(bool on) async {
   if (desktopVideoFullScreen.value == on) return;
+  if (on) await exitDesktopMiniMode();
   desktopVideoFullScreen.value = on;
   await _setWindowFullScreen(on, () => desktopVideoFullScreen.value);
 }
@@ -138,6 +141,8 @@ Future<void> _waitForMaximized(bool maximized) async {
 /// and entered again). Checks once the window has settled, and if Flutter's
 /// view disagrees with the real window, does that leave-and-enter itself.
 Future<void> _healFullScreenView(bool Function() stillWanted) async {
+  // GTK configure events can lag; this repair is specific to Windows.
+  if (!Platform.isWindows) return;
   for (final wait in const [
     Duration(milliseconds: 200),
     Duration(milliseconds: 800),
@@ -367,9 +372,11 @@ class _DesktopAppFrameState extends State<DesktopAppFrame> {
               !desktopVideoFullScreen.value;
           final mini = desktopMiniMode.value;
           return Stack(
+            // Fill the mini window even when the hidden full layout has no size.
+            fit: StackFit.expand,
             children: [
-              const Positioned.fill(child: _DesktopBackdrop()),
-              // Keep the navigation stack and scroll positions in mini mode.
+              if (!mini) const Positioned.fill(child: _DesktopBackdrop()),
+              // Preserve navigation state while pausing hidden animations.
               Visibility(
                 visible: !mini,
                 maintainState: true,

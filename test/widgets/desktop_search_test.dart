@@ -10,6 +10,7 @@ import 'package:inzx/main.dart' show rootNavigatorKey;
 import 'package:inzx/providers/providers.dart';
 import 'package:inzx/screens/search_screen.dart';
 import 'package:inzx/screens/widgets/desktop_shell.dart';
+import 'package:inzx/screens/widgets/desktop_player_bar.dart';
 import 'package:inzx/services/audio_player_service.dart';
 import 'package:inzx/services/search_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -107,5 +108,25 @@ void main() {
     expect(await tester.sendKeyDownEvent(LogicalKeyboardKey.space), isTrue);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.space);
     expect(playback.toggles, 1);
+
+    // Shrinking the native window must reveal the standalone compact player,
+    // not squeeze or keep animating the hidden normal app.
+    addTearDown(() => desktopMiniMode.value = false);
+    desktopMiniMode.value = true;
+    tester.view.physicalSize = const Size(320, 320);
+    await tester.pumpAndSettle();
+    expect(find.byType(DesktopPopoutPlayer), findsOneWidget);
+    expect(tester.getSize(find.byType(DesktopPopoutPlayer)), const Size(320, 320));
+    expect(find.text('Home page'), findsNothing);
+    final hiddenHome = find.text('Home page', skipOffstage: false);
+    expect(hiddenHome, findsOneWidget);
+    expect(TickerMode.valuesOf(tester.element(hiddenHome)).enabled, isFalse);
+    expect(tester.takeException(), isNull);
+
+    desktopMiniMode.value = false;
+    tester.view.physicalSize = const Size(1100, 650);
+    await tester.pumpAndSettle();
+    expect(find.text('Home page'), findsOneWidget);
+    expect(TickerMode.valuesOf(tester.element(find.text('Home page'))).enabled, isTrue);
   });
 }

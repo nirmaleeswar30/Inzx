@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +14,8 @@ import '../../services/desktop/desktop_bootstrap.dart'
 import '../../services/lyrics/lyrics_models.dart';
 import '../../services/lyrics/lyrics_service.dart';
 import '../../services/desktop/desktop_audio_dsp.dart';
+import '../../services/desktop/hyprland_mini_window.dart';
+import '../../services/desktop/linux_mini_window.dart';
 import '../../services/inzx_connect_remote.dart';
 import '../inzx_connect_screen.dart';
 import 'animated_album_art_view.dart';
@@ -44,33 +48,103 @@ String _clock(Duration d) {
 
 Rect? _boundsBeforeMini;
 bool _wasMaximizedBeforeMini = false;
+// Queue button presses instead of dropping one while GTK/compositor replies
+// are pending. A failed transition must not poison the next request.
+Future<void> _miniQueue = Future<void>.value();
+HyprlandMiniWindow? _hyprlandBeforeMini;
+LinuxMiniWindow? _linuxBeforeMini;
 
-/// Shrinks the window into a small always-on-top player.
-Future<void> enterDesktopMiniMode() async {
+/// Switch to the cover-art/lyrics view before asking the OS to shrink it.
+Future<void> enterDesktopMiniMode({
+  // Tests inject the backend so they cannot resize a real desktop window.
+  Future<HyprlandMiniWindow?> Function()? captureWindow,
+}) => _miniQueue = _miniQueue.catchError((Object _) {}).then((_) async {
   if (desktopMiniMode.value) return;
-  // Through the shell, so it keeps track of the window's real state.
-  if (desktopVideoFullScreen.value) await setDesktopVideoFullScreen(false);
-  if (desktopFullScreen.value) await setDesktopFullScreen(false);
-  _wasMaximizedBeforeMini = await windowManager.isMaximized();
-  if (_wasMaximizedBeforeMini) await windowManager.unmaximize();
-  _boundsBeforeMini = await windowManager.getBounds();
-  // Switch first: the full layout mustn't be on screen while the window shrinks.
-  desktopMiniMode.value = true;
-  await windowManager.setMinimumSize(const Size(260, 260));
-  await windowManager.setSize(const Size(320, 340));
-  await windowManager.setAlwaysOnTop(true);
-}
+  try {
+    // Drain fullscreen requests even if their UI flags have already changed.
+    await setDesktopVideoFullScreen(false);
+    await setDesktopFullScreen(false);
+    // Hyprland IPC is an enhancement, not a requirement for mini mode.
+    // Missing tools, timeouts, or an unmapped window use the GTK path instead.
+    try {
+      _hyprlandBeforeMini = await (captureWindow ?? HyprlandMiniWindow.capture)();
+    } catch (error) {
+      debugPrint('Hyprland capture unavailable; using GTK: $error');
+      _hyprlandBeforeMini = null;
+    }
+    if (_hyprlandBeforeMini case final window?) {
+      await window.prepare();
+    } else if (Platform.isLinux) {
+      _linuxBeforeMini = LinuxMiniWindow();
+      await _linuxBeforeMini!.prepare();
+    } else {
+      _wasMaximizedBeforeMini = await windowManager.isMaximized();
+      if (_wasMaximizedBeforeMini) await windowManager.unmaximize();
+      _boundsBeforeMini = await windowManager.getBounds();
+    }
+    desktopMiniMode.value = true;
+    await windowManager.setMinimumSize(const Size(260, 260));
+    // Flush the compact layout and reduced minimum before requesting 320x340.
+    // Otherwise a second entry can still be constrained by the full UI minimum.
+    await WidgetsBinding.instance.endOfFrame;
+    if (_hyprlandBeforeMini case final window?) {
+      await window.enter();
+    } else if (_linuxBeforeMini case final window?) {
+      await window.enter();
+    } else {
+      await windowManager.setSize(const Size(320, 340));
+      await windowManager.setAlwaysOnTop(true);
+    }
+  } catch (error) {
+    debugPrint('Could not enter miniplayer: $error');
+    final context = rootNavigatorKey.currentContext;
+    if (context != null && context.mounted) {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'The window manager could not resize the miniplayer. '
+            'Leave fullscreen or float the window, then try again.',
+          ),
+        ),
+      );
+    }
+    try {
+      await windowManager.setMinimumSize(kDesktopMinWindowSize);
+      await _hyprlandBeforeMini?.restore();
+      await _linuxBeforeMini?.restore();
+    } catch (restoreError) {
+      debugPrint('Could not restore miniplayer window: $restoreError');
+    }
+    desktopMiniMode.value = false;
+    _hyprlandBeforeMini = null;
+    _linuxBeforeMini = null;
+  }
+});
 
-/// Puts the window back the way it was before the mini player.
-Future<void> exitDesktopMiniMode() async {
-  if (!desktopMiniMode.value) return;
-  await windowManager.setAlwaysOnTop(false);
-  await windowManager.setMinimumSize(kDesktopMinWindowSize);
-  final bounds = _boundsBeforeMini;
-  if (bounds != null) await windowManager.setBounds(bounds);
-  if (_wasMaximizedBeforeMini) await windowManager.maximize();
-  desktopMiniMode.value = false;
-}
+/// Restore the previous floating bounds or return to the original tiled mode.
+Future<void> exitDesktopMiniMode() =>
+    _miniQueue = _miniQueue.catchError((Object _) {}).then((_) async {
+      if (!desktopMiniMode.value) return;
+      try {
+        await windowManager.setMinimumSize(kDesktopMinWindowSize);
+        if (_hyprlandBeforeMini case final window?) {
+          await window.restore();
+        } else if (_linuxBeforeMini case final window?) {
+          await window.restore();
+        } else {
+          await windowManager.setAlwaysOnTop(false);
+          final bounds = _boundsBeforeMini;
+          if (bounds != null) await windowManager.setBounds(bounds);
+          if (_wasMaximizedBeforeMini) await windowManager.maximize();
+        }
+        desktopMiniMode.value = false;
+        _hyprlandBeforeMini = null;
+        _linuxBeforeMini = null;
+      } catch (error) {
+        // Keep the compact controls available so the user can retry expanding.
+        debugPrint('Could not leave miniplayer: $error');
+      }
+    });
 
 /// Opens the now playing view on [tab], or closes it if it's already there.
 void _toggleNowPlaying(BuildContext context, {int? tab}) {
