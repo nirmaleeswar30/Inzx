@@ -109,15 +109,14 @@ Future<void> enterDesktopMiniMode({
       );
     }
     try {
-      await windowManager.setMinimumSize(kDesktopMinWindowSize);
-      await _hyprlandBeforeMini?.restore();
-      await _linuxBeforeMini?.restore();
+      await _restoreDesktopMiniWindow();
     } catch (restoreError) {
       debugPrint('Could not restore miniplayer window: $restoreError');
+      // A resize can take effect even if entry reports an error. Keep the
+      // compact controls and the saved window state so Expand can try again.
+      if (desktopMiniMode.value) return;
+      _clearMiniWindowSnapshot();
     }
-    desktopMiniMode.value = false;
-    _hyprlandBeforeMini = null;
-    _linuxBeforeMini = null;
   }
 });
 
@@ -126,25 +125,35 @@ Future<void> exitDesktopMiniMode() =>
     _miniQueue = _miniQueue.catchError((Object _) {}).then((_) async {
       if (!desktopMiniMode.value) return;
       try {
-        await windowManager.setMinimumSize(kDesktopMinWindowSize);
-        if (_hyprlandBeforeMini case final window?) {
-          await window.restore();
-        } else if (_linuxBeforeMini case final window?) {
-          await window.restore();
-        } else {
-          await windowManager.setAlwaysOnTop(false);
-          final bounds = _boundsBeforeMini;
-          if (bounds != null) await windowManager.setBounds(bounds);
-          if (_wasMaximizedBeforeMini) await windowManager.maximize();
-        }
-        desktopMiniMode.value = false;
-        _hyprlandBeforeMini = null;
-        _linuxBeforeMini = null;
+        await _restoreDesktopMiniWindow();
       } catch (error) {
         // Keep the compact controls available so the user can retry expanding.
         debugPrint('Could not leave miniplayer: $error');
       }
     });
+
+Future<void> _restoreDesktopMiniWindow() async {
+  await windowManager.setMinimumSize(kDesktopMinWindowSize);
+  if (_hyprlandBeforeMini case final window?) {
+    await window.restore();
+  } else if (_linuxBeforeMini case final window?) {
+    await window.restore();
+  } else {
+    if (desktopMiniMode.value) await windowManager.setAlwaysOnTop(false);
+    final bounds = _boundsBeforeMini;
+    if (bounds != null) await windowManager.setBounds(bounds);
+    if (_wasMaximizedBeforeMini) await windowManager.maximize();
+  }
+  desktopMiniMode.value = false;
+  _clearMiniWindowSnapshot();
+}
+
+void _clearMiniWindowSnapshot() {
+  _hyprlandBeforeMini = null;
+  _linuxBeforeMini = null;
+  _boundsBeforeMini = null;
+  _wasMaximizedBeforeMini = false;
+}
 
 /// Opens the now playing view on [tab], or closes it if it's already there.
 void _toggleNowPlaying(BuildContext context, {int? tab}) {

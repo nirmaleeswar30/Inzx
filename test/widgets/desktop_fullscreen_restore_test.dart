@@ -1,20 +1,21 @@
 import 'dart:async';
 
-import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:inzx/screens/widgets/desktop_player_bar.dart';
 import 'package:inzx/screens/widgets/desktop_shell.dart';
 
 void main() {
   testWidgets(
-    'lyrics and video fullscreen respect cancellation and restore failure',
+    'fullscreen cancellation, restore failure and miniplayer rollback recovery',
     (tester) async {
       const channel = MethodChannel('window_manager');
       final nativeFullscreenRequests = <bool>[];
       var size = const Size(1280, 800);
       var maximized = false;
       var failRestore = false;
+      var failEntry = false;
       Completer<void>? restoreGate;
       var restoreStarted = false;
       tester.view.devicePixelRatio = 1;
@@ -50,6 +51,9 @@ void main() {
               await restoreGate?.future;
             }
             size = Size(width, height);
+            if (width == 320 && failEntry) {
+              throw PlatformException(code: 'resize-applied-but-entry-failed');
+            }
           case 'setFullScreen':
             nativeFullscreenRequests.add(
               call.arguments['isFullScreen'] as bool,
@@ -107,6 +111,19 @@ void main() {
         expect(nativeFullscreenRequests, [true, false]);
         nativeFullscreenRequests.clear();
       }
+
+      // Native resize took effect before reporting failure. If rollback also
+      // fails, the next Expand must use the same saved desktop geometry.
+      failEntry = true;
+      failRestore = true;
+      await finish(enterDesktopMiniMode(captureWindow: () async => null));
+      expect(size, const Size(320, 340));
+      expect(desktopMiniMode.value, isTrue);
+
+      failRestore = false;
+      await finish(exitDesktopMiniMode());
+      expect(size, const Size(1280, 800));
+      expect(desktopMiniMode.value, isFalse);
     },
   );
 }

@@ -55,19 +55,26 @@ class LinuxMiniWindow {
   }
 
   Future<void> restore() async {
-    if (_alwaysOnTop case final above?) {
-      try {
-        await windowManager.setAlwaysOnTop(above);
-      } catch (_) {}
-    }
     if (_bounds case final bounds?) {
       // Wayland does not support arbitrary positioning; GTK still restores
       // the size. X11 additionally restores the saved position.
       await windowManager.setBounds(bounds);
+      // GTK acknowledges the request before the compositor configures it.
+      // Verify size only: Wayland does not report a reliable position.
+      await _waitFor(() async {
+        final size = await windowManager.getSize();
+        return (size.width - bounds.width).abs() <= 1 &&
+            (size.height - bounds.height).abs() <= 1;
+      });
     }
     if (_maximized) {
       await windowManager.maximize();
       await _waitFor(windowManager.isMaximized);
+    }
+    if (_alwaysOnTop case final above?) {
+      try {
+        await windowManager.setAlwaysOnTop(above);
+      } catch (_) {}
     }
   }
 }

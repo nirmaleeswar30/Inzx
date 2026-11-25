@@ -11,6 +11,7 @@ void main() {
   late String version;
   late String response;
   late int delayedResizes;
+  late bool restoreClientMaxOnClear;
 
   Future<ProcessResult> run(List<String> args) async {
     calls.add(args);
@@ -38,9 +39,15 @@ void main() {
         current['floating'] = false;
       }
       if (command.contains('fullscreen_state')) {
-        current['fullscreen'] = 0;
-        current['fullscreenClient'] = 0;
-        current['size'] = [1280, 800];
+        final state = RegExp(
+          r'internal = (\d+), client = (\d+)',
+        ).firstMatch(command)!;
+        final internal = int.parse(state[1]!);
+        final client = int.parse(state[2]!);
+        current['fullscreen'] = internal;
+        current['fullscreenClient'] = restoreClientMaxOnClear ? 1 : client;
+        restoreClientMaxOnClear = false;
+        current['size'] = internal == 0 ? [1280, 800] : [1920, 1040];
       }
       if (command.contains('window.resize') ||
           args.contains('resizewindowpixel')) {
@@ -81,6 +88,7 @@ void main() {
     version = '0.57.2';
     response = 'ok';
     delayedResizes = 0;
+    restoreClientMaxOnClear = false;
   });
 
   test('other desktops do not call hyprctl', () async {
@@ -137,6 +145,52 @@ void main() {
       expect(commands().where((c) => c.contains('window.resize')).length, 3);
     },
   );
+
+  test(
+    'expanding restores Hyprland maximization after normal geometry',
+    () async {
+      for (final floating in [false, true]) {
+        current
+          ..['floating'] = floating
+          ..['fullscreen'] = 1
+          ..['fullscreenClient'] = 1
+          ..['size'] = [1920, 1040];
+        final window = (await capture())!;
+        await window.prepare();
+        await window.enter();
+        expect(current['size'], [320, 340]);
+        expect(current['fullscreen'], 0);
+        expect(current['fullscreenClient'], 0);
+        await window.restore();
+        expect(current['floating'], floating);
+        expect(current['fullscreen'], 1);
+        expect(current['fullscreenClient'], 1);
+        expect(current['size'], [1920, 1040]);
+        expect(commands().last, contains('internal = 1, client = 1'));
+        if (floating) {
+          expect(
+            commands().any((c) => c.contains('x = 1280, y = 800')),
+            isTrue,
+          );
+        }
+      }
+    },
+  );
+
+  test('clears client maximization restored when leaving fullscreen', () async {
+    current['fullscreen'] = 2;
+    current['fullscreenClient'] = 2;
+    restoreClientMaxOnClear = true;
+    final window = (await capture())!;
+    await window.prepare();
+    await window.enter();
+    expect(current['fullscreenClient'], 0);
+    expect(current['size'], [320, 340]);
+    expect(
+      commands().where((c) => c.contains('internal = 0, client = 0')),
+      hasLength(2),
+    );
+  });
 
   test('older Hyprland uses legacy dispatchers', () async {
     version = '0.54.0';

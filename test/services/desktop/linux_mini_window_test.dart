@@ -9,6 +9,8 @@ void main() {
   late bool fullscreen, maximized, above, refuse, optionalUnsupported;
   late double width, height;
   late int resizeRequests;
+  late bool restoreRequested, refuseRestore;
+  late int restoreReads;
 
   setUp(() {
     calls = [];
@@ -20,6 +22,9 @@ void main() {
     width = 1280;
     height = 800;
     resizeRequests = 0;
+    restoreRequested = false;
+    refuseRestore = false;
+    restoreReads = 0;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (call) async {
           calls.add(call);
@@ -47,6 +52,10 @@ void main() {
               above = args!['isAlwaysOnTop'];
               return null;
             case 'getBounds':
+              if (restoreRequested && !refuseRestore && ++restoreReads == 3) {
+                width = 1280;
+                height = 800;
+              }
               return {'x': 30.0, 'y': 40.0, 'width': width, 'height': height};
             case 'setBounds':
               if (args!['width'] == 320.0) {
@@ -54,6 +63,11 @@ void main() {
                 // Simulate delayed GTK hints, then an accepted configure.
                 if (refuse || resizeRequests < 3) return null;
               }
+              if (args['width'] == 1280.0 && refuseRestore) {
+                restoreRequested = true;
+                return null;
+              }
+              if (args['width'] == 1280.0 && restoreRequested) return null;
               width = args['width'] ?? width;
               height = args['height'] ?? height;
               return null;
@@ -103,4 +117,24 @@ void main() {
     expect(maximized, isTrue);
     expect([width, height], [1280, 800]);
   });
+
+  test(
+    'restore detects ignored GTK resize and waits for a retry to settle',
+    () async {
+      final window = LinuxMiniWindow();
+      await window.prepare();
+      await window.enter();
+
+      refuseRestore = true;
+      await expectLater(window.restore(), throwsStateError);
+      expect([width, height], [320, 340]);
+      expect(maximized, isFalse);
+
+      refuseRestore = false;
+      await window.restore();
+      expect(restoreReads, 3);
+      expect([width, height], [1280, 800]);
+      expect(maximized, isTrue);
+    },
+  );
 }

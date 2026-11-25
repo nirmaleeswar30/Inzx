@@ -10,6 +10,8 @@ class HyprlandMiniWindow {
   final Future<ProcessResult> Function(List<String>) _run;
   final Map<String, dynamic> _window;
   final bool _lua;
+  int _maximizedInternal = 0;
+  int _maximizedClient = 0;
 
   static Future<HyprlandMiniWindow?> capture({
     Map<String, String>? environment,
@@ -53,8 +55,15 @@ class HyprlandMiniWindow {
 
   String get _selector => 'address:${_window['address']}';
 
-  Future<void> _command(String lua, List<String> legacy) async {
-    final result = await _run(_lua ? ['eval', 'hl.dispatch($lua)'] : legacy);
+  Future<void> _command(String lua, [List<String>? legacy]) async {
+    final args = _lua ? ['eval', 'hl.dispatch($lua)'] : legacy;
+    if (args == null) {
+      // Legacy fullscreenstate always affects the focused window.
+      throw StateError(
+        'Leave fullscreen before entering miniplayer on Hyprland older than 0.57',
+      );
+    }
+    final result = await _run(args);
     // Some hyprctl Lua errors are printed with a successful process exit code.
     if (result.exitCode != 0 ||
         RegExp(
@@ -91,41 +100,40 @@ class HyprlandMiniWindow {
     );
   }
 
-  Future<void> _leaveFullscreen() async {
-    final current = await _current();
+  Future<void> _leaveFullscreen(Map<String, dynamic> current) async {
     if ((current['fullscreen'] ?? 0) == 0 &&
         (current['fullscreenClient'] ?? 0) == 0) {
       return;
     }
-    // Legacy fullscreenstate always operates on the focused window, even if
-    // a selector is appended. Never risk changing a different application.
-    if (!_lua) {
-      throw StateError(
-        'Leave fullscreen before entering miniplayer on Hyprland older than 0.57',
-      );
-    }
-    // Clear compositor AND client fullscreen/maximized state, including a
-    // Hyprland keybind change that never updated the app's Flutter flags.
-    await _command(
-      'hl.dsp.window.fullscreen_state({internal = 0, client = 0, '
-      'window = "$_selector"})',
-      ['dispatch', 'fullscreenstate', '0 0,$_selector'],
-    );
+    await _setFullscreenState(0, 0);
+  }
+
+  Future<void> _setFullscreenState(int internal, int client) async {
+    // Leaving fullscreen can briefly restore client maximization. Reissue
+    // the exact state if the first request did not clear both flags.
     for (var attempt = 0; attempt < 20; attempt++) {
+      await _command(
+        'hl.dsp.window.fullscreen_state({internal = $internal, client = $client, '
+        'window = "$_selector"})',
+      );
       final state = await _current();
-      if ((state['fullscreen'] ?? 0) == 0 &&
-          (state['fullscreenClient'] ?? 0) == 0) {
+      if ((state['fullscreen'] ?? 0) == internal &&
+          (state['fullscreenClient'] ?? 0) == client) {
         return;
       }
       await Future<void>.delayed(const Duration(milliseconds: 40));
     }
-    throw StateError('Hyprland did not leave fullscreen');
+    throw StateError('Hyprland did not apply the requested fullscreen state');
   }
 
-  /// Snapshot normal geometry only after fullscreen has actually been left.
+  /// Keep maximization separate from the normal bounds used during restore.
   Future<void> prepare() async {
-    await _leaveFullscreen();
+    final original = await _current();
+    await _leaveFullscreen(original);
     _window.addAll(await _current());
+    // Preserve maximization (1), but expand to normal after fullscreen (2).
+    _maximizedInternal = original['fullscreen'] == 1 ? 1 : 0;
+    _maximizedClient = original['fullscreenClient'] == 1 ? 1 : 0;
   }
 
   Future<void> _resizeSettled(int width, int height) async {
@@ -142,13 +150,13 @@ class HyprlandMiniWindow {
   }
 
   Future<void> enter() async {
-    await _leaveFullscreen();
+    await _leaveFullscreen(await _current());
     await _float(true);
     await _resizeSettled(320, 340);
   }
 
   Future<void> restore() async {
-    await _leaveFullscreen();
+    await _leaveFullscreen(await _current());
     if (_window['floating'] == true) {
       final size = (_window['size'] as List).cast<int>();
       final at = (_window['at'] as List).cast<int>();
@@ -161,6 +169,9 @@ class HyprlandMiniWindow {
       );
     } else {
       await _float(false);
+    }
+    if (_maximizedInternal != 0 || _maximizedClient != 0) {
+      await _setFullscreenState(_maximizedInternal, _maximizedClient);
     }
   }
 }
