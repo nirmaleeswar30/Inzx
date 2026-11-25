@@ -315,6 +315,9 @@ class RenderLiquidGlass extends RenderProxyBox {
         s.pressRefraction * _press;
     var amount = s.refractionAmount + s.refractionAmountFactor * minSide;
     if (height <= 0 || amount <= 0) return null;
+    // Shader image filters need Impeller; under Skia (desktop) the glass
+    // keeps its blur and tint without the refracting rim.
+    if (!ui.ImageFilter.isShaderFilterSupported) return null;
 
     final shader = _lensShader ??= GlassShaders.createLens();
     if (shader == null) return null;

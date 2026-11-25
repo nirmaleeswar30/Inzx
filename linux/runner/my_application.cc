@@ -42,6 +42,9 @@ static void my_application_activate(GApplication* application) {
   setlocale(LC_NUMERIC, "C");
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
+  // Render with Skia: Impeller's OpenGL backend costs more memory on desktop.
+  // Android and iOS keep Impeller.
+  fl_dart_project_set_enable_impeller(project, FALSE);
   fl_dart_project_set_dart_entrypoint_arguments(
       project, self->dart_entrypoint_arguments);
 
