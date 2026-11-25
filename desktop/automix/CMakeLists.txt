@@ -19,20 +19,26 @@ set(AUTOMIX_CPP "${AUTOMIX_REPO}/android/app/src/main/cpp")
 set(AUTOMIX_NATIVE "${AUTOMIX_CPP}/native")
 
 # ---- ONNX Runtime (MIT), Microsoft's prebuilt release -----------------------
+# From Microsoft's NuGet package. The GitHub release archives this used to
+# download went offline in November 2026; the package holds the same build
+# (its Windows DLL and headers match that archive byte for byte). One package
+# carries every platform, so only the headers and this platform's library are
+# unpacked, into the include/ and lib/ layout the archive had.
 set(ORT_VERSION "1.28.0")
+set(ORT_PACKAGE "microsoft.ml.onnxruntime.${ORT_VERSION}.nupkg")
+set(ORT_URL "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime/${ORT_VERSION}/${ORT_PACKAGE}")
+set(ORT_SHA256 "769d1d3ea8ab6cd69f737c9dd4d4462aa4ad0ccfa106eaf506efc40d7bead5db")
+set(ORT_DOWNLOAD "${CMAKE_BINARY_DIR}/${ORT_PACKAGE}")
+set(ORT_DIR "${CMAKE_BINARY_DIR}/onnxruntime-${ORT_VERSION}")
 if(WIN32)
-  set(ORT_NAME "onnxruntime-win-x64-${ORT_VERSION}")
-  set(ORT_ARCHIVE "${ORT_NAME}.zip")
-  set(ORT_SHA256 "abef733dacbe2f571547a7150b479b5cb9cc0df22f96c24983a42cadb1b4f8bc")
+  set(ORT_NATIVE "runtimes/win-x64/native")
+  set(ORT_LIBRARIES onnxruntime.dll onnxruntime.lib)
 else()
-  set(ORT_NAME "onnxruntime-linux-x64-${ORT_VERSION}")
-  set(ORT_ARCHIVE "${ORT_NAME}.tgz")
-  set(ORT_SHA256 "a3e1b79d7bb1bf09696ce675f49e4064e6c81f6202b8225624fff0e93f8d6407")
+  set(ORT_NATIVE "runtimes/linux-x64/native")
+  set(ORT_LIBRARIES libonnxruntime.so)
 endif()
-set(ORT_URL "https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/${ORT_ARCHIVE}")
-set(ORT_DOWNLOAD "${CMAKE_BINARY_DIR}/${ORT_ARCHIVE}")
-set(ORT_DIR "${CMAKE_BINARY_DIR}/${ORT_NAME}")
 
+# The headers go in last, so their presence means the unpacking finished.
 if(NOT EXISTS "${ORT_DIR}/include/onnxruntime_cxx_api.h")
   if(NOT EXISTS "${ORT_DOWNLOAD}")
     message(STATUS "Downloading ${ORT_URL}")
@@ -40,7 +46,20 @@ if(NOT EXISTS "${ORT_DIR}/include/onnxruntime_cxx_api.h")
       EXPECTED_HASH SHA256=${ORT_SHA256}
       SHOW_PROGRESS)
   endif()
-  file(ARCHIVE_EXTRACT INPUT "${ORT_DOWNLOAD}" DESTINATION "${CMAKE_BINARY_DIR}")
+  set(ORT_UNPACK "${CMAKE_BINARY_DIR}/onnxruntime-${ORT_VERSION}-unpack")
+  file(REMOVE_RECURSE "${ORT_UNPACK}" "${ORT_DIR}")
+  file(ARCHIVE_EXTRACT INPUT "${ORT_DOWNLOAD}" DESTINATION "${ORT_UNPACK}"
+    PATTERNS "build/native/include/*" "${ORT_NATIVE}/*")
+  foreach(lib ${ORT_LIBRARIES})
+    file(COPY "${ORT_UNPACK}/${ORT_NATIVE}/${lib}" DESTINATION "${ORT_DIR}/lib")
+  endforeach()
+  if(NOT WIN32)
+    # Named for its SONAME, the name the loader looks for next to Automix.
+    file(RENAME "${ORT_DIR}/lib/libonnxruntime.so"
+      "${ORT_DIR}/lib/libonnxruntime.so.1")
+  endif()
+  file(COPY "${ORT_UNPACK}/build/native/include/" DESTINATION "${ORT_DIR}/include")
+  file(REMOVE_RECURSE "${ORT_UNPACK}")
 endif()
 
 add_library(onnxruntime SHARED IMPORTED GLOBAL)
@@ -51,11 +70,9 @@ if(WIN32)
   set(ORT_RUNTIME_FILES "${ORT_DIR}/lib/onnxruntime.dll")
 else()
   set_target_properties(onnxruntime PROPERTIES
-    IMPORTED_LOCATION "${ORT_DIR}/lib/libonnxruntime.so.${ORT_VERSION}"
+    IMPORTED_LOCATION "${ORT_DIR}/lib/libonnxruntime.so.1"
     IMPORTED_SONAME "libonnxruntime.so.1")
-  set(ORT_RUNTIME_FILES
-    "${ORT_DIR}/lib/libonnxruntime.so.1"
-    "${ORT_DIR}/lib/libonnxruntime.so.${ORT_VERSION}")
+  set(ORT_RUNTIME_FILES "${ORT_DIR}/lib/libonnxruntime.so.1")
 endif()
 target_include_directories(onnxruntime INTERFACE "${ORT_DIR}/include")
 

@@ -521,7 +521,24 @@ Note: If your app uses a number of different audio plugins, e.g. for audio recor
 
 ## Inzx fork
 
-Vendored from just_audio 0.9.46 (MIT, see LICENSE). One change: `JustAudioHooks`
-lets the app supply ExoPlayer's `RenderersFactory` (used by Inzx for hi-res
-float output, the FFmpeg decoder and Android 14 bit-perfect USB output). The
-patch is in `AudioPlayer.ensurePlayerInitialized`. Nothing else differs.
+Vendored from just_audio 0.9.46 (MIT, see LICENSE). Changes, each marked
+"Inzx patch" in the source:
+
+- **Android:** `JustAudioHooks` lets the app supply ExoPlayer's
+  `RenderersFactory` (used by Inzx for hi-res float output, the FFmpeg decoder
+  and Android 14 bit-perfect USB output) and tells it when each player's
+  ExoPlayer is created and released. The patch is in
+  `AudioPlayer.ensurePlayerInitialized` and `dispose`.
+- **Android position updates:** while playing, the player reports a fresh
+  position twice a second, and again whenever the playback speed changes.
+  Automix changes the speed natively, and without this Dart's estimate of the
+  position (and the lyrics) drifts.
+- **Dart:** `AudioPlayer.playerId` exposes the id the platform side knows the
+  player by, so the app's native code can find it.
+- **iOS** (`darwin/`): `AudioPlayer.m` posts `JustAudioPlayerCreated`,
+  `JustAudioPlayerItemCreated` and `JustAudioPlayerDisposed` notifications so
+  the app can attach its audio tap (equaliser, AutoEQ, loudness) to each
+  player and item. `UriAudioSource.m` uses the Spectral time-pitch algorithm
+  instead of TimeDomain, which warbles on music when Automix beatmatches.
+
+Nothing else differs.

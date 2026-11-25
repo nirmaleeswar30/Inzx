@@ -145,6 +145,7 @@ Inzx is free and open source. If it makes your day a little better, consider sup
 - **Dolby Atmos add-on playback** — turn on **Prefer Dolby Atmos mixes** in **Settings → Audio** to play compatible add-on mixes on supported outputs.
 - **Native Windows Desktop** — per-user installer (`.exe`) packaged with Inno Setup, system tray / taskbar controls, and silent background self-updates
 - **Linux AppImage** — standalone portable AppImage with bundled `libmpv`, desktop launcher menu integration, and MPRIS media keys
+- **Desktop mini player** — shrink the window to a small always-on-top player with artwork (including animated canvases), synced lyrics, and hover controls. On Hyprland, Inzx floats and resizes its own window; other Linux desktops depend on the compositor. See [Linux mini player](docs/linux-miniplayer.md)
 - **Hardware media keys & transport** — Windows SMTC and Linux MPRIS integration for keyboard keys, headsets, and system media widgets
 - **Android Auto integration** — driving-optimized dashboard interface for safe on-road playback
 - **Dynamic home-screen widgets** — 3 launcher widget formats (2×2, 4×1 compact, 4×2 expanded) updating live via Android AppWidgetProvider
@@ -328,6 +329,8 @@ bash scripts/build_appimage.sh normal
 # Shorebird OTA-enabled Linux AppImage
 bash scripts/build_appimage.sh shorebird
 ```
+
+The first Windows or Linux build downloads ONNX Runtime 1.28.0 for desktop Automix from Microsoft's NuGet package (about 140 MB, checksum-verified) and reuses it afterwards.
 
 ### Manual iOS builds
 

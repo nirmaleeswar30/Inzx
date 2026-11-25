@@ -440,7 +440,7 @@ class ListeningStatsService extends ChangeNotifier with WidgetsBindingObserver {
           if (_tracks[id] case final track?)
             'm$id': {
               'track': _storable(track),
-              if (_firstHeard[id] case final first?) 'f': first,
+              'f': ?_firstHeard[id],
             },
       };
       if (entries.isNotEmpty) await box.putAll(entries);
@@ -517,7 +517,7 @@ class ListeningStatsService extends ChangeNotifier with WidgetsBindingObserver {
     if (box == null) return const {};
     return {
       for (final key in box.keys)
-        if (box.get(key) case final value?) key.toString(): value,
+        key.toString(): ?box.get(key),
     };
   }
 

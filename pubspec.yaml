@@ -47,7 +47,6 @@ dependencies:
   just_audio: ^0.9.42 # Audio playback
   audio_service: ^0.18.15 # Background playback & media controls
   audio_session: ^0.1.21 # Audio focus management
-  palette_generator: ^0.3.3+4 # Extract colors from album art
   rxdart: ^0.28.0 # Reactive streams for audio
 
   # YouTube Music InnerTube API
@@ -111,8 +110,8 @@ dev_dependencies:
   flutter_native_splash: ^2.4.2
 
 dependency_overrides:
-  # just_audio 0.9.46 plus one hook for the app's ExoPlayer renderers
-  # (hi-res output, FFmpeg decoder, bit-perfect USB). See its README.
+  # just_audio 0.9.46 plus hooks for the app's ExoPlayer renderers (hi-res
+  # output, FFmpeg decoder, bit-perfect USB) and iOS audio tap. See its README.
   just_audio:
     path: packages/just_audio
   # just_audio_media_kit 2.1.0 plus a hook handing the app each mpv player

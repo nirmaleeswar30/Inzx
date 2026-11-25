@@ -32,7 +32,7 @@ class LyricsPlusProvider implements LyricsProvider {
 
     // Prioritize last known working host, followed by rest of mirrors
     final hosts = [
-      if (_lastGoodHost != null) _lastGoodHost!,
+      ?_lastGoodHost,
       ..._mirrors.where((m) => m != _lastGoodHost),
     ];
 

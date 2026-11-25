@@ -701,7 +701,7 @@ class DiscordRpcService {
       'type': 2, // Listening
       'details': _activityText(track.title, 'Unknown Track'),
       'state': _activityText(track.artist, 'Inzx Music'),
-      if (timestamps != null) 'timestamps': timestamps,
+      'timestamps': ?timestamps,
       if (uri != null &&
           uri.host.isNotEmpty &&
           (uri.scheme == 'https' || uri.scheme == 'http'))

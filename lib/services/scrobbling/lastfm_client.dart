@@ -66,7 +66,7 @@ class LastFmClient {
       ...params,
       'method': method,
       'api_key': apiKey,
-      if (sessionKey != null) 'sk': sessionKey,
+      'sk': ?sessionKey,
     };
     body['api_sig'] = signature(body, secret);
     body['format'] = 'json';

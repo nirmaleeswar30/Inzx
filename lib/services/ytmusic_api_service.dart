@@ -353,7 +353,7 @@ class InnerTubeService {
         'contentPlaybackContext': {
           'html5Preference': 'HTML5_PREF_WANTS',
           'referer': 'https://music.youtube.com/watch?v=$videoId',
-          if (timestamp != null) 'signatureTimestamp': timestamp,
+          'signatureTimestamp': ?timestamp,
         },
       },
     };
@@ -1382,7 +1382,7 @@ class InnerTubeService {
   }) async {
     final response = await _request('browse', {
       'browseId': browseId,
-      if (params != null) 'params': params,
+      'params': ?params,
     }, authenticated: isAuthenticated);
     if (response == null) return null;
 

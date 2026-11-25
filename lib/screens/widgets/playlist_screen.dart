@@ -10,6 +10,7 @@ import '../../core/l10n/app_localizations_x.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
+import '../../services/album_color_extractor.dart';
 import '../../services/download_service.dart';
 import 'track_options_sheet.dart';
 import 'playlist_edit_screen.dart';
@@ -17,7 +18,6 @@ import 'mini_player.dart';
 import 'now_playing_screen.dart';
 import 'podcast_screen.dart' show PodcastScreen;
 
-import 'package:palette_generator/palette_generator.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'explicit_badge.dart';
 import 'share_sheet.dart';
@@ -29,28 +29,15 @@ enum PlaylistTrackSort {
   duration,
 }
 
-/// Dynamic theme color provider from playlist image
+/// Dynamic theme color provider from playlist image: the cover's accent, as
+/// the album and artist pages pick it.
 final playlistColorsProvider = FutureProvider.autoDispose.family<Color?, String?>(
   (ref, imageUrl) async {
     if (imageUrl == null || imageUrl.isEmpty) return null;
-
     try {
-      String optimizedUrl = imageUrl;
-      if (imageUrl.contains('googleusercontent.com') ||
-          imageUrl.contains('ytimg.com')) {
-        optimizedUrl = imageUrl
-            .replaceAll(RegExp(r'w\d+-h\d+'), 'w60-h60')
-            .replaceAll(RegExp(r's\d+'), 's60');
-      }
-
-      final paletteGenerator = await PaletteGenerator.fromImageProvider(
-        CachedNetworkImageProvider(optimizedUrl),
-        maximumColorCount: 4,
-        size: const Size(60, 60),
-      );
-      return paletteGenerator.dominantColor?.color ??
-          paletteGenerator.vibrantColor?.color;
-    } catch (e) {
+      final colors = await AlbumColorExtractor.extractFromUrl(imageUrl);
+      return colors.isDefault ? null : colors.accent;
+    } catch (_) {
       return null;
     }
   },

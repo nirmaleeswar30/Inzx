@@ -1138,7 +1138,7 @@ class _SyncedLyricPreviewState extends ConsumerState<SyncedLyricPreview>
                       : Alignment.centerLeft,
                   children: [
                     ...previousChildren,
-                    if (currentChild != null) currentChild,
+                    ?currentChild,
                   ],
                 );
               },
@@ -3483,7 +3483,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                   const SizedBox(width: 8),
 
                   // Trailing widget (e.g. drag handle or trash button)
-                  if (trailingWidget != null) trailingWidget,
+                  ?trailingWidget,
                 ],
               ),
             ),
