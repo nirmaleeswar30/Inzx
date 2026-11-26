@@ -10,21 +10,21 @@
 @property (readonly, nonatomic) AVQueuePlayer *player;
 @property (readonly, nonatomic) float speed;
 
-- (instancetype)initWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar playerId:(NSString*)idParam loadConfiguration:(NSDictionary *)loadConfiguration;
+- (instancetype)initWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar playerId:(NSString*)idParam loadConfiguration:(NSDictionary *)loadConfiguration useLazyPreparation:(BOOL)useLazyPreparation;
 - (void)dispose:(BOOL)calledFromDealloc;
 
 @end
 
 enum ProcessingState {
-    none,
-    loading,
-    buffering,
-    ready,
-    completed
+    psIdle,
+    psLoading,
+    psBuffering,
+    psReady,
+    psCompleted
 };
 
 enum LoopMode {
-    loopOff,
-    loopOne,
-    loopAll
+    lmLoopOff,
+    lmLoopOne,
+    lmLoopAll
 };

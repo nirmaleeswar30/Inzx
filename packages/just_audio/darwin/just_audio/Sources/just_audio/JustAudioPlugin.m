@@ -25,15 +25,17 @@
 }
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
+    //NSLog(@"plugin method: %@", call.method);
     if ([@"init" isEqualToString:call.method]) {
         NSDictionary *request = (NSDictionary *)call.arguments;
         NSString *playerId = (NSString *)request[@"id"];
         NSDictionary *loadConfiguration = (NSDictionary *)request[@"audioLoadConfiguration"];
+        BOOL useLazyPreparation = [((NSNumber *)request[@"useLazyPreparation"]) boolValue];
         if ([_players objectForKey:playerId] != nil) {
             FlutterError *flutterError = [FlutterError errorWithCode:@"error" message:@"Platform player already exists" details:nil];
             result(flutterError);
         } else {
-            AudioPlayer* player = [[AudioPlayer alloc] initWithRegistrar:_registrar playerId:playerId loadConfiguration:loadConfiguration];
+            AudioPlayer* player = [[AudioPlayer alloc] initWithRegistrar:_registrar playerId:playerId loadConfiguration:loadConfiguration useLazyPreparation:useLazyPreparation];
             [_players setValue:player forKey:playerId];
             result(nil);
         }
