@@ -102,7 +102,7 @@ void main() {
       overrides: [
         audioPlayerServiceProvider.overrideWithValue(_Player()),
         playbackStateProvider.overrideWith((_) => Stream.value(const PlaybackState(currentTrack: track))),
-        playerAlbumColorsProvider.overrideWith((_) => AlbumColorsNotifier()),
+        playerAlbumColorsProvider.overrideWith(AlbumColorsNotifier.new),
       ],
       child: const MaterialApp(home: Scaffold(body: DesktopPopoutPlayer())),
     ));

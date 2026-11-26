@@ -21,6 +21,7 @@ import 'widgets/artist_screen.dart';
 import 'widgets/now_playing_screen.dart';
 import 'widgets/track_options_sheet.dart';
 import 'widgets/explicit_badge.dart';
+import '../core/providers/settable_provider.dart';
 
 // ============ PROVIDERS ============
 
@@ -31,9 +32,7 @@ final searchServiceProvider = Provider<SearchService>((ref) {
 });
 
 /// Current search filter
-final searchFilterProvider = StateProvider<SearchFilter>(
-  (ref) => SearchFilter.all,
-);
+final searchFilterProvider = settableProvider<SearchFilter>(SearchFilter.all);
 
 /// Enhanced search results provider with local + online merge
 /// Uses proper debouncing and lets YouTube handle intent detection
@@ -54,7 +53,7 @@ final enhancedSearchProvider =
       }
 
       final downloadedTracks =
-          ref.read(downloadedTracksProvider).valueOrNull ?? [];
+          ref.read(downloadedTracksProvider).value ?? [];
       final localTracks = ref.read(localTracksProvider);
       final allLocalTracks = [...downloadedTracks, ...localTracks];
 
@@ -130,8 +129,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ref.read(searchQueryProvider.notifier).state = _searchController.text;
-      ref.read(searchFilterProvider.notifier).state = SearchFilter.all;
+      ref.read(searchQueryProvider.notifier).set(_searchController.text);
+      ref.read(searchFilterProvider.notifier).set(SearchFilter.all);
       if (widget.desktopInput == null) _searchFocusNode.requestFocus();
     });
   }
@@ -141,7 +140,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
     if (ref.read(searchQueryProvider) == query) return;
     _onSearchChanged(query);
     if (query.isEmpty) {
-      ref.read(searchFilterProvider.notifier).state = SearchFilter.all;
+      ref.read(searchFilterProvider.notifier).set(SearchFilter.all);
     }
   }
 
@@ -217,21 +216,21 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
 
   void _onSearchChanged(String query) {
     _debounceTimer?.cancel();
-    ref.read(searchQueryProvider.notifier).state = query;
+    ref.read(searchQueryProvider.notifier).set(query);
   }
 
   void _performSearch(String query) {
     if (query.trim().isEmpty) return;
     _searchController.text = query;
-    ref.read(searchQueryProvider.notifier).state = query;
+    ref.read(searchQueryProvider.notifier).set(query);
     ref.read(searchHistoryProvider.notifier).addSearch(query.trim());
     _searchFocusNode.unfocus();
   }
 
   void _clearSearch() {
     _searchController.clear();
-    ref.read(searchQueryProvider.notifier).state = '';
-    ref.read(searchFilterProvider.notifier).state = SearchFilter.all;
+    ref.read(searchQueryProvider.notifier).set('');
+    ref.read(searchFilterProvider.notifier).set(SearchFilter.all);
   }
 
   @override
@@ -459,7 +458,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
               style: BouncyStyle.button,
               customScale: 0.92,
               onTap: () {
-                ref.read(searchFilterProvider.notifier).state = filter;
+                ref.read(searchFilterProvider.notifier).set(filter);
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 250),

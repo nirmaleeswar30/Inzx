@@ -72,7 +72,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   }
 
   void _onSearchChanged(String query) {
-    ref.read(searchQueryProvider.notifier).state = query;
+    ref.read(searchQueryProvider.notifier).set(query);
     if (query.isNotEmpty) {
       // Load suggestions
       final innerTube = ref.read(innerTubeServiceProvider);
@@ -91,7 +91,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
 
   void _performSearch(String query) {
     _searchController.text = query;
-    ref.read(searchQueryProvider.notifier).state = query;
+    ref.read(searchQueryProvider.notifier).set(query);
     _searchFocusNode.unfocus();
     setState(() => _suggestions = []);
   }

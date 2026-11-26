@@ -127,7 +127,7 @@ class _MusicHomeTabState extends ConsumerState<MusicHomeTab>
       DesktopAppFrame.openSearch(context, query: query);
       return;
     }
-    ref.read(searchQueryProvider.notifier).state = query;
+    ref.read(searchQueryProvider.notifier).set(query);
     Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (context) => const SearchScreen()));

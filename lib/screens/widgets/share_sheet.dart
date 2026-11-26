@@ -376,7 +376,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
     final palette = _palette;
     if (palette == null) return null;
     final isCurrent = _isCurrent;
-    final state = isCurrent ? ref.read(playbackStateProvider).valueOrNull : null;
+    final state = isCurrent ? ref.read(playbackStateProvider).value : null;
     final duration = state?.duration ?? _track.duration;
     return ShareCardData(
       title: _track.title,

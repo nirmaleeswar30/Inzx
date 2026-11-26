@@ -296,6 +296,10 @@ class _RestartableAppState extends State<RestartableApp> {
   Widget build(BuildContext context) {
     return ProviderScope(
       key: _providerScopeKey,
+      // Riverpod 3 retries failing providers by itself. The app already
+      // retries its network calls and offers refresh where a load can fail,
+      // so a failed provider stays failed until it is refreshed.
+      retry: (retryCount, error) => null,
       overrides: [
         if (widget.audioHandler != null)
           audioHandlerProvider.overrideWithValue(widget.audioHandler),

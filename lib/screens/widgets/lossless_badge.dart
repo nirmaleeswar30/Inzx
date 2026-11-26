@@ -32,11 +32,11 @@ class LosslessBadge extends ConsumerWidget {
     );
     final upgrading =
         tier == null &&
-        (ref.watch(losslessUpgradingProvider).valueOrNull ?? false);
+        (ref.watch(losslessUpgradingProvider).value ?? false);
     // Ahead of the tier: stepping down from FLAC, the song is still lossless
     // until the switch lands.
     final downgrading =
-        ref.watch(qualityDowngradingProvider).valueOrNull ?? false;
+        ref.watch(qualityDowngradingProvider).value ?? false;
     final glyphSize = fontSize + 2;
     final Widget? glyph = downgrading
         ? _UpgradingGlyph(color: color, size: glyphSize, down: true)

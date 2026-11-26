@@ -44,7 +44,7 @@ class _AutomixStatsLineState extends ConsumerState<AutomixStatsLine> {
   }
 
   Future<void> _refresh() async {
-    final state = ref.read(playbackStateProvider).valueOrNull;
+    final state = ref.read(playbackStateProvider).value;
     final current = state?.currentTrack;
     String? line;
     if (current != null && (state?.showNerdStats ?? false)) {

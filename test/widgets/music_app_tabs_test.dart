@@ -11,13 +11,12 @@ import 'package:inzx/screens/tabs/folders_tab.dart';
 import 'package:inzx/screens/tabs/home_tab.dart';
 import 'package:inzx/screens/tabs/library_tab.dart';
 import 'package:inzx/screens/widgets/desktop_shell.dart';
-import 'package:inzx/services/ytmusic_api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _InnerTube extends Fake implements InnerTubeService {}
-
+/// An empty home feed that never loads.
 class _HomePage extends HomePageNotifier {
-  _HomePage() : super(_InnerTube());
+  @override
+  HomePageState build() => const HomePageState();
 
   @override
   Future<void> loadInitial() async {}
@@ -39,7 +38,7 @@ void main() {
           effectiveAccentColorProvider.overrideWithValue(Colors.blue),
           appAccountProvider.overrideWithValue(null),
           jioSaavnEnabledProvider.overrideWithValue(false),
-          ytMusicHomePageStateProvider.overrideWith((_) => _HomePage()),
+          ytMusicHomePageStateProvider.overrideWith(_HomePage.new),
         ],
         child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,

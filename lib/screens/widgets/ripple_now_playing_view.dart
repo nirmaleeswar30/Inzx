@@ -155,7 +155,7 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
                       child: Consumer(
                         builder: (context, ref, _) {
                           final streamPos =
-                              ref.watch(positionStreamProvider).valueOrNull ??
+                              ref.watch(positionStreamProvider).value ??
                               Duration.zero;
                           final displayPos = _seekingPosition ?? streamPos;
 
@@ -305,7 +305,7 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
 
   /// Top Bar with dismiss button, centered track/stats, and 3-dot menu
   Widget _buildTopHeader() {
-    final playbackState = ref.watch(playbackStateProvider).valueOrNull;
+    final playbackState = ref.watch(playbackStateProvider).value;
     final queueTitle = playbackState?.queueTitle;
     final hasQueueTitle = queueTitle != null && queueTitle.trim().isNotEmpty;
     final showNerdStats = playbackState?.showNerdStats ?? false;
@@ -722,7 +722,7 @@ class _RippleTimeReadoutState extends ConsumerState<_RippleTimeReadout>
   @override
   Widget build(BuildContext context) {
     final streamPos =
-        ref.watch(positionStreamProvider).valueOrNull ?? Duration.zero;
+        ref.watch(positionStreamProvider).value ?? Duration.zero;
     if (streamPos != _lastKnownPosition) {
       _lastKnownPosition = streamPos;
       _lastSyncTime = DateTime.now();

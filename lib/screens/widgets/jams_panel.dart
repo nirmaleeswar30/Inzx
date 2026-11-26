@@ -61,7 +61,7 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isSignedIn = ref.watch(appAccountProvider) != null;
-    final session = ref.watch(currentJamSessionProvider).valueOrNull;
+    final session = ref.watch(currentJamSessionProvider).value;
     final jamsState = ref.watch(jamsNotifierProvider);
 
     final effectiveBg = widget.backgroundColor.withValues(alpha: 1.0);

@@ -179,7 +179,7 @@ class DesktopPlayerBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(playbackStateProvider).valueOrNull;
+    final state = ref.watch(playbackStateProvider).value;
     final track = state?.currentTrack;
     if (state == null || track == null) return const SizedBox.shrink();
     if (!showControls) return const SizedBox(height: _kPlayerBarHeight);
@@ -593,7 +593,7 @@ class _ProgressRowState extends ConsumerState<_ProgressRow>
   @override
   Widget build(BuildContext context) {
     final position =
-        ref.watch(positionStreamProvider).valueOrNull ?? Duration.zero;
+        ref.watch(positionStreamProvider).value ?? Duration.zero;
     final maxMs = widget.duration.inMilliseconds.toDouble();
     final valueMs = (_dragMs ?? position.inMilliseconds.toDouble()).clamp(
       0.0,
@@ -1086,7 +1086,7 @@ class _DesktopPopoutPlayerState extends ConsumerState<DesktopPopoutPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(playbackStateProvider).valueOrNull;
+    final state = ref.watch(playbackStateProvider).value;
     final track = state?.currentTrack;
     // The device the player shows: this one, or a paired one it follows
     // over Inzx Connect.
@@ -1280,7 +1280,7 @@ class _MiniLyrics extends ConsumerWidget {
       );
     }
     final position =
-        ref.watch(positionStreamProvider).valueOrNull ?? Duration.zero;
+        ref.watch(positionStreamProvider).value ?? Duration.zero;
     // The lyrics are sized for the full window; scale them to this one.
     return MediaQuery(
       data: MediaQuery.of(

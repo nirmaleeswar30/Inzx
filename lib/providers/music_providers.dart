@@ -31,6 +31,7 @@ import '../data/repositories/music_repository.dart'
 import '../data/sources/music_local_source.dart';
 import '../core/services/cache/hive_service.dart';
 import '../data/entities/color_cache_entity.dart';
+import '../core/providers/settable_provider.dart';
 
 /// Provider for the audio handler (initialized once)
 final audioHandlerProvider = Provider<InzxAudioHandler?>((ref) {
@@ -149,11 +150,11 @@ final playbackStateProvider = StreamProvider<player.PlaybackState>((ref) {
 });
 
 final activeConnectPlaybackProvider = Provider<ConnectPeerPlayback?>((ref) {
-  final followed = ref.watch(connectPeerPlaybackProvider).valueOrNull;
+  final followed = ref.watch(connectPeerPlaybackProvider).value;
   if (followed == null || ref.watch(isInJamSessionProvider)) return null;
   final service = ref.watch(audioPlayerServiceProvider);
   final localPlaying =
-      ref.watch(_localPlaybackActiveProvider).valueOrNull ??
+      ref.watch(_localPlaybackActiveProvider).value ??
       (service.state.isPlaying || service.state.isLoading);
   return localPlaying ? null : followed;
 });
@@ -330,30 +331,7 @@ final jioSaavnEnabledProvider = Provider<bool>((ref) {
 /// Colours from the playing song's artwork, always — what Now Playing (and
 /// the lyrics sheet) are painted with, whatever the Dynamic colours setting.
 final playerAlbumColorsProvider =
-    StateNotifierProvider<AlbumColorsNotifier, AlbumColors>((ref) {
-      final notifier = AlbumColorsNotifier();
-
-      // Listen to track changes and extract colors automatically
-      // Use fireImmediately: false to prevent modification during initialization
-      ref.listen<Track?>(currentTrackProvider, (previous, next) {
-        if (next != null &&
-            (next.id != previous?.id ||
-                next.thumbnailUrl != previous?.thumbnailUrl ||
-                next.localFilePath != previous?.localFilePath)) {
-          notifier.updateForTrack(next);
-        }
-      }, fireImmediately: false);
-
-      // Schedule initial color extraction after provider is fully initialized
-      Future.microtask(() {
-        final currentTrack = ref.read(currentTrackProvider);
-        if (currentTrack != null) {
-          notifier.updateForTrack(currentTrack);
-        }
-      });
-
-      return notifier;
-    });
+    NotifierProvider<AlbumColorsNotifier, AlbumColors>(AlbumColorsNotifier.new);
 
 /// Colours for the rest of the app (home, mini player, settings...): the
 /// artwork's when Dynamic colours is on, otherwise a neutral palette tinted
@@ -366,8 +344,37 @@ final albumColorsProvider = Provider<AlbumColors>((ref) {
 });
 
 /// Notifier for album colors extraction
-class AlbumColorsNotifier extends StateNotifier<AlbumColors> {
-  AlbumColorsNotifier() : super(AlbumColors.defaultColors());
+class AlbumColorsNotifier extends Notifier<AlbumColors> {
+  @override
+  AlbumColors build() {
+    // Follow track changes. fireImmediately: false, as a provider may not
+    // change its own state while it is being built.
+    ref.listen<Track?>(currentTrackProvider, (previous, next) {
+      if (next != null &&
+          (next.id != previous?.id ||
+              next.thumbnailUrl != previous?.thumbnailUrl ||
+              next.localFilePath != previous?.localFilePath)) {
+        updateForTrack(next);
+      }
+    }, fireImmediately: false);
+
+    // The current track's colours, once the provider is built.
+    Future.microtask(() {
+      if (!ref.mounted) return;
+      final currentTrack = ref.read(currentTrackProvider);
+      if (currentTrack != null) {
+        updateForTrack(currentTrack);
+      }
+    });
+
+    return AlbumColors.defaultColors();
+  }
+
+  /// [AlbumColors] equality looks at the accent and background only, so a
+  /// palette that differs elsewhere still has to reach the screen.
+  @override
+  bool updateShouldNotify(AlbumColors previous, AlbumColors next) =>
+      !identical(previous, next);
 
   Future<void> updateForTrack(Track track) async {
     // 1. If track has a local file path, check embedded artwork
@@ -413,7 +420,7 @@ class AlbumColorsNotifier extends StateNotifier<AlbumColors> {
   /// For results that arrive after an await: the notifier may have been
   /// disposed in the meantime.
   void _apply(AlbumColors colors) {
-    if (!mounted) return;
+    if (!ref.mounted) return;
     state = colors;
   }
 
@@ -482,7 +489,7 @@ final trackColorsProvider = FutureProvider.autoDispose
     });
 
 /// Provider for search query
-final searchQueryProvider = StateProvider<String>((ref) => '');
+final searchQueryProvider = settableProvider<String>('');
 
 /// Provider for search results
 /// Now backed by MusicRepository with intelligent caching
@@ -565,15 +572,14 @@ final trendingMusicProvider = FutureProvider<List<Track>>((ref) async {
 
 /// Provider for search history
 final searchHistoryProvider =
-    StateNotifierProvider<SearchHistoryNotifier, List<String>>((ref) {
-      return SearchHistoryNotifier();
-    });
+    NotifierProvider<SearchHistoryNotifier, List<String>>(SearchHistoryNotifier.new);
 
 /// Notifier for search history
-class SearchHistoryNotifier extends StateNotifier<List<String>> {
+class SearchHistoryNotifier extends Notifier<List<String>> {
   static const _maxHistory = 20;
 
-  SearchHistoryNotifier() : super([]);
+  @override
+  List<String> build() => [];
 
   void addSearch(String query) {
     if (query.trim().isEmpty) return;
@@ -603,16 +609,16 @@ class SearchHistoryNotifier extends StateNotifier<List<String>> {
 
 /// Provider for liked songs
 final likedSongsProvider =
-    StateNotifierProvider<LikedSongsNotifier, List<Track>>((ref) {
-      return LikedSongsNotifier();
-    });
+    NotifierProvider<LikedSongsNotifier, List<Track>>(LikedSongsNotifier.new);
 
 /// Notifier for liked songs with persistence
-class LikedSongsNotifier extends StateNotifier<List<Track>> {
+class LikedSongsNotifier extends Notifier<List<Track>> {
   static const String _storageKey = 'local_liked_songs_v1';
 
-  LikedSongsNotifier() : super([]) {
+  @override
+  List<Track> build() {
     _loadFromStorage();
+    return [];
   }
 
   Future<void> _loadFromStorage() async {
@@ -679,7 +685,7 @@ class LikedSongsNotifier extends StateNotifier<List<Track>> {
 }
 
 /// Provider to track explicitly unliked songs (overrides YT Music cache until refresh)
-final explicitlyUnlikedIdsProvider = StateProvider<Set<String>>((ref) => {});
+final explicitlyUnlikedIdsProvider = settableProvider<Set<String>>({});
 
 /// Check if a track is liked (from local state OR YT Music backend)
 final isTrackLikedProvider = Provider.family<bool, String>((ref, trackId) {
@@ -706,7 +712,7 @@ final isTrackLikedProvider = Provider.family<bool, String>((ref, trackId) {
       return false;
     }
 
-    final ytLikedSongs = ytLikedAsync.valueOrNull ?? [];
+    final ytLikedSongs = ytLikedAsync.value ?? [];
     final isLiked = ytLikedSongs.any((t) => t.id == trackId);
 
     // Debug: Always log the check
@@ -782,28 +788,35 @@ final likedSongsRepositoryProvider = FutureProvider<List<Track>>((ref) async {
 
 /// Provider for recently played tracks
 final recentlyPlayedProvider =
-    StateNotifierProvider<RecentlyPlayedNotifier, List<Track>>((ref) {
-      final authState = ref.watch(ytMusicAuthStateProvider);
-      return RecentlyPlayedNotifier(isLoggedIn: authState.isLoggedIn);
-    });
+    NotifierProvider<RecentlyPlayedNotifier, List<Track>>(
+      RecentlyPlayedNotifier.new,
+    );
 
 /// Notifier for recently played with local persistence for non-logged-in devices
-class RecentlyPlayedNotifier extends StateNotifier<List<Track>> {
+class RecentlyPlayedNotifier extends Notifier<List<Track>> {
   static const String _storageKey = 'recently_played';
   static const int _maxRecent = 50;
-  final bool isLoggedIn;
+  bool isLoggedIn = false;
 
-  RecentlyPlayedNotifier({this.isLoggedIn = false}) : super([]) {
+  @override
+  List<Track> build() {
+    // Rebuilt, and emptied, whenever the user signs in or out.
+    isLoggedIn = ref.watch(ytMusicAuthStateProvider).isLoggedIn;
     // Only non-logged-in devices persist local history,
     // as YouTube Music maintains its own cloud history when logged in.
     if (!isLoggedIn) {
       _loadFromStorage();
     }
+    return [];
   }
 
   Future<void> _loadFromStorage() async {
+    // Signing in while this loads rebuilds the provider; the local history
+    // must not land in the signed-in list.
+    final buildRef = ref;
     try {
       final prefs = await SharedPreferences.getInstance();
+      if (!buildRef.mounted) return;
       final jsonList = prefs.getStringList(_storageKey);
       if (jsonList != null && jsonList.isNotEmpty) {
         final tracks = jsonList
@@ -893,13 +906,12 @@ class RecentlyPlayedNotifier extends StateNotifier<List<Track>> {
 
 /// Provider for local playlists
 final localPlaylistsProvider =
-    StateNotifierProvider<LocalPlaylistsNotifier, List<Playlist>>((ref) {
-      return LocalPlaylistsNotifier();
-    });
+    NotifierProvider<LocalPlaylistsNotifier, List<Playlist>>(LocalPlaylistsNotifier.new);
 
 /// Notifier for local playlists
-class LocalPlaylistsNotifier extends StateNotifier<List<Playlist>> {
-  LocalPlaylistsNotifier() : super([]);
+class LocalPlaylistsNotifier extends Notifier<List<Playlist>> {
+  @override
+  List<Playlist> build() => [];
 
   void replaceAll(List<Playlist> playlists) {
     final seen = <String>{};
@@ -1014,7 +1026,7 @@ final crossfadeDurationMsProvider = Provider<int>((ref) {
 });
 
 /// Trigger provider to refresh cache usage reads
-final streamAudioCacheRefreshProvider = StateProvider<int>((ref) => 0);
+final streamAudioCacheRefreshProvider = settableProvider<int>(0);
 
 /// Provider for current stream byte-cache usage (bytes)
 final streamAudioCacheUsageBytesProvider = FutureProvider<int>((ref) async {

@@ -10,9 +10,11 @@ const _searchHistoryKey = 'search_history';
 const _maxHistoryItems = 20;
 
 /// Search history notifier
-class SearchHistoryNotifier extends StateNotifier<List<String>> {
-  SearchHistoryNotifier() : super([]) {
+class SearchHistoryNotifier extends Notifier<List<String>> {
+  @override
+  List<String> build() {
     _loadHistory();
+    return [];
   }
 
   Future<void> _loadHistory() async {
@@ -54,9 +56,7 @@ class SearchHistoryNotifier extends StateNotifier<List<String>> {
 
 /// Provider for search history
 final searchHistoryProvider =
-    StateNotifierProvider<SearchHistoryNotifier, List<String>>((ref) {
-      return SearchHistoryNotifier();
-    });
+    NotifierProvider<SearchHistoryNotifier, List<String>>(SearchHistoryNotifier.new);
 
 /// Provider for filtered search history (matching current query)
 final filteredSearchHistoryProvider = Provider.family<List<String>, String>((

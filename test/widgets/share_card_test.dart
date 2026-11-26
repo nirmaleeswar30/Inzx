@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 import 'package:inzx/core/liquid_glass/liquid_glass_kit.dart';
@@ -209,10 +210,10 @@ void main() {
 
     test('Comet is what a new install starts on', () async {
       SharedPreferences.setMockInitialValues({});
-      final notifier = ProgressBarStyleNotifier();
-      addTearDown(notifier.dispose);
+      final container = ProviderContainer.test();
+      container.read(progressBarStyleProvider);
       await Future<void>.delayed(Duration.zero);
-      expect(notifier.state, ProgressBarStyle.comet);
+      expect(container.read(progressBarStyleProvider), ProgressBarStyle.comet);
     });
 
     test('a style someone already chose is kept', () async {
@@ -220,10 +221,10 @@ void main() {
         ProgressBarStyleNotifier.progressBarStylePrefKey:
             ProgressBarStyle.waveform.index,
       });
-      final notifier = ProgressBarStyleNotifier();
-      addTearDown(notifier.dispose);
+      final container = ProviderContainer.test();
+      container.read(progressBarStyleProvider);
       await Future<void>.delayed(Duration.zero);
-      expect(notifier.state, ProgressBarStyle.waveform);
+      expect(container.read(progressBarStyleProvider), ProgressBarStyle.waveform);
     });
 
     test('nothing is drawn behind the end of the ray', () async {

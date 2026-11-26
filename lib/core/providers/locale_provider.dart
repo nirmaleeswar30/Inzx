@@ -147,11 +147,13 @@ String requestLanguageCodeForLocale(Locale locale) {
   return locale.languageCode;
 }
 
-class AppLocaleNotifier extends StateNotifier<Locale?> {
+class AppLocaleNotifier extends Notifier<Locale?> {
   static const String localePrefKey = 'inzx_locale_code';
 
-  AppLocaleNotifier() : super(null) {
+  @override
+  Locale? build() {
     _loadLocale();
+    return null;
   }
 
   Future<void> _loadLocale() async {
@@ -178,17 +180,16 @@ class AppLocaleNotifier extends StateNotifier<Locale?> {
   }
 }
 
-final appLocaleProvider = StateNotifierProvider<AppLocaleNotifier, Locale?>((
-  ref,
-) {
-  return AppLocaleNotifier();
-});
+final appLocaleProvider =
+    NotifierProvider<AppLocaleNotifier, Locale?>(AppLocaleNotifier.new);
 
-class AppContentLocationNotifier extends StateNotifier<String?> {
+class AppContentLocationNotifier extends Notifier<String?> {
   static const String contentLocationPrefKey = 'inzx_content_country_code';
 
-  AppContentLocationNotifier() : super(null) {
+  @override
+  String? build() {
     _loadCountryCode();
+    return null;
   }
 
   Future<void> _loadCountryCode() async {
@@ -219,9 +220,7 @@ class AppContentLocationNotifier extends StateNotifier<String?> {
 }
 
 final appContentCountryProvider =
-    StateNotifierProvider<AppContentLocationNotifier, String?>((ref) {
-      return AppContentLocationNotifier();
-    });
+    NotifierProvider<AppContentLocationNotifier, String?>(AppContentLocationNotifier.new);
 
 AppLanguageOption appLanguageOptionFromLocale(Locale? locale) {
   final normalized = locale == null

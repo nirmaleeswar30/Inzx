@@ -158,7 +158,7 @@ class _CircularAlbumArtWithProgressState
     });
 
     final position =
-        ref.watch(positionStreamProvider).valueOrNull ?? Duration.zero;
+        ref.watch(positionStreamProvider).value ?? Duration.zero;
 
     final progress = (widget.duration?.inMilliseconds ?? 0) > 0
         ? (position.inMilliseconds / widget.duration!.inMilliseconds).clamp(0.0, 1.0)

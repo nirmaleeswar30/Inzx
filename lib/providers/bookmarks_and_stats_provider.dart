@@ -4,15 +4,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/models.dart';
 import '../services/listening_stats_service.dart';
+import '../core/providers/listenable_provider.dart';
 
 /// Storage keys
 const _bookmarkedAlbumsKey = 'bookmarked_albums';
 const _bookmarkedArtistsKey = 'bookmarked_artists';
 
 /// Bookmarked albums notifier
-class BookmarkedAlbumsNotifier extends StateNotifier<List<Album>> {
-  BookmarkedAlbumsNotifier() : super([]) {
+class BookmarkedAlbumsNotifier extends Notifier<List<Album>> {
+  @override
+  List<Album> build() {
     _load();
+    return [];
   }
 
   Future<void> _load() async {
@@ -50,9 +53,11 @@ class BookmarkedAlbumsNotifier extends StateNotifier<List<Album>> {
 }
 
 /// Bookmarked artists notifier
-class BookmarkedArtistsNotifier extends StateNotifier<List<Artist>> {
-  BookmarkedArtistsNotifier() : super([]) {
+class BookmarkedArtistsNotifier extends Notifier<List<Artist>> {
+  @override
+  List<Artist> build() {
     _load();
+    return [];
   }
 
   Future<void> _load() async {
@@ -91,17 +96,13 @@ class BookmarkedArtistsNotifier extends StateNotifier<List<Artist>> {
 
 /// Providers
 final bookmarkedAlbumsProvider =
-    StateNotifierProvider<BookmarkedAlbumsNotifier, List<Album>>((ref) {
-      return BookmarkedAlbumsNotifier();
-    });
+    NotifierProvider<BookmarkedAlbumsNotifier, List<Album>>(BookmarkedAlbumsNotifier.new);
 
 final bookmarkedArtistsProvider =
-    StateNotifierProvider<BookmarkedArtistsNotifier, List<Artist>>((ref) {
-      return BookmarkedArtistsNotifier();
-    });
+    NotifierProvider<BookmarkedArtistsNotifier, List<Artist>>(BookmarkedArtistsNotifier.new);
 
 /// Listening statistics: rebuilds what watches it as listening is recorded.
-final listeningStatsProvider = ChangeNotifierProvider<ListeningStatsService>(
+final listeningStatsProvider = listenableProvider<ListeningStatsService>(
   (ref) => ListeningStatsService.instance,
 );
 

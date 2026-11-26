@@ -4,6 +4,7 @@ import 'package:inzx/data/sources/music_local_source.dart';
 import 'package:inzx/data/sources/music_remote_source.dart';
 import 'package:inzx/services/cache_warming_service.dart';
 import 'package:inzx/providers/providers.dart';
+import '../core/providers/listenable_provider.dart';
 
 export 'package:inzx/data/repositories/music_repository.dart'
     show CacheAnalytics;
@@ -40,7 +41,7 @@ final cacheWarmingServiceProvider = Provider<CacheWarmingService>((ref) {
 });
 
 /// Provides cache analytics for UI display with reactive updates
-final cacheAnalyticsProvider = ChangeNotifierProvider<CacheAnalytics>((ref) {
+final cacheAnalyticsProvider = listenableProvider<CacheAnalytics>((ref) {
   final repository = ref.watch(musicRepositoryProvider);
   return repository.analytics;
 });
