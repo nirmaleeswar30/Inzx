@@ -11,6 +11,10 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+  # Material and Cupertino, which Flutter 3.50 moved out of the SDK. The app
+  # uses these only; see the skeletonizer / flutter_markdown_plus overrides.
+  material_ui: ^1.11.1
+  cupertino_ui: ^1.1.7
 
   # State Management
   flutter_riverpod: ^2.6.1
@@ -88,7 +92,7 @@ dependencies:
   media_kit_libs_linux: ^1.2.1
   audio_service_mpris: ^0.2.1 # Linux media keys / desktop player widgets
   audio_service_platform_interface: ^0.1.0
-  window_manager: ^0.5.0
+  window_manager: ^0.7.1
   desktop_webview_window: ^0.4.2 # YouTube Music sign-in window
   win32: ^5.15.0 # Windows named pipes for Discord Rich Presence
   mobile_scanner: 7.2.1
@@ -118,6 +122,12 @@ dependency_overrides:
   # (desktop EQ / AutoEQ / exclusive output). See its README.
   just_audio_media_kit:
     path: packages/just_audio_media_kit
+  # On material_ui instead of the SDK's Material library, which they read the
+  # app theme through. See their READMEs.
+  skeletonizer:
+    path: packages/skeletonizer
+  flutter_markdown_plus:
+    path: packages/flutter_markdown_plus
 
 # The following section is specific to Flutter packages.
 flutter:

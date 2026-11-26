@@ -10,16 +10,19 @@ import 'dart:io'
         ServerSocket,
         Socket,
         exit;
-import 'dart:ui' show Size;
+import 'dart:ui' show AppExitResponse, AppExitType, Size;
 
 import 'package:audio_service_platform_interface/audio_service_platform_interface.dart';
 import 'package:flutter/foundation.dart'
     show debugPrint, LicenseRegistry, LicenseEntryWithLineBreaks;
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart'
+    show MethodChannel, ServicesBinding, rootBundle;
+import 'package:flutter/widgets.dart' show AppLifecycleListener;
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../deep_link_handler.dart';
+import 'app_window.dart';
 import 'desktop_audio_dsp.dart';
 import 'desktop_updater.dart';
 import 'windows_media_controls.dart';
@@ -69,8 +72,8 @@ Future<bool> handleDesktopSingleInstance(
         final triggerFocus = onFocusRequested ??
             () {
               try {
-                windowManager.show();
-                windowManager.focus();
+                appWindow.show();
+                appWindow.focus();
               } catch (_) {}
             };
 
@@ -254,46 +257,51 @@ Future<void> initDesktopPlatform() async {
     AudioServicePlatform.instance = WindowsMediaControls();
   }
 
-  await windowManager.ensureInitialized();
-  // Closing goes through _CloseHandler, which installs a downloaded update
-  // on the way out.
-  await windowManager.setPreventClose(true);
-  windowManager.addListener(_CloseHandler());
-  await windowManager.waitUntilReadyToShow(
-    const WindowOptions(
-      title: 'Inzx',
-      size: Size(1280, 800),
-      minimumSize: kDesktopMinWindowSize,
-      center: true,
-      // The app draws its own title bar and window buttons.
-      titleBarStyle: TitleBarStyle.hidden,
-      windowButtonVisibility: false,
-    ),
-    () async {
-      await windowManager.show();
-      await windowManager.focus();
-    },
-  );
+  // However the window is closed (its close button, the title bar, the
+  // taskbar or the system), it ends in closeDesktopApp: on Windows the runner
+  // hands every WM_CLOSE over (windows/runner/flutter_window.cpp), and on
+  // Linux the engine asks the app whether to exit.
+  const MethodChannel('inzx/window').setMethodCallHandler((call) async {
+    if (call.method == 'closeRequested') unawaited(closeDesktopApp());
+  });
+  AppLifecycleListener(onExitRequested: _onExitRequested);
+  final window = appWindow;
+  window.title = 'Inzx';
+  // The app draws its own title bar and window buttons.
+  window.titleBarStyle = TitleBarStyle.hidden;
+  window.isWindowControlButtonsVisible = false;
+  window.minimumSize = kDesktopMinWindowSize.toNative();
+  window.setSize(const Size(1280, 800).toNative(), false);
+  window.center();
+  window.show();
+  window.focus();
 }
 
-class _CloseHandler with WindowListener {
-  bool _closing = false;
+bool _closing = false;
 
-  @override
-  Future<void> onWindowClose() async {
-    if (_closing) return;
-    _closing = true;
-    // Hide the window before the updater or native teardown can hold it open.
-    try {
-      await windowManager.hide();
-    } catch (_) {
-      // Continue closing if the window is already gone.
-    }
-    try {
-      await DesktopUpdater.instance.applyOnExit().timeout(const Duration(seconds: 5));
-    } catch (_) {
-      // Never keep the window from closing over an update.
-    }
-    await windowManager.destroy();
+Future<AppExitResponse> _onExitRequested() async {
+  unawaited(closeDesktopApp());
+  return AppExitResponse.cancel;
+}
+
+/// Ends the app, installing a downloaded update on the way out.
+Future<void> closeDesktopApp() async {
+  if (_closing) return;
+  _closing = true;
+  // Hide the window before the updater or native teardown can hold it open.
+  try {
+    appWindow.hide();
+  } catch (_) {
+    // Continue closing if the window is already gone.
   }
+  try {
+    await DesktopUpdater.instance.applyOnExit().timeout(
+      const Duration(seconds: 5),
+    );
+  } catch (_) {
+    // Never keep the window from closing over an update.
+  }
+  // Ends the message loop (Windows) or the GTK application (Linux) without
+  // asking again.
+  await ServicesBinding.instance.exitApplication(AppExitType.required);
 }

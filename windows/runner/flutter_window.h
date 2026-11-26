@@ -3,6 +3,7 @@
 
 #include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
+#include <flutter/method_channel.h>
 
 #include <memory>
 
@@ -32,6 +33,9 @@ class FlutterWindow : public Win32Window {
 
   // Media keys and the system volume flyout.
   std::unique_ptr<WindowsMediaControls> media_controls_;
+
+  // Hands close requests to Dart (closeDesktopApp in desktop_bootstrap.dart).
+  std::unique_ptr<flutter::MethodChannel<>> window_channel_;
 };
 
 #endif  // RUNNER_FLUTTER_WINDOW_H_

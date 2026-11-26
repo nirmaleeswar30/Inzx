@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:inzx/screens/widgets/desktop_player_bar.dart';
 import 'package:inzx/screens/widgets/desktop_shell.dart';
+
+import '../helpers/fake_desktop_window.dart';
 
 void main() {
   testWidgets('mini cycles, fullscreen guard and capture failures', (
@@ -20,10 +22,7 @@ void main() {
       final calls = <MethodCall>[];
       var width = 1280.0;
       var height = 800.0;
-      const channel = MethodChannel('window_manager');
-      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
-        call,
-      ) async {
+      fakeDesktopWindow((call) async {
         calls.add(call);
         if (call.method == 'setBounds') {
           width = call.arguments['width'] ?? width;
@@ -40,12 +39,6 @@ void main() {
           _ => true,
         };
       });
-      addTearDown(
-        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-          channel,
-          null,
-        ),
-      );
       await tester.pumpWidget(const SizedBox());
       Future<void> finish(Future<void> action) async {
         var completed = false;

@@ -3,7 +3,7 @@ import '../core/utils/platform_utils.dart';
 import 'dart:io';
 import 'package:archive/archive_io.dart';
 import 'package:flutter/foundation.dart' show compute;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:inzx/data/entities/download_entity.dart';
 import 'package:inzx/data/entities/downloaded_playlist_entity.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Inzx app spacing system
 /// Generous spacing for a calm, breathable UI

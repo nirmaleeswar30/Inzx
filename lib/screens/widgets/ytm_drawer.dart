@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// YTM-Style velocity-aware two-state drawer
 /// Snaps between collapsed (Now Playing) and expanded (Up Next) states

@@ -1,5 +1,8 @@
 #include "flutter_window.h"
 
+#include <flutter/method_result_functions.h>
+#include <flutter/standard_method_codec.h>
+
 #include <optional>
 
 #include "flutter/generated_plugin_registrant.h"
@@ -27,6 +30,9 @@ bool FlutterWindow::OnCreate() {
   RegisterPlugins(flutter_controller_->engine());
   media_controls_ = std::make_unique<WindowsMediaControls>(
       flutter_controller_->engine()->messenger(), GetHandle());
+  window_channel_ = std::make_unique<flutter::MethodChannel<>>(
+      flutter_controller_->engine()->messenger(), "inzx/window",
+      &flutter::StandardMethodCodec::GetInstance());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
@@ -42,6 +48,7 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  window_channel_ = nullptr;
   media_controls_ = nullptr;
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
@@ -55,6 +62,21 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
   if (media_controls_ && media_controls_->HandleTaskbarMessage(message, wparam)) {
+    return 0;
+  }
+
+  // Never let a close destroy the window: that tears Flutter down inside
+  // WM_DESTROY, which hangs. Dart installs a pending update, then ends the
+  // message loop, and main.cpp releases Flutter before the window. Without a
+  // Dart handler yet, end the loop right away.
+  if (message == WM_CLOSE && window_channel_) {
+    window_channel_->InvokeMethod(
+        "closeRequested", nullptr,
+        std::make_unique<flutter::MethodResultFunctions<>>(
+            nullptr,
+            [](const std::string&, const std::string&,
+               const flutter::EncodableValue*) { PostQuitMessage(0); },
+            [] { PostQuitMessage(0); }));
     return 0;
   }
 

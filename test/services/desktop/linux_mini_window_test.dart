@@ -2,9 +2,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:inzx/services/desktop/linux_mini_window.dart';
 
+import '../../helpers/fake_desktop_window.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('window_manager');
   late List<MethodCall> calls;
   late bool fullscreen, maximized, above, refuse, optionalUnsupported;
   late double width, height;
@@ -25,60 +26,55 @@ void main() {
     restoreRequested = false;
     refuseRestore = false;
     restoreReads = 0;
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (call) async {
-          calls.add(call);
-          final args = call.arguments as Map?;
-          switch (call.method) {
-            case 'isFullScreen':
-              return fullscreen;
-            case 'setFullScreen':
-              fullscreen = args!['isFullScreen'];
-              return null;
-            case 'isMaximized':
-              return maximized;
-            case 'unmaximize':
-              maximized = false;
-              return null;
-            case 'maximize':
-              maximized = true;
-              return null;
-            case 'isAlwaysOnTop':
-              if (optionalUnsupported) {
-                throw PlatformException(code: 'unsupported');
-              }
-              return above;
-            case 'setAlwaysOnTop':
-              above = args!['isAlwaysOnTop'];
-              return null;
-            case 'getBounds':
-              if (restoreRequested && !refuseRestore && ++restoreReads == 3) {
-                width = 1280;
-                height = 800;
-              }
-              return {'x': 30.0, 'y': 40.0, 'width': width, 'height': height};
-            case 'setBounds':
-              if (args!['width'] == 320.0) {
-                resizeRequests++;
-                // Simulate delayed GTK hints, then an accepted configure.
-                if (refuse || resizeRequests < 3) return null;
-              }
-              if (args['width'] == 1280.0 && refuseRestore) {
-                restoreRequested = true;
-                return null;
-              }
-              if (args['width'] == 1280.0 && restoreRequested) return null;
-              width = args['width'] ?? width;
-              height = args['height'] ?? height;
-              return null;
-          }
+    fakeDesktopWindow((call) async {
+      calls.add(call);
+      final args = call.arguments as Map?;
+      switch (call.method) {
+        case 'isFullScreen':
+          return fullscreen;
+        case 'setFullScreen':
+          fullscreen = args!['isFullScreen'];
           return null;
-        });
+        case 'isMaximized':
+          return maximized;
+        case 'unmaximize':
+          maximized = false;
+          return null;
+        case 'maximize':
+          maximized = true;
+          return null;
+        case 'isAlwaysOnTop':
+          if (optionalUnsupported) {
+            throw PlatformException(code: 'unsupported');
+          }
+          return above;
+        case 'setAlwaysOnTop':
+          above = args!['isAlwaysOnTop'];
+          return null;
+        case 'getBounds':
+          if (restoreRequested && !refuseRestore && ++restoreReads == 3) {
+            width = 1280;
+            height = 800;
+          }
+          return {'x': 30.0, 'y': 40.0, 'width': width, 'height': height};
+        case 'setBounds':
+          if (args!['width'] == 320.0) {
+            resizeRequests++;
+            // Simulate delayed GTK hints, then an accepted configure.
+            if (refuse || resizeRequests < 3) return null;
+          }
+          if (args['width'] == 1280.0 && refuseRestore) {
+            restoreRequested = true;
+            return null;
+          }
+          if (args['width'] == 1280.0 && restoreRequested) return null;
+          width = args['width'] ?? width;
+          height = args['height'] ?? height;
+          return null;
+      }
+      return null;
+    });
   });
-  tearDown(
-    () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, null),
-  );
 
   test(
     'native fullscreen, delayed resize and previous state restore',

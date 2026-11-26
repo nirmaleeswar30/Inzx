@@ -1,5 +1,5 @@
 import '../../core/utils/open_once.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'dart:ui';
 import '../../core/utils/platform_utils.dart';
 import '../../services/audio_routing_service.dart';

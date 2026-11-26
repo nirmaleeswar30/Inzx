@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Inzx app typography system
 /// Clean, readable, with generous line heights for a calm reading experience

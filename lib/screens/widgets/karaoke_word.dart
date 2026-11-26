@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../services/lyrics/lyrics_models.dart';
 
 /// Isolated karaoke word widget that repaints smoothly on frame ticks without

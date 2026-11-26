@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -13,6 +13,7 @@ import '../../services/desktop/desktop_bootstrap.dart'
     show kDesktopMinWindowSize;
 import '../../services/lyrics/lyrics_models.dart';
 import '../../services/lyrics/lyrics_service.dart';
+import '../../services/desktop/app_window.dart';
 import '../../services/desktop/desktop_audio_dsp.dart';
 import '../../services/desktop/hyprland_mini_window.dart';
 import '../../services/desktop/linux_mini_window.dart';
@@ -78,12 +79,12 @@ Future<void> enterDesktopMiniMode({
       _linuxBeforeMini = LinuxMiniWindow();
       await _linuxBeforeMini!.prepare();
     } else {
-      _wasMaximizedBeforeMini = await windowManager.isMaximized();
-      if (_wasMaximizedBeforeMini) await windowManager.unmaximize();
-      _boundsBeforeMini = await windowManager.getBounds();
+      _wasMaximizedBeforeMini = await desktopWindow.isMaximized();
+      if (_wasMaximizedBeforeMini) await desktopWindow.unmaximize();
+      _boundsBeforeMini = await desktopWindow.getBounds();
     }
     desktopMiniMode.value = true;
-    await windowManager.setMinimumSize(const Size(260, 260));
+    await desktopWindow.setMinimumSize(const Size(260, 260));
     // Flush the compact layout and reduced minimum before requesting 320x340.
     // Otherwise a second entry can still be constrained by the full UI minimum.
     await WidgetsBinding.instance.endOfFrame;
@@ -92,8 +93,8 @@ Future<void> enterDesktopMiniMode({
     } else if (_linuxBeforeMini case final window?) {
       await window.enter();
     } else {
-      await windowManager.setSize(const Size(320, 340));
-      await windowManager.setAlwaysOnTop(true);
+      await desktopWindow.setSize(const Size(320, 340));
+      await desktopWindow.setAlwaysOnTop(true);
     }
   } catch (error) {
     debugPrint('Could not enter miniplayer: $error');
@@ -133,16 +134,16 @@ Future<void> exitDesktopMiniMode() =>
     });
 
 Future<void> _restoreDesktopMiniWindow() async {
-  await windowManager.setMinimumSize(kDesktopMinWindowSize);
+  await desktopWindow.setMinimumSize(kDesktopMinWindowSize);
   if (_hyprlandBeforeMini case final window?) {
     await window.restore();
   } else if (_linuxBeforeMini case final window?) {
     await window.restore();
   } else {
-    if (desktopMiniMode.value) await windowManager.setAlwaysOnTop(false);
+    if (desktopMiniMode.value) await desktopWindow.setAlwaysOnTop(false);
     final bounds = _boundsBeforeMini;
-    if (bounds != null) await windowManager.setBounds(bounds);
-    if (_wasMaximizedBeforeMini) await windowManager.maximize();
+    if (bounds != null) await desktopWindow.setBounds(bounds);
+    if (_wasMaximizedBeforeMini) await desktopWindow.maximize();
   }
   desktopMiniMode.value = false;
   _clearMiniWindowSnapshot();

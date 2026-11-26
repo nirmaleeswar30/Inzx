@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
-import 'package:window_manager/window_manager.dart';
+
+import 'app_window.dart';
 
 /// Standard GTK window operations for Linux desktops without a dedicated IPC
 /// backend. Requests are asynchronous: verify configure replies before moving
@@ -18,34 +19,36 @@ class LinuxMiniWindow {
   }
 
   Future<void> prepare() async {
+    final window = desktopWindow;
     // Inspect native state: desktop shortcuts can bypass Flutter's flags.
-    if (await windowManager.isFullScreen()) {
-      await windowManager.setFullScreen(false);
-      await _waitFor(() async => !await windowManager.isFullScreen());
+    if (await window.isFullScreen()) {
+      await window.setFullScreen(false);
+      await _waitFor(() async => !await window.isFullScreen());
     }
-    _bounds = await windowManager.getBounds();
-    _maximized = await windowManager.isMaximized();
+    _bounds = await window.getBounds();
+    _maximized = await window.isMaximized();
     if (_maximized) {
-      await windowManager.unmaximize();
-      await _waitFor(() async => !await windowManager.isMaximized());
-      _bounds = await windowManager.getBounds();
+      await window.unmaximize();
+      await _waitFor(() async => !await window.isMaximized());
+      _bounds = await window.getBounds();
     }
     // Keep-above is optional on Wayland and must not prevent resizing.
     try {
-      _alwaysOnTop = await windowManager.isAlwaysOnTop();
+      _alwaysOnTop = await window.isAlwaysOnTop();
     } catch (_) {}
   }
 
   Future<void> enter() async {
+    final window = desktopWindow;
     // Reissue a few times because GTK size hints may arrive after the request.
     for (var attempt = 0; attempt < 10; attempt++) {
-      await windowManager.setSize(const Size(320, 340));
+      await window.setSize(const Size(320, 340));
       await Future<void>.delayed(const Duration(milliseconds: 100));
-      final size = await windowManager.getSize();
+      final size = await window.getSize();
       if ((size.width - 320).abs() <= 1 && (size.height - 340).abs() <= 1) {
         if (_alwaysOnTop != null) {
           try {
-            await windowManager.setAlwaysOnTop(true);
+            await window.setAlwaysOnTop(true);
           } catch (_) {}
         }
         return;
@@ -55,25 +58,26 @@ class LinuxMiniWindow {
   }
 
   Future<void> restore() async {
+    final window = desktopWindow;
     if (_bounds case final bounds?) {
       // Wayland does not support arbitrary positioning; GTK still restores
       // the size. X11 additionally restores the saved position.
-      await windowManager.setBounds(bounds);
+      await window.setBounds(bounds);
       // GTK acknowledges the request before the compositor configures it.
       // Verify size only: Wayland does not report a reliable position.
       await _waitFor(() async {
-        final size = await windowManager.getSize();
+        final size = await window.getSize();
         return (size.width - bounds.width).abs() <= 1 &&
             (size.height - bounds.height).abs() <= 1;
       });
     }
     if (_maximized) {
-      await windowManager.maximize();
-      await _waitFor(windowManager.isMaximized);
+      await window.maximize();
+      await _waitFor(window.isMaximized);
     }
     if (_alwaysOnTop case final above?) {
       try {
-        await windowManager.setAlwaysOnTop(above);
+        await window.setAlwaysOnTop(above);
       } catch (_) {}
     }
   }
