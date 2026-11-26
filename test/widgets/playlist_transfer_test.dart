@@ -9,13 +9,15 @@ import 'package:inzx/screens/onboarding_screen.dart';
 import 'package:inzx/screens/playlist_transfer_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _Auth extends StateNotifier<YTMusicAuthState>
-    implements YTMusicAuthNotifier {
-  _Auth({required bool signedIn})
-    : super(YTMusicAuthState(isLoggedIn: signedIn, isLoading: false));
+/// Signed in or out from the start, with no auth service behind it.
+class _Auth extends YTMusicAuthNotifier {
+  _Auth({required this.signedIn});
+
+  final bool signedIn;
 
   @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  YTMusicAuthState build() =>
+      YTMusicAuthState(isLoggedIn: signedIn, isLoading: false);
 }
 
 class _SavedPlaylists extends YtMusicSavedPlaylistsNotifier {
@@ -47,7 +49,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          ytMusicAuthStateProvider.overrideWith((_) => _Auth(signedIn: true)),
+          ytMusicAuthStateProvider.overrideWith(() => _Auth(signedIn: true)),
           ytMusicSavedPlaylistsProvider.overrideWith(
             () => _SavedPlaylists(() => refreshes++),
           ),
@@ -89,7 +91,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          ytMusicAuthStateProvider.overrideWith((_) => _Auth(signedIn: false)),
+          ytMusicAuthStateProvider.overrideWith(() => _Auth(signedIn: false)),
         ],
         child: MaterialApp(
           home: OnboardingScreen(onFinished: () => finished = true),

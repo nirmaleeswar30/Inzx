@@ -16,11 +16,16 @@ import 'lyrics_provider_sheet.dart';
 // notifier's `set(...)` method (e.g. `ref.read(provider.notifier).set(value)`).
 
 /// Persists a [String] preference (e.g. an API key) under [_key].
-class _PersistedStringNotifier extends StateNotifier<String> {
-  final String _key;
+class _PersistedStringNotifier extends Notifier<String> {
+  _PersistedStringNotifier(this._key, this._initial);
 
-  _PersistedStringNotifier(this._key, String initial) : super(initial) {
+  final String _key;
+  final String _initial;
+
+  @override
+  String build() {
     _load();
+    return _initial;
   }
 
   Future<void> _load() async {
@@ -41,11 +46,16 @@ class _PersistedStringNotifier extends StateNotifier<String> {
 }
 
 /// Persists a [bool] preference under [_key].
-class _PersistedBoolNotifier extends StateNotifier<bool> {
-  final String _key;
+class _PersistedBoolNotifier extends Notifier<bool> {
+  _PersistedBoolNotifier(this._key, this._initial);
 
-  _PersistedBoolNotifier(this._key, bool initial) : super(initial) {
+  final String _key;
+  final bool _initial;
+
+  @override
+  bool build() {
     _load();
+    return _initial;
   }
 
   Future<void> _load() async {
@@ -67,12 +77,13 @@ class _PersistedBoolNotifier extends StateNotifier<bool> {
 
 /// Persists the selected [TranslationProvider] (by enum index) under [_key].
 class _PersistedTranslationProviderNotifier
-    extends StateNotifier<TranslationProvider> {
+    extends Notifier<TranslationProvider> {
   static const String _key = 'inzx_ai_translation_provider';
 
-  _PersistedTranslationProviderNotifier()
-      : super(TranslationProvider.openRouter) {
+  @override
+  TranslationProvider build() {
     _load();
+    return TranslationProvider.openRouter;
   }
 
   Future<void> _load() async {
@@ -98,26 +109,25 @@ class _PersistedTranslationProviderNotifier
 
 // Provides preferences
 final aiLyricsTranslationEnabledProvider =
-    StateNotifierProvider<_PersistedBoolNotifier, bool>(
-        (ref) => _PersistedBoolNotifier('inzx_ai_translation_enabled', false));
-final aiTranslationProviderKeyProvider = StateNotifierProvider<
-        _PersistedTranslationProviderNotifier, TranslationProvider>(
-    (ref) => _PersistedTranslationProviderNotifier());
+    NotifierProvider<_PersistedBoolNotifier, bool>(
+    () => _PersistedBoolNotifier('inzx_ai_translation_enabled', false));
+final aiTranslationProviderKeyProvider = NotifierProvider<_PersistedTranslationProviderNotifier, TranslationProvider>(
+    () => _PersistedTranslationProviderNotifier());
 final aiTranslationModeProvider =
-    StateNotifierProvider<_PersistedStringNotifier, String>(
-        (ref) => _PersistedStringNotifier('inzx_ai_translation_mode', 'Literal'));
+    NotifierProvider<_PersistedStringNotifier, String>(
+    () => _PersistedStringNotifier('inzx_ai_translation_mode', 'Literal'));
 final aiTranslationLanguageProvider =
-    StateNotifierProvider<_PersistedStringNotifier, String>(
-        (ref) => _PersistedStringNotifier('inzx_ai_translation_language', 'en'));
+    NotifierProvider<_PersistedStringNotifier, String>(
+    () => _PersistedStringNotifier('inzx_ai_translation_language', 'en'));
 final aiTranslationOpenRouterKeyProvider =
-    StateNotifierProvider<_PersistedStringNotifier, String>((ref) =>
-        _PersistedStringNotifier('inzx_ai_translation_openrouter_key', ''));
+    NotifierProvider<_PersistedStringNotifier, String>(
+    () => _PersistedStringNotifier('inzx_ai_translation_openrouter_key', ''));
 final aiTranslationDeepLKeyProvider =
-    StateNotifierProvider<_PersistedStringNotifier, String>((ref) =>
-        _PersistedStringNotifier('inzx_ai_translation_deepl_key', ''));
+    NotifierProvider<_PersistedStringNotifier, String>(
+    () => _PersistedStringNotifier('inzx_ai_translation_deepl_key', ''));
 final aiTranslationModelProvider =
-    StateNotifierProvider<_PersistedStringNotifier, String>(
-        (ref) => _PersistedStringNotifier('inzx_ai_translation_model', ''));
+    NotifierProvider<_PersistedStringNotifier, String>(
+    () => _PersistedStringNotifier('inzx_ai_translation_model', ''));
 
 
 

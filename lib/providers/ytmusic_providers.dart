@@ -17,6 +17,7 @@ import '../core/providers/locale_provider.dart';
 import '../services/ytmusic_api_service.dart';
 import '../services/ytmusic_auth_service.dart';
 import '../models/models.dart';
+import '../core/providers/settable_provider.dart';
 
 // ============ CORE SERVICES ============
 
@@ -35,10 +36,9 @@ final ytMusicAuthServiceProvider = Provider<YTMusicAuthService>((ref) {
 
 /// YT Music auth state
 final ytMusicAuthStateProvider =
-    StateNotifierProvider<YTMusicAuthNotifier, YTMusicAuthState>((ref) {
-      final authService = ref.watch(ytMusicAuthServiceProvider);
-      return YTMusicAuthNotifier(authService);
-    });
+    NotifierProvider<YTMusicAuthNotifier, YTMusicAuthState>(
+      YTMusicAuthNotifier.new,
+    );
 
 class YTMusicAuthState {
   final bool isLoggedIn;
@@ -68,17 +68,23 @@ class YTMusicAuthState {
   }
 }
 
-class YTMusicAuthNotifier extends StateNotifier<YTMusicAuthState> {
-  final YTMusicAuthService _authService;
+class YTMusicAuthNotifier extends Notifier<YTMusicAuthState> {
+  late YTMusicAuthService _authService;
 
-  YTMusicAuthNotifier(this._authService) : super(const YTMusicAuthState()) {
+  @override
+  YTMusicAuthState build() {
+    _authService = ref.watch(ytMusicAuthServiceProvider);
     _initialize();
+    return const YTMusicAuthState();
   }
 
   Future<void> _initialize() async {
+    // Dropped if a newer build (another auth service) takes over meanwhile.
+    final buildRef = ref;
     try {
       // First try to restore from cache
       final cached = await _authService.restoreCachedAuth();
+      if (!buildRef.mounted) return;
       if (cached) {
         state = YTMusicAuthState(
           isLoggedIn: true,
@@ -99,6 +105,7 @@ class YTMusicAuthNotifier extends StateNotifier<YTMusicAuthState> {
 
     // Then try to initialize from storage
     final success = await _authService.initialize();
+    if (!buildRef.mounted) return;
     state = YTMusicAuthState(
       isLoggedIn: success && _authService.isLoggedIn,
       isLoading: false,
@@ -113,7 +120,7 @@ class YTMusicAuthNotifier extends StateNotifier<YTMusicAuthState> {
   void _refreshAccountInBackground() {
     unawaited(
       _authService.refreshAccountInfo().then((account) {
-        if (!mounted || !state.isLoggedIn || account == null) return;
+        if (!ref.mounted || !state.isLoggedIn || account == null) return;
         state = state.copyWith(account: account);
       }),
     );
@@ -169,15 +176,15 @@ final appAccountProvider = Provider<YTMusicAccount?>((ref) {
 
 /// Provider for whether the "Connect YouTube Music" banner on Home tab has been permanently dismissed
 final hideConnectYTMusicBannerProvider =
-    StateNotifierProvider<HideConnectYTMusicBannerNotifier, bool>((ref) {
-  return HideConnectYTMusicBannerNotifier();
-});
+    NotifierProvider<HideConnectYTMusicBannerNotifier, bool>(HideConnectYTMusicBannerNotifier.new);
 
-class HideConnectYTMusicBannerNotifier extends StateNotifier<bool> {
+class HideConnectYTMusicBannerNotifier extends Notifier<bool> {
   static const String _prefKey = 'hide_ytmusic_connect_banner';
 
-  HideConnectYTMusicBannerNotifier() : super(false) {
+  @override
+  bool build() {
     _loadState();
+    return false;
   }
 
   Future<void> _loadState() async {
@@ -306,7 +313,7 @@ class YtMusicSavedPlaylistsNotifier extends AsyncNotifier<List<Playlist>> {
   }
 
   Future<void> addPlaylistOptimistically(String id, String title) async {
-    final currentPlaylists = state.valueOrNull ?? [];
+    final currentPlaylists = state.value ?? [];
     
     final newPlaylist = Playlist(
       id: id,
@@ -398,10 +405,10 @@ final ytMusicSavedPlaylistsProvider = AsyncNotifierProvider<YtMusicSavedPlaylist
 );
 
 /// Current sort order for library artists
-final ytMusicLibraryArtistSortProvider = StateProvider<LibraryArtistSort>((ref) => LibraryArtistSort.recentlyAdded);
+final ytMusicLibraryArtistSortProvider = settableProvider<LibraryArtistSort>(LibraryArtistSort.recentlyAdded);
 
 /// Current filter for library artists (0 = Artists, 1 = Subscriptions)
-final ytMusicLibraryArtistFilterProvider = StateProvider<int>((ref) => 0);
+final ytMusicLibraryArtistFilterProvider = settableProvider<int>(0);
 
 /// Library artists from YT Music (based on saved songs)
 final ytMusicLibraryArtistsProvider = FutureProvider<List<Artist>>((ref) async {
@@ -432,9 +439,9 @@ final ytMusicHomePageProvider = FutureProvider<HomePageContent>((ref) async {
 });
 
 /// Refresh home page content
-final ytMusicHomeRefreshProvider = StateProvider<int>((ref) => 0);
+final ytMusicHomeRefreshProvider = settableProvider<int>(0);
 
-/// Home page with manual refresh support (basic provider - use StateNotifier for continuation)
+/// Home page with manual refresh support (basic provider - use HomePageNotifier for continuation)
 final ytMusicHomeContentProvider = FutureProvider<HomePageContent>((ref) async {
   // Watch refresh trigger
   ref.watch(ytMusicHomeRefreshProvider);
@@ -487,21 +494,39 @@ class HomePageState {
 }
 
 /// Home page notifier with continuation support and caching
-class HomePageNotifier extends StateNotifier<HomePageState> {
-  final InnerTubeService _innerTube;
+class HomePageNotifier extends Notifier<HomePageState> {
+  late InnerTubeService _innerTube;
   static const String _cacheKeyPrefix = 'home_page_v2';
   bool _didAutoLoadMore = false;
 
-  HomePageNotifier(this._innerTube) : super(const HomePageState()) {
-    loadInitial();
+  /// Rebuilt from empty when the account or the app language changes, so the
+  /// feed is fetched for the right user and locale.
+  ///
+  /// The notifier outlives a rebuild, so loads started before one check the
+  /// ref they started with (`buildRef.mounted`): it is unmounted once a newer
+  /// build replaces it, and their stale results are dropped.
+  @override
+  HomePageState build() {
+    ref.watch(ytMusicAuthStateProvider);
+    ref.watch(appLocaleProvider);
+    _innerTube = ref.watch(innerTubeServiceProvider);
+    _didAutoLoadMore = false;
+    // loadInitial reads state, which exists once build has returned.
+    final buildRef = ref;
+    Future.microtask(() {
+      if (buildRef.mounted) loadInitial();
+    });
+    return const HomePageState();
   }
 
   Future<void> loadInitial() async {
     if (state.isLoading) return;
+    final buildRef = ref;
     _didAutoLoadMore = false;
 
     // Try to load from cache first (stale-while-revalidate)
     final cacheResult = await _loadFromCache();
+    if (!buildRef.mounted) return;
     if (cacheResult != null &&
         cacheResult.$1 != null &&
         cacheResult.$1!.isNotEmpty) {
@@ -523,6 +548,7 @@ class HomePageNotifier extends StateNotifier<HomePageState> {
 
       // Check if cache is stale - if so, refresh in background
       final cacheKey = await _homeCacheKey();
+      if (!buildRef.mounted) return;
       final cached = HiveService.homePageBox.get(cacheKey);
       if (cached != null && cached.isStale) {
         if (kDebugMode) {
@@ -620,6 +646,7 @@ class HomePageNotifier extends StateNotifier<HomePageState> {
 
   /// Fetch shelves from network
   Future<void> _fetchFromNetwork({required bool updateState}) async {
+    final buildRef = ref;
     CacheAnalytics.instance.recordNetworkCall();
     try {
       // First fetch
@@ -654,7 +681,7 @@ class HomePageNotifier extends StateNotifier<HomePageState> {
       // Save to cache
       _saveToCache(allShelves, content2.continuationToken);
 
-      if (!mounted) return;
+      if (!buildRef.mounted) return;
 
       if (updateState) {
         state = HomePageState(
@@ -676,7 +703,7 @@ class HomePageNotifier extends StateNotifier<HomePageState> {
       if (kDebugMode) {
         print('Error loading home page: $e');
       }
-      if (!mounted) return;
+      if (!buildRef.mounted) return;
       if (updateState) {
         state = state.copyWith(isLoading: false, hasError: true);
       }
@@ -699,11 +726,13 @@ class HomePageNotifier extends StateNotifier<HomePageState> {
     _lastLoadMoreTime = now;
 
     state = state.copyWith(isLoadingMore: true);
+    final buildRef = ref;
 
     try {
       final content = await _innerTube.getHomePageContinuation(
         state.continuationToken!,
       );
+      if (!buildRef.mounted) return;
 
       // Filter out duplicates based on shelf title
       final existingTitles = state.shelves.map((s) => s.title).toSet();
@@ -726,12 +755,13 @@ class HomePageNotifier extends StateNotifier<HomePageState> {
       if (kDebugMode) {
         print('Error loading more: $e');
       }
+      if (!buildRef.mounted) return;
       state = state.copyWith(isLoadingMore: false);
     }
   }
 
   Future<void> refresh() async {
-    if (!mounted) return; // Guard: check if notifier is still alive
+    if (!ref.mounted) return; // Guard: check if notifier is still alive
     if (kDebugMode) {
       print('HomePageNotifier: refresh() called (force network fetch)');
     }
@@ -744,7 +774,7 @@ class HomePageNotifier extends StateNotifier<HomePageState> {
   }
 
   Future<void> _autoLoadMoreIfNeeded() async {
-    if (!mounted || _didAutoLoadMore) return;
+    if (!ref.mounted || _didAutoLoadMore) return;
     if (!state.hasMore || state.isLoading || state.isLoadingMore) return;
 
     _didAutoLoadMore = true;
@@ -754,20 +784,11 @@ class HomePageNotifier extends StateNotifier<HomePageState> {
 
 /// Provider for home page with continuation support
 final ytMusicHomePageStateProvider =
-    StateNotifierProvider<HomePageNotifier, HomePageState>((ref) {
-      // Watch auth state - provider will recreate when it changes
-      ref.watch(ytMusicAuthStateProvider);
-      ref.watch(appLocaleProvider);
-      final innerTube = ref.watch(innerTubeServiceProvider);
-
-      // Create fresh notifier - old one will be disposed
-      // This ensures we always fetch with correct auth state
-      return HomePageNotifier(innerTube);
-    });
+    NotifierProvider<HomePageNotifier, HomePageState>(HomePageNotifier.new);
 
 // ============ SEARCH ============
 
-final ytMusicSearchQueryProvider = StateProvider<String>((ref) => '');
+final ytMusicSearchQueryProvider = settableProvider<String>('');
 
 final ytMusicSearchResultsProvider = FutureProvider<SearchResults?>((
   ref,
@@ -789,9 +810,14 @@ final ytMusicSearchSuggestionsProvider =
 
 // ============ CONTENT DETAILS ============
 
-class YtMusicPlaylistNotifier extends FamilyAsyncNotifier<Playlist?, String> {
+class YtMusicPlaylistNotifier extends AsyncNotifier<Playlist?> {
+  YtMusicPlaylistNotifier(this.arg);
+
+  /// The playlist id.
+  final String arg;
+
   @override
-  FutureOr<Playlist?> build(String arg) async {
+  FutureOr<Playlist?> build() async {
     // Check cache first
     try {
       final cached = HiveService.playlistsBox.get(arg);
@@ -1010,9 +1036,10 @@ void addTrackToPlaylistCache(String playlistId, Track track) {
   }
 }
 
-final ytMusicPlaylistProvider = AsyncNotifierProviderFamily<YtMusicPlaylistNotifier, Playlist?, String>(
-  YtMusicPlaylistNotifier.new,
-);
+final ytMusicPlaylistProvider =
+    AsyncNotifierProvider.family<YtMusicPlaylistNotifier, Playlist?, String>(
+      YtMusicPlaylistNotifier.new,
+    );
 
 final ytMusicAlbumProvider = FutureProvider.family<Album?, String>((
   ref,
@@ -1100,15 +1127,15 @@ final ytMusicEpisodeDetailsProvider =
 /// save action here — this is the source of truth for the save button and the
 /// library's saved-podcasts list.
 final savedPodcastsProvider =
-    StateNotifierProvider<SavedPodcastsNotifier, Set<String>>((ref) {
-  return SavedPodcastsNotifier();
-});
+    NotifierProvider<SavedPodcastsNotifier, Set<String>>(SavedPodcastsNotifier.new);
 
-class SavedPodcastsNotifier extends StateNotifier<Set<String>> {
+class SavedPodcastsNotifier extends Notifier<Set<String>> {
   static const String _prefKey = 'inzx_saved_podcast_ids';
 
-  SavedPodcastsNotifier() : super(const {}) {
+  @override
+  Set<String> build() {
     _load();
+    return const {};
   }
 
   static String normalize(String id) {

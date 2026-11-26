@@ -684,7 +684,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
     // Extract colors from the high res thumbnail (or low res)
     final colorSource = lowResThumb ?? highResThumb;
     final albumColors = ref != null && colorSource != null
-        ? ref.watch(albumColorsProvider(colorSource)).valueOrNull
+        ? ref.watch(albumColorsProvider(colorSource)).value
         : null;
     final liveAccent = ref?.watch(effectiveAccentColorProvider);
     final primaryColor =

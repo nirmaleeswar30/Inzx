@@ -151,7 +151,7 @@ class _MusicAppState extends ConsumerState<MusicApp>
     });
     // Keep stats and recent history in sync with real playback transitions.
     ref.listen(localCurrentTrackProvider, (previous, value) {
-      final next = value.valueOrNull;
+      final next = value.value;
       if (next == null) return;
       if (_lastTrackedId == next.id) return;
       _lastTrackedId = next.id;

@@ -298,6 +298,15 @@ void main() {
         await updates.close();
         await local.states.close();
       });
+      // Listen as the UI does: Riverpod pauses a stream provider nothing
+      // listens to, so its `.future` would never complete.
+      for (final provider in [
+        connectPeerPlaybackProvider,
+        playbackStateProvider,
+        positionStreamProvider,
+      ]) {
+        container.listen(provider, (_, _) {});
+      }
 
       const first = Track(
         id: 'first',
@@ -327,8 +336,10 @@ void main() {
       );
       updates.add(sample());
       await container.read(connectPeerPlaybackProvider.future);
+      // The PC's report reaches the merged playback stream asynchronously.
+      await Future<void>.delayed(Duration.zero);
 
-      final state = await container.read(playbackStateProvider.future);
+      final state = container.read(playbackStateProvider).requireValue;
       expect(state.currentTrack, second);
       expect(state.queue, [first, second]);
       expect(state.currentIndex, 1);
@@ -358,17 +369,17 @@ void main() {
 
       updates.add(sample(playing: true));
       await pumpEventQueue();
-      expect(states.single.valueOrNull?.isPlaying, true);
+      expect(states.single.value?.isPlaying, true);
 
       // Pause, then seek on the PC. Only the progress stream changes on seek.
       updates.add(sample());
       await pumpEventQueue();
-      expect(states.last.valueOrNull?.isPlaying, false);
+      expect(states.last.value?.isPlaying, false);
       final stateCount = states.length;
       updates.add(sample(ms: 42000));
       await pumpEventQueue();
       expect(states, hasLength(stateCount));
-      expect(positions.last.valueOrNull, const Duration(seconds: 42));
+      expect(positions.last.value, const Duration(seconds: 42));
       expect(states.every((state) => !state.isLoading), true);
       expect(positions.every((position) => !position.isLoading), true);
 
@@ -377,7 +388,7 @@ void main() {
       );
       await pumpEventQueue();
       expect(
-        container.read(playbackStateProvider).valueOrNull?.currentTrack,
+        container.read(playbackStateProvider).value?.currentTrack,
         first,
       );
       await container.read(playbackTransportProvider).pause();

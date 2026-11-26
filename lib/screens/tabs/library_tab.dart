@@ -589,7 +589,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
         : const AsyncValue<List<Playlist>>.data([]);
     // Saved podcasts live in a separate library feed; merge them in.
     final ytPodcasts = ytAuthState.isLoggedIn
-        ? (ref.watch(ytMusicSavedPodcastsProvider).valueOrNull ?? const [])
+        ? (ref.watch(ytMusicSavedPodcastsProvider).value ?? const [])
         : const <Playlist>[];
     // The saved-playlists feed also lists podcasts / auto-episode-lists in a
     // playlist style — drop those so they don't duplicate the podcast cards.
@@ -605,9 +605,9 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
     // Get counts for auto playlists
     final likedSongs = ref.watch(likedSongsProvider);
     final ytLikedSongs =
-        ref.watch(ytMusicLikedSongsProvider).valueOrNull ?? [];
+        ref.watch(ytMusicLikedSongsProvider).value ?? [];
     final downloadedTracks =
-        ref.watch(downloadedTracksProvider).valueOrNull ?? [];
+        ref.watch(downloadedTracksProvider).value ?? [];
     final totalLiked = () {
       final seen = <String>{};
       int count = 0;
@@ -1180,7 +1180,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
       case 'liked':
         final likedSongs = ref.read(likedSongsProvider);
         final ytLikedSongs =
-            ref.read(ytMusicLikedSongsProvider).valueOrNull ?? [];
+            ref.read(ytMusicLikedSongsProvider).value ?? [];
         tracks = [...likedSongs, ...ytLikedSongs];
         break;
       case 'most_played':
@@ -1761,8 +1761,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
                     ? l10n.recentlyAdded
                     : (sort == LibraryArtistSort.aToZ ? 'Alphabetical' : 'Z to A'),
                 onSelected: (result) {
-                  ref.read(ytMusicLibraryArtistSortProvider.notifier).state =
-                      result;
+                  ref.read(ytMusicLibraryArtistSortProvider.notifier).set(result);
                 },
                 isDark: isDark,
                 accentColor: accentColor,
@@ -2086,7 +2085,7 @@ class _MusicLibraryTabState extends ConsumerState<MusicLibraryTab> {
     final accentColor = ref.watch(effectiveAccentColorProvider);
     final downloadsAsync = ref.watch(downloadedTracksProvider);
     final downloadedPlaylists =
-        ref.watch(downloadedPlaylistsProvider).valueOrNull ??
+        ref.watch(downloadedPlaylistsProvider).value ??
         const <DownloadedPlaylistSnapshot>[];
     final downloadManager = ref.watch(downloadManagerProvider);
 

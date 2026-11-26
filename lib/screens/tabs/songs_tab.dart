@@ -25,10 +25,10 @@ final allSongsProvider = Provider<List<Track>>((ref) {
 
   // Downloaded tracks from Hive
   final downloadedTracks =
-      ref.watch(downloadedTracksProvider).valueOrNull ?? [];
+      ref.watch(downloadedTracksProvider).value ?? [];
 
   // YT Music liked songs if logged in
-  final ytLikedSongs = ref.watch(ytMusicLikedSongsProvider).valueOrNull ?? [];
+  final ytLikedSongs = ref.watch(ytMusicLikedSongsProvider).value ?? [];
 
   // Combine all sources, removing duplicates by ID
   final allTracks = <String, Track>{};
@@ -83,7 +83,7 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
       case SongFilter.liked:
         final likedIds = ref.read(likedSongsProvider).map((t) => t.id).toSet();
         final ytLikedIds =
-            (ref.read(ytMusicLikedSongsProvider).valueOrNull ?? [])
+            (ref.read(ytMusicLikedSongsProvider).value ?? [])
                 .map((t) => t.id)
                 .toSet();
         tracks = tracks
@@ -96,7 +96,7 @@ class _MusicSongsTabState extends ConsumerState<MusicSongsTab> {
         break;
       case SongFilter.downloaded:
         final downloadedIds =
-            (ref.read(downloadedTracksProvider).valueOrNull ?? [])
+            (ref.read(downloadedTracksProvider).value ?? [])
                 .map((t) => t.id)
                 .toSet();
         tracks = tracks.where((t) => downloadedIds.contains(t.id)).toList();

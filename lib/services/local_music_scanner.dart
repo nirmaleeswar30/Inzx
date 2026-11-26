@@ -13,21 +13,18 @@ import '../data/entities/download_entity.dart';
 import 'safe_audio_metadata_reader.dart';
 import 'local_artwork_service.dart';
 import 'ios/ios_native.dart';
+import '../core/providers/settable_provider.dart';
 
 /// Provider for scanned local music folders
 final localMusicFoldersProvider =
-    StateNotifierProvider<LocalMusicFoldersNotifier, List<String>>((ref) {
-      return LocalMusicFoldersNotifier();
-    });
+    NotifierProvider<LocalMusicFoldersNotifier, List<String>>(LocalMusicFoldersNotifier.new);
 
 /// Provider for scanned local tracks
 final localTracksProvider =
-    StateNotifierProvider<LocalTracksNotifier, List<Track>>((ref) {
-      return LocalTracksNotifier();
-    });
+    NotifierProvider<LocalTracksNotifier, List<Track>>(LocalTracksNotifier.new);
 
 /// Provider for scan progress
-final scanProgressProvider = StateProvider<ScanProgress?>((ref) => null);
+final scanProgressProvider = settableProvider<ScanProgress?>(null);
 
 /// Scan progress state
 class ScanProgress {
@@ -47,21 +44,19 @@ class ScanProgress {
 }
 
 /// Local music folders notifier
-class LocalMusicFoldersNotifier extends StateNotifier<List<String>> {
-  LocalMusicFoldersNotifier() : super([]) {
-    _loadPersisted();
-  }
-
-  Future<void> _loadPersisted() async {
+class LocalMusicFoldersNotifier extends Notifier<List<String>> {
+  @override
+  List<String> build() {
     try {
       // Folders that aren't there right now (an unplugged drive, a network
       // share that isn't up yet) are kept: scanning skips them until they're
       // back. Only the user removes a folder.
-      state = HiveService.localMusicFoldersBox.values.toList();
+      return HiveService.localMusicFoldersBox.values.toList();
     } catch (e) {
       if (kDebugMode) {
         print('LocalMusicFoldersNotifier: Load error: $e');
       }
+      return [];
     }
   }
 
@@ -117,12 +112,12 @@ class LocalMusicFoldersNotifier extends StateNotifier<List<String>> {
 }
 
 /// Local tracks notifier
-class LocalTracksNotifier extends StateNotifier<List<Track>> {
-  StreamSubscription<Track>? _enrichSubscription;
-
-  LocalTracksNotifier() : super([]) {
-    _loadPersisted();
-    _enrichSubscription = LocalArtworkService.onTrackEnriched.listen((updatedTrack) {
+class LocalTracksNotifier extends Notifier<List<Track>> {
+  @override
+  List<Track> build() {
+    final enrichSubscription = LocalArtworkService.onTrackEnriched.listen((
+      updatedTrack,
+    ) {
       final index = state.indexWhere((t) => t.id == updatedTrack.id);
       if (index != -1) {
         final updatedList = List<Track>.from(state);
@@ -130,15 +125,13 @@ class LocalTracksNotifier extends StateNotifier<List<Track>> {
         state = updatedList;
       }
     });
+    ref.onDispose(enrichSubscription.cancel);
+    return _loadPersisted();
   }
 
-  @override
-  void dispose() {
-    _enrichSubscription?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _loadPersisted() async {
+  /// The saved tracks whose files still exist. The others are pruned from
+  /// Hive in the background.
+  List<Track> _loadPersisted() {
     try {
       final box = HiveService.localMusicTracksBox;
       final allTracks = box.values.map(_trackFromEntity).toList();
@@ -156,19 +149,27 @@ class LocalTracksNotifier extends StateNotifier<List<Track>> {
         }
       }
 
-      state = validTracks;
       if (missingIds.isNotEmpty) {
-        await box.deleteAll(missingIds);
-        if (kDebugMode) {
-          print(
-            'LocalTracksNotifier: Pruned ${missingIds.length} missing tracks from Hive',
-          );
-        }
+        unawaited(
+          box.deleteAll(missingIds).then((_) {
+            if (kDebugMode) {
+              print(
+                'LocalTracksNotifier: Pruned ${missingIds.length} missing tracks from Hive',
+              );
+            }
+          }, onError: (Object e) {
+            if (kDebugMode) {
+              print('LocalTracksNotifier: Prune error: $e');
+            }
+          }),
+        );
       }
+      return validTracks;
     } catch (e) {
       if (kDebugMode) {
         print('LocalTracksNotifier: Load error: $e');
       }
+      return [];
     }
   }
 

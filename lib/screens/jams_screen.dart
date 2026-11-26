@@ -47,9 +47,9 @@ class _JamsScreenState extends ConsumerState<JamsScreen> {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSignedIn = ref.watch(appAccountProvider) != null;
-    final currentSession = ref.watch(currentJamSessionProvider).valueOrNull;
+    final currentSession = ref.watch(currentJamSessionProvider).value;
     final jamsUIState = ref.watch(jamsNotifierProvider);
-    final connectionState = ref.watch(jamsConnectionStateProvider).valueOrNull;
+    final connectionState = ref.watch(jamsConnectionStateProvider).value;
     final albumColors = ref.watch(albumColorsProvider);
 
     // Use dynamic colors if available, but respect light/dark mode

@@ -10,8 +10,13 @@ import 'package:inzx/services/lyrics/lyrics_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _TestLyrics extends LyricsNotifier {
-  _TestLyrics(List<LyricLine> lines) {
-    state = LyricsState(
+  _TestLyrics(this.lines);
+
+  final List<LyricLine> lines;
+
+  @override
+  LyricsState build() {
+    return LyricsState(
       providers: {
         ProviderName.lrclib: ProviderStatus(
           state: LyricsProviderState.done,
@@ -46,7 +51,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          lyricsProvider.overrideWith((_) => _TestLyrics(lines)),
+          lyricsProvider.overrideWith(() => _TestLyrics(lines)),
           currentTrackProvider.overrideWithValue(null),
           isPlayingProvider.overrideWithValue(false),
           showNerdStatsProvider.overrideWithValue(false),

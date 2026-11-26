@@ -422,7 +422,7 @@ class _NowPlayingProgressBarState extends ConsumerState<_NowPlayingProgressBar>
   @override
   Widget build(BuildContext context) {
     final position =
-        ref.watch(positionStreamProvider).valueOrNull ?? Duration.zero;
+        ref.watch(positionStreamProvider).value ?? Duration.zero;
     final progressBarStyle = ref.watch(progressBarStyleProvider);
     final isPlaying = ref.watch(isPlayingProvider);
     final currentTrack = ref.watch(currentTrackProvider);
@@ -677,7 +677,7 @@ class _IsolatedLyricsView extends ConsumerWidget {
         : ref.read(positionStreamProvider);
     return RepaintBoundary(
       child: LyricsView(
-        currentPosition: position.valueOrNull ?? Duration.zero,
+        currentPosition: position.value ?? Duration.zero,
         isActive: isActive,
         fontScale: fontScale,
         menuVisible: menuVisible,
@@ -729,7 +729,7 @@ class _SyncedLyricPreviewState extends ConsumerState<SyncedLyricPreview>
   void initState() {
     super.initState();
     _smoothPositionNotifier.value = _heldPositionMs(
-      ref.read(positionStreamProvider).valueOrNull,
+      ref.read(positionStreamProvider).value,
     );
     _isPlaying = ref.read(isPlayingProvider);
     _latestLyricsState = ref.read(lyricsProvider);
@@ -880,7 +880,7 @@ class _SyncedLyricPreviewState extends ConsumerState<SyncedLyricPreview>
     // position is the truth, so a seek made while paused still moves it.
     ref.listen<AsyncValue<Duration>>(positionStreamProvider, (prev, next) {
       if (!mounted || _ticker.isActive) return;
-      final position = next.valueOrNull;
+      final position = next.value;
       if (position == null) return;
       final newMs = _heldPositionMs(position);
       if (_smoothPositionNotifier.value != newMs) {
@@ -894,7 +894,7 @@ class _SyncedLyricPreviewState extends ConsumerState<SyncedLyricPreview>
       _currentLineIndex = -1;
       _inMidSongBreak = false;
       _smoothPositionNotifier.value = _heldPositionMs(
-        ref.read(positionStreamProvider).valueOrNull,
+        ref.read(positionStreamProvider).value,
       );
     }
 
@@ -1443,7 +1443,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     _pageController = PageController(initialPage: 0);
 
     // Album art page controller follows actual queue index starting on active index
-    final initialQueueIndex = (ref.read(playbackStateProvider).valueOrNull?.currentIndex ?? -1);
+    final initialQueueIndex = (ref.read(playbackStateProvider).value?.currentIndex ?? -1);
     final startPage = initialQueueIndex >= 0 ? initialQueueIndex : 0;
     _albumArtPageController = PageController(initialPage: startPage);
     _lastAlbumArtSyncedIndex = startPage;
@@ -1520,7 +1520,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
       activeIndex = queue.indexWhere((t) => t.id == currentTrack.id);
     }
     if (activeIndex < 0) {
-      activeIndex = (ref.read(playbackStateProvider).valueOrNull?.currentIndex ?? -1);
+      activeIndex = (ref.read(playbackStateProvider).value?.currentIndex ?? -1);
     }
 
     if (activeIndex <= 0) {
@@ -1565,7 +1565,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     final playerService = ref.watch(playbackTransportProvider);
     final albumColors = ref.watch(playerAlbumColorsProvider);
     final currentTrack = ref.watch(currentTrackProvider);
-    final currentQueueIndex = playbackState.valueOrNull?.currentIndex ?? -1;
+    final currentQueueIndex = playbackState.value?.currentIndex ?? -1;
 
     ref.listen<Track?>(currentTrackProvider, (previous, next) {
       if (next != null && previous?.id != next.id) {
@@ -1962,7 +1962,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                             return;
                           }
                           final currentQueueIndex = ref
-                              .read(playbackStateProvider).valueOrNull?.currentIndex ?? -1;
+                              .read(playbackStateProvider).value?.currentIndex ?? -1;
                           if (currentQueueIndex >= 0) {
                             final activePage = _safeAlbumArtPage(-1.0).round();
                             if (activePage != currentQueueIndex) {
@@ -2870,7 +2870,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     final jamQueue = ref.watch(jamQueueProvider);
     final isHost = ref.watch(isJamHostProvider);
     final canControlPlayback = ref.watch(canControlJamPlaybackProvider);
-    final session = ref.watch(currentJamSessionProvider).valueOrNull;
+    final session = ref.watch(currentJamSessionProvider).value;
 
     // Determine queue label
     String queueLabel;
@@ -3343,7 +3343,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     Widget? subtitleWidget,
     Widget? trailingWidget,
   }) {
-    final playbackState = ref.watch(playbackStateProvider).valueOrNull;
+    final playbackState = ref.watch(playbackStateProvider).value;
     final isPlaying = isCurrent && (playbackState?.isPlaying ?? false);
 
     return RepaintBoundary(
@@ -3431,7 +3431,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                               builder: (context) {
                                 final state = ref
                                     .watch(playbackStateProvider)
-                                    .valueOrNull;
+                                    .value;
                                 final playerDuration = isCurrent
                                     ? state?.duration
                                     : null;
@@ -3624,7 +3624,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   }) {
     final isConnected = ref.watch(
       activeConnectPlaybackProvider.select((peer) => peer != null),
-    ) || (ref.watch(connectPlayingOnBothProvider).valueOrNull ?? false);
+    ) || (ref.watch(connectPlayingOnBothProvider).value ?? false);
     return NowPlayingBottomBar(
       textColor: textColor,
       onOpenLyrics: _openLyricsSheet,
@@ -4506,7 +4506,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     Color secondaryColor, {
     bool showJamIndicator = true,
   }) {
-    final playbackState = ref.watch(playbackStateProvider).valueOrNull;
+    final playbackState = ref.watch(playbackStateProvider).value;
     final queueTitle = playbackState?.queueTitle;
     final hasQueueTitle = queueTitle != null && queueTitle.trim().isNotEmpty;
     final showNerdStats = playbackState?.showNerdStats ?? false;
@@ -5053,7 +5053,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   Widget _buildSwipeableAlbumArt(Track track, Color accentColor) {
     final playerService = ref.watch(playbackTransportProvider);
     final queue = ref.watch(queueProvider);
-    final currentIndex = ref.watch(playbackStateProvider).valueOrNull?.currentIndex ?? -1;
+    final currentIndex = ref.watch(playbackStateProvider).value?.currentIndex ?? -1;
 
     if (queue.length <= 1) {
       return GestureDetector(
@@ -5225,7 +5225,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   Widget _buildRippleSwipeableAlbumArt(Track track, Color accentColor) {
     final playerService = ref.watch(playbackTransportProvider);
     final queue = ref.watch(queueProvider);
-    final currentIndex = ref.watch(playbackStateProvider).valueOrNull?.currentIndex ?? -1;
+    final currentIndex = ref.watch(playbackStateProvider).value?.currentIndex ?? -1;
 
     if (queue.length <= 1) {
       return GestureDetector(
@@ -5314,7 +5314,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
   Widget _buildEdgeSwipeableAlbumArt(Track track, Color accentColor) {
     final playerService = ref.watch(playbackTransportProvider);
     final queue = ref.watch(queueProvider);
-    final currentIndex = ref.watch(playbackStateProvider).valueOrNull?.currentIndex ?? -1;
+    final currentIndex = ref.watch(playbackStateProvider).value?.currentIndex ?? -1;
 
     if (queue.length <= 1) {
       return GestureDetector(
@@ -5662,7 +5662,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
   Widget _buildJamsCompactButton(Color textColor, Color accentColor) {
     final isInSession = ref.watch(isInJamSessionProvider);
-    final session = ref.watch(currentJamSessionProvider).valueOrNull;
+    final session = ref.watch(currentJamSessionProvider).value;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -5945,7 +5945,7 @@ class _DesktopArtStats extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(playbackStateProvider).valueOrNull;
+    final state = ref.watch(playbackStateProvider).value;
     final stats = state?.qualityInfo;
     if (!(state?.showNerdStats ?? false) || stats == null || stats.isEmpty) {
       return const SizedBox.shrink();
@@ -6078,7 +6078,7 @@ class _DesktopLyricsStageState extends ConsumerState<_DesktopLyricsStage> {
     if (widget.state.isLive) return;
     final service = ref.read(playbackTransportProvider);
     final position =
-        ref.read(positionStreamProvider).valueOrNull ?? Duration.zero;
+        ref.read(positionStreamProvider).value ?? Duration.zero;
     final length = widget.state.duration ?? widget.track.duration;
     var target = position + step;
     if (target < Duration.zero) target = Duration.zero;

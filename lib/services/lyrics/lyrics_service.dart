@@ -23,6 +23,7 @@ import 'youtube_lyrics_provider.dart';
 import 'genius_provider.dart';
 import 'embedded_lyrics_provider.dart';
 import 'instrumental_gaps.dart';
+import '../../core/providers/settable_provider.dart';
 
 /// Provider names enum for type safety
 enum ProviderName {
@@ -293,12 +294,10 @@ class LyricsState {
 }
 
 /// Lyrics service notifier with caching
-class LyricsNotifier extends StateNotifier<LyricsState> {
-  final Map<ProviderName, LyricsProvider> _providers;
+class LyricsNotifier extends Notifier<LyricsState> {
   LyricsSearchInfo? _lastSearchInfo;
 
-  LyricsNotifier()
-    : _providers = {
+  final Map<ProviderName, LyricsProvider> _providers = {
         ProviderName.lrcRed: LrcRedProvider(),
         ProviderName.biniLyrics: BiniLyricsProvider(),
         ProviderName.unison: UnisonProvider(),
@@ -314,8 +313,10 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
         ProviderName.youtubeMusic: YouTubeLyricsProvider(),
         ProviderName.genius: GeniusProvider(),
         ProviderName.embedded: EmbeddedLyricsProvider(),
-      },
-      super(const LyricsState());
+      };
+
+  @override
+  LyricsState build() => const LyricsState();
 
   /// Fetch lyrics for a track from all providers concurrently (with caching and word-sync priority)
   Future<void> fetchLyrics(LyricsSearchInfo info) async {
@@ -349,7 +350,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
           state: LyricsProviderState.done,
           data: cached,
         );
-        if (mounted) {
+        if (ref.mounted) {
           state = LyricsState(
             videoId: info.videoId,
             providers: providers,
@@ -365,7 +366,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
     CacheAnalytics.instance.recordNetworkCall();
 
     // Reset state for new track
-    if (mounted) {
+    if (ref.mounted) {
       state = LyricsState(
         videoId: info.videoId,
         providers: {
@@ -402,7 +403,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
     await Future.wait(
       onlineProviders.map((providerName) async {
         await _fetchFromProvider(providerName, info);
-        if (!mounted) return;
+        if (!ref.mounted) return;
 
         final status = state.providers[providerName];
         if (status != null && (status.data?.hasWordSync ?? false)) {
@@ -430,7 +431,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
     final anySynced = state.providers.values.any(
       (s) => s.data?.hasSyncedLyrics ?? false,
     );
-    if (!anySynced && mounted) {
+    if (!anySynced && ref.mounted) {
       await _fetchFromProvider(ProviderName.genius, info);
     }
 
@@ -621,7 +622,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
     ProviderName name,
     LyricsSearchInfo info,
   ) async {
-    if (!mounted) return;
+    if (!ref.mounted) return;
     final currentProviders = Map<ProviderName, ProviderStatus>.from(
       state.providers,
     );
@@ -634,13 +635,13 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
       final provider = _providers[name]!;
       final result = await provider.search(info);
 
-      if (!mounted) return;
+      if (!ref.mounted) return;
       _updateProviderStatus(
         name,
         ProviderStatus(state: LyricsProviderState.done, data: result),
       );
     } catch (e) {
-      if (!mounted) return;
+      if (!ref.mounted) return;
       _updateProviderStatus(
         name,
         ProviderStatus(state: LyricsProviderState.error, error: e.toString()),
@@ -649,7 +650,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
   }
 
   void _updateProviderStatus(ProviderName name, ProviderStatus status) {
-    if (!mounted) return;
+    if (!ref.mounted) return;
     final newProviders = Map<ProviderName, ProviderStatus>.from(
       state.providers,
     );
@@ -715,7 +716,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
     final nextIdx = (currentIdx + 1) % providerNames.length;
     final next = providerNames[nextIdx];
 
-    if (mounted) {
+    if (ref.mounted) {
       state = state.copyWith(
         currentProvider: next,
         hasManuallySwitched: true,
@@ -730,7 +731,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
 
     if (needsFetch && _lastSearchInfo != null) {
       await _fetchFromProvider(next, _lastSearchInfo!);
-      if (mounted) {
+      if (ref.mounted) {
         _cacheBestResult(_lastSearchInfo!);
       }
     }
@@ -743,7 +744,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
         (currentIdx - 1 + providerNames.length) % providerNames.length;
     final prev = providerNames[prevIdx];
 
-    if (mounted) {
+    if (ref.mounted) {
       state = state.copyWith(
         currentProvider: prev,
         hasManuallySwitched: true,
@@ -758,7 +759,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
 
     if (needsFetch && _lastSearchInfo != null) {
       await _fetchFromProvider(prev, _lastSearchInfo!);
-      if (mounted) {
+      if (ref.mounted) {
         _cacheBestResult(_lastSearchInfo!);
       }
     }
@@ -768,7 +769,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
   Future<void> selectProvider(ProviderName provider) async {
     if (state.currentProvider == provider) return;
 
-    if (mounted) {
+    if (ref.mounted) {
       state = state.copyWith(
         currentProvider: provider,
         hasManuallySwitched: true,
@@ -783,7 +784,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
 
     if (needsFetch && _lastSearchInfo != null) {
       await _fetchFromProvider(provider, _lastSearchInfo!);
-      if (mounted) {
+      if (ref.mounted) {
         _cacheBestResult(_lastSearchInfo!);
       }
     }
@@ -796,7 +797,7 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
 
   /// Update a specific lyric line (e.g. for translation)
   void updateLine(int index, LyricLine updatedLine) {
-    if (!mounted) return;
+    if (!ref.mounted) return;
     final currentStatus = state.currentStatus;
     if (currentStatus.state != LyricsProviderState.done || currentStatus.data == null) return;
     
@@ -842,14 +843,11 @@ class LyricsNotifier extends StateNotifier<LyricsState> {
 }
 
 /// Global offset in milliseconds applied to the lyrics sync timeline
-final lyricsSyncOffsetProvider = StateProvider<int>((ref) => 0);
+final lyricsSyncOffsetProvider = settableProvider<int>(0);
 
 /// Provider for lyrics service
-final lyricsProvider = StateNotifierProvider<LyricsNotifier, LyricsState>((
-  ref,
-) {
-  return LyricsNotifier();
-});
+final lyricsProvider =
+    NotifierProvider<LyricsNotifier, LyricsState>(LyricsNotifier.new);
 
 /// Provider for current lyric line based on playback position
 final currentLyricLineProvider = Provider<LyricLine?>((ref) {

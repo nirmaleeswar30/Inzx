@@ -213,12 +213,12 @@ class _PodcastScreenState extends ConsumerState<PodcastScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final liveAccent = ref.watch(effectiveAccentColorProvider);
     final async = ref.watch(ytMusicPodcastProvider(widget.podcastId));
-    final podcast = async.valueOrNull;
+    final podcast = async.value;
 
     // Extract dynamic palette color from podcast cover or initial thumbnail
     final bgThumbnailUrl = podcast?.thumbnailUrl ?? widget.thumbnailUrl;
     final dynamicColor = bgThumbnailUrl != null
-        ? ref.watch(playlistColorsProvider(bgThumbnailUrl)).valueOrNull
+        ? ref.watch(playlistColorsProvider(bgThumbnailUrl)).value
         : null;
     final themeColor = dynamicColor ?? liveAccent;
     final accent = themeColor;

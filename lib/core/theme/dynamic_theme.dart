@@ -63,9 +63,11 @@ class ThemeSettings {
 }
 
 /// Theme settings notifier
-class ThemeSettingsNotifier extends StateNotifier<ThemeSettings> {
-  ThemeSettingsNotifier() : super(const ThemeSettings()) {
+class ThemeSettingsNotifier extends Notifier<ThemeSettings> {
+  @override
+  ThemeSettings build() {
     _load();
+    return const ThemeSettings();
   }
 
   Future<void> _load() async {
@@ -117,9 +119,7 @@ class ThemeSettingsNotifier extends StateNotifier<ThemeSettings> {
 
 /// Provider for theme settings
 final themeSettingsProvider =
-    StateNotifierProvider<ThemeSettingsNotifier, ThemeSettings>((ref) {
-      return ThemeSettingsNotifier();
-    });
+    NotifierProvider<ThemeSettingsNotifier, ThemeSettings>(ThemeSettingsNotifier.new);
 
 /// Accent colors palette
 const List<Color> accentColorPalette = [

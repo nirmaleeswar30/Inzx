@@ -369,11 +369,11 @@ class AudioSettingsScreen extends ConsumerWidget {
             usageAsync: streamCacheUsageAsync,
             onWifiOnlyChanged: (enabled) async {
               await playerService.setStreamCacheWifiOnly(enabled);
-              ref.read(streamAudioCacheRefreshProvider.notifier).state++;
+              ref.read(streamAudioCacheRefreshProvider.notifier).update((n) => n + 1);
             },
             onCacheLimitChanged: (limitMb) async {
               await playerService.setStreamCacheSizeLimitMb(limitMb);
-              ref.read(streamAudioCacheRefreshProvider.notifier).state++;
+              ref.read(streamAudioCacheRefreshProvider.notifier).update((n) => n + 1);
             },
             onMaxConcurrentChanged: (value) async {
               await playerService.setStreamCacheMaxConcurrent(value);

@@ -34,6 +34,7 @@ import 'lyrics/paxsenix_provider.dart';
 import 'lyrics/lyricsplus_provider.dart';
 import 'lyrics/simpmusic_provider.dart';
 import 'lyrics/lrc_writer.dart';
+import '../core/providers/settable_provider.dart';
 
 const String kDownloadQualityKey = 'download_quality';
 const String kDownloadParallelPartCountKey = 'download_parallel_part_count';
@@ -124,9 +125,11 @@ class DownloadPathInfo {
 }
 
 /// State notifier for download path allowing custom path selection
-class DownloadPathNotifier extends StateNotifier<AsyncValue<DownloadPathInfo>> {
-  DownloadPathNotifier() : super(const AsyncValue.loading()) {
+class DownloadPathNotifier extends Notifier<AsyncValue<DownloadPathInfo>> {
+  @override
+  AsyncValue<DownloadPathInfo> build() {
     loadPath();
+    return const AsyncValue.loading();
   }
 
   Future<void> loadPath() async {
@@ -155,32 +158,26 @@ class DownloadPathNotifier extends StateNotifier<AsyncValue<DownloadPathInfo>> {
 
 /// Provider for download path
 final downloadPathProvider =
-    StateNotifierProvider<DownloadPathNotifier, AsyncValue<DownloadPathInfo>>((ref) {
-  return DownloadPathNotifier();
-});
+    NotifierProvider<DownloadPathNotifier, AsyncValue<DownloadPathInfo>>(DownloadPathNotifier.new);
 
 /// Provider for download quality preference
 final downloadQualityProvider =
-    StateNotifierProvider<DownloadQualityNotifier, AudioQuality>((ref) {
-      return DownloadQualityNotifier();
-    });
+    NotifierProvider<DownloadQualityNotifier, AudioQuality>(DownloadQualityNotifier.new);
 
 /// Provider for segmented parallel part count used by downloads.
 final downloadParallelPartCountProvider =
-    StateNotifierProvider<DownloadParallelPartCountNotifier, int>((ref) {
-      return DownloadParallelPartCountNotifier();
-    });
+    NotifierProvider<DownloadParallelPartCountNotifier, int>(DownloadParallelPartCountNotifier.new);
 
 /// Provider for minimum file size (MB) before parallel segmented download is used.
 final downloadParallelMinSizeMbProvider =
-    StateNotifierProvider<DownloadParallelMinSizeMbNotifier, int>((ref) {
-      return DownloadParallelMinSizeMbNotifier();
-    });
+    NotifierProvider<DownloadParallelMinSizeMbNotifier, int>(DownloadParallelMinSizeMbNotifier.new);
 
 /// Notifier for download quality
-class DownloadQualityNotifier extends StateNotifier<AudioQuality> {
-  DownloadQualityNotifier() : super(AudioQuality.high) {
+class DownloadQualityNotifier extends Notifier<AudioQuality> {
+  @override
+  AudioQuality build() {
     _loadQuality();
+    return AudioQuality.high;
   }
 
   Future<void> _loadQuality() async {
@@ -201,8 +198,8 @@ class DownloadQualityNotifier extends StateNotifier<AudioQuality> {
 }
 
 /// Trigger to refresh downloaded tracks (incremented when downloads change)
-final downloadedTracksRefreshProvider = StateProvider<int>((ref) => 0);
-final downloadedPlaylistsRefreshProvider = StateProvider<int>((ref) => 0);
+final downloadedTracksRefreshProvider = settableProvider<int>(0);
+final downloadedPlaylistsRefreshProvider = settableProvider<int>(0);
 
 /// Provider for downloaded tracks from Hive (for display in library/songs tabs)
 /// File existence checks run in background isolate to avoid UI jank
@@ -375,10 +372,11 @@ class _DownloadCancelledException implements Exception {
   String toString() => 'Download cancelled';
 }
 
-class DownloadParallelPartCountNotifier extends StateNotifier<int> {
-  DownloadParallelPartCountNotifier()
-    : super(kDefaultParallelDownloadPartCount) {
+class DownloadParallelPartCountNotifier extends Notifier<int> {
+  @override
+  int build() {
     _load();
+    return kDefaultParallelDownloadPartCount;
   }
 
   Future<void> _load() async {
@@ -403,10 +401,11 @@ class DownloadParallelPartCountNotifier extends StateNotifier<int> {
   }
 }
 
-class DownloadParallelMinSizeMbNotifier extends StateNotifier<int> {
-  DownloadParallelMinSizeMbNotifier()
-    : super(kDefaultParallelDownloadMinSizeMb) {
+class DownloadParallelMinSizeMbNotifier extends Notifier<int> {
+  @override
+  int build() {
     _load();
+    return kDefaultParallelDownloadMinSizeMb;
   }
 
   Future<void> _load() async {
@@ -558,9 +557,8 @@ class _DownloadSource {
 }
 
 /// Download manager notifier
-class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
-  final YTPlayerUtils _playerUtils;
-  final Ref _ref;
+class DownloadManagerNotifier extends Notifier<DownloadManagerState> {
+  late YTPlayerUtils _playerUtils;
   final DownloadNotificationService _notificationService =
       DownloadNotificationService();
   http.Client? _httpClient;
@@ -578,8 +576,17 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
   /// attempt moves on to the next source instead of failing the download.
   final Set<String> _losslessUnavailable = <String>{};
 
-  DownloadManagerNotifier(this._playerUtils, this._ref)
-    : super(const DownloadManagerState()) {
+  @override
+  DownloadManagerState build() {
+    _playerUtils = ref.watch(ytPlayerUtilsProvider);
+    // A rebuild starts from an empty state, so it reloads what's persisted.
+    _initialized = false;
+    // Runs on a rebuild too, as disposing the old manager did.
+    ref.onDispose(() {
+      _cleanupTimer?.cancel();
+      _currentDownload?.cancel();
+      _httpClient?.close();
+    });
     // Initialize notification service
     _notificationService.initialize();
     // Load persisted downloads
@@ -593,6 +600,7 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
       const Duration(minutes: 30),
       (_) => _cleanupOldCompletedTasks(),
     );
+    return const DownloadManagerState();
   }
 
   /// Load download quality from preferences
@@ -863,7 +871,7 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
       updatedAt: now,
     );
     await box.put(normalizedId, entity);
-    _ref.read(downloadedPlaylistsRefreshProvider.notifier).state++;
+    ref.read(downloadedPlaylistsRefreshProvider.notifier).update((n) => n + 1);
   }
 
   /// Cancel a download
@@ -937,7 +945,7 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
     await _removeFromHive(trackId);
 
     // Trigger refresh of downloaded tracks provider
-    _ref.read(downloadedTracksRefreshProvider.notifier).state++;
+    ref.read(downloadedTracksRefreshProvider.notifier).update((n) => n + 1);
   }
 
   /// Remove all downloaded tracks
@@ -1534,7 +1542,7 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
         _transientRetryAttempts.remove(task.trackId);
         _losslessUnavailable.remove(task.trackId);
         await _persistDownload(completedTask);
-        _ref.read(downloadedTracksRefreshProvider.notifier).state++;
+        ref.read(downloadedTracksRefreshProvider.notifier).update((n) => n + 1);
         await _notificationService.showDownloadCompleted(
           task.trackId,
           task.track.title,
@@ -1890,7 +1898,7 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
       await _persistDownload(completedTask);
 
       // Trigger refresh of downloaded tracks provider
-      _ref.read(downloadedTracksRefreshProvider.notifier).state++;
+      ref.read(downloadedTracksRefreshProvider.notifier).update((n) => n + 1);
 
       // Show completion notification
       await _notificationService.showDownloadCompleted(
@@ -2202,13 +2210,6 @@ class DownloadManagerNotifier extends StateNotifier<DownloadManagerState> {
     }
   }
 
-  @override
-  void dispose() {
-    _cleanupTimer?.cancel();
-    _currentDownload?.cancel();
-    _httpClient?.close();
-    super.dispose();
-  }
 }
 
 /// Provider for YTPlayerUtils
@@ -2218,10 +2219,9 @@ final ytPlayerUtilsProvider = Provider<YTPlayerUtils>((ref) {
 
 /// Provider for download manager
 final downloadManagerProvider =
-    StateNotifierProvider<DownloadManagerNotifier, DownloadManagerState>((ref) {
-      final playerUtils = ref.watch(ytPlayerUtilsProvider);
-      return DownloadManagerNotifier(playerUtils, ref);
-    });
+    NotifierProvider<DownloadManagerNotifier, DownloadManagerState>(
+      DownloadManagerNotifier.new,
+    );
 
 /// Provider to check if a specific track is downloaded
 final isTrackDownloadedProvider = Provider.family<bool, String>((ref, trackId) {

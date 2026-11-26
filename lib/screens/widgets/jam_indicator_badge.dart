@@ -59,7 +59,7 @@ class _JamIndicatorBadgeState extends ConsumerState<JamIndicatorBadge>
     final isInJam = ref.watch(isInJamSessionProvider);
     if (!isInJam) return const SizedBox.shrink();
 
-    final session = ref.watch(currentJamSessionProvider).valueOrNull;
+    final session = ref.watch(currentJamSessionProvider).value;
     final participantCount = session?.participantCount ?? session?.participants.length ?? 0;
 
     final theme = Theme.of(context);

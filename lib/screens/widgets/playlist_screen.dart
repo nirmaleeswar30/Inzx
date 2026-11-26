@@ -662,8 +662,8 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
           ? ref.watch(ytMusicLikedSongsProvider)
           : const AsyncValue<List<Track>>.data([]);
 
-      final remoteTracks = ytLikedAsync.valueOrNull?.tracks ??
-          ytLikedSongsAsync.valueOrNull ??
+      final remoteTracks = ytLikedAsync.value?.tracks ??
+          ytLikedSongsAsync.value ??
           [];
 
       final seenIds = <String>{};
@@ -694,10 +694,10 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
       final displayPlaylist = Playlist(
         id: widget.playlistId,
         title: widget.playlistTitle ??
-            ytLikedAsync.valueOrNull?.title ??
+            ytLikedAsync.value?.title ??
             context.l10n.likedSongsLabel,
         tracks: combinedTracks,
-        author: ytLikedAsync.valueOrNull?.author ??
+        author: ytLikedAsync.value?.author ??
             context.l10n.autoPlaylists,
         isYTMusic: true,
       );
@@ -907,7 +907,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     // Extract dynamic palette color from playlist cover or first track
     final colorSource = bgThumbnailUrl ?? playlist.thumbnailUrl;
     final playlistColor = ref != null && colorSource != null
-        ? ref.watch(playlistColorsProvider(colorSource)).valueOrNull
+        ? ref.watch(playlistColorsProvider(colorSource)).value
         : null;
     final liveAccent = ref?.watch(effectiveAccentColorProvider);
     final themeColor = playlistColor ?? liveAccent ?? colorScheme.primary;

@@ -186,12 +186,12 @@ final dynamicColorServiceProvider = Provider<DynamicColorService>((ref) {
 
 /// Provider for current dynamic colors based on playing track
 final dynamicColorsProvider =
-    StateNotifierProvider<DynamicColorsNotifier, DynamicColors?>((ref) {
-      return DynamicColorsNotifier(ref);
-    });
+    NotifierProvider<DynamicColorsNotifier, DynamicColors?>(
+      DynamicColorsNotifier.new,
+    );
 
 /// Notifier for managing dynamic colors
-class DynamicColorsNotifier extends StateNotifier<DynamicColors?> {
+class DynamicColorsNotifier extends Notifier<DynamicColors?> {
   final DynamicColorService _colorService = DynamicColorService();
   StreamSubscription<String?>? _subscription;
   String? _lastTrackId;
@@ -200,16 +200,20 @@ class DynamicColorsNotifier extends StateNotifier<DynamicColors?> {
   Timer? _debounceTimer;
   static const _debounceDelay = Duration(milliseconds: 300);
 
-  final Ref _ref;
-
-  DynamicColorsNotifier(this._ref) : super(null) {
+  @override
+  DynamicColors? build() {
     _init();
     // Light and dark themes take different shades of the same artwork, so a
     // theme switch re-extracts the playing track's colours.
-    _ref.listen(themeModeProvider, (_, _) {
+    ref.listen(themeModeProvider, (_, _) {
       final track = player.AudioPlayerService.instance.currentTrack;
-      if (track != null && mounted) _extractColors(track);
+      if (track != null && ref.mounted) _extractColors(track);
     });
+    ref.onDispose(() {
+      _subscription?.cancel();
+      _debounceTimer?.cancel();
+    });
+    return null;
   }
 
   void _init() {
@@ -248,13 +252,13 @@ class DynamicColorsNotifier extends StateNotifier<DynamicColors?> {
       return;
     }
 
-    final isDark = _isDarkTheme(_ref.read(themeModeProvider));
+    final isDark = _isDarkTheme(ref.read(themeModeProvider));
 
     final colors = await _colorService.extractColorsFromUrl(
       imageUrl,
       isDark: isDark,
     );
-    if (mounted) {
+    if (ref.mounted) {
       state = colors;
     }
   }
@@ -271,7 +275,7 @@ class DynamicColorsNotifier extends StateNotifier<DynamicColors?> {
       imageUrl,
       isDark: isDark,
     );
-    if (mounted) {
+    if (ref.mounted) {
       state = colors;
     }
   }
@@ -283,12 +287,6 @@ class DynamicColorsNotifier extends StateNotifier<DynamicColors?> {
     state = null;
   }
 
-  @override
-  void dispose() {
-    _subscription?.cancel();
-    _debounceTimer?.cancel();
-    super.dispose();
-  }
 }
 
 /// Provider to check if dynamic theming is enabled

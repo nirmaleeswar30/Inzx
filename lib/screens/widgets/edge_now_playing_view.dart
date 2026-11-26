@@ -85,7 +85,7 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
         showLyricsBelowArt && (isFetchingLyrics || hasSyncedLyrics);
 
     final playbackState =
-        ref.watch(playbackStateProvider).valueOrNull ?? widget.state;
+        ref.watch(playbackStateProvider).value ?? widget.state;
     final showNerdStats = playbackState.showNerdStats;
     final statsSummary = playbackState.qualityInfo;
     final hasStats = showNerdStats && statsSummary.isNotEmpty;

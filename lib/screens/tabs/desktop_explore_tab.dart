@@ -257,7 +257,7 @@ class DesktopExploreMoodScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final link = ref.watch(_exploreLinkByNameProvider(linkName));
-    final found = link.valueOrNull;
+    final found = link.value;
     return Scaffold(
       appBar: AppBar(
         title: Text(found?.title ?? title),

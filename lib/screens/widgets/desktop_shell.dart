@@ -32,6 +32,7 @@ import 'desktop_update_button.dart';
 import 'now_playing_screen.dart';
 import 'playlist_screen.dart';
 import 'podcast_screen.dart';
+import '../../core/providers/settable_provider.dart';
 
 const double _kTopBarHeight = 56;
 const double _kSidebarWidth = 240;
@@ -180,8 +181,8 @@ Future<void> _healFullScreenView(bool Function() stillWanted) async {
   }
 }
 
-final desktopTabProvider = StateProvider<int>((ref) => 0);
-final desktopSidebarCollapsedProvider = StateProvider<bool>((ref) => false);
+final desktopTabProvider = settableProvider<int>(0);
+final desktopSidebarCollapsedProvider = settableProvider<bool>(false);
 
 /// Lets a mouse drag the app's horizontal shelves, which the wheel can't reach.
 class DesktopScrollBehavior extends MaterialScrollBehavior {
@@ -582,7 +583,7 @@ class _DesktopTopBar extends ConsumerWidget {
                 final collapsed = ref.read(
                   desktopSidebarCollapsedProvider.notifier,
                 );
-                collapsed.state = !collapsed.state;
+                collapsed.update((value) => !value);
               },
             ),
             const SizedBox(width: 18),
@@ -727,7 +728,7 @@ class _JamsButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(currentJamSessionProvider).valueOrNull;
+    final session = ref.watch(currentJamSessionProvider).value;
     final accent = ref.watch(effectiveAccentColorProvider);
     final count = session?.participants.length ?? 0;
     final active = session != null;
@@ -892,9 +893,11 @@ class DesktopLibraryEntry {
 }
 
 /// Keys of the pinned sidebar entries, most recently pinned first.
-class DesktopPinnedLibrary extends StateNotifier<List<String>> {
-  DesktopPinnedLibrary() : super(const []) {
+class DesktopPinnedLibrary extends Notifier<List<String>> {
+  @override
+  List<String> build() {
     _load();
+    return const [];
   }
 
   static const _prefKey = 'desktop_pinned_library';
@@ -914,9 +917,7 @@ class DesktopPinnedLibrary extends StateNotifier<List<String>> {
 }
 
 final desktopPinnedLibraryProvider =
-    StateNotifierProvider<DesktopPinnedLibrary, List<String>>(
-      (ref) => DesktopPinnedLibrary(),
-    );
+    NotifierProvider<DesktopPinnedLibrary, List<String>>(DesktopPinnedLibrary.new);
 
 /// Everything in the user's library, pinned entries first.
 final desktopLibraryProvider = Provider<List<DesktopLibraryEntry>>((ref) {
@@ -952,15 +953,15 @@ final desktopLibraryProvider = Provider<List<DesktopLibraryEntry>>((ref) {
 
   addPlaylists(ref.watch(localPlaylistsProvider), DesktopLibraryType.playlist);
   addPlaylists(
-    ref.watch(ytMusicSavedPlaylistsProvider).valueOrNull ?? const [],
+    ref.watch(ytMusicSavedPlaylistsProvider).value ?? const [],
     DesktopLibraryType.playlist,
   );
   addArtists(
-    ref.watch(ytMusicLibrarySubscriptionsProvider).valueOrNull ?? const [],
+    ref.watch(ytMusicLibrarySubscriptionsProvider).value ?? const [],
   );
-  addArtists(ref.watch(ytMusicLibraryArtistsProvider).valueOrNull ?? const []);
+  addArtists(ref.watch(ytMusicLibraryArtistsProvider).value ?? const []);
   addPlaylists(
-    ref.watch(ytMusicSavedPodcastsProvider).valueOrNull ?? const [],
+    ref.watch(ytMusicSavedPodcastsProvider).value ?? const [],
     DesktopLibraryType.podcast,
   );
 
@@ -977,7 +978,7 @@ class _DesktopSidebar extends ConsumerWidget {
 
   void _selectTab(WidgetRef ref, int index) {
     _showFirstRoute();
-    ref.read(desktopTabProvider.notifier).state = index;
+    ref.read(desktopTabProvider.notifier).set(index);
   }
 
   @override

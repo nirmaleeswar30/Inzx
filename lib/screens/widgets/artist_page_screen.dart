@@ -21,6 +21,7 @@ import 'shelf_details_screen.dart';
 
 import 'package:skeletonizer/skeletonizer.dart';
 import 'share_sheet.dart';
+import '../../core/providers/settable_provider.dart';
 
 // ============ PROVIDERS ============
 
@@ -35,7 +36,7 @@ final artistPageProvider = FutureProvider.autoDispose
     .family<ArtistPageData, String>((ref, artistId) async {
       // Get local library for merged results
       final downloadedTracks =
-          ref.read(downloadedTracksProvider).valueOrNull ?? [];
+          ref.read(downloadedTracksProvider).value ?? [];
       final localTracks = ref.read(localTracksProvider);
       final allLocalTracks = [...downloadedTracks, ...localTracks];
 
@@ -46,14 +47,20 @@ final artistPageProvider = FutureProvider.autoDispose
       );
     });
 
-final artistSubscribeBusyProvider = StateProvider.autoDispose
-    .family<bool, String>((ref, artistId) => false);
+final artistSubscribeBusyProvider = NotifierProvider.autoDispose
+    .family<SettableNotifier<bool>, bool, String>(
+      (artistId) => SettableNotifier(false),
+    );
 
-final artistSubscribeOptimisticProvider = StateProvider.autoDispose
-    .family<bool?, String>((ref, artistId) => null);
+final artistSubscribeOptimisticProvider = NotifierProvider.autoDispose
+    .family<SettableNotifier<bool?>, bool?, String>(
+      (artistId) => SettableNotifier(null),
+    );
 
-final artistDescriptionExpandedProvider = StateProvider.autoDispose
-    .family<bool, String>((ref, artistId) => false);
+final artistDescriptionExpandedProvider = NotifierProvider.autoDispose
+    .family<SettableNotifier<bool>, bool, String>(
+      (artistId) => SettableNotifier(false),
+    );
 
 /// Page palette extracted from the artist image (same extractor as the
 /// player, so the page is tinted the way the artist's photo is).
@@ -320,7 +327,7 @@ class _ArtistContent extends ConsumerWidget {
     );
     final isSubscribed =
         optimisticSubscribed ??
-        subscribedArtists.valueOrNull?.any(
+        subscribedArtists.value?.any(
           (artist) => artist.id == artistData.id,
         ) ??
         false;
@@ -329,7 +336,7 @@ class _ArtistContent extends ConsumerWidget {
     final themeColorAsync = ref.watch(
       artistColorsProvider(artistData.thumbnailUrl ?? initialThumbnail),
     );
-    final rawArtistColors = themeColorAsync.valueOrNull;
+    final rawArtistColors = themeColorAsync.value;
     final artistColors = rawArtistColors == null
         ? null
         : (isDark ? rawArtistColors : rawArtistColors.toLightMode());
@@ -633,8 +640,7 @@ class _ArtistContent extends ConsumerWidget {
                                     artistData.id,
                                   ).notifier,
                                 )
-                                .state =
-                            !isDescriptionExpanded;
+                                .set(!isDescriptionExpanded);
                       },
                 child: Text(
                   artistData.description!,
@@ -893,8 +899,7 @@ class _ArtistContent extends ConsumerWidget {
                                       artistData.id,
                                     ).notifier,
                                   )
-                                  .state =
-                              !isDescriptionExpanded;
+                                  .set(!isDescriptionExpanded);
                         },
                         child: Text(
                           description,
@@ -1075,8 +1080,8 @@ class _ArtistContent extends ConsumerWidget {
     final subscribeAction = ref.read(ytMusicSubscribeActionProvider);
     final nextSubscribed = !isSubscribed;
 
-    busyNotifier.state = true;
-    optimisticNotifier.state = nextSubscribed;
+    busyNotifier.set(true);
+    optimisticNotifier.set(nextSubscribed);
 
     try {
       final success = nextSubscribed
@@ -1086,7 +1091,7 @@ class _ArtistContent extends ConsumerWidget {
       if (!context.mounted) return;
 
       if (!success) {
-        optimisticNotifier.state = isSubscribed;
+        optimisticNotifier.set(isSubscribed);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -1110,7 +1115,7 @@ class _ArtistContent extends ConsumerWidget {
         ),
       );
     } finally {
-      busyNotifier.state = false;
+      busyNotifier.set(false);
     }
   }
 

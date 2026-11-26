@@ -59,7 +59,7 @@ class _AudioRoutingPillState extends ConsumerState<AudioRoutingPill>
     final remoteName = ref.watch(
       activeConnectPlaybackProvider.select((peer) => peer?.device.label),
     );
-    final both = ref.watch(connectPlayingOnBothProvider).valueOrNull ?? false;
+    final both = ref.watch(connectPlayingOnBothProvider).value ?? false;
     return BouncyTouch(
       style: BouncyStyle.button,
       customScale: 0.95,

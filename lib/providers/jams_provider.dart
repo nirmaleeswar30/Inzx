@@ -104,7 +104,7 @@ final jamsConnectionStateProvider = StreamProvider<JamConnectionState>((ref) {
 
 /// Whether user is currently in a Jam session
 final isInJamSessionProvider = Provider<bool>((ref) {
-  final session = ref.watch(currentJamSessionProvider).valueOrNull;
+  final session = ref.watch(currentJamSessionProvider).value;
   return session != null;
 });
 
@@ -112,7 +112,7 @@ final isInJamSessionProvider = Provider<bool>((ref) {
 /// This watches the session stream so it updates when host changes
 final isJamHostProvider = Provider<bool>((ref) {
   // Watch the session stream to react to host changes
-  final session = ref.watch(currentJamSessionProvider).valueOrNull;
+  final session = ref.watch(currentJamSessionProvider).value;
   final jamsService = ref.watch(jamsServiceProvider);
 
   if (jamsService == null || session == null) return false;
@@ -123,13 +123,13 @@ final isJamHostProvider = Provider<bool>((ref) {
 
 /// Jam queue provider - returns the queue from the current session
 final jamQueueProvider = Provider<List<JamQueueItem>>((ref) {
-  final session = ref.watch(currentJamSessionProvider).valueOrNull;
+  final session = ref.watch(currentJamSessionProvider).value;
   return session?.queue ?? [];
 });
 
 /// Whether current user can control playback (host or has permission)
 final canControlJamPlaybackProvider = Provider<bool>((ref) {
-  final session = ref.watch(currentJamSessionProvider).valueOrNull;
+  final session = ref.watch(currentJamSessionProvider).value;
   final jamsService = ref.watch(jamsServiceProvider);
 
   if (jamsService == null) return true; // Not in a session, can control
@@ -147,58 +147,75 @@ final canControlJamPlaybackProvider = Provider<bool>((ref) {
 });
 
 /// Notifier for Jams UI state and actions
-class JamsNotifier extends StateNotifier<JamsUIState> {
-  final JamsService? _jamsService;
-  final JamsSyncController? _syncController;
+class JamsNotifier extends Notifier<JamsUIState> {
+  /// Rebuilt from a clean state when the service or sync controller changes
+  /// (signing in or out). Work started before that checks the ref it began
+  /// with, which a newer build unmounts, before touching state.
+  @override
+  JamsUIState build() {
+    ref.watch(jamsServiceProvider);
+    ref.watch(jamsSyncControllerProvider);
+    return const JamsUIState();
+  }
 
-  JamsNotifier(this._jamsService, this._syncController)
-    : super(const JamsUIState());
+  JamsService? get _jamsService => ref.read(jamsServiceProvider);
+  JamsSyncController? get _syncController =>
+      ref.read(jamsSyncControllerProvider);
 
   /// Create a new Jam session
   Future<String?> createSession() async {
-    if (_jamsService == null) {
+    final jamsService = _jamsService;
+    final syncController = _syncController;
+    if (jamsService == null) {
       state = state.copyWith(error: 'Please sign in with Google first');
       return null;
     }
+    final buildRef = ref;
 
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final code = await _jamsService.createSession();
+      final code = await jamsService.createSession();
       if (code != null) {
         // Start sync as host
-        _syncController?.startSync();
+        syncController?.startSync();
 
         // Initialize jam queue from current player queue
-        await _syncController?.initializeJamQueueFromPlayer();
+        await syncController?.initializeJamQueueFromPlayer();
       }
-      state = state.copyWith(isLoading: false);
+      if (buildRef.mounted) state = state.copyWith(isLoading: false);
       return code;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      if (buildRef.mounted) {
+        state = state.copyWith(isLoading: false, error: e.toString());
+      }
       return null;
     }
   }
 
   /// Join a Jam session with a code
   Future<bool> joinSession(String code) async {
-    if (_jamsService == null) {
+    final jamsService = _jamsService;
+    final syncController = _syncController;
+    if (jamsService == null) {
       state = state.copyWith(error: 'Please sign in with Google first');
       return false;
     }
+    final buildRef = ref;
 
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final success = await _jamsService.joinSession(code);
+      final success = await jamsService.joinSession(code);
+      if (!buildRef.mounted) return success;
       if (success) {
         // Start sync as participant
         if (kDebugMode) {
           print(
-            'JamsNotifier: Join successful, starting sync. syncController=${_syncController != null ? "exists" : "NULL"}',
+            'JamsNotifier: Join successful, starting sync. syncController=${syncController != null ? "exists" : "NULL"}',
           );
         }
-        _syncController?.startSync();
+        syncController?.startSync();
         state = state.copyWith(isLoading: false, error: null);
         return true;
       }
@@ -208,7 +225,9 @@ class JamsNotifier extends StateNotifier<JamsUIState> {
       );
       return false;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      if (buildRef.mounted) {
+        state = state.copyWith(isLoading: false, error: e.toString());
+      }
       return false;
     }
   }
@@ -221,12 +240,14 @@ class JamsNotifier extends StateNotifier<JamsUIState> {
 
   /// Transfer host to another participant (host only)
   Future<bool> transferHost(String newHostId) async {
-    if (_jamsService == null) return false;
-    final success = await _jamsService.transferHost(newHostId);
+    final jamsService = _jamsService;
+    final syncController = _syncController;
+    if (jamsService == null) return false;
+    final success = await jamsService.transferHost(newHostId);
     if (success) {
       // Restart sync with new role
-      _syncController?.stopSync();
-      _syncController?.startSync();
+      syncController?.stopSync();
+      syncController?.startSync();
     }
     return success;
   }
@@ -250,10 +271,5 @@ class JamsUIState {
 }
 
 /// Jams UI notifier provider
-final jamsNotifierProvider = StateNotifierProvider<JamsNotifier, JamsUIState>((
-  ref,
-) {
-  final jamsService = ref.watch(jamsServiceProvider);
-  final syncController = ref.watch(jamsSyncControllerProvider);
-  return JamsNotifier(jamsService, syncController);
-});
+final jamsNotifierProvider =
+    NotifierProvider<JamsNotifier, JamsUIState>(JamsNotifier.new);

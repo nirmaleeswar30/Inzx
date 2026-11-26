@@ -126,16 +126,16 @@ String getAccentColorName(InzxAccentColor accent) {
 
 /// Provider for the custom accent color
 final customAccentColorProvider =
-    StateNotifierProvider<CustomAccentColorNotifier, Color>((ref) {
-      return CustomAccentColorNotifier();
-    });
+    NotifierProvider<CustomAccentColorNotifier, Color>(CustomAccentColorNotifier.new);
 
 /// Notifier to manage custom accent color
-class CustomAccentColorNotifier extends StateNotifier<Color> {
+class CustomAccentColorNotifier extends Notifier<Color> {
   static const String customAccentPrefKey = 'inzx_custom_accent_color_int';
 
-  CustomAccentColorNotifier() : super(const Color(0xFF9F7AEA)) {
+  @override
+  Color build() {
     _loadCustomColor();
+    return const Color(0xFF9F7AEA);
   }
 
   Future<void> _loadCustomColor() async {
@@ -159,16 +159,16 @@ class CustomAccentColorNotifier extends StateNotifier<Color> {
 
 /// Provider for the current accent color
 final accentColorProvider =
-    StateNotifierProvider<AccentColorNotifier, InzxAccentColor>((ref) {
-      return AccentColorNotifier();
-    });
+    NotifierProvider<AccentColorNotifier, InzxAccentColor>(AccentColorNotifier.new);
 
 /// Notifier to manage accent color state
-class AccentColorNotifier extends StateNotifier<InzxAccentColor> {
+class AccentColorNotifier extends Notifier<InzxAccentColor> {
   static const String accentColorPrefKey = 'inzx_accent_color_enum';
 
-  AccentColorNotifier() : super(InzxAccentColor.red) {
+  @override
+  InzxAccentColor build() {
     _loadAccentColor();
+    return InzxAccentColor.red;
   }
 
   Future<void> _loadAccentColor() async {
@@ -192,17 +192,17 @@ class AccentColorNotifier extends StateNotifier<InzxAccentColor> {
 
 /// Provider for the current theme mode
 final themeModeProvider =
-    StateNotifierProvider<ThemeModeNotifier, InzxThemeMode>((ref) {
-      return ThemeModeNotifier();
-    });
+    NotifierProvider<ThemeModeNotifier, InzxThemeMode>(ThemeModeNotifier.new);
 
 /// Notifier to manage theme mode state
-class ThemeModeNotifier extends StateNotifier<InzxThemeMode> {
+class ThemeModeNotifier extends Notifier<InzxThemeMode> {
   static const String themeModePrefKey = 'inzx_theme_mode';
   static const String _legacyThemeModePrefKey = 'inzx_theme_mode';
 
-  ThemeModeNotifier() : super(InzxThemeMode.dark) {
+  @override
+  InzxThemeMode build() {
     _loadThemeMode();
+    return InzxThemeMode.dark;
   }
 
   Future<void> _loadThemeMode() async {
@@ -267,13 +267,12 @@ ThemeMode toFlutterThemeMode(InzxThemeMode mode) {
 }
 
 /// Provider for the user's display name (for personalization)
-final userNameProvider = StateNotifierProvider<UserNameNotifier, String>((ref) {
-  return UserNameNotifier();
-});
+final userNameProvider = NotifierProvider<UserNameNotifier, String>(UserNameNotifier.new);
 
 /// Notifier to manage user name state
-class UserNameNotifier extends StateNotifier<String> {
-  UserNameNotifier() : super('Music Lover');
+class UserNameNotifier extends Notifier<String> {
+  @override
+  String build() => 'Music Lover';
 
   void setName(String name) {
     state = name.trim().isEmpty ? 'Music Lover' : name.trim();
@@ -282,17 +281,17 @@ class UserNameNotifier extends StateNotifier<String> {
 
 /// Provider for whether the liquid glass navigation bar is enabled
 final liquidGlassNavProvider =
-    StateNotifierProvider<LiquidGlassNavNotifier, bool>((ref) {
-      return LiquidGlassNavNotifier();
-    });
+    NotifierProvider<LiquidGlassNavNotifier, bool>(LiquidGlassNavNotifier.new);
 
 /// Notifier to manage the liquid glass navigation bar preference.
 /// Default: false (off by default, uses normal navbar from commit 6ee4ad9).
-class LiquidGlassNavNotifier extends StateNotifier<bool> {
+class LiquidGlassNavNotifier extends Notifier<bool> {
   static const String liquidGlassNavPrefKey = 'inzx_liquid_glass_nav_enabled';
 
-  LiquidGlassNavNotifier() : super(false) {
+  @override
+  bool build() {
     _loadPreference();
+    return false;
   }
 
   Future<void> _loadPreference() async {
@@ -318,18 +317,18 @@ class LiquidGlassNavNotifier extends StateNotifier<bool> {
 
 /// Provider for whether rotating miniplayer album art is enabled
 final rotatingMiniPlayerArtProvider =
-    StateNotifierProvider<RotatingMiniPlayerArtNotifier, bool>((ref) {
-      return RotatingMiniPlayerArtNotifier();
-    });
+    NotifierProvider<RotatingMiniPlayerArtNotifier, bool>(RotatingMiniPlayerArtNotifier.new);
 
 /// Notifier to manage the rotating miniplayer album art preference.
 /// Default: true (enabled by default).
-class RotatingMiniPlayerArtNotifier extends StateNotifier<bool> {
+class RotatingMiniPlayerArtNotifier extends Notifier<bool> {
   static const String rotatingArtPrefKey =
       'inzx_rotating_mini_player_art_enabled';
 
-  RotatingMiniPlayerArtNotifier() : super(true) {
+  @override
+  bool build() {
     _loadPreference();
+    return true;
   }
 
   Future<void> _loadPreference() async {
@@ -355,17 +354,17 @@ class RotatingMiniPlayerArtNotifier extends StateNotifier<bool> {
 
 /// Provider for whether animated album art (Canvas video) is enabled.
 final animatedAlbumArtProvider =
-    StateNotifierProvider<AnimatedAlbumArtNotifier, bool>((ref) {
-  return AnimatedAlbumArtNotifier();
-});
+    NotifierProvider<AnimatedAlbumArtNotifier, bool>(AnimatedAlbumArtNotifier.new);
 
 /// Notifier to manage the animated album art preference.
 /// Default: true (enabled by default).
-class AnimatedAlbumArtNotifier extends StateNotifier<bool> {
+class AnimatedAlbumArtNotifier extends Notifier<bool> {
   static const String animatedArtPrefKey = 'inzx_animated_album_art_enabled';
 
-  AnimatedAlbumArtNotifier() : super(true) {
+  @override
+  bool build() {
     _loadPreference();
+    return true;
   }
 
   Future<void> _loadPreference() async {
@@ -425,16 +424,16 @@ String getNowPlayingStyleDescription(NowPlayingStyle style) {
 
 /// Provider for Now Playing screen style
 final nowPlayingStyleProvider =
-    StateNotifierProvider<NowPlayingStyleNotifier, NowPlayingStyle>((ref) {
-  return NowPlayingStyleNotifier();
-});
+    NotifierProvider<NowPlayingStyleNotifier, NowPlayingStyle>(NowPlayingStyleNotifier.new);
 
 /// Notifier to manage Now Playing screen style
-class NowPlayingStyleNotifier extends StateNotifier<NowPlayingStyle> {
+class NowPlayingStyleNotifier extends Notifier<NowPlayingStyle> {
   static const String nowPlayingStylePrefKey = 'inzx_now_playing_style_v1';
 
-  NowPlayingStyleNotifier() : super(NowPlayingStyle.edge) {
+  @override
+  NowPlayingStyle build() {
     _loadPreference();
+    return NowPlayingStyle.edge;
   }
 
   Future<void> _loadPreference() async {
@@ -458,18 +457,18 @@ class NowPlayingStyleNotifier extends StateNotifier<NowPlayingStyle> {
 
 /// Provider for whether the synced lyric preview line below album art is enabled
 final showLyricsBelowAlbumArtProvider =
-    StateNotifierProvider<ShowLyricsBelowAlbumArtNotifier, bool>((ref) {
-  return ShowLyricsBelowAlbumArtNotifier();
-});
+    NotifierProvider<ShowLyricsBelowAlbumArtNotifier, bool>(ShowLyricsBelowAlbumArtNotifier.new);
 
 /// Notifier to manage the synced lyric preview preference below album art.
 /// Default: true (enabled by default).
-class ShowLyricsBelowAlbumArtNotifier extends StateNotifier<bool> {
+class ShowLyricsBelowAlbumArtNotifier extends Notifier<bool> {
   static const String showLyricsBelowArtPrefKey =
       'inzx_show_lyrics_below_album_art';
 
-  ShowLyricsBelowAlbumArtNotifier() : super(true) {
+  @override
+  bool build() {
     _loadPreference();
+    return true;
   }
 
   Future<void> _loadPreference() async {
@@ -493,17 +492,17 @@ class ShowLyricsBelowAlbumArtNotifier extends StateNotifier<bool> {
 
 /// Provider for whether the smart audio routing pill is shown
 final showSmartAudioRoutingProvider =
-    StateNotifierProvider<ShowSmartAudioRoutingNotifier, bool>((ref) {
-  return ShowSmartAudioRoutingNotifier();
-});
+    NotifierProvider<ShowSmartAudioRoutingNotifier, bool>(ShowSmartAudioRoutingNotifier.new);
 
 /// Notifier to manage the smart audio routing visibility preference.
 /// Default: true (enabled by default).
-class ShowSmartAudioRoutingNotifier extends StateNotifier<bool> {
+class ShowSmartAudioRoutingNotifier extends Notifier<bool> {
   static const String _prefKey = 'inzx_show_smart_audio_routing';
 
-  ShowSmartAudioRoutingNotifier() : super(true) {
+  @override
+  bool build() {
     _loadPreference();
+    return true;
   }
 
   Future<void> _loadPreference() async {
@@ -524,17 +523,17 @@ class ShowSmartAudioRoutingNotifier extends StateNotifier<bool> {
 
 /// Provider for whether the app should prefer audio versions of tracks
 final preferAudioVersionsProvider =
-    StateNotifierProvider<PreferAudioVersionsNotifier, bool>((ref) {
-  return PreferAudioVersionsNotifier();
-});
+    NotifierProvider<PreferAudioVersionsNotifier, bool>(PreferAudioVersionsNotifier.new);
 
 /// Notifier to manage the prefer audio versions preference.
 /// Default: false.
-class PreferAudioVersionsNotifier extends StateNotifier<bool> {
+class PreferAudioVersionsNotifier extends Notifier<bool> {
   static const String _prefKey = 'inzx_prefer_audio_versions';
 
-  PreferAudioVersionsNotifier() : super(false) {
+  @override
+  bool build() {
     _loadPreference();
+    return false;
   }
 
   Future<void> _loadPreference() async {
@@ -557,15 +556,15 @@ class PreferAudioVersionsNotifier extends StateNotifier<bool> {
 
 /// Provider for whether ambient reflection is enabled behind the Now Playing screen.
 final ambientReflectionsEnabledProvider =
-    StateNotifierProvider<AmbientReflectionsEnabledNotifier, bool>((ref) {
-  return AmbientReflectionsEnabledNotifier();
-});
+    NotifierProvider<AmbientReflectionsEnabledNotifier, bool>(AmbientReflectionsEnabledNotifier.new);
 
-class AmbientReflectionsEnabledNotifier extends StateNotifier<bool> {
+class AmbientReflectionsEnabledNotifier extends Notifier<bool> {
   static const String ambientReflectionsPrefKey = 'inzx_ambient_reflections_enabled';
 
-  AmbientReflectionsEnabledNotifier() : super(true) {
+  @override
+  bool build() {
     _loadPreference();
+    return true;
   }
 
   Future<void> _loadPreference() async {
@@ -590,15 +589,15 @@ class AmbientReflectionsEnabledNotifier extends StateNotifier<bool> {
 
 /// Provider for whether the cinematic ambient reflection is only shown for animated artwork
 final cinematicAmbientOnlyForAnimatedArtProvider =
-    StateNotifierProvider<CinematicAmbientOnlyForAnimatedArtNotifier, bool>((ref) {
-  return CinematicAmbientOnlyForAnimatedArtNotifier();
-});
+    NotifierProvider<CinematicAmbientOnlyForAnimatedArtNotifier, bool>(CinematicAmbientOnlyForAnimatedArtNotifier.new);
 
-class CinematicAmbientOnlyForAnimatedArtNotifier extends StateNotifier<bool> {
+class CinematicAmbientOnlyForAnimatedArtNotifier extends Notifier<bool> {
   static const String cinematicAmbientOnlyPrefKey = 'inzx_cinematic_ambient_only_animated';
 
-  CinematicAmbientOnlyForAnimatedArtNotifier() : super(true) {
+  @override
+  bool build() {
     _loadPreference();
+    return true;
   }
 
   Future<void> _loadPreference() async {
@@ -653,16 +652,16 @@ String getProgressBarStyleDescription(ProgressBarStyle style) {
 
 /// Provider for Progress Bar style
 final progressBarStyleProvider =
-    StateNotifierProvider<ProgressBarStyleNotifier, ProgressBarStyle>((ref) {
-  return ProgressBarStyleNotifier();
-});
+    NotifierProvider<ProgressBarStyleNotifier, ProgressBarStyle>(ProgressBarStyleNotifier.new);
 
 /// Notifier to manage Progress Bar style
-class ProgressBarStyleNotifier extends StateNotifier<ProgressBarStyle> {
+class ProgressBarStyleNotifier extends Notifier<ProgressBarStyle> {
   static const String progressBarStylePrefKey = 'inzx_progress_bar_style_v1';
 
-  ProgressBarStyleNotifier() : super(ProgressBarStyle.comet) {
+  @override
+  ProgressBarStyle build() {
     _loadPreference();
+    return ProgressBarStyle.comet;
   }
 
   Future<void> _loadPreference() async {
@@ -689,15 +688,15 @@ class ProgressBarStyleNotifier extends StateNotifier<ProgressBarStyle> {
 
 /// Provider for whether dynamic ambient background is enabled for non-cinematic styles when animated art is present
 final dynamicAmbientBackgroundForAnimatedArtProvider =
-    StateNotifierProvider<DynamicAmbientBackgroundForAnimatedArtNotifier, bool>((ref) {
-  return DynamicAmbientBackgroundForAnimatedArtNotifier();
-});
+    NotifierProvider<DynamicAmbientBackgroundForAnimatedArtNotifier, bool>(DynamicAmbientBackgroundForAnimatedArtNotifier.new);
 
-class DynamicAmbientBackgroundForAnimatedArtNotifier extends StateNotifier<bool> {
+class DynamicAmbientBackgroundForAnimatedArtNotifier extends Notifier<bool> {
   static const String _prefKey = 'inzx_dynamic_ambient_background_animated';
 
-  DynamicAmbientBackgroundForAnimatedArtNotifier() : super(true) {
+  @override
+  bool build() {
     _loadPreference();
+    return true;
   }
 
   Future<void> _loadPreference() async {
@@ -718,15 +717,15 @@ class DynamicAmbientBackgroundForAnimatedArtNotifier extends StateNotifier<bool>
 /// Whether the app takes its colours from the playing song's artwork
 /// ("dynamic colours"). Off, everything uses the chosen accent colour.
 final dynamicColorsEnabledProvider =
-    StateNotifierProvider<DynamicColorsEnabledNotifier, bool>((ref) {
-      return DynamicColorsEnabledNotifier();
-    });
+    NotifierProvider<DynamicColorsEnabledNotifier, bool>(DynamicColorsEnabledNotifier.new);
 
-class DynamicColorsEnabledNotifier extends StateNotifier<bool> {
+class DynamicColorsEnabledNotifier extends Notifier<bool> {
   static const String prefKey = 'inzx_dynamic_colors_enabled';
 
-  DynamicColorsEnabledNotifier() : super(true) {
+  @override
+  bool build() {
     _load();
+    return true;
   }
 
   Future<void> _load() async {
