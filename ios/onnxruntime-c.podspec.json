@@ -1,0 +1,39 @@
+{
+  "name": "onnxruntime-c",
+  "version": "1.28.0",
+  "authors": {
+    "ONNX Runtime": "onnxruntime@microsoft.com"
+  },
+  "license": {
+    "type": "MIT",
+    "file": "LICENSE"
+  },
+  "homepage": "https://github.com/microsoft/onnxruntime",
+  "source": {
+    "http": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime/1.28.0/microsoft.ml.onnxruntime.1.28.0.nupkg",
+    "type": "zip",
+    "sha256": "769d1d3ea8ab6cd69f737c9dd4d4462aa4ad0ccfa106eaf506efc40d7bead5db"
+  },
+  "prepare_command": "unzip -q -o runtimes/ios/native/onnxruntime.xcframework.zip && mkdir -p Headers && cp onnxruntime.xcframework/ios-arm64/onnxruntime.framework/Headers/*.h build/native/include/*.inc Headers/",
+  "summary": "ONNX Runtime C/C++ Pod",
+  "platforms": {
+    "ios": "15.1"
+  },
+  "vendored_frameworks": "onnxruntime.xcframework",
+  "static_framework": true,
+  "weak_frameworks": [
+    "CoreML"
+  ],
+  "source_files": [
+    "Headers/*.h",
+    "Headers/*.inc"
+  ],
+  "preserve_paths": [
+    "LICENSE"
+  ],
+  "description": "A pod for the ONNX Runtime C/C++ library.",
+  "libraries": "c++",
+  "pod_target_xcconfig": {
+    "OTHER_CPLUSPLUSFLAGS": "-fvisibility=hidden -fvisibility-inlines-hidden"
+  }
+}

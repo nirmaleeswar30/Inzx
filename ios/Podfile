@@ -29,6 +29,10 @@ flutter_ios_podfile_setup
 
 target 'Runner' do
   use_frameworks!
+  # ONNX Runtime from Microsoft's NuGet package (checksum-pinned), the same
+  # 1.28.0 the desktop and Android builds use. The official pod downloads from
+  # download.onnxruntime.ai, whose certificate no longer matches its domain.
+  pod 'onnxruntime-c', :podspec => File.join(__dir__, 'onnxruntime-c.podspec.json')
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do

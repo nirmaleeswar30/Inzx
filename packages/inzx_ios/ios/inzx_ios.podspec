@@ -23,7 +23,7 @@ Pod::Spec.new do |s|
   s.static_framework = true
   # ONNX Runtime (MIT), Microsoft's prebuilt C/C++ library: runs Automix's
   # beat and vocal models (desktop/automix/automix_ffi.cpp).
-  s.dependency 'onnxruntime-c', '1.24.2'
+  s.dependency 'onnxruntime-c', '1.28.0'
   s.platform         = :ios, '17.0'
   s.swift_version    = '5.0'
   s.frameworks       = 'AVFoundation', 'AVKit', 'MediaPlayer', 'MediaToolbox', 'Photos',
