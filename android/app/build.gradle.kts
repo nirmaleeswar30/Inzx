@@ -18,7 +18,9 @@ val keystoreProperties = Properties().apply {
 
 android {
     namespace = "com.nirmal.inzx"
-    compileSdk = flutter.compileSdkVersion
+    // 37: permission_handler 13 and flutter_local_notifications 23 compile
+    // against it (Flutter's default is 36). targetSdk is unchanged.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
