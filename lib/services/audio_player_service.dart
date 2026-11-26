@@ -67,8 +67,7 @@ const int kMinValidStreamCacheFileBytes = 50 * 1024;
 const int kParallelPrecacheMinBytes = 1024 * 1024;
 const int kParallelPrecachePartCount = 4;
 
-/// ConcatenatingAudioSource for gapless playback with pre-buffering
-/// This is the key to OuterTune's instant playback
+/// What the player is doing: track, queue, position and settings.
 class PlaybackState {
   final Track? currentTrack;
   final List<Track> queue;
@@ -2731,16 +2730,15 @@ class AudioPlayerService {
       _prefetchTriggered = false;
     });
 
-    player.playbackEventStream.listen(
-      (event) {},
-      onError: (Object e, StackTrace st) {
-        if (!identical(player, _player)) return;
-        if (kDebugMode) {
-          print('AudioPlayerService: Playback error: $e');
-        }
-        _handlePlaybackError(e);
-      },
-    );
+    // Since just_audio 0.10, playback errors arrive here rather than as
+    // errors on playbackEventStream.
+    player.errorStream.listen((e) {
+      if (!identical(player, _player)) return;
+      if (kDebugMode) {
+        print('AudioPlayerService: Playback error: $e');
+      }
+      _handlePlaybackError(e);
+    });
   }
 
   void _init() {
@@ -4180,20 +4178,11 @@ class AudioPlayerService {
           sourcePlan.playbackDataByQueueIndex;
 
       try {
-        if (source is ConcatenatingAudioSource) {
-          await _player.setAudioSource(
-            source,
-            // Pre-buffer ahead for smoother playback
-            preload: true,
-            initialIndex: 0,
-          );
-        } else {
-          await _player.setAudioSource(
-            source,
-            // Pre-buffer ahead for smoother playback
-            preload: true,
-          );
-        }
+        await _player.setAudioSource(
+          source,
+          // Pre-buffer ahead for smoother playback
+          preload: true,
+        );
       } catch (e) {
         // ignore: experimental_member_use
         if (source is LockCachingAudioSource && _isLoopbackCleartextError(e)) {
@@ -4988,7 +4977,11 @@ class AudioPlayerService {
     try {
       if (match.stream.isAtmos &&
           !await AddonService.instance.canPlayAtmos(track)) {
-        throw PlayerException(0, 'Atmos is unavailable on the current output');
+        throw PlayerException(
+          0,
+          'Atmos is unavailable on the current output',
+          null,
+        );
       }
       if (_currentTrack?.id != track.id || !identical(player, _player)) return;
       await player.setAudioSource(

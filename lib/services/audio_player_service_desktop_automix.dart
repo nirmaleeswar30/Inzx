@@ -39,7 +39,7 @@ class _DesktopAutomixHost implements DesktopAutomixHost {
 
   @override
   DecodeSource? sourceOf(String playerId) {
-    final source = _player(playerId).sequenceState?.currentSource;
+    final source = _player(playerId).sequenceState.currentSource;
     if (source is UriAudioSource) {
       return DecodeSource(source.uri.toString(), source.headers ?? const {});
     }
@@ -275,7 +275,7 @@ extension _DesktopLoudnessWiring on AudioPlayerService {
   }
 
   String? _trackIdOn(AudioPlayer player) {
-    final tag = player.sequenceState?.currentSource?.tag;
+    final tag = player.sequenceState.currentSource?.tag;
     return tag is Track ? tag.id : null;
   }
 

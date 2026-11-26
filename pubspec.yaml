@@ -48,7 +48,7 @@ dependencies:
   http: ^1.2.2
 
   # Music Player
-  just_audio: ^0.9.42 # Audio playback
+  just_audio: ^0.10.6 # Audio playback
   audio_service: ^0.18.15 # Background playback & media controls
   audio_session: ^0.1.21 # Audio focus management
   rxdart: ^0.28.0 # Reactive streams for audio
@@ -114,7 +114,7 @@ dev_dependencies:
   flutter_native_splash: ^2.4.2
 
 dependency_overrides:
-  # just_audio 0.9.46 plus hooks for the app's ExoPlayer renderers (hi-res
+  # just_audio 0.10.6 plus hooks for the app's ExoPlayer renderers (hi-res
   # output, FFmpeg decoder, bit-perfect USB) and iOS audio tap. See its README.
   just_audio:
     path: packages/just_audio

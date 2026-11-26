@@ -31,6 +31,13 @@
 }
 
 - (void)dispose {
+    if (_eventSink) {
+        @try {
+            _eventSink(FlutterEndOfEventStream);
+        } @catch (NSException *exception) {
+            NSLog(@"Exception while ending event stream: %@", exception.reason);
+        }
+    }
     [_eventChannel setStreamHandler:nil];
 }
 

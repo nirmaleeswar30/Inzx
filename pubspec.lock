@@ -880,7 +880,7 @@ packages:
       path: "packages/just_audio"
       relative: true
     source: path
-    version: "0.9.46"
+    version: "0.10.6"
   just_audio_media_kit:
     dependency: "direct main"
     description:
