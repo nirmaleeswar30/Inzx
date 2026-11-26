@@ -19,6 +19,29 @@ TextStyle _font(TextStyle style) => style.copyWith(
 class InzxTheme {
   InzxTheme._();
 
+  /// The loading-skeleton look for a theme of [brightness]. The app provides
+  /// it above every route with a `SkeletonizerConfig` (see main.dart), keyed
+  /// to the app theme rather than the platform's brightness, which can differ.
+  static SkeletonizerConfigData skeletonizer(Brightness brightness) =>
+      SkeletonizerConfigData(
+        effectResolver: _skeletonEffect,
+        brightness: brightness,
+        enableSwitchAnimation: true,
+      );
+
+  static PaintingEffect _skeletonEffect(Brightness brightness) =>
+      brightness == Brightness.dark
+      ? const ShimmerEffect(
+          baseColor: Color(0xFF2A2A2A),
+          highlightColor: Color(0xFF3A3A3A),
+          duration: Duration(milliseconds: 1500),
+        )
+      : const ShimmerEffect(
+          baseColor: Color(0xFFE0E0E0),
+          highlightColor: Color(0xFFF5F5F5),
+          duration: Duration(milliseconds: 1500),
+        );
+
   /// Light theme (primary theme for Inzx)
   static ThemeData get light => lightWithAccent(InzxColors.accent);
 
@@ -377,18 +400,6 @@ class InzxTheme {
 
       // Splash
       splashFactory: InkRipple.splashFactory,
-
-      // Skeleton loading shimmer config
-      extensions: [
-        const SkeletonizerConfigData(
-          effect: ShimmerEffect(
-            baseColor: Color(0xFFE0E0E0),
-            highlightColor: Color(0xFFF5F5F5),
-            duration: Duration(milliseconds: 1500),
-          ),
-          enableSwitchAnimation: true,
-        ),
-      ],
     );
   }
 
@@ -773,18 +784,6 @@ class InzxTheme {
 
       // Splash
       splashFactory: InkRipple.splashFactory,
-
-      // Skeleton loading shimmer config
-      extensions: [
-        const SkeletonizerConfigData.dark(
-          effect: ShimmerEffect(
-            baseColor: Color(0xFF2A2A2A),
-            highlightColor: Color(0xFF3A3A3A),
-            duration: Duration(milliseconds: 1500),
-          ),
-          enableSwitchAnimation: true,
-        ),
-      ],
     );
   }
 
