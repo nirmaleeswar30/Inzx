@@ -801,6 +801,12 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
         Platform.isLinux &&
         mounted) {
       folderPath = await _askForFolderPath();
+    } else if (folderPath == null &&
+        LocalMusicScanner.lastPickerError != null &&
+        mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(LocalMusicScanner.lastPickerError!)),
+      );
     }
     if (folderPath == null || !mounted) return;
     final added = ref

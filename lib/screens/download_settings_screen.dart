@@ -1,7 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import '../core/utils/platform_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/l10n/app_localizations_x.dart';
 import '../../core/design_system/design_system.dart';
@@ -10,6 +9,7 @@ import '../services/addons/addon_models.dart';
 import '../services/addons/addon_service.dart';
 import '../services/playback/playback_data.dart';
 import '../services/download_service.dart';
+import '../services/folder_picker.dart';
 
 /// Download settings screen — quality, location, and data usage
 class DownloadSettingsScreen extends ConsumerWidget {
@@ -579,12 +579,22 @@ class _DownloadPathSetting extends ConsumerWidget {
             children: [
               ElevatedButton.icon(
                 onPressed: () async {
-                  // A filesystem path, which downloads are written to;
-                  // pickDirectory() would give Android's content:// URI.
-                  // ignore: deprecated_member_use
-                  final selected = await FilePicker.getDirectoryPath(
-                    dialogTitle: 'Select Download Folder',
-                  );
+                  final String? selected;
+                  try {
+                    selected = await pickFolderPath(
+                      dialogTitle: 'Select Download Folder',
+                    );
+                  } catch (error) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('$error'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                    return;
+                  }
                   if (selected != null && selected.trim().isNotEmpty) {
                     await ref
                         .read(downloadPathProvider.notifier)

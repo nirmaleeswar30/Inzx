@@ -3,11 +3,11 @@ import 'dart:io';
 import 'dart:math' show min;
 import 'package:flutter/foundation.dart' show compute, kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:hive/hive.dart';
 import '../models/models.dart';
 import '../core/services/cache/hive_service.dart';
+import 'folder_picker.dart';
 import '../data/entities/track_entity.dart';
 import '../data/entities/download_entity.dart';
 import 'safe_audio_metadata_reader.dart';
@@ -524,8 +524,9 @@ class LocalMusicScanner {
           ? _iosExtensions
           : [..._phoneExtensions, ..._desktopExtensions];
 
-  /// Why the last [pickFolder] couldn't open a folder dialog, if it couldn't.
-  /// On Linux the dialog needs zenity, kdialog or qarma installed.
+  /// Why the last [pickFolder] gave no folder, if it wasn't a cancel: on
+  /// Linux the dialog needs zenity, kdialog or qarma installed, and on Android
+  /// the folder must be on the device's storage ([UnsupportedFolderException]).
   static String? lastPickerError;
 
   /// Request storage permission
@@ -616,11 +617,7 @@ class LocalMusicScanner {
       // iOS: a folder outside the app is only readable through its security
       // scope, kept open across launches as a bookmark (inzx_ios).
       if (Platform.isIOS) return await IosNative.pickFolder();
-      // A filesystem path, which the scanner reads with dart:io;
-      // pickDirectory() would give Android's content:// URI instead.
-      // ignore: deprecated_member_use
-      final result = await FilePicker.getDirectoryPath();
-      return result;
+      return await pickFolderPath();
     } catch (e) {
       lastPickerError = e.toString();
       if (kDebugMode) {
