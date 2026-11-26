@@ -11,7 +11,7 @@ repeated presses cannot leave the player permanently busy.
   fullscreen exit. On older versions, leave fullscreen before pressing mini.
   If capture fails (missing hyprctl, timeout, or no matching window), use the
   standard GTK backend instead.
-- Other Linux desktops: use the existing GTK/window_manager backend. Inspect
+- Other Linux desktops: use the existing GTK backend (window_manager on nativeapi). Inspect
   native fullscreen/maximized state, wait for those states to clear, then retry
   and verify the requested size. Preserve maximization and keep-above on expand.
   Keep-above is optional; an unsupported operation does not prevent mini mode.

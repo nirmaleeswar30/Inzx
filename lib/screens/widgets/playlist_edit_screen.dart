@@ -4,7 +4,7 @@ import '../../core/utils/platform_utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show compute;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image/image.dart' as img;
 
@@ -146,12 +146,10 @@ class _PlaylistEditScreenState extends ConsumerState<PlaylistEditScreen> {
   }
 
   Future<void> _pickImage() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      withData: true,
-    );
-    final bytes = result?.files.single.bytes;
-    if (bytes == null || bytes.isEmpty) return;
+    final picked = await FilePicker.pickFile(type: FileType.image);
+    if (picked == null) return;
+    final bytes = await picked.readAsBytes();
+    if (bytes.isEmpty) return;
 
     final dims = await compute(_decodeImageDimensions, bytes);
     if (!mounted) return;

@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/utils/platform_utils.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 

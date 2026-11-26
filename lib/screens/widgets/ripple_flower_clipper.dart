@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Custom clipper that produces an 8-petal harmonic wavy 'Ripple' shape.
 /// Perfectly matches the organic wavy aesthetic with 8 smooth lobes and valleys.

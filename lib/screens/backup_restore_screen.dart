@@ -3,7 +3,7 @@ import '../core/utils/platform_utils.dart';
 import 'dart:io';
 import 'package:archive/archive_io.dart';
 import 'package:flutter/foundation.dart' show compute;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:inzx/data/entities/download_entity.dart';
 import 'package:inzx/data/entities/downloaded_playlist_entity.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -352,17 +352,18 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
     setState(() => _isRestoring = true);
 
     try {
-      final result = await FilePicker.platform.pickFiles(
+      // Android copies the pick into the app cache, so it has a file path.
+      final picked = await FilePicker.pickFile(
         type: FileType.custom,
         allowedExtensions: ['json', 'zip'],
       );
+      final path = picked?.path;
 
-      if (result == null || result.files.isEmpty) {
+      if (path == null) {
         setState(() => _isRestoring = false);
         return;
       }
 
-      final path = result.files.single.path!;
       if (path.toLowerCase().endsWith('.zip')) {
         await _restoreFromZip(path);
       } else {

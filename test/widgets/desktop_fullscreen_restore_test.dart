@@ -6,11 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:inzx/screens/widgets/desktop_player_bar.dart';
 import 'package:inzx/screens/widgets/desktop_shell.dart';
 
+import '../helpers/fake_desktop_window.dart';
+
 void main() {
   testWidgets(
     'fullscreen cancellation, restore failure and miniplayer rollback recovery',
     (tester) async {
-      const channel = MethodChannel('window_manager');
       final nativeFullscreenRequests = <bool>[];
       var size = const Size(1280, 800);
       var maximized = false;
@@ -23,8 +24,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       addTearDown(tester.view.resetPhysicalSize);
 
-      final messenger = tester.binding.defaultBinaryMessenger;
-      messenger.setMockMethodCallHandler(channel, (call) async {
+      fakeDesktopWindow((call) async {
         switch (call.method) {
           case 'isMaximized':
             return maximized;
@@ -61,7 +61,6 @@ void main() {
         }
         return null;
       });
-      addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
       await tester.pumpWidget(const SizedBox());
 
       Future<void> finish(Future<void> action) async {

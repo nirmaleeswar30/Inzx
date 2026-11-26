@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A quick cross-fade with a slight settle, in place of the phone's sideways
 /// slide. The page being left fades too, since desktop pages are see-through

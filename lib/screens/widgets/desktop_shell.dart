@@ -4,7 +4,7 @@ import 'dart:math' show max;
 import 'dart:ui' show PointerDeviceKind;
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
@@ -18,7 +18,8 @@ import '../../main.dart' show rootNavigatorKey;
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../services/desktop/desktop_bootstrap.dart'
-    show kDesktopMinWindowSize;
+    show closeDesktopApp, kDesktopMinWindowSize;
+import '../../services/desktop/app_window.dart';
 import '../../services/inzx_connect_remote.dart';
 import '../../services/inzx_connect_service.dart';
 import '../inzx_connect_screen.dart';
@@ -106,9 +107,9 @@ Future<void> _setWindowFullScreen(bool on, bool Function() stillWanted) {
         if (_windowFullScreen == on) return;
         if (on) {
           await _maximizeBeforeFullScreen();
-          await windowManager.setFullScreen(true);
+          await desktopWindow.setFullScreen(true);
         } else {
-          await windowManager.setFullScreen(false);
+          await desktopWindow.setFullScreen(false);
           await _unmaximizeAfterFullScreen();
         }
         _windowFullScreen = on;
@@ -126,9 +127,9 @@ bool _maximizedForFullScreen = false;
 /// of stale pixels there. So a normal window is maximised first and takes
 /// the same path as a maximised one.
 Future<void> _maximizeBeforeFullScreen() async {
-  if (!Platform.isWindows || await windowManager.isMaximized()) return;
+  if (!Platform.isWindows || await desktopWindow.isMaximized()) return;
   _maximizedForFullScreen = true;
-  await windowManager.maximize();
+  await desktopWindow.maximize();
   await _waitForMaximized(true);
 }
 
@@ -138,12 +139,12 @@ Future<void> _unmaximizeAfterFullScreen() async {
   // The plugin re-maximises a window it took from maximised, by a posted
   // message: wait for that to land, or it would undo the restore.
   await _waitForMaximized(true);
-  await windowManager.unmaximize();
+  await desktopWindow.unmaximize();
 }
 
 Future<void> _waitForMaximized(bool maximized) async {
   for (var i = 0; i < 20; i++) {
-    if (await windowManager.isMaximized() == maximized) return;
+    if (await desktopWindow.isMaximized() == maximized) return;
     await Future<void>.delayed(const Duration(milliseconds: 25));
   }
 }
@@ -162,7 +163,7 @@ Future<void> _healFullScreenView(bool Function() stillWanted) async {
     await Future<void>.delayed(wait);
     if (!stillWanted()) return;
     final view = WidgetsBinding.instance.platformDispatcher.views.first;
-    final bounds = await windowManager.getBounds();
+    final bounds = await desktopWindow.getBounds();
     final expected = bounds.size * view.devicePixelRatio;
     final actual = view.physicalSize;
     if ((expected.width - actual.width).abs() <= 2 &&
@@ -173,9 +174,9 @@ Future<void> _healFullScreenView(bool Function() stillWanted) async {
       'Full screen: view ${actual.width}x${actual.height} != window '
       '${expected.width}x${expected.height}; switching again',
     );
-    await windowManager.setFullScreen(false);
+    await desktopWindow.setFullScreen(false);
     if (!stillWanted()) return;
-    await windowManager.setFullScreen(true);
+    await desktopWindow.setFullScreen(true);
   }
 }
 
@@ -615,7 +616,7 @@ class _DesktopTopBar extends ConsumerWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                const DragToMoveArea(child: SizedBox.expand()),
+                DragToMoveArea(child: const SizedBox.expand()),
                 if (showShell)
                   Padding(
                     padding: const EdgeInsets.only(left: 40, right: 24),
@@ -813,52 +814,58 @@ class _WindowButtons extends StatefulWidget {
   State<_WindowButtons> createState() => _WindowButtonsState();
 }
 
-class _WindowButtonsState extends State<_WindowButtons> with WindowListener {
-  bool _maximized = false;
+class _WindowButtonsState extends State<_WindowButtons>
+    with WidgetsBindingObserver {
+  // Null only where there is no native window, as in widget tests.
+  final Window? _window = maybeAppWindow;
+  late bool _maximized = _window?.isMaximized ?? false;
 
   @override
   void initState() {
     super.initState();
-    windowManager.addListener(this);
-    windowManager.isMaximized().then((value) {
-      if (mounted) setState(() => _maximized = value);
-    });
+    // Maximizing and restoring resize the view. Polling the window here,
+    // rather than listening to it natively, leaves no native callback to
+    // outlive the engine when the app exits.
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
-    windowManager.removeListener(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
-  void onWindowMaximize() => setState(() => _maximized = true);
-
-  @override
-  void onWindowUnmaximize() => setState(() => _maximized = false);
+  void didChangeMetrics() {
+    final maximized = _window?.isMaximized ?? false;
+    if (mounted && maximized != _maximized) {
+      setState(() => _maximized = maximized);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final window = _window;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         WindowCaptionButton.minimize(
           brightness: widget.brightness,
-          onPressed: windowManager.minimize,
+          onPressed: window?.minimize,
         ),
         if (_maximized)
           WindowCaptionButton.unmaximize(
             brightness: widget.brightness,
-            onPressed: windowManager.unmaximize,
+            onPressed: window?.unmaximize,
           )
         else
           WindowCaptionButton.maximize(
             brightness: widget.brightness,
-            onPressed: windowManager.maximize,
+            onPressed: window?.maximize,
           ),
         WindowCaptionButton.close(
           brightness: widget.brightness,
-          onPressed: windowManager.close,
+          onPressed: closeDesktopApp,
         ),
       ],
     );

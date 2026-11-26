@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'dart:ui' show ImageFilter;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../core/l10n/app_localizations_x.dart';
@@ -801,6 +801,12 @@ class _MusicFoldersTabState extends ConsumerState<MusicFoldersTab> {
         Platform.isLinux &&
         mounted) {
       folderPath = await _askForFolderPath();
+    } else if (folderPath == null &&
+        LocalMusicScanner.lastPickerError != null &&
+        mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(LocalMusicScanner.lastPickerError!)),
+      );
     }
     if (folderPath == null || !mounted) return;
     final added = ref

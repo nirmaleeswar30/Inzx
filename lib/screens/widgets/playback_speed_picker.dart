@@ -1,5 +1,5 @@
 import '../../core/utils/open_once.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations_x.dart';
 import '../../providers/providers.dart';

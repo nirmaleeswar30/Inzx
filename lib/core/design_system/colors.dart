@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Inzx app color palette
 /// Calm, minimal, premium aesthetic with soft whites and muted accents

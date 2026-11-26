@@ -31,7 +31,7 @@ android {
     if (project.android.hasProperty("namespace")) {
         namespace 'com.ryanheise.just_audio'
     }
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         minSdk 16

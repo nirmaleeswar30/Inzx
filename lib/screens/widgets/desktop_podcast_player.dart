@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../services/canvas/mpv_canvas_player.dart';
 import '../../services/playback/yt_player_utils.dart';
