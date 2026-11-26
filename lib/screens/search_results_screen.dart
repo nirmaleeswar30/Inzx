@@ -1073,7 +1073,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final textPainter = TextPainter(
-          text: TextSpan(text: title, style: style),
+          text: TextSpan(text: title, style: withAppFont(style)),
           maxLines: 1,
           textDirection: TextDirection.ltr,
         )..layout(maxWidth: constraints.maxWidth);

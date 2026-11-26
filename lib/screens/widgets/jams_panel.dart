@@ -11,6 +11,7 @@ import '../ytmusic_login_screen.dart';
 import '../../services/jams/jams_models.dart';
 import '../../core/design_system/colors.dart';
 import '../../core/l10n/app_localizations_x.dart';
+import 'package:inzx/core/utils/platform_utils.dart';
 
 /// Jams panel shown as a bottom sheet from Now Playing
 class JamsPanel extends ConsumerStatefulWidget {
@@ -771,12 +772,12 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
                       final textPainter = TextPainter(
                         text: TextSpan(
                           text: track.title,
-                          style: TextStyle(
+                          style: withAppFont(TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 14.5,
                             letterSpacing: -0.2,
                             color: widget.textColor,
-                          ),
+                          )),
                         ),
                         maxLines: 1,
                         textDirection: TextDirection.ltr,
@@ -822,10 +823,10 @@ class _JamsPanelState extends ConsumerState<JamsPanel> {
                       final textPainter = TextPainter(
                         text: TextSpan(
                           text: track.artist,
-                          style: TextStyle(
+                          style: withAppFont(TextStyle(
                             fontSize: 12.5,
                             color: widget.textColor.withValues(alpha: 0.60),
-                          ),
+                          )),
                         ),
                         maxLines: 1,
                         textDirection: TextDirection.ltr,

@@ -1953,7 +1953,7 @@ class _YTMusicSettingsScreenState extends ConsumerState<YTMusicSettingsScreen> {
                 borderRadius: BorderRadius.circular(14),
               ),
               textStyle: TextStyle(
-                fontFamily: desktopFontFamily,
+                fontFamily: appFontFamily,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),

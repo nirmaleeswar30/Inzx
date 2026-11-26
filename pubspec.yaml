@@ -153,24 +153,53 @@ flutter:
     - assets/text.png
     - .env
     - shorebird.yaml
-    - assets/fonts/poppins/OFL.txt
+    - assets/fonts/inter/OFL.txt
 
-  # Desktop only: see desktopFontFamily in platform_utils.dart.
+  # Inter 4.1 (static instances, from github.com/rsms/inter), on every
+  # platform: see appFontFamily in platform_utils.dart.
   fonts:
-    - family: Poppins
+    - family: Inter
       fonts:
-        - asset: assets/fonts/poppins/Poppins-Light.ttf
+        - asset: assets/fonts/inter/Inter-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/inter/Inter-ExtraLightItalic.ttf
+          weight: 200
+          style: italic
+        - asset: assets/fonts/inter/Inter-Light.ttf
           weight: 300
-        - asset: assets/fonts/poppins/Poppins-Regular.ttf
+        - asset: assets/fonts/inter/Inter-LightItalic.ttf
+          weight: 300
+          style: italic
+        - asset: assets/fonts/inter/Inter-Regular.ttf
           weight: 400
-        - asset: assets/fonts/poppins/Poppins-Medium.ttf
+        - asset: assets/fonts/inter/Inter-Italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/inter/Inter-Medium.ttf
           weight: 500
-        - asset: assets/fonts/poppins/Poppins-SemiBold.ttf
+        - asset: assets/fonts/inter/Inter-MediumItalic.ttf
+          weight: 500
+          style: italic
+        - asset: assets/fonts/inter/Inter-SemiBold.ttf
           weight: 600
-        - asset: assets/fonts/poppins/Poppins-Bold.ttf
+        - asset: assets/fonts/inter/Inter-SemiBoldItalic.ttf
+          weight: 600
+          style: italic
+        - asset: assets/fonts/inter/Inter-Bold.ttf
           weight: 700
-        - asset: assets/fonts/poppins/Poppins-ExtraBold.ttf
+        - asset: assets/fonts/inter/Inter-BoldItalic.ttf
+          weight: 700
+          style: italic
+        - asset: assets/fonts/inter/Inter-ExtraBold.ttf
           weight: 800
+        - asset: assets/fonts/inter/Inter-ExtraBoldItalic.ttf
+          weight: 800
+          style: italic
+        - asset: assets/fonts/inter/Inter-Black.ttf
+          weight: 900
+        - asset: assets/fonts/inter/Inter-BlackItalic.ttf
+          weight: 900
+          style: italic
 
 # Flutter Launcher Icons configuration
 flutter_launcher_icons:

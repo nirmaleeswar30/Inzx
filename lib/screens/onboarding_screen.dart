@@ -635,7 +635,7 @@ class _PrimaryButton extends StatelessWidget {
           foregroundColor: Colors.black,
           shape: const StadiumBorder(),
           textStyle: TextStyle(
-            fontFamily: desktopFontFamily,
+            fontFamily: appFontFamily,
             fontSize: 16,
             fontWeight: FontWeight.w700,
           ),

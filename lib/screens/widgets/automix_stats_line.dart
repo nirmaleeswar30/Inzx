@@ -6,6 +6,7 @@ import 'package:marquee/marquee.dart';
 
 import '../../providers/providers.dart';
 import '../../services/automix/automix_service.dart';
+import 'package:inzx/core/utils/platform_utils.dart';
 
 /// Automix's line in stats for nerds, under the stream stats (BitChord's
 /// layout): both songs' analysis while it waits, then the planned mix.
@@ -72,7 +73,7 @@ class _AutomixStatsLineState extends ConsumerState<AutomixStatsLine> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final painter = TextPainter(
-            text: TextSpan(text: line, style: style),
+            text: TextSpan(text: line, style: withAppFont(style)),
             maxLines: 1,
             textDirection: TextDirection.ltr,
           )..layout();

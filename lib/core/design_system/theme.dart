@@ -8,10 +8,10 @@ import 'spacing.dart';
 import 'desktop_page_transitions.dart';
 import '../utils/platform_utils.dart';
 
-/// Adds the desktop font to a shared style; on mobile it's returned as is.
+/// Adds the app font (and, on desktop, its fallbacks) to a shared style.
 TextStyle _font(TextStyle style) => style.copyWith(
-      fontFamily: desktopFontFamily,
-      fontFamilyFallback: desktopFontFamilyFallback,
+      fontFamily: appFontFamily,
+      fontFamilyFallback: appFontFamilyFallback,
     );
 
 /// Inzx app theme configuration
@@ -50,8 +50,8 @@ class InzxTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      fontFamily: desktopFontFamily,
-      fontFamilyFallback: desktopFontFamilyFallback,
+      fontFamily: appFontFamily,
+      fontFamilyFallback: appFontFamilyFallback,
 
       // Colors
       colorScheme: ColorScheme.light(
@@ -81,8 +81,8 @@ class InzxTheme {
 
       // Typography
       textTheme: createMineTextTheme().apply(
-        fontFamily: desktopFontFamily,
-        fontFamilyFallback: desktopFontFamilyFallback,
+        fontFamily: appFontFamily,
+        fontFamilyFallback: appFontFamilyFallback,
         bodyColor: InzxColors.textPrimary,
         displayColor: InzxColors.textPrimary,
       ),
@@ -411,8 +411,8 @@ class InzxTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      fontFamily: desktopFontFamily,
-      fontFamilyFallback: desktopFontFamilyFallback,
+      fontFamily: appFontFamily,
+      fontFamilyFallback: appFontFamilyFallback,
 
       // Colors
       colorScheme: ColorScheme.dark(
@@ -442,8 +442,8 @@ class InzxTheme {
 
       // Typography
       textTheme: createMineTextTheme().apply(
-        fontFamily: desktopFontFamily,
-        fontFamilyFallback: desktopFontFamilyFallback,
+        fontFamily: appFontFamily,
+        fontFamilyFallback: appFontFamilyFallback,
         bodyColor: InzxColors.darkTextPrimary,
         displayColor: InzxColors.darkTextPrimary,
       ),
@@ -460,8 +460,8 @@ class InzxTheme {
           statusBarBrightness: Brightness.dark,
         ),
         titleTextStyle: TextStyle(
-          fontFamily: desktopFontFamily,
-          fontFamilyFallback: desktopFontFamilyFallback,
+          fontFamily: appFontFamily,
+          fontFamilyFallback: appFontFamilyFallback,
           fontSize: 22,
           fontWeight: FontWeight.w500,
           letterSpacing: 0,

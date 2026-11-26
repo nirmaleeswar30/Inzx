@@ -16,6 +16,7 @@ import 'jam_indicator_badge.dart';
 import 'explicit_badge.dart';
 import 'signal_path_sheet.dart';
 import 'automix_stats_line.dart';
+import 'package:inzx/core/utils/platform_utils.dart';
 
 /// The 'Cinematic' Now Playing screen layout.
 /// Features a full-width uncropped album artwork spanning the top half of the screen
@@ -333,12 +334,12 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
                           final painter = TextPainter(
                       text: TextSpan(
                         text: widget.track.title,
-                        style: TextStyle(
+                        style: withAppFont(TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.3,
                           color: widget.textColor,
-                        ),
+                        )),
                       ),
                       maxLines: 1,
                       textDirection: TextDirection.ltr,
@@ -399,7 +400,7 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
                     final painter = TextPainter(
                       text: TextSpan(
                         text: widget.track.artist,
-                        style: artistStyle,
+                        style: withAppFont(artistStyle),
                       ),
                       maxLines: 1,
                       textDirection: TextDirection.ltr,

@@ -23,6 +23,7 @@ import 'signal_path_sheet.dart';
 import 'lossless_badge.dart';
 import 'automix_mix_pulse.dart';
 import 'automix_stats_line.dart';
+import 'package:inzx/core/utils/platform_utils.dart';
 
 /// The 'Ripple' minimalist Now Playing screen layout.
 /// Features an 8-petal wavy album art mask, concentric waveform seek ring,
@@ -499,12 +500,12 @@ class _RippleNowPlayingViewState extends ConsumerState<RippleNowPlayingView> {
                         final painter = TextPainter(
                           text: TextSpan(
                             text: widget.track.title,
-                            style: TextStyle(
+                            style: withAppFont(TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0.3,
                               color: widget.textColor,
-                            ),
+                            )),
                           ),
                           maxLines: 1,
                           textDirection: TextDirection.ltr,

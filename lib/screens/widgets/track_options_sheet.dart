@@ -708,7 +708,7 @@ class _TrackOptionsSheetState extends ConsumerState<TrackOptionsSheet> {
                       color: textColor,
                     );
                     final textPainter = TextPainter(
-                      text: TextSpan(text: track.title, style: titleStyle),
+                      text: TextSpan(text: track.title, style: withAppFont(titleStyle)),
                       maxLines: 1,
                       textDirection: TextDirection.ltr,
                     )..layout();
@@ -748,7 +748,7 @@ class _TrackOptionsSheetState extends ConsumerState<TrackOptionsSheet> {
                       color: secondaryColor,
                     );
                     final textPainter = TextPainter(
-                      text: TextSpan(text: track.artist, style: artistStyle),
+                      text: TextSpan(text: track.artist, style: withAppFont(artistStyle)),
                       maxLines: 1,
                       textDirection: TextDirection.ltr,
                     )..layout();

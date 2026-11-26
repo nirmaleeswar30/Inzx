@@ -12,6 +12,7 @@ import '../../providers/providers.dart';
 import '../../services/listening_stats_service.dart';
 import 'album_screen.dart';
 import 'artist_screen.dart';
+import 'package:inzx/core/utils/platform_utils.dart';
 
 /// "12h 34m", "45m", "30s".
 String formatListening(int ms) {
@@ -844,7 +845,7 @@ class _ClockPainter extends CustomPainter {
     ]) {
       final angle = (h / 24) * 2 * math.pi - math.pi / 2;
       final painter = TextPainter(
-        text: TextSpan(text: text, style: style),
+        text: TextSpan(text: text, style: withAppFont(style)),
         textDirection: TextDirection.ltr,
       )..layout();
       final at =

@@ -135,10 +135,10 @@ class _SweptLyricLineState extends State<SweptLyricLine> {
     final style = DefaultTextStyle.of(context).style.merge(widget.style);
     final effectiveStyle = style.copyWith(
       color: widget.color,
-      fontFamily: widget.style.fontFamily ?? style.fontFamily ?? desktopFontFamily,
+      fontFamily: widget.style.fontFamily ?? style.fontFamily ?? appFontFamily,
       fontFamilyFallback: widget.style.fontFamilyFallback ??
           style.fontFamilyFallback ??
-          desktopFontFamilyFallback,
+          appFontFamilyFallback,
     );
     final scaler = MediaQuery.textScalerOf(context);
     final rtl = _isRtl(widget.line.text);
@@ -242,7 +242,7 @@ class _LineLayout {
     if (_cache.length > 160) _cache.clear();
 
     final painter = TextPainter(
-      text: TextSpan(text: text, style: style),
+      text: TextSpan(text: text, style: withAppFont(style)),
       textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
       textAlign: textAlign,
       textScaler: scaler,

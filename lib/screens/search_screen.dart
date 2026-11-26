@@ -1139,7 +1139,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
                             color: textColor,
                           );
                           final textPainter = TextPainter(
-                            text: TextSpan(text: title, style: titleStyle),
+                            text: TextSpan(text: title, style: withAppFont(titleStyle)),
                             maxLines: 1,
                             textDirection: TextDirection.ltr,
                           )..layout();
@@ -1872,7 +1872,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
     return LayoutBuilder(
       builder: (context, constraints) {
         final textPainter = TextPainter(
-          text: TextSpan(text: title, style: style),
+          text: TextSpan(text: title, style: withAppFont(style)),
           maxLines: 1,
           textDirection: TextDirection.ltr,
         )..layout(maxWidth: constraints.maxWidth);

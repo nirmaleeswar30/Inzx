@@ -562,7 +562,7 @@ class _CurvePainter extends CustomPainter {
       final tp = TextPainter(
         text: TextSpan(
           text: f >= 1000 ? '${(f / 1000).round()}k' : '${f.round()}',
-          style: TextStyle(color: label, fontSize: 10),
+          style: withAppFont(TextStyle(color: label, fontSize: 10)),
         ),
         textDirection: TextDirection.ltr,
       )..layout();

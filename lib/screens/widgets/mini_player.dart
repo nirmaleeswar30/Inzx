@@ -308,11 +308,11 @@ class _MusicMiniPlayerState extends ConsumerState<MusicMiniPlayer> {
                                           final textPainter = TextPainter(
                                             text: TextSpan(
                                               text: track.title,
-                                              style: TextStyle(
+                                              style: withAppFont(TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 13.5,
                                                 color: foregroundColor,
-                                              ),
+                                              )),
                                             ),
                                             maxLines: 1,
                                             textDirection: TextDirection.ltr,
@@ -371,11 +371,11 @@ class _MusicMiniPlayerState extends ConsumerState<MusicMiniPlayer> {
                                     final textPainter = TextPainter(
                                       text: TextSpan(
                                         text: subtitle,
-                                        style: TextStyle(
+                                        style: withAppFont(TextStyle(
                                           fontSize: 11.5,
                                           fontWeight: FontWeight.w500,
                                           color: secondaryColor,
-                                        ),
+                                        )),
                                       ),
                                       maxLines: 1,
                                       textDirection: TextDirection.ltr,

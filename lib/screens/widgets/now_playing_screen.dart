@@ -2574,11 +2574,11 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
               final textPainter = TextPainter(
                 text: TextSpan(
                   text: track.title,
-                  style: TextStyle(
+                  style: withAppFont(TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: textColor,
-                  ),
+                  )),
                 ),
                 maxLines: 1,
                 textDirection: TextDirection.ltr,
@@ -2630,7 +2630,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
               final textPainter = TextPainter(
                 text: TextSpan(
                   text: track.artist,
-                  style: TextStyle(fontSize: 12, color: secondaryColor),
+                  style: withAppFont(TextStyle(fontSize: 12, color: secondaryColor)),
                 ),
                 maxLines: 1,
                 textDirection: TextDirection.ltr,
@@ -2777,11 +2777,11 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                       final textPainter = TextPainter(
                         text: TextSpan(
                           text: track.title,
-                          style: TextStyle(
+                          style: withAppFont(TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: textColor,
-                          ),
+                          )),
                         ),
                         maxLines: 1,
                         textDirection: TextDirection.ltr,
@@ -4648,7 +4648,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                             );
 
                             final textPainter = TextPainter(
-                              text: TextSpan(text: text, style: textStyle),
+                              text: TextSpan(text: text, style: withAppFont(textStyle)),
                               maxLines: 1,
                               textDirection: TextDirection.ltr,
                             )..layout();
@@ -5448,11 +5448,11 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                             final textPainter = TextPainter(
                               text: TextSpan(
                                 text: track.title,
-                                style: TextStyle(
+                                style: withAppFont(TextStyle(
                                   fontSize: titleFontSize,
                                   fontWeight: FontWeight.bold,
                                   color: textColor,
-                                ),
+                                )),
                               ),
                               maxLines: 1,
                               textDirection: TextDirection.ltr,
@@ -5732,7 +5732,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
         ? LayoutBuilder(
             builder: (context, constraints) {
               final textPainter = TextPainter(
-                text: TextSpan(text: track.artist, style: style),
+                text: TextSpan(text: track.artist, style: withAppFont(style)),
                 maxLines: maxLines,
                 textDirection: TextDirection.ltr,
               )..layout();

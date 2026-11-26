@@ -1016,8 +1016,8 @@ class _LyricsViewState extends ConsumerState<LyricsView>
               child: Text(
                 displayText,
                 style: TextStyle(
-                  fontFamily: desktopFontFamily,
-                  fontFamilyFallback: desktopFontFamilyFallback,
+                  fontFamily: appFontFamily,
+                  fontFamilyFallback: appFontFamilyFallback,
                   fontStyle: FontStyle.italic,
                   fontSize: (isCurrentLine ? 20.0 : 16.0) * widget.fontScale,
                   fontWeight: isCurrentLine ? FontWeight.w600 : FontWeight.w400,
@@ -1115,8 +1115,8 @@ bool _isComplexScript(String text) {
         duration: isCurrentLine ? _lyricSettle : Duration.zero,
         curve: _lyricEase,
         style: TextStyle(
-          fontFamily: desktopFontFamily,
-          fontFamilyFallback: desktopFontFamilyFallback,
+          fontFamily: appFontFamily,
+          fontFamilyFallback: appFontFamilyFallback,
           fontSize: fontSize,
           fontWeight: fontWeight,
           fontStyle: isBg ? FontStyle.italic : FontStyle.normal,
@@ -1147,8 +1147,8 @@ bool _isComplexScript(String text) {
                   duration: _lyricSettle,
                   curve: _lyricEase,
                   style: TextStyle(
-                    fontFamily: desktopFontFamily,
-                    fontFamilyFallback: desktopFontFamilyFallback,
+                    fontFamily: appFontFamily,
+                    fontFamilyFallback: appFontFamilyFallback,
                     fontSize: fontSize * 0.75, // Smaller font for translation
                     fontWeight: FontWeight.w400,
                     color: textColor.withValues(alpha: 0.8), // Muted color
@@ -1269,8 +1269,8 @@ bool _isComplexScript(String text) {
                 line: line,
                 position: _smoothPositionNotifier,
                 style: TextStyle(
-                  fontFamily: desktopFontFamily,
-                  fontFamilyFallback: desktopFontFamilyFallback,
+                  fontFamily: appFontFamily,
+                  fontFamilyFallback: appFontFamilyFallback,
                   fontSize: fontSize,
                   fontWeight: FontWeight.w800,
                   fontStyle: isBg ? FontStyle.italic : FontStyle.normal,
@@ -1294,8 +1294,8 @@ bool _isComplexScript(String text) {
               child: Text(
                 line.translatedText!,
                 style: TextStyle(
-                  fontFamily: desktopFontFamily,
-                  fontFamilyFallback: desktopFontFamilyFallback,
+                  fontFamily: appFontFamily,
+                  fontFamilyFallback: appFontFamilyFallback,
                   fontSize: fontSize * 0.72,
                   fontWeight: FontWeight.w400,
                   color: isCurrentLine
@@ -1430,8 +1430,8 @@ bool _isComplexScript(String text) {
               child: Text(
                 displayLine,
                 style: TextStyle(
-                  fontFamily: desktopFontFamily,
-                  fontFamilyFallback: desktopFontFamilyFallback,
+                  fontFamily: appFontFamily,
+                  fontFamilyFallback: appFontFamilyFallback,
                   fontSize: (isSection ? 18 : 22) * widget.fontScale,
                   fontWeight: isSection ? FontWeight.w700 : FontWeight.w400,
                   letterSpacing: isSection ? 0.5 : 0.0,
@@ -1550,8 +1550,8 @@ class LyricsLine extends ConsumerWidget {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
-        fontFamily: desktopFontFamily,
-        fontFamilyFallback: desktopFontFamilyFallback,
+        fontFamily: appFontFamily,
+        fontFamilyFallback: appFontFamilyFallback,
         color: textColor.withValues(alpha: 0.7),
         fontSize: 13,
         fontStyle: FontStyle.italic,

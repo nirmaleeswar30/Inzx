@@ -2,7 +2,7 @@ import 'dart:io' show Directory, Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:material_ui/material_ui.dart'
-    show BuildContext, Color, MediaQuery, Theme;
+    show BuildContext, Color, MediaQuery, TextStyle, Theme;
 import 'package:path_provider/path_provider.dart';
 
 /// True on the desktop targets Inzx ships for (Windows and Linux).
@@ -55,13 +55,23 @@ int desktopGridColumns(BuildContext context) {
   return (MediaQuery.sizeOf(context).width / 180).floor().clamp(2, 10);
 }
 
-/// The app font on desktop. Null leaves the system font, as on Android.
-String? get desktopFontFamily => isDesktop ? 'Poppins' : null;
+/// The app font on every platform (bundled; see pubspec.yaml), as in Nivio.
+const String appFontFamily = 'Inter';
 
-/// Universal font fallback chain for desktop.
-/// Allows Linux and Windows to resolve any world script glyphs (Indic, CJK,
-/// Southeast Asian, Arabic, Cyrillic, Emojis) seamlessly.
-List<String>? get desktopFontFamilyFallback => isDesktop
+/// [style] in the app font, for text laid out by hand with a TextPainter.
+/// Unlike Text, a TextPainter doesn't inherit the theme's font, and measuring
+/// in a font other than the one drawn gets widths wrong (scrolling titles,
+/// chart labels). A font [style] already names is kept.
+TextStyle withAppFont(TextStyle? style) =>
+    (style ?? const TextStyle()).copyWith(
+      fontFamily: style?.fontFamily ?? appFontFamily,
+      fontFamilyFallback: style?.fontFamilyFallback ?? appFontFamilyFallback,
+    );
+
+/// Fonts to try, on desktop, for scripts Inter doesn't cover (Indic, CJK,
+/// Southeast Asian, Arabic, emoji). Android and iOS fall back to their system
+/// fonts on their own, so it's null there.
+List<String>? get appFontFamilyFallback => isDesktop
     ? const [
         // Standard system sans
         'Noto Sans',

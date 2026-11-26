@@ -6,14 +6,6 @@ class InzxTypography {
   InzxTypography._();
 
   // ─────────────────────────────────────────────────────────────────
-  // FONT FAMILY
-  // ─────────────────────────────────────────────────────────────────
-
-  /// Primary font - using system font for now
-  /// Can be replaced with Inter or SF Pro when added as assets
-  static const String fontFamily = 'Inter';
-
-  // ─────────────────────────────────────────────────────────────────
   // DISPLAY STYLES - For big hero numbers (safe-to-spend, water %)
   // ─────────────────────────────────────────────────────────────────
 

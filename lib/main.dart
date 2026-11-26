@@ -4,6 +4,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:cupertino_ui/cupertino_ui.dart' show GlobalCupertinoLocalizations;
 import 'package:flutter_localizations/flutter_localizations.dart'
     show GlobalWidgetsLocalizations;
+import 'package:flutter/foundation.dart'
+    show LicenseRegistry, LicenseEntryWithLineBreaks;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -83,6 +85,14 @@ void main([List<String> args = const []]) async {
 
   // Initialize rolling application logger and crash tracing
   await AppLogger.init();
+
+  // Inter's SIL Open Font License asks for its text to ship with the font;
+  // this lists it on the licenses page.
+  LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks(const [
+      'Inter',
+    ], await rootBundle.loadString('assets/fonts/inter/OFL.txt'));
+  });
 
   // Initialize dynamic font fallback loader (loads cached fonts into engine)
   try {
