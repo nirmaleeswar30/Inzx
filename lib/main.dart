@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart'
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'core/design_system/design_system.dart';
 import 'core/l10n/app_localizations_x.dart';
 import 'core/providers/locale_provider.dart';
@@ -496,13 +497,16 @@ class _InzxAppState extends ConsumerState<InzxApp> {
               MediaQuery.of(context).textScaler.scale(1.0).clamp(0.8, 1.2),
             ),
           ),
-          child: isDesktop
-              ? DesktopShortcuts(
-                  child: DesktopAppFrame(
-                    child: child ?? const SizedBox.shrink(),
-                  ),
-                )
-              : child ?? const SizedBox.shrink(),
+          child: SkeletonizerConfig(
+            data: InzxTheme.skeletonizer(brightness),
+            child: isDesktop
+                ? DesktopShortcuts(
+                    child: DesktopAppFrame(
+                      child: child ?? const SizedBox.shrink(),
+                    ),
+                  )
+                : child ?? const SizedBox.shrink(),
+          ),
         );
       },
     );
