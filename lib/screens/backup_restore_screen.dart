@@ -352,17 +352,18 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
     setState(() => _isRestoring = true);
 
     try {
-      final result = await FilePicker.platform.pickFiles(
+      // Android copies the pick into the app cache, so it has a file path.
+      final picked = await FilePicker.pickFile(
         type: FileType.custom,
         allowedExtensions: ['json', 'zip'],
       );
+      final path = picked?.path;
 
-      if (result == null || result.files.isEmpty) {
+      if (path == null) {
         setState(() => _isRestoring = false);
         return;
       }
 
-      final path = result.files.single.path!;
       if (path.toLowerCase().endsWith('.zip')) {
         await _restoreFromZip(path);
       } else {

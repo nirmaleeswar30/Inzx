@@ -616,7 +616,10 @@ class LocalMusicScanner {
       // iOS: a folder outside the app is only readable through its security
       // scope, kept open across launches as a bookmark (inzx_ios).
       if (Platform.isIOS) return await IosNative.pickFolder();
-      final result = await FilePicker.platform.getDirectoryPath();
+      // A filesystem path, which the scanner reads with dart:io;
+      // pickDirectory() would give Android's content:// URI instead.
+      // ignore: deprecated_member_use
+      final result = await FilePicker.getDirectoryPath();
       return result;
     } catch (e) {
       lastPickerError = e.toString();

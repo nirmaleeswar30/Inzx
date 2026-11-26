@@ -540,5 +540,8 @@ Vendored from just_audio 0.9.46 (MIT, see LICENSE). Changes, each marked
   the app can attach its audio tap (equaliser, AutoEQ, loudness) to each
   player and item. `UriAudioSource.m` uses the Spectral time-pitch algorithm
   instead of TimeDomain, which warbles on music when Automix beatmatches.
+- **Android build:** `compileSdk 36` (upstream 34), which Media3 1.11 (pinned
+  app-wide in `android/build.gradle.kts`) requires under Android Gradle
+  Plugin 9.
 
 Nothing else differs.

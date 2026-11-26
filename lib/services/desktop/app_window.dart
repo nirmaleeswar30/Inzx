@@ -78,20 +78,16 @@ Window _findAppWindow() {
 
 /// This process's top-level window of the runner's class
 /// (`kWindowClassName` in `windows/runner/win32_window.cpp`), hidden or not.
-int _findRunnerWindow() {
-  final className = 'FLUTTER_RUNNER_WIN32_WINDOW'.toNativeUtf16();
-  final processId = calloc<Uint32>();
-  try {
-    final self = win32.GetCurrentProcessId();
-    var hwnd = 0;
-    while (true) {
-      hwnd = win32.FindWindowEx(0, hwnd, className, nullptr);
-      if (hwnd == 0) return 0;
-      win32.GetWindowThreadProcessId(hwnd, processId);
-      if (processId.value == self) return hwnd;
-    }
-  } finally {
-    calloc.free(processId);
-    malloc.free(className);
+int _findRunnerWindow() => using((arena) {
+  final className = 'FLUTTER_RUNNER_WIN32_WINDOW'.toPcwstr(allocator: arena);
+  final processId = arena<Uint32>();
+  final self = win32.GetCurrentProcessId();
+  win32.HWND? after;
+  while (true) {
+    final hwnd = win32.FindWindowEx(null, after, className, null).value;
+    if (hwnd.address == 0) return 0;
+    win32.GetWindowThreadProcessId(hwnd, processId);
+    if (processId.value == self) return hwnd.address;
+    after = hwnd;
   }
-}
+});

@@ -579,7 +579,10 @@ class _DownloadPathSetting extends ConsumerWidget {
             children: [
               ElevatedButton.icon(
                 onPressed: () async {
-                  final selected = await FilePicker.platform.getDirectoryPath(
+                  // A filesystem path, which downloads are written to;
+                  // pickDirectory() would give Android's content:// URI.
+                  // ignore: deprecated_member_use
+                  final selected = await FilePicker.getDirectoryPath(
                     dialogTitle: 'Select Download Folder',
                   );
                   if (selected != null && selected.trim().isNotEmpty) {

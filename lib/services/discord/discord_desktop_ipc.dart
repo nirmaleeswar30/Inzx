@@ -176,22 +176,21 @@ class _DiscordWindowsPipe {
   static _DiscordWindowsPipe open() {
     for (var index = 0; index < 10; index++) {
       final handle = using((arena) {
-        final path = '\\\\.\\pipe\\discord-ipc-$index'.toNativeUtf16(
+        final path = '\\\\.\\pipe\\discord-ipc-$index'.toPcwstr(
           allocator: arena,
         );
         final handle = win32.CreateFile(
           path,
           win32.GENERIC_READ | win32.GENERIC_WRITE,
-          0,
-          nullptr,
+          const win32.FILE_SHARE_MODE(0),
+          null,
           win32.OPEN_EXISTING,
-          0,
-          0,
-        );
+          const win32.FILE_FLAGS_AND_ATTRIBUTES(0),
+          null,
+        ).value;
         if (handle == win32.INVALID_HANDLE_VALUE) return null;
         final mode = arena<win32.DWORD>()..value = win32.PIPE_NOWAIT;
-        if (win32.SetNamedPipeHandleState(handle, mode, nullptr, nullptr) !=
-            0) {
+        if (win32.SetNamedPipeHandleState(handle, mode, null, null).value) {
           return handle;
         }
         win32.CloseHandle(handle);
@@ -202,7 +201,7 @@ class _DiscordWindowsPipe {
     throw const _DiscordUnavailable();
   }
 
-  final int _handle;
+  final win32.HANDLE _handle;
   final _incoming = StreamController<Uint8List>.broadcast();
   late final Timer _poller;
   bool _closed = false;
@@ -212,14 +211,13 @@ class _DiscordWindowsPipe {
     try {
       final bytes = using((arena) {
         final count = arena<win32.DWORD>();
-        if (win32.PeekNamedPipe(_handle, nullptr, 0, nullptr, count, nullptr) ==
-            0) {
+        if (!win32.PeekNamedPipe(_handle, null, 0, null, count, null).value) {
           throw StateError('Discord closed the named pipe');
         }
         final size = min(count.value, 64 * 1024);
         if (size == 0) return null;
         final buffer = arena<win32.BYTE>(size);
-        if (win32.ReadFile(_handle, buffer, size, count, nullptr) == 0) {
+        if (!win32.ReadFile(_handle, buffer, size, count, null).value) {
           throw StateError('Could not read from the Discord pipe');
         }
         return Uint8List.fromList(buffer.asTypedList(count.value));
@@ -243,7 +241,7 @@ class _DiscordWindowsPipe {
         final buffer = arena<win32.BYTE>(length);
         buffer.asTypedList(length).setRange(0, length, bytes, offset);
         final count = arena<win32.DWORD>();
-        if (win32.WriteFile(_handle, buffer, length, count, nullptr) == 0) {
+        if (!win32.WriteFile(_handle, buffer, length, count, null).value) {
           throw StateError('Could not write to the Discord pipe');
         }
         return count.value;

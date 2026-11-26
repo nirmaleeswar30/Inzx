@@ -71,7 +71,9 @@ vec2 safeNormalize(vec2 v) {
     return l > 1e-4 ? v / l : vec2(0.0);
 }
 
-void main() {
+// Early returns live here, not in main(): Flutter warns that several returns
+// in main() can fail shader compilation on Windows (flutter/flutter#190809).
+vec4 lensColor() {
     vec2 coord = FlutterFragCoord().xy;
     vec2 halfSize = uRect.zw * 0.5;
     vec2 centered = coord - uRect.xy - halfSize;
@@ -79,8 +81,7 @@ void main() {
 
     float sd = sdRoundedRect(centered, halfSize, radius);
     if (uRefractionHeight <= 0.0 || -sd >= uRefractionHeight) {
-        fragColor = sampleAt(coord);
-        return;
+        return sampleAt(coord);
     }
     sd = min(sd, 0.0);
 
@@ -95,8 +96,7 @@ void main() {
 
     vec2 refracted = coord + d * grad;
     if (uChromatic < 0.5) {
-        fragColor = sampleAt(refracted);
-        return;
+        return sampleAt(refracted);
     }
 
     float dispersionIntensity = (centered.x * centered.y) / (halfSize.x * halfSize.y);
@@ -136,5 +136,9 @@ void main() {
     color.b += purple.b / 3.0;
     color.a += purple.a / 7.0;
 
-    fragColor = color;
+    return color;
+}
+
+void main() {
+    fragColor = lensColor();
 }

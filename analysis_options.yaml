@@ -20,6 +20,8 @@ analyzer:
     # list names the SDK's deprecated Material localizations; main.dart passes
     # material_ui's.
     - lib/l10n/generated/**
+    # Upstream Dart code, unchanged; the fork only patches its Gradle file.
+    - packages/flutter_inappwebview_android/**
 include: package:flutter_lints/flutter.yaml
 
 linter:
