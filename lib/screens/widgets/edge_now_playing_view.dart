@@ -79,8 +79,7 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
     final isFetchingLyrics =
         lyricsState.currentStatus.state == LyricsProviderState.fetching ||
         lyricsState.currentStatus.state == LyricsProviderState.idle;
-    final hasSyncedLyrics =
-        lyricsState.currentLyrics?.hasSyncedLyrics ?? false;
+    final hasSyncedLyrics = lyricsState.currentLyrics?.hasSyncedLyrics ?? false;
     final showLyricsBelowArt = ref.watch(showLyricsBelowAlbumArtProvider);
     final hasLyricsPreview =
         showLyricsBelowArt && (isFetchingLyrics || hasSyncedLyrics);
@@ -105,7 +104,10 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
         } else if (availableHeight < 800) {
           artHeight = (availableHeight * 0.46).clamp(290.0, 370.0);
         } else {
-          artHeight = (availableHeight * 0.48).clamp(340.0, availableHeight * 0.50);
+          artHeight = (availableHeight * 0.48).clamp(
+            340.0,
+            availableHeight * 0.50,
+          );
         }
 
         return Container(
@@ -123,7 +125,10 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
                     child: Transform.scale(
                       scale: 1.5, // Scale it up normally to fill and bleed
                       child: ImageFiltered(
-                        imageFilter: ImageFilter.blur(sigmaX: 80, sigmaY: 80), // Massive blur
+                        imageFilter: ImageFilter.blur(
+                          sigmaX: 80,
+                          sigmaY: 80,
+                        ), // Massive blur
                         child: widget.ambientArt!,
                       ),
                     ),
@@ -131,171 +136,203 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
                 ),
 
               // --- FOREGROUND CONTENT ---
-              Column(
+              // The controls take the height they need first and the artwork
+              // gets the rest, up to [artHeight]: on a short screen (or with
+              // larger text) the cover gives up a few pixels instead of the
+              // bottom row being pushed off the screen.
+              CustomMultiChildLayout(
+                delegate: _EdgeLayout(
+                  maxArtHeight: artHeight,
+                  bottomGap: max(10.0, bottomPadding + 2),
+                  gapBetween:
+                      !(hasLyricsPreview && widget.lyricPreview != null),
+                ),
                 children: [
-                  // 1. TOP HALF: Edge-to-Edge Artwork starting from absolute top (NO GAP)
-              // with seamless ShaderMask bottom fade into background
-              SizedBox(
-                width: availableWidth,
-                height: artHeight,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    // Full-bleed artwork with smooth alpha roll-off only at the bottom rim
-                    ShaderMask(
-                        shaderCallback: (rect) {
-                          return const LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.white,
-                              Colors.white,
-                              Color(0xD9FFFFFF), // 85%
-                              Color(0x80FFFFFF), // 50%
-                              Color(0x26FFFFFF), // 15%
-                              Colors.transparent,
-                            ],
-                            stops: [0.0, 0.70, 0.85, 0.92, 0.97, 1.0], // Smoother transition
-                          ).createShader(rect);
-                        },
-                        blendMode: BlendMode.dstIn,
-                        child: SizedBox(
-                          width: availableWidth,
-                          height: artHeight,
-                          child: widget.albumArt,
-                        ),
-                      ),
+                  // 1. TOP: edge-to-edge artwork from the very top pixel
+                  // with a seamless fade into the background
+                  LayoutId(
+                    id: _EdgeSlot.art,
+                    child: SizedBox(
+                      width: availableWidth,
+                      height: artHeight,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          // Full-bleed artwork with smooth alpha roll-off only at the bottom rim
+                          ShaderMask(
+                            shaderCallback: (rect) {
+                              return const LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.white,
+                                  Colors.white,
+                                  Color(0xD9FFFFFF), // 85%
+                                  Color(0x80FFFFFF), // 50%
+                                  Color(0x26FFFFFF), // 15%
+                                  Colors.transparent,
+                                ],
+                                stops: [
+                                  0.0,
+                                  0.70,
+                                  0.85,
+                                  0.92,
+                                  0.97,
+                                  1.0,
+                                ], // Smoother transition
+                              ).createShader(rect);
+                            },
+                            blendMode: BlendMode.dstIn,
+                            child: SizedBox(
+                              width: availableWidth,
+                              height: artHeight,
+                              child: widget.albumArt,
+                            ),
+                          ),
 
-                      // Ambient color bleed softly dissolving only at the very bottom rim
-                      // (Only apply if we don't have ambientArt filling the background)
-                      if (widget.ambientArt == null || widget.forceFallbackGradient || true) // Keep in tree for animation
-                        Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        height: artHeight * 0.10,
-                        child: IgnorePointer(
-                          child: AnimatedOpacity(
-                            duration: const Duration(milliseconds: 400),
-                            opacity: (widget.ambientArt == null || widget.forceFallbackGradient) ? 1.0 : 0.0,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    widget.backgroundColor.withValues(alpha: 0.0),
-                                    widget.backgroundColor.withValues(alpha: 0.35),
-                                    widget.backgroundColor.withValues(alpha: 0.75),
-                                    widget.backgroundColor,
-                                  ],
-                                  stops: const [0.0, 0.40, 0.75, 1.0],
+                          // Ambient color bleed softly dissolving only at the very bottom rim
+                          // (Only apply if we don't have ambientArt filling the background)
+                          if (widget.ambientArt == null ||
+                              widget.forceFallbackGradient ||
+                              true) // Keep in tree for animation
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              height: artHeight * 0.10,
+                              child: IgnorePointer(
+                                child: AnimatedOpacity(
+                                  duration: const Duration(milliseconds: 400),
+                                  opacity:
+                                      (widget.ambientArt == null ||
+                                          widget.forceFallbackGradient)
+                                      ? 1.0
+                                      : 0.0,
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          widget.backgroundColor.withValues(
+                                            alpha: 0.0,
+                                          ),
+                                          widget.backgroundColor.withValues(
+                                            alpha: 0.35,
+                                          ),
+                                          widget.backgroundColor.withValues(
+                                            alpha: 0.75,
+                                          ),
+                                          widget.backgroundColor,
+                                        ],
+                                        stops: const [0.0, 0.40, 0.75, 1.0],
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                      ),
 
-                      // Subtle Stats for Nerds plain text at bottom center of album art
-                      if (hasStats)
-                        Positioned(
-                          left: 24,
-                          right: 24,
-                          bottom: 10,
-                          // Only the text takes taps (→ signal path); the
-                          // art around it keeps its swipes.
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              GestureDetector(
-                                onTap: () => SignalPathSheet.show(
-                                  context,
-                                  accentColor: ref
-                                      .read(playerAlbumColorsProvider)
-                                      .accent,
-                                ),
-                                child: _buildNerdStatsText(statsSummary),
-                              ),
-                              // Automix's line, under the stream stats.
-                              IgnorePointer(
-                                child: AutomixStatsLine(
-                                  color: widget.textColor.withValues(
-                                    alpha: 0.5,
+                          // Subtle Stats for Nerds plain text at bottom center of album art
+                          if (hasStats)
+                            Positioned(
+                              left: 24,
+                              right: 24,
+                              bottom: 10,
+                              // Only the text takes taps (→ signal path); the
+                              // art around it keeps its swipes.
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () => SignalPathSheet.show(
+                                      context,
+                                      accentColor: ref
+                                          .read(playerAlbumColorsProvider)
+                                          .accent,
+                                    ),
+                                    child: _buildNerdStatsText(statsSummary),
                                   ),
-                                  fontSize: 10,
+                                  // Automix's line, under the stream stats.
+                                  IgnorePointer(
+                                    child: AutomixStatsLine(
+                                      color: widget.textColor.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          // Popping heart animation (for double-tap to like)
+                          if (widget.heartOverlay != null)
+                            IgnorePointer(
+                              child: Center(child: widget.heartOverlay!),
+                            ),
+
+                          // Floating Jam Indicator Badge when in active Jam
+                          if (isInJam)
+                            Positioned(
+                              top: MediaQuery.paddingOf(context).top + 12,
+                              right: 16,
+                              child: JamIndicatorBadge(
+                                textColor: Colors.white,
+                                accentColor: widget.accentColor,
+                                backgroundColor: Colors.black.withValues(
+                                  alpha: 0.6,
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-
-                      // Popping heart animation (for double-tap to like)
-                      if (widget.heartOverlay != null)
-                        IgnorePointer(
-                          child: Center(child: widget.heartOverlay!),
-                        ),
-
-                      // Floating Jam Indicator Badge when in active Jam
-                      if (isInJam)
-                        Positioned(
-                          top: MediaQuery.paddingOf(context).top + 12,
-                          right: 16,
-                          child: JamIndicatorBadge(
-                            textColor: Colors.white,
-                            accentColor: widget.accentColor,
-                            backgroundColor: Colors.black.withValues(alpha: 0.6),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-
-              // 2. BOTTOM HALF: Content positioned strictly UNDER the album cover
-              Expanded(
-                child: Column(
-                  children: [
-                    const Spacer(flex: 1),
-
-                    // Song title & artist with horizontal frosted glass three-dot options menu
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                      child: _buildTrackInfoRow(),
-                    ),
-
-                    // Optional live synced lyrics preview
-                    if (hasLyricsPreview && widget.lyricPreview != null) ...[
-                      const SizedBox(height: 6),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                        child: widget.lyricPreview!,
+                            ),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                    ] else ...[
-                      const Spacer(flex: 1),
-                    ],
+                    ),
+                  ),
 
-                    // Progress bar / linear scrubber (same horizontal width as default now playing screen)
-                    if (widget.progressBar != null)
-                      widget.progressBar!,
+                  // 2. Song title & artist (and the live lyric line)
+                  LayoutId(
+                    id: _EdgeSlot.info,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                          child: _buildTrackInfoRow(),
+                        ),
+                        if (hasLyricsPreview &&
+                            widget.lyricPreview != null) ...[
+                          const SizedBox(height: 6),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24.0,
+                            ),
+                            child: widget.lyricPreview!,
+                          ),
+                          const SizedBox(height: 4),
+                        ],
+                      ],
+                    ),
+                  ),
 
-                    const SizedBox(height: 20),
+                  // 3. Scrubber and playback controls
+                  LayoutId(
+                    id: _EdgeSlot.player,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (widget.progressBar != null) widget.progressBar!,
+                        const SizedBox(height: 20),
+                        if (widget.controlsWidget != null)
+                          widget.controlsWidget!,
+                      ],
+                    ),
+                  ),
 
-                    // Main playback controls row (same horizontal width as default now playing screen)
-                    if (widget.controlsWidget != null)
-                      widget.controlsWidget!,
-
-                    const Spacer(flex: 2),
-
-                    // Bottom bar (output device), pinned to the very bottom
-                    widget.tabsWidget,
-
-                    SizedBox(height: max(10.0, bottomPadding + 2)),
-                  ],
-                ),
+                  // 4. Bottom bar (output device), pinned to the very bottom
+                  LayoutId(id: _EdgeSlot.tabs, child: widget.tabsWidget),
+                ],
               ),
-            ],
-          ), // Close Column
             ],
           ), // Close Stack
         );
@@ -305,13 +342,14 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
 
   /// Track title and artist with horizontal frosted glass three-dot options menu
   Widget _buildTrackInfoRow() {
-    final canOpen = widget.track.isPodcast ||
+    final canOpen =
+        widget.track.isPodcast ||
         (widget.track.podcastId != null &&
             widget.track.podcastId!.isNotEmpty) ||
         widget.track.artistId.isNotEmpty;
-    final isPodcast = widget.track.isPodcast ||
-        (widget.track.podcastId != null &&
-            widget.track.podcastId!.isNotEmpty);
+    final isPodcast =
+        widget.track.isPodcast ||
+        (widget.track.podcastId != null && widget.track.podcastId!.isNotEmpty);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -332,46 +370,48 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
                       child: LayoutBuilder(
                         builder: (context, constraints) {
                           final painter = TextPainter(
-                      text: TextSpan(
-                        text: widget.track.title,
-                        style: withAppFont(TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.3,
-                          color: widget.textColor,
-                        )),
-                      ),
-                      maxLines: 1,
-                      textDirection: TextDirection.ltr,
-                    )..layout();
+                            text: TextSpan(
+                              text: widget.track.title,
+                              style: withAppFont(
+                                TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.3,
+                                  color: widget.textColor,
+                                ),
+                              ),
+                            ),
+                            maxLines: 1,
+                            textDirection: TextDirection.ltr,
+                          )..layout();
 
-                    if (painter.width > constraints.maxWidth) {
-                      return Marquee(
-                        text: widget.track.title,
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.3,
-                          color: widget.textColor,
-                        ),
-                        scrollAxis: Axis.horizontal,
-                        blankSpace: 48.0,
-                        velocity: 30.0,
-                        pauseAfterRound: const Duration(seconds: 2),
-                      );
-                    }
+                          if (painter.width > constraints.maxWidth) {
+                            return Marquee(
+                              text: widget.track.title,
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.3,
+                                color: widget.textColor,
+                              ),
+                              scrollAxis: Axis.horizontal,
+                              blankSpace: 48.0,
+                              velocity: 30.0,
+                              pauseAfterRound: const Duration(seconds: 2),
+                            );
+                          }
 
-                    return Text(
-                      widget.track.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.3,
-                        color: widget.textColor,
-                      ),
-                    );
+                          return Text(
+                            widget.track.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.3,
+                              color: widget.textColor,
+                            ),
+                          );
                         },
                       ),
                     ),
@@ -389,70 +429,73 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
                       ExplicitBadge(color: widget.secondaryTextColor),
                     Expanded(
                       child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final artistStyle = TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: widget.secondaryTextColor,
-                      letterSpacing: 0.1,
-                    );
-
-                    final painter = TextPainter(
-                      text: TextSpan(
-                        text: widget.track.artist,
-                        style: withAppFont(artistStyle),
-                      ),
-                      maxLines: 1,
-                      textDirection: TextDirection.ltr,
-                    )..layout();
-
-                    final isOverflowing = painter.width > constraints.maxWidth;
-
-                    final textWidget = isOverflowing
-                        ? Marquee(
-                            text: widget.track.artist,
-                            style: artistStyle,
-                            scrollAxis: Axis.horizontal,
-                            blankSpace: 40.0,
-                            velocity: 25.0,
-                            pauseAfterRound: const Duration(seconds: 2),
-                          )
-                        : Text(
-                            widget.track.artist,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: artistStyle,
+                        builder: (context, constraints) {
+                          final artistStyle = TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: widget.secondaryTextColor,
+                            letterSpacing: 0.1,
                           );
 
-                    return GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: canOpen
-                          ? () {
-                              if (isPodcast) {
-                                PodcastScreen.open(
-                                  context,
-                                  podcastId: widget.track.podcastId!,
-                                  title: widget.track.album ?? widget.track.artist,
-                                  thumbnailUrl: widget.track.thumbnailUrl,
+                          final painter = TextPainter(
+                            text: TextSpan(
+                              text: widget.track.artist,
+                              style: withAppFont(artistStyle),
+                            ),
+                            maxLines: 1,
+                            textDirection: TextDirection.ltr,
+                          )..layout();
+
+                          final isOverflowing =
+                              painter.width > constraints.maxWidth;
+
+                          final textWidget = isOverflowing
+                              ? Marquee(
+                                  text: widget.track.artist,
+                                  style: artistStyle,
+                                  scrollAxis: Axis.horizontal,
+                                  blankSpace: 40.0,
+                                  velocity: 25.0,
+                                  pauseAfterRound: const Duration(seconds: 2),
+                                )
+                              : Text(
+                                  widget.track.artist,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: artistStyle,
                                 );
-                              } else {
-                                ArtistScreen.open(
-                                  context,
-                                  artistId: widget.track.artistId,
-                                  name: widget.track.artist,
-                                );
-                              }
-                            }
-                          : null,
-                      child: textWidget,
-                    );
-                  },
+
+                          return GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: canOpen
+                                ? () {
+                                    if (isPodcast) {
+                                      PodcastScreen.open(
+                                        context,
+                                        podcastId: widget.track.podcastId!,
+                                        title:
+                                            widget.track.album ??
+                                            widget.track.artist,
+                                        thumbnailUrl: widget.track.thumbnailUrl,
+                                      );
+                                    } else {
+                                      ArtistScreen.open(
+                                        context,
+                                        artistId: widget.track.artistId,
+                                        name: widget.track.artist,
+                                      );
+                                    }
+                                  }
+                                : null,
+                            child: textWidget,
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-               ),
-              ],
-             ),
-            ),
-          ],
+              ),
+            ],
           ),
         ),
 
@@ -557,4 +600,60 @@ class _EdgeNowPlayingViewState extends ConsumerState<EdgeNowPlayingView> {
       ),
     );
   }
+}
+
+enum _EdgeSlot { art, info, player, tabs }
+
+/// Lays out [EdgeNowPlayingView]: the artwork on top, then title, scrubber
+/// and controls, with the bottom bar pinned [bottomGap] above the edge. Spare
+/// height goes one part above the title, one between title and scrubber when
+/// there's no lyric line ([gapBetween]), and two parts above the bottom bar,
+/// as the Spacers it replaces did. When the height runs short the artwork
+/// shrinks below [maxArtHeight] rather than anything overflowing.
+class _EdgeLayout extends MultiChildLayoutDelegate {
+  _EdgeLayout({
+    required this.maxArtHeight,
+    required this.bottomGap,
+    required this.gapBetween,
+  });
+
+  final double maxArtHeight;
+  final double bottomGap;
+  final bool gapBetween;
+
+  static const double _minArtHeight = 160;
+
+  @override
+  void performLayout(Size size) {
+    final width = BoxConstraints.tightFor(width: size.width);
+    final tabs = layoutChild(_EdgeSlot.tabs, width);
+    final info = layoutChild(_EdgeSlot.info, width);
+    final player = layoutChild(_EdgeSlot.player, width);
+    final below = info.height + player.height + tabs.height + bottomGap;
+    final art = (size.height - below)
+        .clamp(_minArtHeight, max(_minArtHeight, maxArtHeight))
+        .toDouble();
+    layoutChild(
+      _EdgeSlot.art,
+      BoxConstraints.tightFor(width: size.width, height: art),
+    );
+    positionChild(_EdgeSlot.art, Offset.zero);
+
+    final free = max(0.0, size.height - art - below);
+    final unit = free / (gapBetween ? 4 : 3);
+    var y = art + unit;
+    positionChild(_EdgeSlot.info, Offset(0, y));
+    y += info.height + (gapBetween ? unit : 0);
+    positionChild(_EdgeSlot.player, Offset(0, y));
+    positionChild(
+      _EdgeSlot.tabs,
+      Offset(0, size.height - bottomGap - tabs.height),
+    );
+  }
+
+  @override
+  bool shouldRelayout(_EdgeLayout old) =>
+      old.maxArtHeight != maxArtHeight ||
+      old.bottomGap != bottomGap ||
+      old.gapBetween != gapBetween;
 }
