@@ -60,7 +60,9 @@ float circleMap(float x) {
 
 vec4 sampleAt(vec2 p) {
     vec2 uv = p / uTexSize;
-#ifdef IMPELLER_TARGET_OPENGLES
+// Flutter up to 3.44 handed OpenGL ES shaders bottom-up textures; 3.45+
+// hands them top-down, and defines this macro so the old flip is skipped.
+#if defined(IMPELLER_TARGET_OPENGLES) && !defined(IMPELLER_OPENGLES_UNFLIPPED_DEPRECATED)
     uv.y = 1.0 - uv.y;
 #endif
     return texture(uTexture, uv);

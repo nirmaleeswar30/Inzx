@@ -33,6 +33,8 @@ class _MusicAppState extends ConsumerState<MusicApp>
   late AnimationController _animationController;
   late final AnimationController _bottomNavAnimationController;
   late final Animation<double> _bottomNavAnimation;
+  // The glass nav collapses rather than hides, on Nivio's curve.
+  late final Animation<double> _glassNavLabels;
   bool _isBottomNavVisible = true;
   double _accumulatedDelta = 0.0;
   static const double _hideThreshold = 25.0;
@@ -61,6 +63,10 @@ class _MusicAppState extends ConsumerState<MusicApp>
     _bottomNavAnimation = CurvedAnimation(
       parent: _bottomNavAnimationController,
       curve: Curves.easeInOutCubic,
+    );
+    _glassNavLabels = CurvedAnimation(
+      parent: _bottomNavAnimationController,
+      curve: const Cubic(0.2, 0, 0, 1),
     );
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.delayed(const Duration(milliseconds: 1200));
@@ -187,6 +193,10 @@ class _MusicAppState extends ConsumerState<MusicApp>
 
     // Desktop's sidebar and player bar live in DesktopAppFrame.
     final tabIndex = isDesktop ? ref.watch(desktopTabProvider) : _currentIndex;
+    final glassNav = !isDesktop && ref.watch(liquidGlassNavProvider);
+    _bottomNavAnimationController.duration = Duration(
+      milliseconds: glassNav ? 280 : 250,
+    );
     _visitedTabs.add(tabIndex);
 
     return PopScope(
@@ -209,31 +219,34 @@ class _MusicAppState extends ConsumerState<MusicApp>
             children: [
               // Strong accent gradient at the very top (like YT Music).
               // Desktop's spans the whole window, in DesktopAppFrame.
-              if (!isDesktop) Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: 250,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: hasAlbumColors
-                          ? [
-                              albumColors.accent.withValues(
-                                alpha: isDark ? 0.4 : 0.25,
-                              ),
-                              albumColors.accent.withValues(alpha: 0),
-                            ]
-                          : [
-                              accentColor.withValues(alpha: isDark ? 0.35 : 0.2),
-                              accentColor.withValues(alpha: 0),
-                            ],
+              if (!isDesktop)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 250,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: hasAlbumColors
+                            ? [
+                                albumColors.accent.withValues(
+                                  alpha: isDark ? 0.4 : 0.25,
+                                ),
+                                albumColors.accent.withValues(alpha: 0),
+                              ]
+                            : [
+                                accentColor.withValues(
+                                  alpha: isDark ? 0.35 : 0.2,
+                                ),
+                                accentColor.withValues(alpha: 0),
+                              ],
+                      ),
                     ),
                   ),
                 ),
-              ),
               // Main content (extends full screen behind floating nav)
               Positioned.fill(
                 child: IndexedStack(
@@ -248,57 +261,78 @@ class _MusicAppState extends ConsumerState<MusicApp>
                 ),
               ),
               // Mini player + nav bar positioned at bottom
-              if (!isDesktop) Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (hasCurrentTrack)
-                      AnimatedBuilder(
-                        animation: _bottomNavAnimation,
-                        builder: (context, child) {
-                          final safeBottom =
-                              MediaQuery.of(context).padding.bottom;
-                          final extraBottom = (1.0 - _bottomNavAnimation.value) *
-                              (safeBottom > 0 ? safeBottom + 4 : 12.0);
-                          return Padding(
-                            padding: EdgeInsets.only(bottom: extraBottom),
-                            child: child,
-                          );
-                        },
-                        child: MusicMiniPlayer(
-                          onTap: () => NowPlayingScreen.show(context),
+              if (!isDesktop)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (hasCurrentTrack)
+                        AnimatedBuilder(
+                          animation: _bottomNavAnimation,
+                          builder: (context, child) {
+                            // Only the standard nav leaves; the glass one stays.
+                            final safeBottom = MediaQuery.of(
+                              context,
+                            ).padding.bottom;
+                            final extraBottom = glassNav
+                                ? 0.0
+                                : (1.0 - _bottomNavAnimation.value) *
+                                      (safeBottom > 0 ? safeBottom + 4 : 12.0);
+                            return Padding(
+                              padding: EdgeInsets.only(bottom: extraBottom),
+                              child: child,
+                            );
+                          },
+                          child: MusicMiniPlayer(
+                            onTap: () => NowPlayingScreen.show(context),
+                          ),
                         ),
-                      ),
-                    // Clips the hide animation, but lets the glass nav's
-                    // lifted lens rise above the bar's top edge.
-                    ClipRect(
-                      clipper: const _TopOverflowClipper(16),
-                      // SizeTransition's own animation without its built-in
-                      // ClipRect, which cut the lens off at the bar's edge.
-                      child: AnimatedBuilder(
-                        animation: _bottomNavAnimation,
-                        builder: (context, child) => Align(
-                          alignment: Alignment.topCenter,
-                          heightFactor: _bottomNavAnimation.value.clamp(0.0, 1.0),
-                          child: child,
-                        ),
-                        child: FadeTransition(
-                          opacity: _bottomNavAnimation,
-                          child: _ModernFloatingNav(
+                      if (glassNav)
+                        // Scrolling folds its labels away instead of hiding it.
+                        AnimatedBuilder(
+                          animation: _glassNavLabels,
+                          builder: (context, _) => _ModernFloatingNav(
                             currentIndex: _currentIndex,
                             onTap: _onTabSelected,
                             isDark: isDark,
                             accentColor: accentColor,
+                            labelFraction: _glassNavLabels.value.clamp(
+                              0.0,
+                              1.0,
+                            ),
+                          ),
+                        )
+                      else
+                        // Clips the hide animation, short of the bar's shadow.
+                        ClipRect(
+                          clipper: const _TopOverflowClipper(16),
+                          child: AnimatedBuilder(
+                            animation: _bottomNavAnimation,
+                            builder: (context, child) => Align(
+                              alignment: Alignment.topCenter,
+                              heightFactor: _bottomNavAnimation.value.clamp(
+                                0.0,
+                                1.0,
+                              ),
+                              child: child,
+                            ),
+                            child: FadeTransition(
+                              opacity: _bottomNavAnimation,
+                              child: _ModernFloatingNav(
+                                currentIndex: _currentIndex,
+                                onTap: _onTabSelected,
+                                isDark: isDark,
+                                accentColor: accentColor,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -314,12 +348,14 @@ class _ModernFloatingNav extends ConsumerWidget {
   final Function(int) onTap;
   final bool isDark;
   final Color accentColor;
+  final double labelFraction;
 
   const _ModernFloatingNav({
     required this.currentIndex,
     required this.onTap,
     required this.isDark,
     required this.accentColor,
+    this.labelFraction = 1,
   });
 
   @override
@@ -359,6 +395,7 @@ class _ModernFloatingNav extends ConsumerWidget {
         onTap: onTap,
         isDark: isDark,
         accentColor: accent,
+        labelFraction: labelFraction,
       );
     }
     return _StandardFloatingNav(
@@ -413,20 +450,22 @@ class _StandardFloatingNavState extends ConsumerState<_StandardFloatingNav>
       duration: const Duration(milliseconds: 300),
     );
 
-    _slideAnimation = Tween<double>(
-      begin: widget.currentIndex.toDouble(),
-      end: widget.currentIndex.toDouble(),
-    ).animate(
-      CurvedAnimation(parent: _slideController, curve: Curves.easeOutBack),
-    );
+    _slideAnimation =
+        Tween<double>(
+          begin: widget.currentIndex.toDouble(),
+          end: widget.currentIndex.toDouble(),
+        ).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutBack),
+        );
 
-    _bounceAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.85), weight: 20),
-      TweenSequenceItem(tween: Tween(begin: 0.85, end: 1.1), weight: 40),
-      TweenSequenceItem(tween: Tween(begin: 1.1, end: 1.0), weight: 40),
-    ]).animate(
-      CurvedAnimation(parent: _bounceController, curve: Curves.easeOut),
-    );
+    _bounceAnimation =
+        TweenSequence<double>([
+          TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.85), weight: 20),
+          TweenSequenceItem(tween: Tween(begin: 0.85, end: 1.1), weight: 40),
+          TweenSequenceItem(tween: Tween(begin: 1.1, end: 1.0), weight: 40),
+        ]).animate(
+          CurvedAnimation(parent: _bounceController, curve: Curves.easeOut),
+        );
   }
 
   @override
@@ -441,24 +480,26 @@ class _StandardFloatingNavState extends ConsumerState<_StandardFloatingNav>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.currentIndex != widget.currentIndex) {
       _previousIndex = oldWidget.currentIndex;
-      _slideAnimation = Tween<double>(
-        begin: _previousIndex.toDouble(),
-        end: widget.currentIndex.toDouble(),
-      ).animate(
-        CurvedAnimation(
-          parent: _slideController,
-          curve: Curves.easeOutBack,
-        ),
-      );
+      _slideAnimation =
+          Tween<double>(
+            begin: _previousIndex.toDouble(),
+            end: widget.currentIndex.toDouble(),
+          ).animate(
+            CurvedAnimation(
+              parent: _slideController,
+              curve: Curves.easeOutBack,
+            ),
+          );
       _slideController.forward(from: 0);
 
-      _bounceAnimation = TweenSequence<double>([
-        TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.85), weight: 20),
-        TweenSequenceItem(tween: Tween(begin: 0.85, end: 1.1), weight: 40),
-        TweenSequenceItem(tween: Tween(begin: 1.1, end: 1.0), weight: 40),
-      ]).animate(
-        CurvedAnimation(parent: _bounceController, curve: Curves.easeOut),
-      );
+      _bounceAnimation =
+          TweenSequence<double>([
+            TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.85), weight: 20),
+            TweenSequenceItem(tween: Tween(begin: 0.85, end: 1.1), weight: 40),
+            TweenSequenceItem(tween: Tween(begin: 1.1, end: 1.0), weight: 40),
+          ]).animate(
+            CurvedAnimation(parent: _bounceController, curve: Curves.easeOut),
+          );
       _bounceController.forward(from: 0);
     }
   }
@@ -543,10 +584,7 @@ class _StandardFloatingNavState extends ConsumerState<_StandardFloatingNav>
                   colors: gradientColors,
                 ),
                 borderRadius: BorderRadius.circular(32),
-                border: Border.all(
-                  color: borderColor,
-                  width: 1.0,
-                ),
+                border: Border.all(color: borderColor, width: 1.0),
               ),
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -616,9 +654,10 @@ class _StandardFloatingNavState extends ConsumerState<_StandardFloatingNav>
                                 animation: _bounceController,
                                 builder: (context, child) {
                                   final scale =
-                                      isSelected && _bounceController.isAnimating
-                                          ? _bounceAnimation.value
-                                          : 1.0;
+                                      isSelected &&
+                                          _bounceController.isAnimating
+                                      ? _bounceAnimation.value
+                                      : 1.0;
                                   return Transform.scale(
                                     scale: scale,
                                     child: _StandardNavItemWidget(
@@ -684,9 +723,7 @@ class _StandardNavItemWidget extends StatelessWidget {
           child: Icon(
             isSelected ? selectedIcon : icon,
             size: isSelected ? 23 : 21,
-            color: isSelected
-                ? accentColor
-                : Colors.white70,
+            color: isSelected ? accentColor : Colors.white70,
           ),
         ),
         const SizedBox(height: 1),
@@ -695,9 +732,7 @@ class _StandardNavItemWidget extends StatelessWidget {
           style: TextStyle(
             fontSize: isSelected ? 10.5 : 9.5,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected
-                ? accentColor
-                : Colors.white70,
+            color: isSelected ? accentColor : Colors.white70,
             letterSpacing: isSelected ? 0.2 : 0,
           ),
           child: Text(label),
@@ -707,10 +742,8 @@ class _StandardNavItemWidget extends StatelessWidget {
   }
 }
 
-
-/// A [ClipRect] clip extended [overflow] px above the child, so content that
-/// rises out of the top of the bar (the liquid glass nav's lifted lens) is
-/// not cut off.
+/// A [ClipRect] clip extended [overflow] px above the child, so what rises
+/// out of the top of the bar (its shadow) is not cut off while it hides.
 class _TopOverflowClipper extends CustomClipper<Rect> {
   const _TopOverflowClipper(this.overflow);
 

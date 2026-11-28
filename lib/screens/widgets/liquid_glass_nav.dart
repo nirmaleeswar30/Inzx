@@ -29,6 +29,9 @@ class LiquidGlassNavItem {
 ///    it can stand taller than the bar — that refracts the bar and the tabs
 ///    while it travels with squash-and-stretch, then lands back flat
 ///    ([GlassPillMotion]).
+///
+/// [labelFraction] collapses it as a page scrolls (Nivio's nav): at 0 the
+/// labels are gone and the bar is shorter and narrower.
 class LiquidGlassNav extends StatefulWidget {
   const LiquidGlassNav({
     super.key,
@@ -37,6 +40,7 @@ class LiquidGlassNav extends StatefulWidget {
     required this.onTap,
     required this.isDark,
     required this.accentColor,
+    this.labelFraction = 1,
   });
 
   final List<LiquidGlassNavItem> items;
@@ -47,14 +51,15 @@ class LiquidGlassNav extends StatefulWidget {
   /// Selected icon / label colour (already readable on dark glass).
   final Color accentColor;
 
+  /// 1 shows the labels at full size, 0 hides them and tightens the bar.
+  final double labelFraction;
+
   @override
   State<LiquidGlassNav> createState() => _LiquidGlassNavState();
 }
 
 class _LiquidGlassNavState extends State<LiquidGlassNav>
     with TickerProviderStateMixin {
-  // Same size and corner as the standard nav.
-  static const double _barHeight = 64;
   static const double _radius = 32;
 
   late final GlassPillMotion _pill = GlassPillMotion(
@@ -73,9 +78,14 @@ class _LiquidGlassNavState extends State<LiquidGlassNav>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _pill.reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+  }
+
+  @override
   void didUpdateWidget(covariant LiquidGlassNav old) {
     super.didUpdateWidget(old);
-    _pill.reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     if (widget.currentIndex != old.currentIndex) {
       _pill.animateTo(widget.currentIndex);
       _lastHapticTab = widget.currentIndex;
@@ -104,15 +114,23 @@ class _LiquidGlassNavState extends State<LiquidGlassNav>
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    final bottomMargin = (bottomPadding > 0 ? bottomPadding : 10.0) + 14.0;
+    final bottomMargin = bottomPadding + 10;
+    // 28 from each edge with labels, 58 without, never so close that the
+    // bar is under 192 wide.
+    final inset = (58 - 30 * widget.labelFraction)
+        .clamp(
+          8.0,
+          ((MediaQuery.sizeOf(context).width - 192) / 2).clamp(8.0, 58.0),
+        )
+        .toDouble();
     final n = widget.items.length;
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(10, 0, 10, bottomMargin),
+      padding: EdgeInsets.fromLTRB(inset, 0, inset, bottomMargin),
       // Its own repaint boundary: the pill repaints the bar, never the page.
       child: RepaintBoundary(
         child: SizedBox(
-          height: _barHeight,
+          height: 50 + 14 * widget.labelFraction,
           child: LayoutBuilder(
             builder: (context, constraints) {
               final rowWidth = constraints.maxWidth - kPillInset * 2;
@@ -129,6 +147,7 @@ class _LiquidGlassNavState extends State<LiquidGlassNav>
                         selected: i == widget.currentIndex,
                         accent: widget.accentColor,
                         content: glassContentColor(true),
+                        labelFraction: widget.labelFraction,
                         onTap: () => _select(i),
                       ),
                     ),
@@ -146,7 +165,7 @@ class _LiquidGlassNavState extends State<LiquidGlassNav>
                         style: GlassStyle.bitChord(
                           dark: true,
                           surfaceTint: Colors.black.withValues(
-                            alpha: widget.isDark ? 0.42 : 0.72,
+                            alpha: widget.isDark ? 0.22 : 0.72,
                           ),
                         ),
                         borderRadius: BorderRadius.circular(_radius),
@@ -155,6 +174,7 @@ class _LiquidGlassNavState extends State<LiquidGlassNav>
                           onHorizontalDragStart: (_) {
                             _dragTotal = 0;
                             _dragStartIndex = widget.currentIndex;
+                            _lastHapticTab = _dragStartIndex;
                             _pill.startDrag();
                           },
                           onHorizontalDragUpdate: (d) {
@@ -352,6 +372,7 @@ class _NavItem extends StatefulWidget {
     required this.accent,
     required this.content,
     required this.onTap,
+    required this.labelFraction,
   });
 
   final LiquidGlassNavItem item;
@@ -361,6 +382,7 @@ class _NavItem extends StatefulWidget {
   /// Glyph / label colour on the glass: white on dark, black on light.
   final Color content;
   final VoidCallback onTap;
+  final double labelFraction;
 
   @override
   State<_NavItem> createState() => _NavItemState();
@@ -408,39 +430,56 @@ class _NavItemState extends State<_NavItem>
     final color = selected
         ? widget.accent
         : widget.content.withValues(alpha: 0.7);
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: widget.onTap,
-      child: Center(
-        child: TweenAnimationBuilder<Color?>(
-          tween: ColorTween(end: color),
-          duration: const Duration(milliseconds: 200),
-          builder: (context, c, _) => Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ScaleTransition(
-                scale: _scale,
-                child: Icon(
-                  selected ? widget.item.selectedIcon : widget.item.icon,
-                  size: 23,
-                  color: c,
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
+        child: Center(
+          child: TweenAnimationBuilder<Color?>(
+            tween: ColorTween(end: color),
+            duration: const Duration(milliseconds: 200),
+            builder: (context, c, _) => Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ScaleTransition(
+                  scale: _scale,
+                  child: Icon(
+                    selected ? widget.item.selectedIcon : widget.item.icon,
+                    size: 23,
+                    color: c,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                widget.item.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  color: c,
-                  letterSpacing: 0.2,
+                // The label folds away with the bar as the page scrolls.
+                ClipRect(
+                  child: Align(
+                    heightFactor: widget.labelFraction,
+                    child: Opacity(
+                      opacity: widget.labelFraction,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          widget.item.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: selected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: c,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
