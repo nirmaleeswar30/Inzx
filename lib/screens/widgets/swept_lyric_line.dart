@@ -196,7 +196,7 @@ bool _isRtl(String text) {
 /// One visual row of the laid-out line.
 class _Row {
   _Row(this.start, this.endAll, this.endVisible, this.left, this.right,
-      this.top, this.bottom);
+      this.top, this.bottom, this.baseline);
 
   final int start;
   final int endAll;
@@ -205,13 +205,14 @@ class _Row {
   final double right;
   final double top;
   final double bottom;
+  final double baseline;
 }
 
 /// The line's text laid out, with where every character and row sits. Kept
 /// per text, style and width, so frames never lay anything out again.
 class _LineLayout {
   _LineLayout._(this.painter, this.text, this.rtl, this.rows, this.charRow,
-      this.charLeft, this.charRight);
+      this.charLeft, this.charRight, this.em);
 
   final TextPainter painter;
   final String text;
@@ -220,6 +221,9 @@ class _LineLayout {
   final List<int> charRow;
   final List<double> charLeft;
   final List<double> charRight;
+
+  /// The font size as drawn, for placing the cut between rows.
+  final double em;
 
   static final Map<Object, _LineLayout> _cache = {};
 
@@ -311,7 +315,7 @@ class _LineLayout {
       right = math.max(right, m.left + m.width);
       rows.add(
         _Row(start, endAll, endVisible, left, right, m.baseline - m.ascent,
-            m.baseline + m.descent),
+            m.baseline + m.descent, m.baseline),
       );
     }
 
@@ -323,6 +327,7 @@ class _LineLayout {
       charRow,
       charLeft,
       charRight,
+      scaler.scale(style.fontSize ?? 14),
     );
     _cache[key] = layout;
     return layout;
@@ -333,15 +338,30 @@ class _LineLayout {
 
   double rowClipTop(int r, double vPad) {
     if (r <= 0) return rows.isEmpty ? -vPad : rows[0].top - vPad;
-    return (rows[r - 1].bottom + rows[r].top) / 2;
+    return _cutBelow(r - 1);
   }
 
   double rowClipBottom(int r, double vPad) {
     if (r >= rows.length - 1) {
       return rows.isEmpty ? vPad : rows.last.bottom + vPad;
     }
-    return (rows[r].bottom + rows[r + 1].top) / 2;
+    return _cutBelow(r);
   }
+
+  /// Where row [r] ends and the next begins: midway between where [r]'s
+  /// descenders stop and the next row's ascenders start. The font's line
+  /// boxes can't be used: Inter's descent is deep enough that, at the line
+  /// heights lyrics use, half-way between the boxes cuts through the tops of
+  /// the next row, which were then lit and lifted with this one.
+  double _cutBelow(int r) =>
+      (rows[r].baseline + _descender * em + rows[r + 1].baseline -
+          _ascender * em) /
+      2;
+
+  /// How far ink reaches below and above the baseline, in ems (Latin
+  /// descenders and ascenders; accents and other scripts sit near these).
+  static const double _descender = 0.22;
+  static const double _ascender = 0.76;
 
   /// Where a character offset sits across [row], in pixels, row-aware at
   /// both ends (BitChord's `xOn`).
@@ -558,6 +578,14 @@ class _SweptPainter extends CustomPainter {
       final row = layout.rows[r];
       final top = layout.rowClipTop(r, vPad);
       final bottom = layout.rowClipBottom(r, vPad);
+      // The slices below clip where the piece goes on screen; this clips the
+      // text being moved to its own row, so a lifted word never carries the
+      // tops of the next row (or the tails of the last) up with it.
+      final band = Rect.fromLTRB(-1e5, top, 1e5, bottom);
+      void rowOnly(Canvas c) {
+        c.clipRect(band);
+        drawContent(c);
+      }
       var at = row.start;
       var edge = row.left - margin;
       for (var index = 0; index < timing.words.length; index++) {
@@ -577,18 +605,18 @@ class _SweptPainter extends CustomPainter {
         final to = layout.xOn(end, row);
         if (to <= from) continue;
         if (start > at) {
-          _slice(canvas, drawContent, edge, top, from, bottom, 0);
+          _slice(canvas, rowOnly, edge, top, from, bottom, 0);
         }
         if (held != null) {
-          _growEach(canvas, drawContent, held, position, row, start, end, peak);
+          _growEach(canvas, rowOnly, held, position, row, start, end, peak);
         } else {
-          _slice(canvas, drawContent, from, top - peak, to, bottom, -lift * peak);
+          _slice(canvas, rowOnly, from, top - peak, to, bottom, -lift * peak);
         }
         at = end;
         edge = to;
       }
       if (at < row.endVisible) {
-        _slice(canvas, drawContent, edge, top, row.right + margin, bottom, 0);
+        _slice(canvas, rowOnly, edge, top, row.right + margin, bottom, 0);
       }
     }
   }
@@ -678,6 +706,7 @@ class _SweptPainter extends CustomPainter {
         canvas.translate(centre.dx, centre.dy);
         canvas.scale(_growth.scale, _growth.scale);
         canvas.translate(-centre.dx, -centre.dy);
+        canvas.clipRect(Rect.fromLTRB(-1e5, top, 1e5, bottom));
         _drawText(canvas);
         canvas.restore();
         canvas.drawRect(
