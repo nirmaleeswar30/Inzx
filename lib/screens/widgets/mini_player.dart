@@ -204,9 +204,17 @@ class _CircularAlbumArtWithProgressState
 class MusicMiniPlayer extends ConsumerStatefulWidget {
   final VoidCallback onTap;
 
+  /// The glass capsule's size, 1 at full size; it shrinks with the liquid
+  /// glass nav as a page scrolls (down to [minScale]).
+  final double scale;
+
+  /// How small [scale] gets with the nav fully collapsed.
+  static const double minScale = 0.875;
+
   const MusicMiniPlayer({
     super.key,
     required this.onTap,
+    this.scale = 1,
   });
 
   @override
@@ -461,34 +469,51 @@ class _MusicMiniPlayerState extends ConsumerState<MusicMiniPlayer> {
 
         final Widget capsule;
         if (isLiquidGlass) {
-          capsule = LiquidGlassContainer(
-            pressable: false,
-            borderRadius: 32,
-            blurSigma: 2.0,
-            refractionScale: 1.05,
-            refractionDeflection: 2.8,
-            isDark: isDark,
-            surfaceColor: Colors.black.withValues(
-              alpha: isDark ? 0.45 : 0.35,
-            ),
-            accentColor: accentColor,
-            height: 64.0,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 6,
-            ),
-            additionalShadows: [
-              if (hasAlbumColors)
-                BoxShadow(
-                  color: accentColor.withValues(
-                    alpha: isDark ? 0.20 : 0.10,
-                  ),
-                  blurRadius: 24,
-                  spreadRadius: -2,
-                  offset: const Offset(0, 4),
+          // Scaled by layout, not by a Transform around the glass (that breaks
+          // its refraction, see below): the capsule takes the scaled size, and
+          // the row inside is laid out at full size and drawn scaled, so the
+          // scrolling titles never relayout.
+          final scale = widget.scale;
+          capsule = LayoutBuilder(
+            builder: (context, constraints) => Center(
+              child: LiquidGlassContainer(
+                pressable: false,
+                borderRadius: 32 * scale,
+                blurSigma: 2.0,
+                refractionScale: 1.05,
+                refractionDeflection: 2.8,
+                isDark: isDark,
+                surfaceColor: Colors.black.withValues(
+                  alpha: isDark ? 0.45 : 0.35,
                 ),
-            ],
-            child: miniPlayerContent,
+                accentColor: accentColor,
+                width: constraints.maxWidth * scale,
+                height: 64.0 * scale,
+                padding: EdgeInsets.symmetric(
+                  horizontal: 8 * scale,
+                  vertical: 6 * scale,
+                ),
+                additionalShadows: [
+                  if (hasAlbumColors)
+                    BoxShadow(
+                      color: accentColor.withValues(
+                        alpha: isDark ? 0.20 : 0.10,
+                      ),
+                      blurRadius: 24,
+                      spreadRadius: -2,
+                      offset: const Offset(0, 4),
+                    ),
+                ],
+                child: FittedBox(
+                  fit: BoxFit.fill,
+                  child: SizedBox(
+                    width: constraints.maxWidth - 16,
+                    height: 52,
+                    child: miniPlayerContent,
+                  ),
+                ),
+              ),
+            ),
           );
         } else {
           capsule = Container(

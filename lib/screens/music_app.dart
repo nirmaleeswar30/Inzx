@@ -281,14 +281,21 @@ class _MusicAppState extends ConsumerState<MusicApp>
                                 ? 0.0
                                 : (1.0 - _bottomNavAnimation.value) *
                                       (safeBottom > 0 ? safeBottom + 4 : 12.0);
+                            // With the glass nav it shrinks as the nav folds.
+                            final folded =
+                                1 - _glassNavLabels.value.clamp(0.0, 1.0);
                             return Padding(
                               padding: EdgeInsets.only(bottom: extraBottom),
-                              child: child,
+                              child: MusicMiniPlayer(
+                                onTap: () => NowPlayingScreen.show(context),
+                                scale: glassNav
+                                    ? 1 -
+                                          (1 - MusicMiniPlayer.minScale) *
+                                              folded
+                                    : 1,
+                              ),
                             );
                           },
-                          child: MusicMiniPlayer(
-                            onTap: () => NowPlayingScreen.show(context),
-                          ),
                         ),
                       if (glassNav)
                         // Scrolling folds its labels away instead of hiding it.
