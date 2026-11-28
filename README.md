@@ -96,10 +96,11 @@ Inzx is free and open source. If it makes your day a little better, consider sup
 ### 🎨 Interface & Now Playing
 
 - **Instant dynamic colors** — isolate-based `AlbumColorExtractor` generates 0 ms palettes from album covers with zero UI stutter
-- **Shader-powered liquid-glass UI** — translucent navigation bar with real-time blur and specular highlight shaders
+- **Shader-powered liquid-glass UI** — translucent navigation bar with real-time blur and specular highlight shaders; as you scroll it folds its labels away and tightens, and the mini player shrinks with it
 - **4 distinct Now Playing styles** — Default, Cinematic, Ripple, and classic OG layouts
 - **Audio visualizer progress bars** — linear, dynamic waveform, and live frequency spectrum scrubbers
 - **Animated album art (Canvas)** — fullscreen video canvas loops with ambient reflection glow
+- **3D cover on desktop** — on Windows and Linux, the album art in Now Playing and full-screen lyrics leans towards the mouse
 - **Material 3 personalization** — 10+ brand accent colors (including new Inzx Purple), custom color wheel, and pure AMOLED dark mode
 - **Skeletonizer shimmer** — fluid loading placeholders across all views
 - **Localized UI** in 20+ languages with catalog-region control
@@ -123,6 +124,7 @@ Inzx is free and open source. If it makes your day a little better, consider sup
 - **Device pairing via Supabase** — quick device discovery and pairing with instant connection status
 - **Simultaneous playback** — synchronized multi-room / multi-device playback across paired installations
 - **Remote control** — control volume, skip, pause, and reorder upcoming tracks from any linked device
+- **Desktop follows your phone** — while nothing is playing on the PC, its player bar shows the song playing on a paired phone and controls it; **Play here** moves the song to the PC
 
 &nbsp;
 
@@ -253,7 +255,8 @@ With a free Apple ID, sideloaded apps must be refreshed every 7 days (AltStore a
 ## 🛠️ Building from Source
 
 ### Prerequisites
-- **Flutter SDK** (stable channel, bundling **Dart**)
+- **Flutter SDK 3.50 or newer** (stable channel, bundling **Dart**)
+- **JDK 17 or newer** (for Android builds, which use Android Gradle Plugin 9)
 - **Android Studio** or **VS Code** with Flutter/Dart extensions
 - **Visual Studio with C++ tools** (for Windows builds)
 - **libmpv** & standard build tools (for Linux builds: `libmpv-dev clang cmake ninja-build`)
@@ -275,7 +278,7 @@ With a free Apple ID, sideloaded apps must be refreshed every 7 days (AltStore a
 
 3. **Run code generation**
    ```bash
-   dart run build_runner build --delete-conflicting-outputs
+   dart run build_runner build
    flutter gen-l10n
    ```
 
@@ -355,7 +358,7 @@ See [iOS build notes](ios/README.md) and [Shorebird setup](SHOREBIRD_SETUP.md) f
 
 **Social & integrations** — Discord Rich Presence (RPC) · Last.fm & ListenBrainz scrobbling clients · BetterLyrics TTML parser
 
-**UI & media** — Custom liquid-glass shaders · [Skeletonizer](https://pub.dev/packages/skeletonizer) · isolate-based `AlbumColorExtractor` (0 ms palette) · [Iconsax](https://pub.dev/packages/iconsax) · Cached Network Image · `video_player` (Spotify Canvas art) · Marquee
+**UI & media** — [Inter](https://rsms.me/inter/) typeface · Custom liquid-glass shaders · [Skeletonizer](https://pub.dev/packages/skeletonizer) · isolate-based `AlbumColorExtractor` (0 ms palette) · [Iconsax](https://pub.dev/packages/iconsax) · Cached Network Image · `video_player` (Spotify Canvas art) · Marquee
 
 **Delivery** — [Shorebird](https://shorebird.dev) code push for OTA updates
 
@@ -419,6 +422,7 @@ For larger features, please open an issue first so we can align on the approach.
 - [just_audio](https://pub.dev/packages/just_audio) — audio playback engine
 - [Supabase](https://supabase.com) — real-time infrastructure
 - [Shorebird](https://shorebird.dev) — Flutter over-the-air updates
+- [Inter](https://rsms.me/inter/) — typeface by Rasmus Andersson (SIL Open Font License)
 - [Flutter](https://flutter.dev) — UI framework
 
 ---
