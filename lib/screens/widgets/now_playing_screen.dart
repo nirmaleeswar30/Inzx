@@ -24,6 +24,7 @@ import '../../core/l10n/app_localizations_x.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../core/utils/duration_format.dart';
 import 'artist_screen.dart';
+import 'tilt_on_hover.dart';
 import 'album_screen.dart' show AlbumScreen;
 import 'playlist_screen.dart' show PlaylistScreen;
 import 'podcast_screen.dart' show PodcastScreen;
@@ -2314,23 +2315,29 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                             .read(audioPlayerServiceProvider)
                             .togglePlayPause,
                         onDoubleTap: () => _triggerDoubleTapLike(track),
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              // Animated canvases: video_player_win on
-                              // Windows, libmpv's software renderer on Linux.
-                              child: _buildAlbumArtContent(
-                                track,
-                                accentColor,
+                        // Leans towards the mouse in 3D, as in full screen;
+                        // not in the small always-on-top player.
+                        child: TiltOnHover(
+                          enabled: !mini,
+                          borderRadius: BorderRadius.circular(8),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
+                                // Animated canvases: video_player_win on
+                                // Windows, libmpv's software renderer on Linux.
+                                child: _buildAlbumArtContent(
+                                  track,
+                                  accentColor,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
-                            ),
-                            _buildHeartOverlay(),
-                            // Stats for nerds on the art, as on Android.
-                            if (!mini) const _DesktopArtStats(),
-                          ],
+                              _buildHeartOverlay(),
+                              // Stats for nerds on the art, as on Android.
+                              if (!mini) const _DesktopArtStats(),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -6341,27 +6348,31 @@ class _DesktopLyricsStageState extends ConsumerState<_DesktopLyricsStage> {
         behavior: HitTestBehavior.opaque,
         onTap: ref.read(audioPlayerServiceProvider).togglePlayPause,
         onDoubleTap: widget.onDoubleTapLike,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.35),
-                blurRadius: 40,
-                offset: const Offset(0, 16),
-              ),
-            ],
-          ),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: widget.art,
-              ),
-              widget.heartOverlay,
-              const _DesktopArtStats(),
-            ],
+        // Leans towards the mouse in 3D while it's over the cover.
+        child: TiltOnHover(
+          borderRadius: BorderRadius.circular(12),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  blurRadius: 40,
+                  offset: const Offset(0, 16),
+                ),
+              ],
+            ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: widget.art,
+                ),
+                widget.heartOverlay,
+                const _DesktopArtStats(),
+              ],
+            ),
           ),
         ),
       ),
