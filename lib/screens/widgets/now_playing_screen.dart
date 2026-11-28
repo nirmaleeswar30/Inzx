@@ -1759,6 +1759,10 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
       child: playbackState.when(
         data: (state) {
           if (state.currentTrack == null) {
+            // The desktop Connect card and button open this even when nothing
+            // is playing here (say, a phone is paused): show Connect on its
+            // own instead of an empty page.
+            if (isDesktop) return const InzxConnectScreen();
             return const SizedBox.shrink();
           }
 

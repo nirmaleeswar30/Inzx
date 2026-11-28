@@ -424,9 +424,12 @@ class InzxConnectRemote extends ChangeNotifier {
   ({ConnectDevice device, ConnectPlayback playback})? get activePlayback =>
       _localPlaying || _inJam ? null : followedPlayback;
 
+  /// Follows whichever paired device is playing, when nothing is playing here
+  /// and no output was picked. Computers do too: the desktop shell's status
+  /// poll keeps paired devices reporting, so the player bar shows a song
+  /// started on a phone.
   void _selectFollowedDevice() {
-    if (!InzxConnectService.canScanQr ||
-        _discoveryPausedByUser ||
+    if (_discoveryPausedByUser ||
         _selectedOutput != null ||
         isPlayingOnBoth) {
       return;
@@ -654,9 +657,9 @@ class InzxConnectRemote extends ChangeNotifier {
 
   /// Re-enables playback following when the user opens Connect again.
   void resumeFollowing() {
-    if (!InzxConnectService.canScanQr) return;
     _discoveryPausedByUser = false;
-    if (_inForeground) _startDiscovery();
+    // A computer has no discovery loop; its status poll picks devices up.
+    if (InzxConnectService.canScanQr && _inForeground) _startDiscovery();
   }
 
   void disconnect() {
