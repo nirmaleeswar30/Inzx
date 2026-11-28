@@ -181,18 +181,18 @@ packages:
     dependency: transitive
     description:
       name: built_collection
-      sha256: "44922ecebd8e3d0cef743dadd3b54df4e87e2a4c52a29465a1872aa9e192caa8"
+      sha256: "68c430bce63c47a00d7c978545777d2f6315bb1dbbb098d4f60cfd3148b8bc61"
       url: "https://pub.dev"
     source: hosted
-    version: "5.1.2"
+    version: "6.0.0"
   built_value:
     dependency: transitive
     description:
       name: built_value
-      sha256: f87ea98192116f7093cb214551ce1929caae0681fdba282b3d8b4462adee7bb7
+      sha256: c909bcf7b192256e8dc710efb11df369fdf069aa4f0615f49371d00eb0d7679f
       url: "https://pub.dev"
     source: hosted
-    version: "8.13.0"
+    version: "8.13.1"
   cached_network_image:
     dependency: "direct main"
     description:
@@ -862,10 +862,10 @@ packages:
     dependency: transitive
     description:
       name: js
-      sha256: f2c445dce49627136094980615a031419f7f3eb393237e4ecd97ac15dea343f3
+      sha256: "53385261521cc4a0c4658fd0ad07a7d14591cf8fc33abbceae306ddb974888dc"
       url: "https://pub.dev"
     source: hosted
-    version: "0.6.7"
+    version: "0.7.2"
   json_annotation:
     dependency: transitive
     description:
